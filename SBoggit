@@ -386,48 +386,6 @@ function dotprofilizer
 }
 
 #-------------------------------------------------------------------------------
-
-function itpassed
-{
-  local p="${1:-$prg}"
-  c=$(cd $SBOREPO/*/$p/..; basename $(pwd))
-  # this won't delete everything, but it's good enough:
-  rm -rf $TMP/${p}* $TMP/package-${p}
-  find $SBOREPO/$c/$p/ -type l -exec rm {} \;
-  gitrev=$(git log -n 1 --format=format:%h $SBOREPO/$category/$prg)
-  if [ -z "$(cd $SBOREPO/$c/$p; git status -s .)" ]; then
-    git log -n 1 $SBOREPO/$category/$prg > $OUTPUT/gitrev-$gitrev
-  elif [ -f "$HINTS/$p.tar.gz" ]; then
-    tarmd5=$(md5sum $HINTS/$p.tar.gz | sed 's/ .*//')
-    echo "gitrev $gitrev $HINTS/$p.tar.gz $tarmd5" > $OUTPUT/gitrev-$gitrev-targz-$tarmd5
-    git reset --hard
-  else
-    echo "$(cd $SBOREPO/$c/$p; git status .)" > $OUTPUT/gitrev-$gitrev+dirty
-    git reset --hard
-  fi
-  echogreen ":-) PASS (-: $c/$p $prgrev"
-  echo "$c/$p" >> $LOGDIR/PASSLIST
-  mv $LOGDIR/$p.log $LOGDIR/PASS/
-  # If the SlackBuild directory was clean, stamp the output with the git revision
-}
-
-#-------------------------------------------------------------------------------
-
-function itfailed
-{
-  local p="${1:-$prg}"
-  c=$(cd $SBOREPO/*/$p/..; basename $(pwd))
-  echored ":-( FAIL )-: $c/$p"
-  grep -q "^$c/$p\$" $LOGDIR/FAILLIST || echo $c/$p >> $LOGDIR/FAILLIST
-  # leave the wreckage in $TMP for investigation
-  if [ -f $LOGDIR/$p.log ]; then
-    mv $LOGDIR/$p.log $LOGDIR/FAIL/$p.log
-    echored "See $LOGDIR/FAIL/$p.log"
-  fi
-  find $SBOREPO/$c/$p/ -type l -exec rm {} \;
-}
-
-#-------------------------------------------------------------------------------
 # Main loop
 #-------------------------------------------------------------------------------
 

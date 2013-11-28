@@ -259,54 +259,6 @@ function buildzilla
 }
 
 #-------------------------------------------------------------------------------
-
-function dependublaster2000
-{
-  local me="$1"
-  local prevdep mydeps moredeps dep readmedep
-  for prevdep in $DEPLIST; do
-    if [ "$prevdep" = "$me" ]; then
-      # if I'm already on the list, then my deps must also be on the list
-      # so nothing to do :-)
-      return 0
-    fi
-  done
-  if [ ! -d $SBOREPO/*/$me ]; then
-    echoyellow "WARNING: Dependency $me not found in $SBOREPO"
-    return 0  # carry on regardless ;-)
-  fi
-  if [ -f $HINTS/$me.tar.gz ]; then
-    echo "Hint: applying tarball for $me"
-    ( cd $SBOREPO/*/$me/..; rm -rf $me/; tar xf $HINTS/$me.tar.gz )
-  fi
-  . $SBOREPO/*/$me/$me.info
-  # ok, ready to go!  First, add my deps:
-  mydeps="$REQUIRES"
-  if [ -f $HINTS/$me.moredeps ]; then
-    moredeps="$(cat $HINTS/$me.moredeps)"
-    echo "Hint: adding more deps: $moredeps"
-    mydeps="$mydeps $moredeps"
-  fi
-  for dep in $mydeps; do
-    if [ $dep = '%README%' ]; then
-      if [ -f $HINTS/$me.readmedeps ]; then
-        echo "Hint: substituting '$(cat $HINTS/$me.readmedeps)' for %README%"
-        for readmedep in $(cat $HINTS/$me.readmedeps); do 
-          dependublaster2000 $readmedep
-        done
-      else
-        echoyellow "WARNING: %README% in $me.info but $HINTS/$me.readmedeps not found"
-      fi
-    else
-      dependublaster2000 $dep
-    fi
-  done
-  # then add me:
-  DEPLIST="$DEPLIST $me"
-  return 0
-}
-
-#-------------------------------------------------------------------------------
 # Main loop
 #-------------------------------------------------------------------------------
 

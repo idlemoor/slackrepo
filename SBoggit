@@ -1,6 +1,6 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
-# SBoggit - automated clean (fsvo ;) building from SlackBuilds.org git
+# SBoggit - automated clean (fsvo ;) package building from SlackBuilds.org git
 #
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.

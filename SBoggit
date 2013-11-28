@@ -1,0 +1,604 @@
+#!/bin/bash
+#-------------------------------------------------------------------------------
+# BOBtheBuilder.sh - automated clean (fsvo ;) building from SBo git
+#
+# Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#-------------------------------------------------------------------------------
+#
+[ $# = 0 ] && { echo 'Usage: BOBtheBuilder.sh category|item ...'; exit 0; }
+#
+# Optional environment variables --
+# BOB - base directory, default /BOB
+# TAG - default _BOB
+# REPODIR - local SBo git repo base, default $BOB/slackbuilds
+# GITBRANCH  - git branch to build in, default 'master'
+#
+# Possible hints in $BOB/hints/ --
+# prg.skipme - don't build prg (.skipme file contains optional comment for display/log)
+# prg.readmedeps - dependencies to substitute for %README% in REQUIRES=
+# prg.options - options to supply to the SlackBuild
+# prg.extradeps - more dependencies, eg. to support options
+# prg.makej1 - set MAKEFLAGS='j1' during build
+# prg.tar.gz - SBo submission-style tarball to replace prg/* before build
+#
+# Builds are not 100% clean and not 100% repeatable.  Each build is done as a
+#   flat list of deps.  Each dep not already in $OUTREPO is built in the context
+#   of the list, so it is possible for a package to pick up an unintended
+#   dependency.  If one dep in the list is out of date, the remainder of the
+#   list is rebuilt.  Git revision hashes and hint tarball md5sums are recorded,
+#   and rebuilds are triggered when they are found to have changed.
+# The local git branch will be brutally cleaned on startup.  You have been
+#   warned!  If the branch is 'master', it will be updated by fast forward (if
+#   possible) from origin/master (which is probably SBo, but could be a local
+#   mirror to avoid loading the SBo server).
+#-------------------------------------------------------------------------------
+
+export BOB=${BOB:-/BOB}
+export TAG=${TAG:-_BOB}
+export REPODIR=${REPODIR:-$BOB/slackbuilds}
+export GITBRANCH=${GITBRANCH:-master}
+
+[ -d $BOB ] || { echo "ERROR: directory $BOB not found"; exit 1; }
+
+export HINTS=$BOB/hints
+export SRCDIR=$BOB/src
+export OUTREPO=$BOB/output
+export TMP=$BOB/tmp
+export LOGDIR=$BOB/logs-$(date +%Y%m%d_%H%M)
+
+if [ -z "$SLKARCH" ]; then
+  case "$( uname -m )" in
+    i?86) SLKARCH=i486 ;;
+    arm*) SLKARCH=arm ;;
+       *) SLKARCH=$( uname -m ) ;;
+  esac
+fi
+
+#-------------------------------------------------------------------------------
+# Initialisation
+#-------------------------------------------------------------------------------
+
+echo "Removing $TMP ..."
+rm -rf $TMP
+mkdir -p $HINTS $OUTREPO $TMP $SRCDIR
+mkdir -p $LOGDIR/PASS $LOGDIR/FAIL
+rm -f $LOGDIR/PASSLIST $LOGDIR/FAILLIST $LOGDIR/READMELIST
+touch $LOGDIR/PASSLIST $LOGDIR/FAILLIST $LOGDIR/READMELIST
+
+if [ -n "$(ls /var/log/packages/*$TAG 2>/dev/null)" ]; then
+  echo "Removing all $TAG packages ..."
+  removepkg /var/log/packages/*$TAG
+  echo ""
+fi
+
+echo "Initialising git ..."
+# This is going to be brutal :P
+if [ ! -d $REPODIR ]; then
+  echo "$REPODIR does not exist"
+  git clone git://slackbuilds.org/slackbuilds.git $REPODIR
+fi
+cd $REPODIR
+git checkout -f $GITBRANCH
+git reset --hard
+git clean -xdf
+if [ "$GITBRANCH" = 'master' ]; then
+  git fetch -a
+  git merge --ff-only origin/master
+fi
+echo "Finished initialising git."
+echo ""
+
+#-------------------------------------------------------------------------------
+
+function buildzilla
+{
+  # Returns:
+  # 1 - build failed
+  # 2 - download failed
+  # 3 - checksum failed
+  # 4 - installpkg returned nonzero
+  # 5 - skipped by hint, or unsupported on this arch
+  # 6 - build returned 0 but nothing in $OUTPUT
+  prg="$1"
+  category=$(cd $REPODIR/*/$prg/..; basename $(pwd))
+  . $REPODIR/$category/$prg/$prg.info
+  unset BUILD
+  buildassign=$(grep '^BUILD=' $REPODIR/*/$PRGNAM/$PRGNAM.SlackBuild)
+  eval $buildassign
+  # At this point we have a full set of environment variables for called functions to use:
+  # PRGNAM VERSION SLKARCH BUILD TAG DOWNLOAD* MD5SUM* etc
+
+  msg="--$category/$prg-----------------------------------------------------------------------------"
+  echo "${msg:0:79}"
+  rm -f $LOGDIR/$prg.log
+
+  if [ "$PRGNAM" != "$prg" ]; then
+    echoyellow "WARNING: PRGNAM in $REPODIR/$category/$prg/$prg.info is '$PRGNAM', not $prg"
+  fi
+
+  # Check whether the item should be skipped
+  if [ -f $HINTS/$prg.skipme ]; then
+    echoyellow "SKIPPED $category/$prg due to hint"
+    cat $HINTS/$prg.skipme
+    return 5
+  fi
+
+  # Get the source and symlink it into the SlackBuild directory
+  if [ -d $SRCDIR/$prg ]; then
+    if ! checksrc ; then
+      echo "Note: bad checksums in cached source, will download again"
+      downloadsrc
+      case $? in
+        0) checksrc || { savebadsrc; itfailed; return 3; } ;;
+        2) rm -rf $SRCDIR/$prg;  return 5 ;;
+        *) savebadsrc; itfailed; return 2 ;;
+      esac
+    fi
+  else
+    downloadsrc
+    case $? in
+      0) checksrc || { savebadsrc; itfailed; return 3; } ;;
+      2) rm -rf $SRCDIR/$prg;  return 5 ;;
+      *) savebadsrc; itfailed; return 2 ;;
+    esac
+  fi
+  ln -sf -t $REPODIR/$category/$prg/ $SRCDIR/$prg/*
+
+  # Get any hints for the build
+  if [ -f $HINTS/$prg.options ]; then
+    options="$(cat $HINTS/$prg.options)"
+    echo "Hint: found options $options"
+  fi
+  tempmakeflags=''
+  if [ -f $HINTS/$prg.makej1 ]; then
+    tempmakeflags="MAKEFLAGS='-j1'"
+    echo "Hint: setting $tempmakeflags"
+  fi
+
+  # Build it
+  echo "SlackBuilding $prg.SlackBuild ..."
+  export OUTPUT=$OUTREPO/$prg
+  rm -rf $OUTPUT/*
+  mkdir -p $OUTPUT
+  ( cd $REPODIR/$category/$prg; env $tempmakeflags $options sh ./$prg.SlackBuild ) >>$LOGDIR/$prg.log 2>&1
+  stat=$?
+  if [ $stat != 0 ]; then
+    echo "ERROR: $prg.SlackBuild failed (status $stat)"
+    itfailed
+    return 1
+  fi
+
+  # Make sure we got something :-)
+  pkglist=$(ls $OUTPUT/*.t?z 2>/dev/null)
+  if [ -z "$pkglist" ]; then
+    echo "ERROR: no packages found in $OUTPUT"
+    itfailed
+    return 6
+  fi
+
+  # Install the built packages
+  # (this supports multiple output packages because some Slackware SlackBuilds do that)
+  for pkgpath in $pkglist; do
+    # This is our best chance to verify the package name:
+    pkg=$(basename $pkgpath)
+    case $pkg in
+    $PRGNAM-${VERSION}-$SLKARCH-$BUILD$TAG.t?z | \
+    $PRGNAM-${VERSION}-noarch-$BUILD$TAG.t?z | \
+    $PRGNAM-${VERSION}_*-$SLKARCH-$BUILD$TAG.t?z | \
+    $PRGNAM-${VERSION}_*-noarch-$BUILD$TAG.t?z )
+      : ;;
+    *)
+      echoyellow "WARNING: abnormal package name $pkg"
+      pprgnam=$(echo $pkg | rev | cut -f4- -d- | rev)
+      pversion=$(echo $pkg | rev | cut -f3 -d- | rev)
+      parch=$(echo $pkg | rev | cut -f2 -d- | rev)
+      pbuild=$(echo $pkg | rev | cut -f1 -d- | rev | sed 's/[^0-9]*$//')
+      ptag=$(echo $pkg | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
+      pext=$(echo $pkg | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
+      [  "$pprgnam" != "$PRGNAM"  ] && echoyellow "PRGNAM is $pprgnam not $PRGNAM"
+      [ "$pversion" != "$VERSION" ] && echoyellow "VERSION is $pversion not $VERSION"
+      [    "$parch" != "$SLKARCH" -a "$parch" != "noarch" ] && \
+        echoyellow "ARCH is $parch not $SLKARCH or noarch"
+      [   "$pbuild" != "$BUILD"   ] && echoyellow "BUILD is $pbuild not $BUILD"
+      [     "$ptag" != "$TAG"     ] && echoyellow "TAG is $ptag not $TAG"
+      [ "$pext" != 'tgz' -a "$pext" != 'tbz' -a "$pext" != 'tlz' -a "$pext" != 'txz' ] && \
+        echoyellow "Suffix .$pext is not .t[gblx]z"
+      ;;
+    esac 
+    echo "Installing $pkgpath ..."
+    installpkg --terse $pkgpath
+    stat=$?
+    if [ $stat != 0 ]; then
+      echo "ERROR: installpkg $pkgpath failed (status $stat)"
+      itfailed
+      return 4
+    fi
+    dotprofilizer $pkg
+  done
+
+  itpassed  # \o/
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function dependublaster2000
+{
+  local me="$1"
+  local prevdep mydeps extradeps dep readmedep
+  for prevdep in $DEPLIST; do
+    if [ "$prevdep" = "$me" ]; then
+      # if I'm already on the list, then my deps must also be on the list
+      # so nothing to do :-)
+      return 0
+    fi
+  done
+  if [ ! -d $REPODIR/*/$me ]; then
+    echoyellow "WARNING: Dependency $me not found in $REPODIR"
+    return 0  # carry on regardless ;-)
+  fi
+  if [ -f $HINTS/$me.tar.gz ]; then
+    echo "Hint: applying tarball for $me"
+    ( cd $REPODIR/*/$me/..; rm -rf $me/; tar xf $HINTS/$me.tar.gz )
+  fi
+  . $REPODIR/*/$me/$me.info
+  # ok, ready to go!  First, add my deps:
+  mydeps="$REQUIRES"
+  if [ -f $HINTS/$me.extradeps ]; then
+    extradeps="$(cat $HINTS/$me.extradeps)"
+    echo "Hint: adding extra deps: $extradeps"
+    mydeps="$mydeps $extradeps"
+  fi
+  for dep in $mydeps; do
+    if [ $dep = '%README%' ]; then
+      if [ -f $HINTS/$me.readmedeps ]; then
+        echo "Hint: substituting '$(cat $HINTS/$me.readmedeps)' for %README%"
+        for readmedep in $(cat $HINTS/$me.readmedeps); do 
+          dependublaster2000 $readmedep
+        done
+      else
+        echoyellow "WARNING: %README% in $me.info but $HINTS/$me.readmedeps not found"
+      fi
+    else
+      dependublaster2000 $dep
+    fi
+  done
+  # then add me:
+  DEPLIST="$DEPLIST $me"
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function inOUTREPOanduptodate
+{
+  # Returns:
+  # 1 - not found (or unstamped with git rev)
+  # 2 - git thinks the directory has been modified locally
+  # 3 - previous git rev != current git rev
+  local p="${1:-$prg}"
+  gitrevfilename=$(ls $OUTREPO/$p/gitrev-* 2>/dev/null)
+  pkglist=$(ls $OUTREPO/$p/*$TAG.t?z 2>/dev/null)
+  if [ -z "$pkglist" -o $(echo $gitrevfilename | wc -w) != 1 ]; then
+    echo "$p not found, needs to be built."
+    return 1
+  elif [ -n "$(cd $REPODIR/*/$p; git status -s .)" ]; then
+    echo "$p has been modified."
+    # Note, if a tar.gz hint is identical to upstream git (eg. if merged),
+    # git status won't know that the hint was applied.  This is a Good Thing.
+    return 2
+  else
+    pkgrev=$(echo $gitrevfilename | sed 's/^.*gitrev-//')
+    prgrev=$(git log -n 1 --format=format:%h $REPODIR/*/$p)
+    if [ $pkgrev = $prgrev ]; then
+      echo "$p $pkgrev is up-to-date."
+      return 0
+    else
+      echo "$p $pkgrev is not up-to-date ($GITBRANCH is $prgrev)."
+      return 3
+    fi
+  fi
+}
+
+#-------------------------------------------------------------------------------
+
+function installfromOUTREPO
+{
+  local p="${1:-$prg}"
+  c=$(cd $REPODIR/*/$p/..; basename $(pwd))
+  msg="--$c/$p-----------------------------------------------------------------------------"
+  echo "${msg:0:79}"
+  pkglist=$(ls $OUTREPO/$p/*$TAG.t?z 2>/dev/null)
+  for pkgpath in $pkglist; do
+    pkgid=$(echo $(basename $pkgpath) | sed "s/$TAG\.t.z\$//")
+    if [ -e /var/log/packages/$pkgid ]; then
+      echoyellow "WARNING: $p is already installed:" $(ls /var/log/packages/$pkgid)
+    else
+      echo "Installing previously built $pkgpath ..."
+      installpkg --terse $pkgpath
+      stat=$?
+      if [ $stat != 0 ]; then
+        echo "ERROR: installpkg $pkgpath failed (status $stat)"
+        itfailed
+        return 1
+      fi
+      dotprofilizer $pkgpath  # ignore any problems, probably doesn't matter ;-)
+    fi
+  done
+}
+
+#-------------------------------------------------------------------------------
+
+function dotprofilizer
+{
+  local p="${1:-$prg}"
+  # examine /var/log/packages/xxxx because it's quicker than looking inside a .t?z
+  varlogpkg=/var/log/packages/$(basename $p | sed 's/\.t.z$//')
+  if grep -q -E 'etc/profile\.d/.*\.sh(\.new)?' $varlogpkg; then
+    for script in $(grep 'etc/profile\.d/.*\.sh' $varlogpkg | sed 's/.new$//'); do
+      if [ -f /$script ]; then
+        echo "Running profile script /$script"
+        . /$script
+      elif [ -f /$script.new ]; then
+        echo "Running profile script /$script.new"
+        . /$script.new
+      fi
+    done
+  fi
+}
+
+#-------------------------------------------------------------------------------
+
+function downloadsrc
+{
+  # Returns:
+  # 1 - wget failed
+  # 2 - UNSUPPORTED or UNTESTED in .info
+  local p="${1:-$prg}"
+  # This function also uses global variables DOWNLOAD* previously read from .info
+  case $SLKARCH in
+    i486) DOWNLIST="$DOWNLOAD" ;;
+  x86_64) DOWNLIST="${DOWNLOAD_x86_64:-$DOWNLOAD}" ;;
+       *) DOWNLIST="$DOWNLOAD" ;;
+  esac
+  if [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ]; then
+    echo "$DOWNLIST ON $SLKARCH"
+    echo "$DOWNLIST ON $SLKARCH" > $HINTS/$p.skipme
+    return 2
+  fi
+  rm -rf $SRCDIR/$p
+  mkdir -p $SRCDIR/$p
+  echo "Downloading ..."
+  ( cd $SRCDIR/$p
+    for src in $DOWNLIST; do
+      echo "wget $src ..."
+      wget --no-check-certificate --content-disposition --tries=2 -T 240 "$src" >> $LOGDIR/$p.log 2>&1
+      wstat=$?
+      if [ $wstat != 0 ]; then
+        echored "ERROR: wget error (status $wstat)"
+        return 1
+      fi
+    done
+  )
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function checksrc
+{
+  # Returns:
+  # 1 - one or more files had a bad md5sum
+  # 2 - no. of files != no. of md5sums
+  local p="${1:-$prg}"
+  # This function also uses global variables MD5SUM* previously read from .info
+  ( cd $SRCDIR/${p}
+    case $SLKARCH in
+      i486) MD5LIST="$MD5SUM" ;;
+    x86_64) MD5LIST="${MD5SUM_x86_64:-$MD5SUM}" ;;
+         *) MD5LIST="$MD5SUM" ;;
+    esac
+    echo "Checking source files ..."
+    numgot=$(ls 2>/dev/null| wc -l)
+    numwant=$(echo $MD5LIST | wc -w)
+    [ $numgot = $numwant ] || { echo "ERROR: want $numwant source files but got $numgot"; return 2; }
+    allok='y'
+    for f in *; do
+      mf=$(md5sum "$f" | sed 's/ .*//')
+      ok='n'
+      # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
+      for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
+      [ "$ok" = 'y' ] || { echo "ERROR: Failed md5sum: '$f'"; allok='n'; }
+    done
+    [ "$allok" = 'y' ] || { return 1; }
+  )
+  return $?  # status comes from subshell
+}
+
+#-------------------------------------------------------------------------------
+
+function savebadsrc
+{
+  local p="${1:-$prg}"
+  [ -d $SRCDIR/${p} ] && rmdir --ignore-fail-on-non-empty $SRCDIR/${p}
+  if [ -d $SRCDIR/${p} ]; then
+    baddir=$SRCDIR/${p}_BAD
+    rm -rf $baddir
+    mv $SRCDIR/$p $baddir
+    echo "Note: bad sources saved in $baddir"
+  fi
+}
+
+#-------------------------------------------------------------------------------
+
+function itpassed
+{
+  local p="${1:-$prg}"
+  c=$(cd $REPODIR/*/$p/..; basename $(pwd))
+  # this won't delete everything, but it's good enough:
+  rm -rf $TMP/${p}* $TMP/package-${p}
+  find $REPODIR/$c/$p/ -type l -exec rm {} \;
+  gitrev=$(git log -n 1 --format=format:%h $REPODIR/$category/$prg)
+  if [ -z "$(cd $REPODIR/$c/$p; git status -s .)" ]; then
+    git log -n 1 $REPODIR/$category/$prg > $OUTPUT/gitrev-$gitrev
+  elif [ -f "$HINTS/$p.tar.gz" ]; then
+    tarmd5=$(md5sum $HINTS/$p.tar.gz | sed 's/ .*//')
+    echo "gitrev $gitrev $HINTS/$p.tar.gz $tarmd5" > $OUTPUT/gitrev-$gitrev-targz-$tarmd5
+    git reset --hard
+  else
+    echo "$(cd $REPODIR/$c/$p; git status .)" > $OUTPUT/gitrev-$gitrev+dirty
+    git reset --hard
+  fi
+  echogreen ":-) PASS (-: $c/$p $prgrev"
+  echo "$c/$p" >> $LOGDIR/PASSLIST
+  mv $LOGDIR/$p.log $LOGDIR/PASS/
+  # If the SlackBuild directory was clean, stamp the output with the git revision
+}
+
+#-------------------------------------------------------------------------------
+
+function itfailed
+{
+  local p="${1:-$prg}"
+  c=$(cd $REPODIR/*/$p/..; basename $(pwd))
+  echored ":-( FAIL )-: $c/$p"
+  grep -q "^$c/$p\$" $LOGDIR/FAILLIST || echo $c/$p >> $LOGDIR/FAILLIST
+  # leave the wreckage in $TMP for investigation
+  if [ -f $LOGDIR/$p.log ]; then
+    mv $LOGDIR/$p.log $LOGDIR/FAIL/$p.log
+    echored "See $LOGDIR/FAIL/$p.log"
+  fi
+  find $REPODIR/$c/$p/ -type l -exec rm {} \;
+}
+
+#-------------------------------------------------------------------------------
+
+function echoinbox
+{
+  msg="${*}                                                                      "
+  echo "==============================================================================="
+  echo "! ${msg:0:66} $(date +%T) !"
+  echo "==============================================================================="
+  echo ""
+}
+
+function echored
+{ tput bold; tput setaf 1; echo "$@"; tput sgr0; }
+
+function echogreen
+{ tput bold; tput setaf 2; echo "$@"; tput sgr0; }
+
+function echoyellow
+{ tput bold; tput setaf 3; echo "$@"; tput sgr0; }
+
+#-------------------------------------------------------------------------------
+# Main loop
+#-------------------------------------------------------------------------------
+
+while [ $# != 0 ]; do
+
+  ARG=${1%%/}; shift
+
+  # Check the current argument
+  if [ -d $REPODIR/${ARG##*/} ]; then
+    # it's a category: expand it into a list of its items
+    set -- $REPODIR/$ARG/* "$@"
+    continue
+  fi
+  # otherwise, the last component should be an item
+  PRG=$(basename ${ARG%%/})
+  if [ ! -d $REPODIR/*/$PRG ]; then
+    echoinbox "ERROR: $PRG is neither a category nor an application"
+    continue
+  fi
+  CATEGORY=$(cd $REPODIR/*/$PRG/..; basename $(pwd))
+  echoinbox "$CATEGORY/$PRG"
+
+  # Quick check whether the item should be skipped
+  if [ -f $HINTS/$PRG.skipme ]; then
+    echoyellow "SKIPPED $CATEGORY/$PRG due to hint"
+    cat $HINTS/$PRG.skipme
+    if inOUTREPOanduptodate $PRG; then
+      echo "Note: previously built $CATEGORY/$PRG is up-to-date"
+    fi
+    echo ""
+    continue
+  fi
+
+  # Work out dependencies (DEPLIST), and then which deps are already up-to-date
+  # and can just be installed (INSTLIST) and which deps need to be built (TODOLIST)
+  export DEPLIST=""
+  dependublaster2000 $PRG
+  if [ "$(echo $DEPLIST)" != "$PRG" ]; then
+    echo "Package stack for $PRG:" $DEPLIST
+  fi
+  INSTLIST=""
+  TODOLIST=""
+  needbuild='n'
+  for dep in $DEPLIST; do
+    if inOUTREPOanduptodate $dep; then
+      if [ $needbuild = 'y' ]; then
+        TODOLIST=$(echo $TODOLIST $dep)
+      else
+        INSTLIST=$(echo $INSTLIST $dep)
+      fi
+    else
+      # trigger build for all following deps, even if they are already in OUTREPO
+      needbuild='y'
+      TODOLIST=$(echo $TODOLIST $dep)
+    fi
+  done
+
+  # Process INSTLIST and TODOLIST
+  # If there's nothing in TODOLIST, don't bother installing :D
+  if [ "$TODOLIST" != '' ]; then
+    if [ "$TODOLIST" != "$PRG" ]; then
+      echo "To-do list for $PRG:" $DEPLIST
+    fi
+    instok='y'
+    for instprg in $INSTLIST; do
+      installfromOUTREPO $instprg
+      if [ $? != 0 ]; then
+        instok='n'
+        [ $instprg != $PRG ] && echored "ABORTED $CATEGORY/$PRG"
+        break
+      fi
+    done
+    if [ $instok = 'y' ]; then
+      for todoprg in $TODOLIST; do
+        buildzilla $todoprg
+        if [ $? != 0 ]; then
+          [ $todoprg != $PRG ] && echored "ABORTED $CATEGORY/$PRG"
+          break
+        fi
+      done
+    fi
+    echo "-------------------------------------------------------------------------------"
+    echo "Removing all $TAG packages ..."
+    removepkg /var/log/packages/*$TAG >/dev/null 2>&1
+    # undo any clever things that a profile.d script might have set
+    unset LD_PRELOAD JAVA_HOME
+  fi
+  echo ""
+
+done
+
+exit 0

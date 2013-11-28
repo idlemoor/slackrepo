@@ -28,7 +28,7 @@
 # Optional environment variables --
 # SBOGGIT - base directory, default /SBoggit
 # TAG - default _SBoggit
-# REPODIR - local SBo git repo base, default $SBOGGIT/slackbuilds
+# SBOREPO - local SBo git repo base, default $SBOGGIT/slackbuilds
 # GITBRANCH  - git branch to build in, default 'master'
 #
 # Possible hints in $SBOGGIT/hints/ --
@@ -53,7 +53,7 @@
 
 export SBOGGIT=${SBOGGIT:-/SBoggit}
 export TAG=${TAG:-_SBoggit}
-export REPODIR=${REPODIR:-$SBOGGIT/slackbuilds}
+export SBOREPO=${SBOREPO:-$SBOGGIT/slackbuilds}
 export GITBRANCH=${GITBRANCH:-master}
 
 [ -d $SBOGGIT ] || { echo "ERROR: directory $SBOGGIT not found"; exit 1; }
@@ -91,11 +91,11 @@ fi
 
 echo "Initialising git ..."
 # This is going to be brutal :P
-if [ ! -d $REPODIR ]; then
-  echo "$REPODIR does not exist"
-  git clone git://slackbuilds.org/slackbuilds.git $REPODIR
+if [ ! -d $SBOREPO ]; then
+  echo "$SBOREPO does not exist"
+  git clone git://slackbuilds.org/slackbuilds.git $SBOREPO
 fi
-cd $REPODIR
+cd $SBOREPO
 git checkout -f $GITBRANCH
 git reset --hard
 git clean -xdf
@@ -118,10 +118,10 @@ function buildzilla
   # 5 - skipped by hint, or unsupported on this arch
   # 6 - build returned 0 but nothing in $OUTPUT
   prg="$1"
-  category=$(cd $REPODIR/*/$prg/..; basename $(pwd))
-  . $REPODIR/$category/$prg/$prg.info
+  category=$(cd $SBOREPO/*/$prg/..; basename $(pwd))
+  . $SBOREPO/$category/$prg/$prg.info
   unset BUILD
-  buildassign=$(grep '^BUILD=' $REPODIR/*/$PRGNAM/$PRGNAM.SlackBuild)
+  buildassign=$(grep '^BUILD=' $SBOREPO/*/$PRGNAM/$PRGNAM.SlackBuild)
   eval $buildassign
   # At this point we have a full set of environment variables for called functions to use:
   # PRGNAM VERSION SLKARCH BUILD TAG DOWNLOAD* MD5SUM* etc
@@ -131,7 +131,7 @@ function buildzilla
   rm -f $LOGDIR/$prg.log
 
   if [ "$PRGNAM" != "$prg" ]; then
-    echoyellow "WARNING: PRGNAM in $REPODIR/$category/$prg/$prg.info is '$PRGNAM', not $prg"
+    echoyellow "WARNING: PRGNAM in $SBOREPO/$category/$prg/$prg.info is '$PRGNAM', not $prg"
   fi
 
   # Check whether the item should be skipped
@@ -160,7 +160,7 @@ function buildzilla
       *) savebadsrc; itfailed; return 2 ;;
     esac
   fi
-  ln -sf -t $REPODIR/$category/$prg/ $SRCDIR/$prg/*
+  ln -sf -t $SBOREPO/$category/$prg/ $SRCDIR/$prg/*
 
   # Get any hints for the build
   if [ -f $HINTS/$prg.options ]; then
@@ -178,7 +178,7 @@ function buildzilla
   export OUTPUT=$OUTREPO/$prg
   rm -rf $OUTPUT/*
   mkdir -p $OUTPUT
-  ( cd $REPODIR/$category/$prg; env $tempmakeflags $options sh ./$prg.SlackBuild ) >>$LOGDIR/$prg.log 2>&1
+  ( cd $SBOREPO/$category/$prg; env $tempmakeflags $options sh ./$prg.SlackBuild ) >>$LOGDIR/$prg.log 2>&1
   stat=$?
   if [ $stat != 0 ]; then
     echo "ERROR: $prg.SlackBuild failed (status $stat)"
@@ -251,15 +251,15 @@ function dependublaster2000
       return 0
     fi
   done
-  if [ ! -d $REPODIR/*/$me ]; then
-    echoyellow "WARNING: Dependency $me not found in $REPODIR"
+  if [ ! -d $SBOREPO/*/$me ]; then
+    echoyellow "WARNING: Dependency $me not found in $SBOREPO"
     return 0  # carry on regardless ;-)
   fi
   if [ -f $HINTS/$me.tar.gz ]; then
     echo "Hint: applying tarball for $me"
-    ( cd $REPODIR/*/$me/..; rm -rf $me/; tar xf $HINTS/$me.tar.gz )
+    ( cd $SBOREPO/*/$me/..; rm -rf $me/; tar xf $HINTS/$me.tar.gz )
   fi
-  . $REPODIR/*/$me/$me.info
+  . $SBOREPO/*/$me/$me.info
   # ok, ready to go!  First, add my deps:
   mydeps="$REQUIRES"
   if [ -f $HINTS/$me.extradeps ]; then
@@ -300,14 +300,14 @@ function inOUTREPOanduptodate
   if [ -z "$pkglist" -o $(echo $gitrevfilename | wc -w) != 1 ]; then
     echo "$p not found, needs to be built."
     return 1
-  elif [ -n "$(cd $REPODIR/*/$p; git status -s .)" ]; then
+  elif [ -n "$(cd $SBOREPO/*/$p; git status -s .)" ]; then
     echo "$p has been modified."
     # Note, if a tar.gz hint is identical to upstream git (eg. if merged),
     # git status won't know that the hint was applied.  This is a Good Thing.
     return 2
   else
     pkgrev=$(echo $gitrevfilename | sed 's/^.*gitrev-//')
-    prgrev=$(git log -n 1 --format=format:%h $REPODIR/*/$p)
+    prgrev=$(git log -n 1 --format=format:%h $SBOREPO/*/$p)
     if [ $pkgrev = $prgrev ]; then
       echo "$p $pkgrev is up-to-date."
       return 0
@@ -323,7 +323,7 @@ function inOUTREPOanduptodate
 function installfromOUTREPO
 {
   local p="${1:-$prg}"
-  c=$(cd $REPODIR/*/$p/..; basename $(pwd))
+  c=$(cd $SBOREPO/*/$p/..; basename $(pwd))
   msg="--$c/$p-----------------------------------------------------------------------------"
   echo "${msg:0:79}"
   pkglist=$(ls $OUTREPO/$p/*$TAG.t?z 2>/dev/null)
@@ -452,19 +452,19 @@ function savebadsrc
 function itpassed
 {
   local p="${1:-$prg}"
-  c=$(cd $REPODIR/*/$p/..; basename $(pwd))
+  c=$(cd $SBOREPO/*/$p/..; basename $(pwd))
   # this won't delete everything, but it's good enough:
   rm -rf $TMP/${p}* $TMP/package-${p}
-  find $REPODIR/$c/$p/ -type l -exec rm {} \;
-  gitrev=$(git log -n 1 --format=format:%h $REPODIR/$category/$prg)
-  if [ -z "$(cd $REPODIR/$c/$p; git status -s .)" ]; then
-    git log -n 1 $REPODIR/$category/$prg > $OUTPUT/gitrev-$gitrev
+  find $SBOREPO/$c/$p/ -type l -exec rm {} \;
+  gitrev=$(git log -n 1 --format=format:%h $SBOREPO/$category/$prg)
+  if [ -z "$(cd $SBOREPO/$c/$p; git status -s .)" ]; then
+    git log -n 1 $SBOREPO/$category/$prg > $OUTPUT/gitrev-$gitrev
   elif [ -f "$HINTS/$p.tar.gz" ]; then
     tarmd5=$(md5sum $HINTS/$p.tar.gz | sed 's/ .*//')
     echo "gitrev $gitrev $HINTS/$p.tar.gz $tarmd5" > $OUTPUT/gitrev-$gitrev-targz-$tarmd5
     git reset --hard
   else
-    echo "$(cd $REPODIR/$c/$p; git status .)" > $OUTPUT/gitrev-$gitrev+dirty
+    echo "$(cd $SBOREPO/$c/$p; git status .)" > $OUTPUT/gitrev-$gitrev+dirty
     git reset --hard
   fi
   echogreen ":-) PASS (-: $c/$p $prgrev"
@@ -478,7 +478,7 @@ function itpassed
 function itfailed
 {
   local p="${1:-$prg}"
-  c=$(cd $REPODIR/*/$p/..; basename $(pwd))
+  c=$(cd $SBOREPO/*/$p/..; basename $(pwd))
   echored ":-( FAIL )-: $c/$p"
   grep -q "^$c/$p\$" $LOGDIR/FAILLIST || echo $c/$p >> $LOGDIR/FAILLIST
   # leave the wreckage in $TMP for investigation
@@ -486,7 +486,7 @@ function itfailed
     mv $LOGDIR/$p.log $LOGDIR/FAIL/$p.log
     echored "See $LOGDIR/FAIL/$p.log"
   fi
-  find $REPODIR/$c/$p/ -type l -exec rm {} \;
+  find $SBOREPO/$c/$p/ -type l -exec rm {} \;
 }
 
 #-------------------------------------------------------------------------------
@@ -518,18 +518,18 @@ while [ $# != 0 ]; do
   ARG=${1%%/}; shift
 
   # Check the current argument
-  if [ -d $REPODIR/${ARG##*/} ]; then
+  if [ -d $SBOREPO/${ARG##*/} ]; then
     # it's a category: expand it into a list of its items
-    set -- $REPODIR/$ARG/* "$@"
+    set -- $SBOREPO/$ARG/* "$@"
     continue
   fi
   # otherwise, the last component should be an item
   PRG=$(basename ${ARG%%/})
-  if [ ! -d $REPODIR/*/$PRG ]; then
+  if [ ! -d $SBOREPO/*/$PRG ]; then
     echoinbox "ERROR: $PRG is neither a category nor an application"
     continue
   fi
-  CATEGORY=$(cd $REPODIR/*/$PRG/..; basename $(pwd))
+  CATEGORY=$(cd $SBOREPO/*/$PRG/..; basename $(pwd))
   echoinbox "$CATEGORY/$PRG"
 
   # Quick check whether the item should be skipped

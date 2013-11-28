@@ -1,6 +1,6 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
-# BOBtheBuilder.sh - automated clean (fsvo ;) building from SBo git
+# SBoggit - automated clean (fsvo ;) building from SBo git
 #
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.
@@ -23,15 +23,15 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-------------------------------------------------------------------------------
 #
-[ $# = 0 ] && { echo 'Usage: BOBtheBuilder.sh category|item ...'; exit 0; }
+[ $# = 0 ] && { echo 'Usage: SBoggit category|item ...'; exit 0; }
 #
 # Optional environment variables --
-# BOB - base directory, default /BOB
-# TAG - default _BOB
-# REPODIR - local SBo git repo base, default $BOB/slackbuilds
+# SBOGGIT - base directory, default /SBoggit
+# TAG - default _SBoggit
+# REPODIR - local SBo git repo base, default $SBOGGIT/slackbuilds
 # GITBRANCH  - git branch to build in, default 'master'
 #
-# Possible hints in $BOB/hints/ --
+# Possible hints in $SBOGGIT/hints/ --
 # prg.skipme - don't build prg (.skipme file contains optional comment for display/log)
 # prg.readmedeps - dependencies to substitute for %README% in REQUIRES=
 # prg.options - options to supply to the SlackBuild
@@ -51,18 +51,18 @@
 #   mirror to avoid loading the SBo server).
 #-------------------------------------------------------------------------------
 
-export BOB=${BOB:-/BOB}
-export TAG=${TAG:-_BOB}
-export REPODIR=${REPODIR:-$BOB/slackbuilds}
+export SBOGGIT=${SBOGGIT:-/SBoggit}
+export TAG=${TAG:-_SBoggit}
+export REPODIR=${REPODIR:-$SBOGGIT/slackbuilds}
 export GITBRANCH=${GITBRANCH:-master}
 
-[ -d $BOB ] || { echo "ERROR: directory $BOB not found"; exit 1; }
+[ -d $SBOGGIT ] || { echo "ERROR: directory $SBOGGIT not found"; exit 1; }
 
-export HINTS=$BOB/hints
-export SRCDIR=$BOB/src
-export OUTREPO=$BOB/output
-export TMP=$BOB/tmp
-export LOGDIR=$BOB/logs-$(date +%Y%m%d_%H%M)
+export HINTS=$SBOGGIT/hints
+export SRCDIR=$SBOGGIT/src
+export OUTREPO=$SBOGGIT/output
+export TMP=$SBOGGIT/tmp
+export LOGDIR=$SBOGGIT/logs-$(date +%Y%m%d_%H%M)
 
 if [ -z "$SLKARCH" ]; then
   case "$( uname -m )" in

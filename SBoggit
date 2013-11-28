@@ -29,7 +29,8 @@
 #   SBOGGIT - base directory, default /SBoggit
 #   TAG - default _SBoggit
 #   SBOREPO - local SBo git repo base, default $SBOGGIT/slackbuilds
-#   GITBRANCH  - git branch to build in, default 'master'
+#   GITBRANCH  - git branch to build in, default as follows:
+gitstable='14.1'
 #
 # Possible hints in $SBOGGIT/hints/ --
 #   prg.skipme - don't build prg (.skipme file contains optional comment for display/log)
@@ -56,15 +57,15 @@
 #
 # The local git branch will be brutally cleaned on startup.  You have been
 #   warned!  If no git repo is present, it will be cloned from SlackBuilds.org.
-#   If the branch is 'master', it will be updated by fast forward (if possible)
-#   from origin/master (which is probably SBo, but could be a local mirror) if
-#   it is more than one day since the last update.
+#   If the branch is '14.1' or 'master', it will be updated by fast forward
+#   (if possible) from origin/master (which is probably SBo, but could be a
+#   local mirror) if it is more than one day since the last update.
 #-------------------------------------------------------------------------------
 
 export SBOGGIT=${SBOGGIT:-/SBoggit}
 export TAG=${TAG:-_SBoggit}
 export SBOREPO=${SBOREPO:-$SBOGGIT/slackbuilds}
-export GITBRANCH=${GITBRANCH:-master}
+export GITBRANCH=${GITBRANCH:-$gitstable}
 
 [ -d $SBOGGIT ] || { echo "ERROR: directory $SBOGGIT not found"; exit 1; }
 
@@ -104,14 +105,16 @@ echo "Initialising git ..."
 if [ ! -d $SBOREPO ]; then
   echo "$SBOREPO does not exist"
   git clone git://slackbuilds.org/slackbuilds.git $SBOREPO
+  git checkout -b $gitstable -t origin/$gitstable
 fi
 cd $SBOREPO
 git checkout -f $GITBRANCH
 git reset --hard
 git clean -xdf
-if [ "$GITBRANCH" = 'master' -a -n "$(find $SBOREPO/.git/FETCH_HEAD -mtime +1)" ]; then
+if [ ( "$GITBRANCH" = 'master' -o "$GITBRANCH" = $gitstable ) \
+     -a -n "$(find $SBOREPO/.git/FETCH_HEAD -mtime +1)" ]; then
   git fetch -a
-  git merge --ff-only origin/master
+  git merge --ff-only origin/$GITBRANCH
 fi
 echo "Finished initialising git."
 echo ""

@@ -1,0 +1,21 @@
+Clean repeatable building
+
+Review current hints & add to git
+
+Support for uidgid hints & create initial set of hints
+
+Support for cleanup hints & create initial set of hints
+
+Do something more intelligent for UNSUPPORTED/UNTESTED
+
+Nicer logging (+ export logs to dokuwiki)
+
+Add support for calling gen_repos_files.sh
+
+Put everything in a proper place instead of a stupid top level directory
+
+Add control arguments to force full rebuilds, minimum rebuilds etc
+
+See if support for Slackware SlackBuilds is doable
+
+arm support?

@@ -87,6 +87,13 @@ fi
 # Initialisation
 #-------------------------------------------------------------------------------
 
+# Stolen from slackpkg :-)
+for i in functions.d/*.sh; do
+  if [ -x $i ]; then
+    . $i
+  fi
+done
+
 echo "Removing $TMP ..."
 rm -rf $TMP
 mkdir -p $HINTS $OUTREPO $TMP $SRCDIR
@@ -111,20 +118,14 @@ cd $SBOREPO
 git checkout -f $GITBRANCH
 git reset --hard
 git clean -xdf
-if [ ( "$GITBRANCH" = 'master' -o "$GITBRANCH" = $gitstable ) \
-     -a -n "$(find $SBOREPO/.git/FETCH_HEAD -mtime +1)" ]; then
-  git fetch -a
-  git merge --ff-only origin/$GITBRANCH
+if [ "$GITBRANCH" = 'master' -o "$GITBRANCH" = $gitstable ]; then
+  if [ -n "$(find $SBOREPO/.git/FETCH_HEAD -mtime +1)" ]; then
+    git fetch -a
+    git merge --ff-only origin/$GITBRANCH
+  fi
 fi
 echo "Finished initialising git."
 echo ""
-
-# Stolen from slackpkg :-)
-for i in functions.d/*.sh; do
-  if [ -x $i ]; then
-    . $i
-  fi
-done
 
 #-------------------------------------------------------------------------------
 # Main loop

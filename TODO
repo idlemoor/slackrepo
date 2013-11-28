@@ -8,6 +8,8 @@ Support for cleanup hints & create initial set of hints
 
 Do something more intelligent for UNSUPPORTED/UNTESTED
 
+Combine i486 and x86_64 source repositories
+
 Nicer logging (+ export logs to dokuwiki)
 
 Add support for calling gen_repos_files.sh

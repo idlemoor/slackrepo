@@ -1,0 +1,1 @@
+ENABLE=blas,lapack,ffmpeg,postgresql,mysql,sqlite

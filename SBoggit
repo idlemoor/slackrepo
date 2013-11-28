@@ -35,7 +35,7 @@
 # prg.skipme - don't build prg (.skipme file contains optional comment for display/log)
 # prg.readmedeps - dependencies to substitute for %README% in REQUIRES=
 # prg.options - options to supply to the SlackBuild
-# prg.extradeps - more dependencies, eg. to support options
+# prg.moredeps - more dependencies, eg. to support options
 # prg.makej1 - set MAKEFLAGS='j1' during build
 # prg.tar.gz - SBo submission-style tarball to replace prg/* before build
 #
@@ -243,7 +243,7 @@ function buildzilla
 function dependublaster2000
 {
   local me="$1"
-  local prevdep mydeps extradeps dep readmedep
+  local prevdep mydeps moredeps dep readmedep
   for prevdep in $DEPLIST; do
     if [ "$prevdep" = "$me" ]; then
       # if I'm already on the list, then my deps must also be on the list
@@ -262,10 +262,10 @@ function dependublaster2000
   . $SBOREPO/*/$me/$me.info
   # ok, ready to go!  First, add my deps:
   mydeps="$REQUIRES"
-  if [ -f $HINTS/$me.extradeps ]; then
-    extradeps="$(cat $HINTS/$me.extradeps)"
-    echo "Hint: adding extra deps: $extradeps"
-    mydeps="$mydeps $extradeps"
+  if [ -f $HINTS/$me.moredeps ]; then
+    moredeps="$(cat $HINTS/$me.moredeps)"
+    echo "Hint: adding more deps: $moredeps"
+    mydeps="$mydeps $moredeps"
   fi
   for dep in $mydeps; do
     if [ $dep = '%README%' ]; then

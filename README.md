@@ -3,7 +3,19 @@ SBoggit
 
 Automated clean package building from SlackBuilds.org git
 
-Usage: SBoggit category|item ...
+Usage: SBoggit option|category|item ...
+
+Options:
+  --install      install built packages
+  --no-install   do not install built packages [default]
+  --rebuild      rebuild packages that are up-to-date
+  --no-rebuild   do not rebuild packages that are up-to-date [default]
+  --clean-repos  remove dead packages from source cache and output repo
+
+All arguments are processed in order, left to right. Each control argument will
+apply to all following arguments, until reversed by another control argument,
+for example
+  SBoggit --install ffmpeg libquicktime --no-install kino
 
 Optional environment variables --
 * SBOGGIT - base directory, default /SBoggit

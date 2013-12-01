@@ -24,7 +24,7 @@
 #-------------------------------------------------------------------------------
 #
 if [ $# = 0 ]; then
-  echo 'Usage: SBoggit [options] category|item ...'
+  echo 'Usage: SBoggit option|category|item ...'
   echo '  --install      install built packages'
   echo '  --no-install   do not install built packages [default]'
   echo '  --rebuild      rebuild packages that are up-to-date'

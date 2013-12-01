@@ -4,6 +4,7 @@
 #   inOUTREPOanduptodate
 #   installfromOUTREPO
 #   dotprofilizer
+#   cleanoutrepo
 #
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.
@@ -103,3 +104,16 @@ function dotprofilizer
   fi
 }
 
+#-------------------------------------------------------------------------------
+
+function cleanoutrepo
+{
+  echo "Cleaning output repo $OUTREPO ..."
+  for outpath in $(ls $OUTREPO/* 2>/dev/null); do
+    pkgname=$(basename $outpath)
+    if [ ! -d "$(ls -d $SBOREPO/*/$pkgname 2>/dev/null)" ]; then
+      rm -rf -v "$OUTREPO/$pkgname"
+    fi
+  done
+  echo "Finished cleaning output repo."
+}

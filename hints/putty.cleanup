@@ -1,0 +1,1 @@
+echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall pssh

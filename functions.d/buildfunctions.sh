@@ -47,33 +47,33 @@ function buildzilla
   rm -f $LOGDIR/$prg.log
 
   if [ "$PRGNAM" != "$prg" ]; then
-    echoyellow "WARNING: PRGNAM in $SBOREPO/$category/$prg/$prg.info is '$PRGNAM', not $prg"
+    echo_yellow "WARNING: PRGNAM in $SBOREPO/$category/$prg/$prg.info is '$PRGNAM', not $prg"
   fi
 
   # Check whether the item should be skipped
   if [ -f $HINTS/$prg.skipme ]; then
-    echoyellow "SKIPPED $category/$prg due to hint"
+    echo_yellow "SKIPPED $category/$prg due to hint"
     cat $HINTS/$prg.skipme
     return 5
   fi
 
   # Get the source and symlink it into the SlackBuild directory
   if [ -d $SRCCACHE/$prg ]; then
-    if ! checksrc ; then
+    if ! check_src ; then
       echo "Note: bad checksums in cached source, will download again"
-      downloadsrc
+      download_src
       case $? in
-        0) checksrc || { savebadsrc; itfailed; return 3; } ;;
+        0) check_src || { save_bad_src; itfailed; return 3; } ;;
         2) rm -rf $SRCCACHE/$prg;  return 5 ;;
-        *) savebadsrc; itfailed; return 2 ;;
+        *) save_bad_src; itfailed; return 2 ;;
       esac
     fi
   else
-    downloadsrc
+    download_src
     case $? in
-      0) checksrc || { savebadsrc; itfailed; return 3; } ;;
+      0) check_src || { save_bad_src; itfailed; return 3; } ;;
       2) rm -rf $SRCCACHE/$prg;  return 5 ;;
-      *) savebadsrc; itfailed; return 2 ;;
+      *) save_bad_src; itfailed; return 2 ;;
     esac
   fi
   ln -sf -t $SBOREPO/$category/$prg/ $SRCCACHE/$prg/*
@@ -122,21 +122,21 @@ function buildzilla
     $PRGNAM-${VERSION}_*-noarch-$BUILD$TAG.t?z )
       : ;;
     *)
-      echoyellow "WARNING: abnormal package name $pkg"
+      echo_yellow "WARNING: abnormal package name $pkg"
       pprgnam=$(echo $pkg | rev | cut -f4- -d- | rev)
       pversion=$(echo $pkg | rev | cut -f3 -d- | rev)
       parch=$(echo $pkg | rev | cut -f2 -d- | rev)
       pbuild=$(echo $pkg | rev | cut -f1 -d- | rev | sed 's/[^0-9]*$//')
       ptag=$(echo $pkg | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
       pext=$(echo $pkg | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
-      [  "$pprgnam" != "$PRGNAM"  ] && echoyellow "PRGNAM is $pprgnam not $PRGNAM"
-      [ "$pversion" != "$VERSION" ] && echoyellow "VERSION is $pversion not $VERSION"
+      [  "$pprgnam" != "$PRGNAM"  ] && echo_yellow "PRGNAM is $pprgnam not $PRGNAM"
+      [ "$pversion" != "$VERSION" ] && echo_yellow "VERSION is $pversion not $VERSION"
       [    "$parch" != "$SLKARCH" -a "$parch" != "noarch" ] && \
-        echoyellow "ARCH is $parch not $SLKARCH or noarch"
-      [   "$pbuild" != "$BUILD"   ] && echoyellow "BUILD is $pbuild not $BUILD"
-      [     "$ptag" != "$TAG"     ] && echoyellow "TAG is $ptag not $TAG"
+        echo_yellow "ARCH is $parch not $SLKARCH or noarch"
+      [   "$pbuild" != "$BUILD"   ] && echo_yellow "BUILD is $pbuild not $BUILD"
+      [     "$ptag" != "$TAG"     ] && echo_yellow "TAG is $ptag not $TAG"
       [ "$pext" != 'tgz' -a "$pext" != 'tbz' -a "$pext" != 'tlz' -a "$pext" != 'txz' ] && \
-        echoyellow "Suffix .$pext is not .t[gblx]z"
+        echo_yellow "Suffix .$pext is not .t[gblx]z"
       ;;
     esac 
     echo "Installing $pkgpath ..."

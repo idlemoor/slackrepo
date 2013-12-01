@@ -36,7 +36,7 @@ function dependublaster2000
     fi
   done
   if [ ! -d $SBOREPO/*/$me ]; then
-    echoyellow "WARNING: Dependency $me not found in $SBOREPO"
+    echo_yellow "WARNING: Dependency $me not found in $SBOREPO"
     return 0  # carry on regardless ;-)
   fi
   if [ -f $HINTS/$me.tar.gz ]; then
@@ -59,7 +59,7 @@ function dependublaster2000
           dependublaster2000 $readmedep
         done
       else
-        echoyellow "WARNING: %README% in $me.info but $HINTS/$me.readmedeps not found"
+        echo_yellow "WARNING: %README% in $me.info but $HINTS/$me.readmedeps not found"
       fi
     else
       dependublaster2000 $dep

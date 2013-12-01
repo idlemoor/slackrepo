@@ -1,10 +1,10 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
 # srcfunctions.sh - source functions for SBoggit:
-#   downloadsrc
-#   checksrc
-#   savebadsrc
-#   cleansrccache
+#   download_src
+#   check_src
+#   save_bad_src
+#   clean_srccache
 #
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.
@@ -27,7 +27,7 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-------------------------------------------------------------------------------
 
-function downloadsrc
+function download_src
 {
   # Returns:
   # 1 - wget failed
@@ -53,7 +53,7 @@ function downloadsrc
       wget --no-check-certificate --content-disposition --tries=2 -T 240 "$src" >> $LOGDIR/$p.log 2>&1
       wstat=$?
       if [ $wstat != 0 ]; then
-        echored "ERROR: wget error (status $wstat)"
+        echo_red "ERROR: wget error (status $wstat)"
         return 1
       fi
     done
@@ -63,7 +63,7 @@ function downloadsrc
 
 #-------------------------------------------------------------------------------
 
-function checksrc
+function check_src
 {
   # Returns:
   # 1 - one or more files had a bad md5sum
@@ -95,7 +95,7 @@ function checksrc
 
 #-------------------------------------------------------------------------------
 
-function savebadsrc
+function save_bad_src
 {
   local p="${1:-$prg}"
   [ -d $SRCCACHE/${p} ] && rmdir --ignore-fail-on-non-empty $SRCCACHE/${p}
@@ -109,7 +109,7 @@ function savebadsrc
 
 #-------------------------------------------------------------------------------
 
-function cleansrccache
+function clean_srccache
 {
   echo "Cleaning source cache $SRCCACHE ..."
   for srcpath in $(ls $SRCCACHE/* 2>/dev/null); do

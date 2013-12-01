@@ -1,10 +1,10 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
 # installfunctions.sh - package install functions for SBoggit:
-#   inOUTREPOanduptodate
-#   installfromOUTREPO
+#   in_outrepo_and_uptodate
+#   install_from_outrepo
 #   dotprofilizer
-#   cleanoutrepo
+#   clean_outrepo
 #
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.
@@ -27,7 +27,7 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-------------------------------------------------------------------------------
 
-function inOUTREPOanduptodate
+function in_outrepo_and_uptodate
 {
   # Returns:
   # 1 - not found (or unstamped with git rev)
@@ -59,7 +59,7 @@ function inOUTREPOanduptodate
 
 #-------------------------------------------------------------------------------
 
-function installfromOUTREPO
+function install_from_outrepo
 {
   local p="${1:-$prg}"
   c=$(cd $SBOREPO/*/$p/..; basename $(pwd))
@@ -69,7 +69,7 @@ function installfromOUTREPO
   for pkgpath in $pkglist; do
     pkgid=$(echo $(basename $pkgpath) | sed "s/$TAG\.t.z\$//")
     if [ -e /var/log/packages/$pkgid ]; then
-      echoyellow "WARNING: $p is already installed:" $(ls /var/log/packages/$pkgid)
+      echo_yellow "WARNING: $p is already installed:" $(ls /var/log/packages/$pkgid)
     else
       echo "Installing previously built $pkgpath ..."
       installpkg --terse $pkgpath
@@ -106,7 +106,7 @@ function dotprofilizer
 
 #-------------------------------------------------------------------------------
 
-function cleanoutrepo
+function clean_outrepo
 {
   echo "Cleaning output repo $OUTREPO ..."
   for outpath in $(ls $OUTREPO/* 2>/dev/null); do

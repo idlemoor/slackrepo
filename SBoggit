@@ -148,26 +148,26 @@ while [ $# != 0 ]; do
 
   case "$ARG" in
   --install)
-    INSTALLFLAG='y'
-    continue
+      INSTALLFLAG='y'
+      continue
     ;;
   --no-install)
-    INSTALLFLAG='n'
-    continue
-    ;;
+      INSTALLFLAG='n'
+      continue
+      ;;
   --rebuild)
-    REBUILDFLAG='y'
-    continue
-    ;;
+      REBUILDFLAG='y'
+      continue
+      ;;
   --no-rebuild)
-    REBUILDFLAG='n'
-    continue
-    ;;
+      REBUILDFLAG='n'
+      continue
+      ;;
   --clean-repos)
-    cleansrccache
-    cleanoutrepo
-    continue
-    ;;
+      clean_srccache
+      clean_outrepo
+      continue
+      ;;
   esac
 
   # Check the current argument
@@ -179,17 +179,17 @@ while [ $# != 0 ]; do
   # otherwise, the last component should be an item
   PRG=$(basename ${ARG%%/})
   if [ ! -d $SBOREPO/*/$PRG ]; then
-    echoinbox "ERROR: $PRG is neither a category nor an application"
+    echo_boxed "ERROR: $PRG is neither a category nor an application"
     continue
   fi
   CATEGORY=$(cd $SBOREPO/*/$PRG/..; basename $(pwd))
-  echoinbox "$CATEGORY/$PRG"
+  echo_boxed "$CATEGORY/$PRG"
 
   # Quick check whether the item should be skipped
   if [ -f $HINTS/$PRG.skipme ]; then
-    echoyellow "SKIPPED $CATEGORY/$PRG due to hint"
+    echo_yellow "SKIPPED $CATEGORY/$PRG due to hint"
     cat $HINTS/$PRG.skipme
-    if inOUTREPOanduptodate $PRG; then
+    if in_outrepo_and_uptodate $PRG; then
       echo "Note: previously built $CATEGORY/$PRG is up-to-date"
     fi
     echo ""
@@ -207,7 +207,7 @@ while [ $# != 0 ]; do
   TODOLIST=""
   needbuild='n'
   for dep in $DEPLIST; do
-    if inOUTREPOanduptodate $dep; then
+    if in_outrepo_and_uptodate $dep; then
       if [ $needbuild = 'y' ]; then
         TODOLIST=$(echo $TODOLIST $dep)
       else
@@ -228,10 +228,10 @@ while [ $# != 0 ]; do
     fi
     instok='y'
     for instprg in $INSTLIST; do
-      installfromOUTREPO $instprg
+      install_from_outrepo $instprg
       if [ $? != 0 ]; then
         instok='n'
-        [ $instprg != $PRG ] && echored "ABORTED $CATEGORY/$PRG"
+        [ $instprg != $PRG ] && echo_red "ABORTED $CATEGORY/$PRG"
         break
       fi
     done
@@ -239,7 +239,7 @@ while [ $# != 0 ]; do
       for todoprg in $TODOLIST; do
         buildzilla $todoprg
         if [ $? != 0 ]; then
-          [ $todoprg != $PRG ] && echored "ABORTED $CATEGORY/$PRG"
+          [ $todoprg != $PRG ] && echo_red "ABORTED $CATEGORY/$PRG"
           break
         fi
       done

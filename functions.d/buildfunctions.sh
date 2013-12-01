@@ -58,13 +58,13 @@ function buildzilla
   fi
 
   # Get the source and symlink it into the SlackBuild directory
-  if [ -d $SRCDIR/$prg ]; then
+  if [ -d $SRCCACHE/$prg ]; then
     if ! checksrc ; then
       echo "Note: bad checksums in cached source, will download again"
       downloadsrc
       case $? in
         0) checksrc || { savebadsrc; itfailed; return 3; } ;;
-        2) rm -rf $SRCDIR/$prg;  return 5 ;;
+        2) rm -rf $SRCCACHE/$prg;  return 5 ;;
         *) savebadsrc; itfailed; return 2 ;;
       esac
     fi
@@ -72,11 +72,11 @@ function buildzilla
     downloadsrc
     case $? in
       0) checksrc || { savebadsrc; itfailed; return 3; } ;;
-      2) rm -rf $SRCDIR/$prg;  return 5 ;;
+      2) rm -rf $SRCCACHE/$prg;  return 5 ;;
       *) savebadsrc; itfailed; return 2 ;;
     esac
   fi
-  ln -sf -t $SBOREPO/$category/$prg/ $SRCDIR/$prg/*
+  ln -sf -t $SBOREPO/$category/$prg/ $SRCCACHE/$prg/*
 
   # Get any hints for the build
   if [ -f $HINTS/$prg.options ]; then

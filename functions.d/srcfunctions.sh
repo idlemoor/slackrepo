@@ -4,6 +4,7 @@
 #   downloadsrc
 #   checksrc
 #   savebadsrc
+#   cleansrccache
 #
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.
@@ -43,10 +44,10 @@ function downloadsrc
     echo "$DOWNLIST ON $SLKARCH" > $HINTS/$p.skipme
     return 2
   fi
-  rm -rf $SRCDIR/$p
-  mkdir -p $SRCDIR/$p
+  rm -rf $SRCCACHE/$p
+  mkdir -p $SRCCACHE/$p
   echo "Downloading ..."
-  ( cd $SRCDIR/$p
+  ( cd $SRCCACHE/$p
     for src in $DOWNLIST; do
       echo "wget $src ..."
       wget --no-check-certificate --content-disposition --tries=2 -T 240 "$src" >> $LOGDIR/$p.log 2>&1
@@ -69,7 +70,7 @@ function checksrc
   # 2 - no. of files != no. of md5sums
   local p="${1:-$prg}"
   # This function also uses global variables MD5SUM* previously read from .info
-  ( cd $SRCDIR/${p}
+  ( cd $SRCCACHE/${p}
     case $SLKARCH in
       i486) MD5LIST="$MD5SUM" ;;
     x86_64) MD5LIST="${MD5SUM_x86_64:-$MD5SUM}" ;;
@@ -97,12 +98,25 @@ function checksrc
 function savebadsrc
 {
   local p="${1:-$prg}"
-  [ -d $SRCDIR/${p} ] && rmdir --ignore-fail-on-non-empty $SRCDIR/${p}
-  if [ -d $SRCDIR/${p} ]; then
-    baddir=$SRCDIR/${p}_BAD
+  [ -d $SRCCACHE/${p} ] && rmdir --ignore-fail-on-non-empty $SRCCACHE/${p}
+  if [ -d $SRCCACHE/${p} ]; then
+    baddir=$SRCCACHE/${p}_BAD
     rm -rf $baddir
-    mv $SRCDIR/$p $baddir
+    mv $SRCCACHE/$p $baddir
     echo "Note: bad sources saved in $baddir"
   fi
 }
 
+#-------------------------------------------------------------------------------
+
+function cleansrccache
+{
+  echo "Cleaning source cache $SRCCACHE ..."
+  for srcpath in $(ls $SRCCACHE/* 2>/dev/null); do
+    pkgname=$(basename $srcpath)
+    if [ ! -d "$(ls -d $SBOREPO/*/$pkgname 2>/dev/null)" ]; then
+      rm -rf -v "$SRCCACHE/$pkgname"
+    fi
+  done
+  echo "Finished cleaning source cache."
+}

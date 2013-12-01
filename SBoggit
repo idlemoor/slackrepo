@@ -23,7 +23,15 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-------------------------------------------------------------------------------
 #
-[ $# = 0 ] && { echo 'Usage: SBoggit category|item ...'; exit 0; }
+if [ $# = 0 ]; then
+  echo 'Usage: SBoggit [options] category|item ...'
+  echo '  --install      install built packages'
+  echo '  --no-install   do not install built packages [default]'
+  echo '  --rebuild      rebuild packages that are up-to-date'
+  echo '  --no-rebuild   do not rebuild packages that are up-to-date [default]'
+  echo '  --clean-repos  remove dead packages from source cache and output repo'
+  exit 0
+fi
 #
 # Optional environment variables --
 #   SBOGGIT - base directory, default /SBoggit
@@ -131,9 +139,34 @@ echo ""
 # Main loop
 #-------------------------------------------------------------------------------
 
+INSTALLFLAG='n'
+REBUILDFLAG='n'
+
 while [ $# != 0 ]; do
 
   ARG=${1%%/}; shift
+
+  case "$ARG" in
+  --install)
+    INSTALLFLAG='y'
+    continue
+    ;;
+  --no-install)
+    INSTALLFLAG='n'
+    continue
+    ;;
+  --rebuild)
+    REBUILDFLAG='y'
+    continue
+    ;;
+  --no-rebuild)
+    REBUILDFLAG='n'
+    continue
+    ;;
+  --clean-repos)
+    continue
+    ;;
+  esac
 
   # Check the current argument
   if [ -d $SBOREPO/${ARG##*/} ]; then

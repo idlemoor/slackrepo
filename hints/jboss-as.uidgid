@@ -1,0 +1,7 @@
+if ! getent group jboss | grep -q ^jboss: 2>/dev/null ; then
+  groupadd -g 254 -r jboss
+fi
+
+if ! getent passwd jboss | grep -q ^jboss: 2>/dev/null ; then
+  useradd -u 254 -M -r -s /bin/bash -d /usr/share/jboss-as -c "JBoss Application Server" -g jboss jboss
+fi

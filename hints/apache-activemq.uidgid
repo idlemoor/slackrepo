@@ -1,0 +1,5 @@
+UIDGIDNUMBER=253
+UIDGIDNAME=activemq
+UIDGIDCOMMENT="Apache Active MQ"
+UIDGIDDIR=/var/lib/activemq
+UIDGIDSHELL=/bin/sh

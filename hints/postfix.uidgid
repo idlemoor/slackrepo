@@ -1,0 +1,11 @@
+if ! getent group postfix | grep -q ^postfix: 2>/dev/null ; then
+  groupadd -g 200 postfix
+fi
+
+if ! getent passwd postfix | grep -q ^postfix: 2>/dev/null ; then
+  useradd -u 200 -d /dev/null -s /bin/false -g postfix postfix
+fi
+
+if ! getent group postdrop | grep -q ^postdrop: 2>/dev/null ; then
+  groupadd -g 201 postdrop
+fi

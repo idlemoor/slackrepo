@@ -1,0 +1,15 @@
+if ! getent group dovecot | grep -q ^dovecot: 2>/dev/null ; then
+  groupadd -g 202 dovecot
+fi
+
+if ! getent passwd dovecot | grep -q ^dovecot: 2>/dev/null ; then
+  useradd -d /dev/null -s /bin/false -u 202 -g 202 dovecot
+fi
+
+if ! getent group dovenull | grep -q ^dovenull: 2>/dev/null ; then
+  groupadd -g 248 dovenull
+fi
+
+if ! getent passwd dovenull | grep -q ^dovenull: 2>/dev/null ; then
+  useradd -d /dev/null -s /bin/false -u 248 -g 248 dovenull
+fi

@@ -1,0 +1,7 @@
+if ! getent group openfire | grep -q ^openfire: 2>/dev/null ; then
+  groupadd -g 265 openfire
+fi
+
+if ! getent passwd openfire | grep -q ^openfire: 2>/dev/null ; then
+  useradd -u 265 -g openfire -c "Openfire Server" -m openfire
+fi

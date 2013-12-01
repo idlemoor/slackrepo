@@ -1,0 +1,7 @@
+if ! getent group etherpad | grep -q ^etherpad: 2>/dev/null ; then
+  groupadd -g 264 etherpad
+fi
+
+if ! getent passwd etherpad | grep -q ^etherpad: 2>/dev/null ; then
+  useradd -u 264 -g etherpad -c "Etherpad lite" -m etherpad
+fi

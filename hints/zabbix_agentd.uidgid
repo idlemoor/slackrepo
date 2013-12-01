@@ -1,0 +1,11 @@
+if ! getent group zabbix | grep -q ^zabbix: 2>/dev/null ; then
+  groupadd -g 228 zabbix
+fi
+
+if ! getent passwd zabbix | grep -q ^zabbix: 2>/dev/null ; then
+  useradd -u 228 -g zabbix -d /dev/null -s /bin/false zabbix
+fi
+
+if ! getent passwd zabbixagent | grep -q ^zabbixagent: 2>/dev/null ; then
+  useradd -u 266 -g zabbix -d /dev/null -s /bin/false zabbixagent
+fi

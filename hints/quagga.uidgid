@@ -1,0 +1,11 @@
+if ! getent group quagga | grep -q ^quagga: 2>/dev/null ; then
+  groupadd -g 245 quagga
+fi
+
+if ! getent passwd quagga | grep -q ^quagga: 2>/dev/null ; then
+  useradd -g quagga -u 245 -s /bin/false -c "Quagga routing suite" -d /var/run/quagga/ quagga
+fi
+
+if ! getent group quaggavt | grep -q ^quaggavt: 2>/dev/null ; then
+  groupadd -g 246 quaggavt
+fi

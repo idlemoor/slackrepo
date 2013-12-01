@@ -1,0 +1,5 @@
+UIDGIDNUMBER=274
+UIDGIDNAME=prosody
+UIDGIDCOMMENT=
+UIDGIDDIR=/var/lib/prosody
+UIDGIDSHELL=/sbin/nologin

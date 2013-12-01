@@ -1,0 +1,7 @@
+if ! getent group clamav | grep -q ^clamav: 2>/dev/null ; then
+  groupadd -g 210 clamav
+fi
+
+if ! getent passwd havp | grep -q ^havp: 2>/dev/null ; then
+  useradd -u 256 -d /dev/null -s /bin/false -g clamav havp
+fi

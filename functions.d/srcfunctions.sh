@@ -34,7 +34,7 @@ function downloadsrc
   local p="${1:-$prg}"
   # This function also uses global variables DOWNLOAD* previously read from .info
   case $SLKARCH in
-    i486) DOWNLIST="$DOWNLOAD" ;;
+    i?86) DOWNLIST="$DOWNLOAD" ;;
   x86_64) DOWNLIST="${DOWNLOAD_x86_64:-$DOWNLOAD}" ;;
        *) DOWNLIST="$DOWNLOAD" ;;
   esac

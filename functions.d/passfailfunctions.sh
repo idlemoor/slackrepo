@@ -44,7 +44,7 @@ function itpassed
     echo "$(cd $SBOREPO/$c/$p; git status .)" > $OUTPUT/gitrev-$gitrev+dirty
     git reset --hard
   fi
-  echogreen ":-) PASS (-: $c/$p $prgrev"
+  echogreen ":-) PASS (-: $c/$p $gitrev"
   echo "$c/$p" >> $LOGDIR/PASSLIST
   mv $LOGDIR/$p.log $LOGDIR/PASS/
 }

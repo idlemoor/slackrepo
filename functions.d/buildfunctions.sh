@@ -1,6 +1,6 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
-# buildfunctions.sh - dependency functions for SBoggit:
+# buildfunctions.sh - build functions for SBoggit:
 #   buildzilla
 #
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.

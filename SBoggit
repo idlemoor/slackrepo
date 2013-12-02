@@ -116,21 +116,25 @@ if [ -n "$(ls /var/log/packages/*$TAG 2>/dev/null)" ]; then
 fi
 
 echo "Initialising git ..."
-# This bit is going to be nasty, brutish and short :P
-if [ ! -d $SBOREPO ]; then
+if [ -d $SBOREPO ]; then
+  cd $SBOREPO
+  # This bit is going to be nasty, brutish and short :P
+  git checkout -f $GITBRANCH
+  git reset --hard
+  git clean -xdf
+  if [ "$GITBRANCH" = 'master' -o "$GITBRANCH" = $gitstable ]; then
+    if [ -n "$(find $SBOREPO/.git/FETCH_HEAD -mtime +1)" ]; then
+      git fetch -a
+      git merge --ff-only origin/$GITBRANCH
+    fi
+  fi
+else
   echo "$SBOREPO does not exist"
   git clone git://slackbuilds.org/slackbuilds.git $SBOREPO
+  cd $SBOREPO
+  git fetch -a
+  git remote update
   git checkout -b $gitstable -t origin/$gitstable
-fi
-cd $SBOREPO
-git checkout -f $GITBRANCH
-git reset --hard
-git clean -xdf
-if [ "$GITBRANCH" = 'master' -o "$GITBRANCH" = $gitstable ]; then
-  if [ -n "$(find $SBOREPO/.git/FETCH_HEAD -mtime +1)" ]; then
-    git fetch -a
-    git merge --ff-only origin/$GITBRANCH
-  fi
 fi
 echo "Finished initialising git."
 echo ""

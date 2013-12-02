@@ -79,15 +79,11 @@ function buildzilla
   ln -sf -t $SBOREPO/$category/$prg/ $SRCCACHE/$prg/*
 
   # Get any hints for the build
-  if [ -f $HINTS/$prg.options ]; then
-    options="$(cat $HINTS/$prg.options)"
-    echo "Hint: found options $options"
-  fi
-  tempmakeflags=''
-  if [ -f $HINTS/$prg.makej1 ]; then
-    tempmakeflags="MAKEFLAGS='-j1'"
-    echo "Hint: setting $tempmakeflags"
-  fi
+  hint_uidgid $prg
+  options="$(hint_options $prg)"
+  [ -n "$options" ] && echo "Hint: options=\"$options\""
+  tempmakeflags="$(hint_makeflags $prg)"
+  [ -n "$tempmakeflags" ] && echo "Hint: $tempmakeflags"
 
   # Build it
   echo "SlackBuilding $prg.SlackBuild ..."

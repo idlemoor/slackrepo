@@ -95,10 +95,9 @@ fi
 # Initialisation
 #-------------------------------------------------------------------------------
 
-# Stolen from slackpkg :-)
-for i in functions.d/*.sh; do
-  if [ -x $i ]; then
-    . $i
+for f in functions.d/*functions.sh; do
+  if [ -x $f ]; then
+    . $f
   fi
 done
 

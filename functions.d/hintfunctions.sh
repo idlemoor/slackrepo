@@ -4,6 +4,7 @@
 #   hint_uidgid
 #   hint_options
 #   hint_makeflags
+#   hint_cleanup
 #
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.
@@ -60,6 +61,7 @@ function hint_uidgid
 function hint_options
 {
   local prg="$1"
+  # Prints options to standard output, so don't display any messages here!
   if [ -f $HINTS/$prg.options ]; then
     echo "$(cat $HINTS/$prg.options)"
   fi
@@ -70,7 +72,25 @@ function hint_options
 function hint_makeflags
 {
   local prg="$1"
+  # Prints makeflags to standard output, so don't display any messages here!
+  # Currently handles only -j1 (no real requirement for anything else).
   if [ -f $HINTS/$prg.makej1 ]; then
     echo "MAKEFLAGS='-j1'"
   fi
+}
+
+#-------------------------------------------------------------------------------
+
+function hint_cleanup
+{
+  local prg="$1"
+  # Returns 1 if no hint found.
+  # The prg.cleanup file can contain any required shell commands, for example:
+  #   * Reinstalling Slackware packages that conflict with prg
+  #   * Unsetting any environment variables set in prg's /etc/profile.d script
+  #   * Removing specific files and directories that removepkg doesn't remove
+  [ -f $HINTS/$prg.cleanup ] || return 1
+  echo "Hint: cleanup for $prg"
+  . $HINTS/$prg.cleanup
+  return 0
 }

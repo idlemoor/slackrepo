@@ -90,7 +90,12 @@ function buildzilla
   export OUTPUT=$OUTREPO/$prg
   rm -rf $OUTPUT/*
   mkdir -p $OUTPUT
-  ( cd $SBOREPO/$category/$prg; env $tempmakeflags $options sh ./$prg.SlackBuild ) >>$LOGDIR/$prg.log 2>&1
+  cmdline="env $tempmakeflags $options sh ./$prg.SlackBuild"
+  if [ -f $HINTS/$prg.answers ]; then
+    echo "Hint: supplying answers from $HINTS/$prg.answers"
+    cmdline="cat $HINTS/$prg.answers | $cmdline"
+  fi
+  ( cd $SBOREPO/$category/$prg; eval $cmdline ) >>$LOGDIR/$prg.log 2>&1
   stat=$?
   if [ $stat != 0 ]; then
     echo "ERROR: $prg.SlackBuild failed (status $stat)"

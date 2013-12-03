@@ -249,10 +249,9 @@ while [ $# != 0 ]; do
       done
     fi
     echo "-------------------------------------------------------------------------------"
-    echo "Removing all $TAG packages ..."
-    removepkg /var/log/packages/*$TAG >/dev/null 2>&1
-    # undo any clever things that a profile.d script might have set
-    unset LD_PRELOAD JAVA_HOME
+    for instprg in $INSTLIST $TODOLIST; do
+      uninstall_package $instprg
+    done
   fi
   echo ""
 

@@ -42,8 +42,7 @@ function buildzilla
   # At this point we have a full set of environment variables for called functions to use:
   # PRGNAM VERSION SLKARCH BUILD TAG DOWNLOAD* MD5SUM* etc
 
-  msg="--$category/$prg-----------------------------------------------------------------------------"
-  echo "${msg:0:79}"
+  echo_lined "$category/$prg"
   rm -f $LOGDIR/$prg.log
 
   if [ "$PRGNAM" != "$prg" ]; then

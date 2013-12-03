@@ -2,6 +2,7 @@
 #-------------------------------------------------------------------------------
 # echofunctions.sh - fancy display functions for SBoggit:
 #   echo_boxed
+#   echo_lined
 #   echo_red
 #   echo_green
 #   echo_yellow
@@ -34,6 +35,12 @@ function echo_boxed
   echo "! ${msg:0:66} $(date +%T) !"
   echo "==============================================================================="
   echo ""
+}
+
+function echo_lined
+{
+  msg="--${*}------------------------------------------------------------------------------"
+  echo "${msg:0:79}"
 }
 
 function echo_red

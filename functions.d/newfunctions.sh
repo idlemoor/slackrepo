@@ -3,11 +3,11 @@
 # newfunctions.sh - rewritten functions for SBoggit clean building:
 #   list_direct_deps
 #   build_with_deps
-#   build_single_package
+#   build_package
 #   install_with_deps
-#   install_single_package
+#   install_package
 #   uninstall_with_deps
-#   uninstall_single_package
+#   uninstall_package
 #
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.
@@ -60,58 +60,10 @@ function build_with_deps
 
 #-------------------------------------------------------------------------------
 
-function build_single_package
+function build_package
 {
   local prg="$1"
   :
-}
-
-#-------------------------------------------------------------------------------
-
-function install_with_deps
-{
-  local me="$1"
-  :
-}
-
-#-------------------------------------------------------------------------------
-
-function install_single_package
-{
-  local prg="$1"
-  :
-}
-
-#-------------------------------------------------------------------------------
-
-function uninstall_with_deps
-{
-  local me="$1"
-  :
-}
-
-#-------------------------------------------------------------------------------
-
-function uninstall_single_package
-{
-  local prg="$1"
-
-  pkgid=$(basename /var/log/packages/$prg-*$TAG)
-  # Save a list of potential detritus in /etc
-  etcnewfiles=$(grep '^etc/.*\.new$' /var/log/packages/$pkgid)
-  etcdirs=$(grep '^etc/.*/$' /var/log/packages/$pkgid)
-  echo "Removing package $pkgid ..."
-  removepkg $pkgid >/dev/null 2>&1
-  # Remove any surviving detritus
-  for f in $etcnewfiles; do
-    rm -f /"$f" /"$(echo "$f" | sed 's/\.new$//')"
-  done
-  for d in $etcnewdirs; do
-    rmdir --ignore-fail-on-non-empty /"$d"
-  done
-  # Do this last so it can mend things we broke
-  # (e.g. by reinstalling a Slackware package)
-  hint_cleanup $prg
 }
 
 #-------------------------------------------------------------------------------
@@ -144,6 +96,81 @@ function check_package
       [ "$pext" != 'tgz' -a "$pext" != 'tbz' -a "$pext" != 'tlz' -a "$pext" != 'txz' ] && \
         echo_yellow "Suffix .$pext is not .t[gblx]z"
       ;;
-    esac 
+    esac
   # Check the package contents [UNIMPLEMENTED]
+}
+
+#-------------------------------------------------------------------------------
+
+function install_with_deps
+{
+  local me="$1"
+  :
+}
+
+#-------------------------------------------------------------------------------
+
+function install_package
+{
+  local p="$1"
+  c=$(cd $SBOREPO/*/$p/..; basename $(pwd))
+  echo_lined "$c/$p"
+  pkglist=$(ls $OUTREPO/$p/*$TAG.t?z 2>/dev/null)
+  for pkgpath in $pkglist; do
+    pkgid=$(echo $(basename $pkgpath) | sed "s/$TAG\.t.z\$//")
+    if [ -e /var/log/packages/$pkgid ]; then
+      echo_yellow "WARNING: $p is already installed:" $(ls /var/log/packages/$pkgid)
+    else
+      echo "Installing previously built $pkgpath ..."
+      installpkg --terse $pkgpath
+      stat=$?
+      if [ $stat != 0 ]; then
+        echo "ERROR: installpkg $pkgpath failed (status $stat)"
+        itfailed
+        return 1
+      fi
+      dotprofilizer $pkgpath  # ignore any problems, probably doesn't matter ;-)
+    fi
+  done
+}
+
+#-------------------------------------------------------------------------------
+
+function uninstall_with_deps
+{
+  local me="$1"
+  :
+}
+
+#-------------------------------------------------------------------------------
+
+function uninstall_package
+{
+  local prg="$1"
+  # filter out false matches in /var/log/packages
+  plist=$(ls /var/log/packages/$prg-*$TAG 2>/dev/null)
+  pkgid=''
+  for ppath in $plist; do
+    p=$(basename $ppath)
+    if [ "$(echo $p | rev | cut -f4- -d- | rev)" = "$prg" ]; then
+      pkgid=$p
+      break
+    fi
+  done
+  [ -n "$pkgid" ] || { echo "Not removing $prg (not installed)"; return 1; }
+  # Save a list of potential detritus in /etc
+  etcnewfiles=$(grep '^etc/.*\.new$' /var/log/packages/$pkgid)
+  etcdirs=$(grep '^etc/.*/$' /var/log/packages/$pkgid)
+  echo "Removing $pkgid"
+  removepkg $pkgid >/dev/null 2>&1
+  # Remove any surviving detritus
+  for f in $etcnewfiles; do
+    rm -f /"$f" /"$(echo "$f" | sed 's/\.new$//')"
+  done
+  for d in $etcnewdirs; do
+    rmdir --ignore-fail-on-non-empty /"$d"
+  done
+  # Do this last so it can mend things we broke
+  # (e.g. by reinstalling a Slackware package)
+  hint_cleanup $prg
 }

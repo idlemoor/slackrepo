@@ -1,10 +1,10 @@
 Clean repeatable building
 
-Review current hints & add to git
+[done] Review current hints & add to git
 
-Support for uidgid hints & create initial set of hints
+[done] Support for uidgid hints & create initial set of hints [done]
 
-Support for cleanup hints & create initial set of hints
+[done] Support for cleanup hints & create initial set of hints
 
 Do something more intelligent for UNSUPPORTED/UNTESTED
 

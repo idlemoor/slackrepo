@@ -109,32 +109,7 @@ function buildzilla
   # Install the built packages
   # (this supports multiple output packages because some Slackware SlackBuilds do that)
   for pkgpath in $pkglist; do
-    # This is our best chance to verify the package name:
-    pkg=$(basename $pkgpath)
-    case $pkg in
-    $PRGNAM-${VERSION}-$SLKARCH-$BUILD$TAG.t?z | \
-    $PRGNAM-${VERSION}-noarch-$BUILD$TAG.t?z | \
-    $PRGNAM-${VERSION}_*-$SLKARCH-$BUILD$TAG.t?z | \
-    $PRGNAM-${VERSION}_*-noarch-$BUILD$TAG.t?z )
-      : ;;
-    *)
-      echo_yellow "WARNING: abnormal package name $pkg"
-      pprgnam=$(echo $pkg | rev | cut -f4- -d- | rev)
-      pversion=$(echo $pkg | rev | cut -f3 -d- | rev)
-      parch=$(echo $pkg | rev | cut -f2 -d- | rev)
-      pbuild=$(echo $pkg | rev | cut -f1 -d- | rev | sed 's/[^0-9]*$//')
-      ptag=$(echo $pkg | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
-      pext=$(echo $pkg | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
-      [  "$pprgnam" != "$PRGNAM"  ] && echo_yellow "PRGNAM is $pprgnam not $PRGNAM"
-      [ "$pversion" != "$VERSION" ] && echo_yellow "VERSION is $pversion not $VERSION"
-      [    "$parch" != "$SLKARCH" -a "$parch" != "noarch" ] && \
-        echo_yellow "ARCH is $parch not $SLKARCH or noarch"
-      [   "$pbuild" != "$BUILD"   ] && echo_yellow "BUILD is $pbuild not $BUILD"
-      [     "$ptag" != "$TAG"     ] && echo_yellow "TAG is $ptag not $TAG"
-      [ "$pext" != 'tgz' -a "$pext" != 'tbz' -a "$pext" != 'tlz' -a "$pext" != 'txz' ] && \
-        echo_yellow "Suffix .$pext is not .t[gblx]z"
-      ;;
-    esac 
+    check_package $pkgpath
     echo "Installing $pkgpath ..."
     installpkg --terse $pkgpath
     stat=$?

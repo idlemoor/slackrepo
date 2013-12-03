@@ -123,7 +123,7 @@ function buildzilla
       itfailed
       return 4
     fi
-    dotprofilizer $pkg
+    dotprofilizer $pkgpath
   done
 
   itpassed  # \o/

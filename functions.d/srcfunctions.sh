@@ -111,6 +111,7 @@ function save_bad_src
 
 function clean_srccache
 {
+  # will remove *_BAD directories as well as obsolete/removed directories :-)
   echo "Cleaning source cache $SRCCACHE ..."
   for srcpath in $(ls $SRCCACHE/* 2>/dev/null); do
     pkgname=$(basename $srcpath)

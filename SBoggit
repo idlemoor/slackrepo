@@ -22,7 +22,7 @@
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-------------------------------------------------------------------------------
-#
+
 if [ $# = 0 ]; then
   echo 'Usage: SBoggit option|category|item ...'
   echo '  --install      install built packages'
@@ -32,7 +32,8 @@ if [ $# = 0 ]; then
   echo '  --clean-repos  remove dead packages from source cache and output repo'
   exit 0
 fi
-#
+
+#-------------------------------------------------------------------------------
 # Optional environment variables --
 #   SBOGGIT - base directory, default /SBoggit
 #   TAG - default _SBoggit
@@ -45,10 +46,10 @@ gitstable='14.1'
 #   prg.readmedeps - dependencies to substitute for %README% in REQUIRES="..."
 #   prg.options - options to supply to the SlackBuild
 #   prg.moredeps - more dependencies, eg. to support options
-#   prg.uidgid - groupadd and useradd commands needed for prg [UNIMPLEMENTED]
+#   prg.uidgid - groupadd and useradd commands needed for prg
 #   prg.makej1 - set MAKEFLAGS='j1' during build
 #   prg.tar.gz - SBo submission-style tarball to replace prg/* before build
-#   prg.cleanup - script to run after prg is uninstalled [UNIMPLEMENTED]
+#   prg.cleanup - script to run after prg is uninstalled
 #   prg.answers - answers to questions that may be asked when the SlackBuild is run
 #
 # This script is intended to be run on a clean, full installation of Slackware.

@@ -97,6 +97,9 @@ fi
 # Initialisation
 #-------------------------------------------------------------------------------
 
+# ensure ctrl-c exits the whole thing, not just a random subshell
+trap "exit 2" SIGINT SIGQUIT
+
 for f in functions.d/*functions.sh; do
   if [ -x $f ]; then
     . $f
@@ -191,7 +194,7 @@ while [ $# != 0 ]; do
   echo_boxed "$CATEGORY/$PRG"
 
   # Quick check whether the item is unsupported or should be skipped
-  if hint_skipme $prg; then
+  if hint_skipme $PRG; then
     echo ""
     continue
   elif arch_unsupported $PRG; then

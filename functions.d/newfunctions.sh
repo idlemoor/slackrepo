@@ -196,7 +196,7 @@ function check_package
       ;;
     esac
   # Check the package contents
-  if tar tf $pkgpath | grep -q -v ^bin -v ^etc -v ^lib -v ^opt -v ^sbin -v ^usr -v ^var; then
+  if tar tf $pkgpath | grep -q -v -E '^(bin)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)'; then
     echo_yellow "WARNING: $pkgpath installs some weird shit"
   fi
 }

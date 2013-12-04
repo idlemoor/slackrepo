@@ -39,9 +39,9 @@ function download_src
   x86_64) DOWNLIST="${DOWNLOAD_x86_64:-$DOWNLOAD}" ;;
        *) DOWNLIST="$DOWNLOAD" ;;
   esac
+  # this quick check is probably redundant:
   if [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ]; then
     echo "$DOWNLIST ON $SLKARCH"
-    echo "$DOWNLIST ON $SLKARCH" > $HINTS/$p.skipme
     return 2
   fi
   rm -rf $SRCCACHE/$p

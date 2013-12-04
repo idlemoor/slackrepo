@@ -190,13 +190,11 @@ while [ $# != 0 ]; do
   CATEGORY=$(cd $SBOREPO/*/$PRG/..; basename $(pwd))
   echo_boxed "$CATEGORY/$PRG"
 
-  # Quick check whether the item should be skipped
-  if [ -f $HINTS/$PRG.skipme ]; then
-    echo_yellow "SKIPPED $CATEGORY/$PRG due to hint"
-    cat $HINTS/$PRG.skipme
-    if in_outrepo_and_uptodate $PRG; then
-      echo "Note: previously built $CATEGORY/$PRG is up-to-date"
-    fi
+  # Quick check whether the item is unsupported or should be skipped
+  if hint_skipme $prg; then
+    echo ""
+    continue
+  elif arch_unsupported $PRG; then
     echo ""
     continue
   fi
@@ -242,7 +240,7 @@ while [ $# != 0 ]; do
     done
     if [ $instok = 'y' ]; then
       for todoprg in $TODOLIST; do
-        buildzilla $todoprg
+        build_package $todoprg
         if [ $? != 0 ]; then
           [ $todoprg != $PRG ] && echo_red "ABORTED $CATEGORY/$PRG"
           break

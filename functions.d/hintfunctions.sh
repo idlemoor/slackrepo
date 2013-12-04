@@ -1,6 +1,7 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
 # hintfunctions.sh - functions for SBoggit hints:
+#   hint_skipme
 #   hint_uidgid
 #   hint_options
 #   hint_makeflags
@@ -25,6 +26,21 @@
 #  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#-------------------------------------------------------------------------------
+
+function hint_skipme
+{
+  local prg="$1"
+  # Note the return status: 0 = skip, 1 = do not skip
+  if [ ! -f $HINTS/$prg.skipme ]; then
+    return 1
+  fi
+  category=$(cd $SBOREPO/*/$prg/..; basename $(pwd))
+  echo_yellow "SKIPPED $category/$prg due to hint"
+  cat $HINTS/$prg.skipme
+  return 0
+}
+
 #-------------------------------------------------------------------------------
 
 function hint_uidgid

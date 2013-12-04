@@ -2,22 +2,22 @@ Clean repeatable building
 
 [done] Review current hints & add to git
 
-[done] Support for uidgid hints & create initial set of hints [done]
+[done] Support for uidgid hints & create initial set of hints
 
 [done] Support for cleanup hints & create initial set of hints
 
-Do something more intelligent for UNSUPPORTED/UNTESTED
+[done] Do something more intelligent for UNSUPPORTED/UNTESTED
 
 Combine i486 and x86_64 source repositories
 
 Nicer logging (+ export logs to dokuwiki)
 
-Add support for calling gen_repos_files.sh
+Alien-style metafiles and add support for calling gen_repos_files.sh
 
 Put everything in a proper place instead of a stupid top level directory
 
-Add control arguments to force full rebuilds, minimum rebuilds etc
+Add control arguments to control installs and rebuilds
 
-See if support for Slackware SlackBuilds is doable
+Support for Slackware SlackBuilds (SBo mode/Slack mode)
 
 arm support?

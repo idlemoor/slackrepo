@@ -32,6 +32,7 @@ Possible hints in $SBOGGIT/hints/ --
 * prg.makej1 - set MAKEFLAGS='j1' during build
 * prg.tar.gz - SBo submission-style tarball to replace prg/* before build
 * prg.cleanup - script to run after prg is uninstalled [UNIMPLEMENTED]
+* prg.answers - answers to questions that may be asked when the SlackBuild is run
 
 This script is intended to be run on a clean, full installation of Slackware.
 * Start with a full installation of Slackware.

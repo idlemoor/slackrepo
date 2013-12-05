@@ -59,33 +59,6 @@ function in_outrepo_and_uptodate
 
 #-------------------------------------------------------------------------------
 
-function install_from_outrepo
-{
-  local p="${1:-$prg}"
-  c=$(cd $SBOREPO/*/$p/..; basename $(pwd))
-  msg="--$c/$p-----------------------------------------------------------------------------"
-  echo "${msg:0:79}"
-  pkglist=$(ls $OUTREPO/$p/*$TAG.t?z 2>/dev/null)
-  for pkgpath in $pkglist; do
-    pkgid=$(echo $(basename $pkgpath) | sed "s/$TAG\.t.z\$//")
-    if [ -e /var/log/packages/$pkgid ]; then
-      echo_yellow "WARNING: $p is already installed:" $(ls /var/log/packages/$pkgid)
-    else
-      echo "Installing previously built $pkgpath ..."
-      installpkg --terse $pkgpath
-      stat=$?
-      if [ $stat != 0 ]; then
-        echo "ERROR: installpkg $pkgpath failed (status $stat)"
-        itfailed
-        return 1
-      fi
-      dotprofilizer $pkgpath  # ignore any problems, probably doesn't matter ;-)
-    fi
-  done
-}
-
-#-------------------------------------------------------------------------------
-
 function dotprofilizer
 {
   local p="${1:-$prg}"

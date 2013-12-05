@@ -1,7 +1,7 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
 # buildfunctions.sh - build functions for SBoggit:
-#   buildzilla
+#   build_package
 #
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.
@@ -24,8 +24,9 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-------------------------------------------------------------------------------
 
-function buildzilla
+function build_package
 {
+  local prg="$1"
   # Returns:
   # 1 - build failed
   # 2 - download failed
@@ -33,28 +34,24 @@ function buildzilla
   # 4 - installpkg returned nonzero
   # 5 - skipped by hint, or unsupported on this arch
   # 6 - build returned 0 but nothing in $OUTPUT
-  prg="$1"
-  category=$(cd $SBOREPO/*/$prg/..; basename $(pwd))
+
+  local category=$(cd $SBOREPO/*/$prg/..; basename $(pwd))
+  echo_lined "$category/$prg"
+  rm -f $LOGDIR/$prg.log
+
+  # Load up the .info (and BUILD from the SlackBuild)
   . $SBOREPO/$category/$prg/$prg.info
+  if [ "$PRGNAM" != "$prg" ]; then
+    echo_yellow "WARNING: PRGNAM in $SBOREPO/$category/$prg/$prg.info is '$PRGNAM', not $prg"
+  fi
   unset BUILD
   buildassign=$(grep '^BUILD=' $SBOREPO/*/$PRGNAM/$PRGNAM.SlackBuild)
   eval $buildassign
   # At this point we have a full set of environment variables for called functions to use:
   # PRGNAM VERSION SLKARCH BUILD TAG DOWNLOAD* MD5SUM* etc
 
-  echo_lined "$category/$prg"
-  rm -f $LOGDIR/$prg.log
-
-  if [ "$PRGNAM" != "$prg" ]; then
-    echo_yellow "WARNING: PRGNAM in $SBOREPO/$category/$prg/$prg.info is '$PRGNAM', not $prg"
-  fi
-
-  # Check whether the item should be skipped
-  if [ -f $HINTS/$prg.skipme ]; then
-    echo_yellow "SKIPPED $category/$prg due to hint"
-    cat $HINTS/$prg.skipme
-    return 5
-  fi
+  arch_unsupported $prg && return 5
+  hint_skipme $prg && return 5
 
   # Get the source and symlink it into the SlackBuild directory
   if [ -d $SRCCACHE/$prg ]; then
@@ -79,22 +76,22 @@ function buildzilla
 
   # Get any hints for the build
   hint_uidgid $prg
-  options="$(hint_options $prg)"
-  [ -n "$options" ] && echo "Hint: options=\"$options\""
   tempmakeflags="$(hint_makeflags $prg)"
   [ -n "$tempmakeflags" ] && echo "Hint: $tempmakeflags"
+  options="$(hint_options $prg)"
+  [ -n "$options" ] && echo "Hint: options=\"$options\""
+  BUILDCMD="env $tempmakeflags $options sh ./$prg.SlackBuild"
+  if [ -f $HINTS/$prg.answers ]; then
+    echo "Hint: supplying answers from $HINTS/$prg.answers"
+    BUILDCMD="cat $HINTS/$prg.answers | $BUILDCMD"
+  fi
 
   # Build it
   echo "SlackBuilding $prg.SlackBuild ..."
   export OUTPUT=$OUTREPO/$prg
   rm -rf $OUTPUT/*
   mkdir -p $OUTPUT
-  cmdline="env $tempmakeflags $options sh ./$prg.SlackBuild"
-  if [ -f $HINTS/$prg.answers ]; then
-    echo "Hint: supplying answers from $HINTS/$prg.answers"
-    cmdline="cat $HINTS/$prg.answers | $cmdline"
-  fi
-  ( cd $SBOREPO/$category/$prg; eval $cmdline ) >>$LOGDIR/$prg.log 2>&1
+  ( cd $SBOREPO/$category/$prg; eval $BUILDCMD ) >>$LOGDIR/$prg.log 2>&1
   stat=$?
   if [ $stat != 0 ]; then
     echo "ERROR: $prg.SlackBuild failed (status $stat)"
@@ -102,7 +99,7 @@ function buildzilla
     return 1
   fi
 
-  # Make sure we got something :-)
+  # Make sure we got *something* :-)
   pkglist=$(ls $OUTPUT/*.t?z 2>/dev/null)
   if [ -z "$pkglist" ]; then
     echo "ERROR: no packages found in $OUTPUT"
@@ -114,15 +111,7 @@ function buildzilla
   # (this supports multiple output packages because some Slackware SlackBuilds do that)
   for pkgpath in $pkglist; do
     check_package $pkgpath
-    echo "Installing $pkgpath ..."
-    installpkg --terse $pkgpath
-    stat=$?
-    if [ $stat != 0 ]; then
-      echo "ERROR: installpkg $pkgpath failed (status $stat)"
-      itfailed
-      return 4
-    fi
-    dotprofilizer $pkgpath
+    install_package $pkgpath || return 4
   done
 
   itpassed  # \o/

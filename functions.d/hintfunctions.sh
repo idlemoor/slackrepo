@@ -60,7 +60,7 @@ function hint_uidgid
   if ! getent passwd $UIDGIDNAME | grep -q ^$UIDGIDNAME: 2>/dev/null ; then
     useradd \
       -u $UIDGIDNUMBER \
-      -c ${UIDGIDCOMMENT:-$UIDGIDNAME} \
+      -c "${UIDGIDCOMMENT:-$UIDGIDNAME}" \
       -d ${UIDGIDDIR:-/dev/null} \
       -s ${UIDGIDSHELL:-/bin/false} \
       -g $UIDGIDNAME \

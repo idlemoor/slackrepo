@@ -95,7 +95,7 @@ function build_package
   # Install the built packages
   # (this supports multiple output packages because some Slackware SlackBuilds do that)
   for pkgpath in $pkglist; do
-    check_package $pkgpath
+    test_package_is_sane $pkgpath
     install_package $pkgpath || return 4
   done
 

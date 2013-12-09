@@ -175,7 +175,7 @@ while [ $# != 0 ]; do
   if hint_skipme $PRG; then
     echo ""
     continue
-  elif arch_unsupported $PRG; then
+  elif ! test_arch_is_supported $PRG; then
     echo ""
     continue
   fi
@@ -191,7 +191,7 @@ while [ $# != 0 ]; do
   TODOLIST=""
   needbuild='n'
   for dep in $DEPLIST; do
-    if in_outrepo_and_uptodate $dep; then
+    if test_package_is_uptodate $dep; then
       if [ $needbuild = 'y' ]; then
         TODOLIST=$(echo $TODOLIST $dep)
       else

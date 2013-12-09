@@ -3,7 +3,71 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # depfunctions.sh - dependency functions for sboggit:
+#   list_direct_deps (not yet used)
+#   build_with_deps (not yet used)
+#   install_with_deps (not yet used)
+#   uninstall_with_deps (not yet used)
 #   dependublaster2000
+#-------------------------------------------------------------------------------
+
+function list_direct_deps
+{
+  local prg="$1"
+  local deplist dep
+  . $SB_REPO/*/$prg/$prg.info
+  deplist="$REQUIRES"
+  if [ -f $SB_HINTS/$me.moredeps ]; then
+    moredeps="$(cat $SB_HINTS/$me.moredeps)"
+    deplist="$deplist $moredeps"
+  fi
+  for dep in $deplist; do
+    if [ $dep = '%README%' ]; then
+      if [ -f $SB_HINTS/$me.readmedeps ]; then
+        cat $SB_HINTS/$me.readmedeps
+      else
+        ####### complain (unhandled %README%)
+        :
+      fi
+    else
+      echo $rdep
+    fi
+  done
+}
+
+#-------------------------------------------------------------------------------
+
+function build_with_deps
+{
+  local me="$1"
+  local mydeplist="$(list_direct_deps $me)"
+  for mydep in $mydeplist; do
+    build_with_deps $mydep
+  done
+  for mydep in $mydeplist; do
+    install_with_deps $mydep
+  done
+  build_package $me
+  for mydep in $mydeplist; do
+    uninstall_with_deps $mydep
+  done
+}
+
+#-------------------------------------------------------------------------------
+
+function install_with_deps
+{
+  local me="$1"
+  :
+}
+
+#-------------------------------------------------------------------------------
+
+function uninstall_with_deps
+{
+  local me="$1"
+  :
+}
+
 #-------------------------------------------------------------------------------
 
 function dependublaster2000

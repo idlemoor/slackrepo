@@ -3,40 +3,77 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # installfunctions.sh - package install functions for sboggit:
-#   in_outrepo_and_uptodate
-#   install_from_outrepo
+#   install_prebuilt_packages
+#   install_package
+#   uninstall_package
 #   dotprofilizer
 #   clean_outputdir
 #-------------------------------------------------------------------------------
 
-function in_outrepo_and_uptodate
+function install_prebuilt_packages
 {
-  # Returns:
-  # 1 - not found (or unstamped with git rev)
-  # 2 - git thinks the directory has been modified locally
-  # 3 - previous git rev != current git rev
-  local p="${1:-$prg}"
-  gitrevfilename=$(ls $SB_OUTPUT/$p/gitrev-* 2>/dev/null)
+  local p="$1"
+  c=$(cd $SB_REPO/*/$p/..; basename $(pwd))
+  echo_lined "$c/$p"
   pkglist=$(ls $SB_OUTPUT/$p/*$SB_TAG.t?z 2>/dev/null)
-  if [ -z "$pkglist" -o $(echo $gitrevfilename | wc -w) != 1 ]; then
-    echo "$p not found, needs to be built."
-    return 1
-  elif [ -n "$(cd $SB_REPO/*/$p; git status -s .)" ]; then
-    echo "$p has been modified."
-    # Note, if a tar.gz hint is identical to upstream git (eg. if merged),
-    # git status won't know that the hint was applied.  This is a Good Thing.
-    return 2
-  else
-    pkgrev=$(echo $gitrevfilename | sed 's/^.*gitrev-//')
-    prgrev=$(git log -n 1 --format=format:%h $SB_REPO/*/$p)
-    if [ $pkgrev = $prgrev ]; then
-      echo "$p $pkgrev is up-to-date."
-      return 0
+  for pkgpath in $pkglist; do
+    pkgid=$(echo $(basename $pkgpath) | sed "s/$SB_TAG\.t.z\$//")
+    if [ -e /var/log/packages/$pkgid ]; then
+      echo_yellow "WARNING: $p is already installed:" $(ls /var/log/packages/$pkgid)
     else
-      echo "$p $pkgrev is not up-to-date ($SB_GITBRANCH is $prgrev)."
-      return 3
+      install_package $pkgpath || return 1
     fi
+  done
+}
+
+#-------------------------------------------------------------------------------
+
+function install_package
+{
+  local pkgpath="$1"
+  echo "Installing $pkgpath ..."
+  installpkg --terse $pkgpath
+  stat=$?
+  if [ $stat != 0 ]; then
+    echo "ERROR: installpkg $pkgpath failed (status $stat)"
+    itfailed
+    return 1
   fi
+  dotprofilizer $pkgpath
+  return 0   # ignore any dotprofilizer problems, probably doesn't matter ;-)
+}
+
+#-------------------------------------------------------------------------------
+
+function uninstall_package
+{
+  local prg="$1"
+  # filter out false matches in /var/log/packages
+  plist=$(ls /var/log/packages/$prg-*$SB_TAG 2>/dev/null)
+  pkgid=''
+  for ppath in $plist; do
+    p=$(basename $ppath)
+    if [ "$(echo $p | rev | cut -f4- -d- | rev)" = "$prg" ]; then
+      pkgid=$p
+      break
+    fi
+  done
+  [ -n "$pkgid" ] || { echo "Not removing $prg (not installed)"; return 1; }
+  # Save a list of potential detritus in /etc
+  etcnewfiles=$(grep '^etc/.*\.new$' /var/log/packages/$pkgid)
+  etcdirs=$(grep '^etc/.*/$' /var/log/packages/$pkgid)
+  echo "Removing $pkgid"
+  removepkg $pkgid >/dev/null 2>&1
+  # Remove any surviving detritus
+  for f in $etcnewfiles; do
+    rm -f /"$f" /"$(echo "$f" | sed 's/\.new$//')"
+  done
+  for d in $etcnewdirs; do
+    rmdir --ignore-fail-on-non-empty /"$d"
+  done
+  # Do this last so it can mend things we broke
+  # (e.g. by reinstalling a Slackware package)
+  hint_cleanup $prg
 }
 
 #-------------------------------------------------------------------------------

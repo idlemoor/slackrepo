@@ -35,17 +35,20 @@ function check_src
   fi
   ( cd $DOWNDIR
     echo "Checking source files ..."
-    numgot=$(ls 2>/dev/null| wc -l)
+    numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| wc -l)
     numwant=$(echo $MD5LIST | wc -w)
     [ $numgot = $numwant ] || { echo "ERROR: want $numwant source files but got $numgot"; return 2; }
-    hint_md5ignore && return 0
+    hint_md5ignore $prg && return 0
     allok='y'
     for f in *; do
-      mf=$(md5sum "$f" | sed 's/ .*//')
-      ok='n'
-      # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
-      for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
-      [ "$ok" = 'y' ] || { echo "ERROR: Failed md5sum: '$f'"; allok='n'; }
+      # check that it's a file (arch-specific subdirectories may exist)
+      if [ -f "$f" ]; then
+        mf=$(md5sum "$f" | sed 's/ .*//')
+        ok='n'
+        # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
+        for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
+        [ "$ok" = 'y' ] || { echo "ERROR: Failed md5sum: '$f'"; allok='n'; }
+      fi
     done
     [ "$allok" = 'y' ] || { return 1; }
   )
@@ -62,7 +65,7 @@ function download_src
   # Returns:
   # 1 - wget failed
   mkdir -p $DOWNDIR
-  find $DOWNDIR -type f -maxdepth 0 -exec rm {} \;
+  find $DOWNDIR -maxdepth 1 -type f -exec rm {} \;
   echo "Downloading ..."
   ( cd $DOWNDIR
     for src in $DOWNLIST; do

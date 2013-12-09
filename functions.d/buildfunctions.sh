@@ -57,7 +57,7 @@ function build_package
   esac
 
   # Symlink the source into the SlackBuild directory
-  ln -sf -t $SB_REPO/$category/$prg/ $SB_SRC/$prg/*
+  ln -sf -t $SB_REPO/$category/$prg/ $DOWNDIR/*
 
   # Get any hints for the build
   hint_uidgid $prg

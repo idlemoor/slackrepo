@@ -1,12 +1,9 @@
 # This is the configuration file for sboggit
 #
 # The priority order for configuration is:
-#   Environment variables when sboggit is called
-#   ~/.sboggit
-#   /etc/sboggit.conf
-
-
-SB_LIBDIR=/var/lib/sboggit
+# (1) Environment variables when sboggit is called
+# (2) ~/.sboggitrc
+# (3) /etc/sboggit.conf
 
 SB_REPO=/var/lib/sboggit/slackbuilds
 
@@ -34,10 +31,8 @@ SB_USE_GENREPOS=''
 
 REPOSROOT=${REPOSROOT:-$SB_OUTPUT}
 
-#-------------------------------------------------------------------------------
-
 # Repository maintainer
-REPOSOWNER=${REPOSOWNER:-"Eric Hameleers <alien@slackware.com>"}
+REPOSOWNER=${REPOSOWNER:-"Local administrator <root@localhost>"}
 
 # The GPG key for the repository owner can contain a different string than
 # the value of $REPOSOWNER . If you leave $REPOSOWNERGPG empty, the script will
@@ -48,26 +43,26 @@ REPOSOWNERGPG=${REPOSOWNERGPG:-""}
 DL_URL=${DL_URL:-""}
 
 # The title of the generated RSS feed:
-RSS_TITLE=${RSS_TITLE:-"Alien's Slackware packages"}
+RSS_TITLE=${RSS_TITLE:-"Local SlackBuild Packages"}
 
 # The logo picture used for the RSS feed:
 RSS_ICON=${RSS_ICON:-"http://www.slackware.com/~alien/graphics/blueorb.png"}
 
 # The URL linked to when clicking on the logo:
-RSS_LINK=${RSS_LINK:-"http://www.slackware.com/~alien/"}
+RSS_LINK=${RSS_LINK:-"file://$REPOSROOT/ChangeLog.txt"}
 
 # URL to the full changelog.txt:
-RSS_CLURL=${RSS_CLURL:-"http://www.slackware.com/~alien/slackbuilds/ChangeLog.txt"}
+RSS_CLURL=${RSS_CLURL:-"file://$REPOSROOT/ChangeLog.txt"}
 
 # The descriptive text for the RSS feed:
-RSS_DESCRIPTION=${RSS_DESCRIPTION:-"Eric Hameleers (alien's) Slackware package repository. The package directories include the SlackBuild script and sources."}
+RSS_DESCRIPTION=${RSS_DESCRIPTION:-"Local SlackBuild Packages"}
 
 # Maximum number of RSS feed entries to display:
 RSS_FEEDMAX=${RSS_FEEDMAX:-15}
 
 # The RSS generator must use a unique feed identifier.
 # Generate one for your feed by using the string returned by "uuidgen -t":
-RSS_UUID=${RSS_UUID:-""}
+RSS_UUID=${RSS_UUID:-"%UUID%"}
 
 # Either use gpg or gpg2:
 GPGBIN=${GPGBIN:-"/usr/bin/gpg"}

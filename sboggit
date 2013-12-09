@@ -34,32 +34,10 @@ if [ $# = 0 ]; then
 fi
 
 #-------------------------------------------------------------------------------
-# This script is intended to be run on a clean, full installation of Slackware.
-#   Start with a full installation of Slackware.
-#   Do not install any other packages.
-#   Do not use the system for anything else.
-#   Do a complete reinstall of Slackware after you have finished.
-#
-# Builds are not 100% clean and not 100% repeatable.  Each build is done as a
-#   flat list of deps.  Each dep not already in $SB_OUTPUT is built in the context
-#   of the list, so it is possible for a package to pick up an unintended
-#   dependency.  If one dep in the list is out of date, the remainder of the
-#   list is rebuilt.  Git revision hashes are recorded in $OUTPUT, and rebuilds
-#   are triggered when the hash in SB_REPO differs.
-#
-# The local git branch will be brutally cleaned on startup.  You have been
-#   warned!  If no git repo is present, it will be cloned from SlackBuilds.org.
-#   If the branch is '14.1' or 'master', it will be updated by fast forward
-#   (if possible) from origin/master (which is probably SBo, but could be a
-#   local mirror) if it is more than one day since the last update.
-#-------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------
 # Configuration
 #-------------------------------------------------------------------------------
 
 # Save environment variables
-ENV_SB_LIBDIR=$SB_LIBDIR    # default = /var/lib/sboggit
 ENV_SB_REPO=$SB_REPO                  # /var/lib/sboggit/slackbuilds
 ENV_SB_GITBRANCH=$SB_GITBRANCH        # 14.1
 ENV_SB_SRC=$SB_SRC                    # /var/lib/sboggit/src
@@ -79,14 +57,13 @@ if [ -f ~/.sboggitrc ]; then
 fi
 
 # Override config with saved environment
-SB_LIBDIR=${ENV_SB_LIBDIR:-$SB_LIBDIR}
 SB_REPO=${ENV_SB_REPO:-$SB_REPO}
 SB_GITBRANCH=${ENV_SB_GITBRANCH:-$SB_GITBRANCH}
 SB_SRC=${ENV_SB_SRC:-$SB_SRC}
 SB_OUTPUT=${ENV_SB_OUTPUT:-$SB_OUTPUT}
 SB_TAG=${ENV_SB_TAG:-$SB_TAG}
 SB_ARCH=${ENV_SB_ARCH:-$SB_ARCH}
-SB_HINTS=${ENV_SB_HINTS:-SB_HINTS}
+SB_HINTS=${ENV_SB_HINTS:-$SB_HINTS}
 SB_TMP=${ENV_SB_TMP:-$SB_TMP}
 SB_LOGDIR=${ENV_SB_LOGDIR:-$SB_LOGDIR}
 
@@ -98,10 +75,6 @@ if [ -z "$SB_ARCH" ]; then
        *) SB_ARCH=$( uname -m ) ;;
   esac
 fi
-
-for v in SB_LIBDIR SB_REPO SB_GITBRANCH SB_SRC SB_OUTPUT SB_TAG SB_ARCH SB_HINTS SB_TMP SB_LOGDIR; do
-  eval echo "$v=\$$v"
-done
 
 #-------------------------------------------------------------------------------
 # Initialisation
@@ -118,13 +91,13 @@ done
 
 echo "Removing $SB_TMP ..."
 rm -rf $SB_TMP
-mkdir -p $SB_HINTS $SB_OUTPUT $SB_TMP $SB_SRC
+mkdir -p $SB_HINTS $SB_SRC $SB_OUTPUT $SB_TMP
 mkdir -p $SB_LOGDIR/PASS $SB_LOGDIR/FAIL
 rm -f $SB_LOGDIR/PASSLIST $SB_LOGDIR/FAILLIST $SB_LOGDIR/READMELIST
 touch $SB_LOGDIR/PASSLIST $SB_LOGDIR/FAILLIST $SB_LOGDIR/READMELIST
 
 echo "Initialising git ..."
-if [ -d $SB_REPO ]; then
+if [ -d $SB_REPO/.git ]; then
   cd $SB_REPO
   # This bit is going to be nasty, brutish and short :P
   git checkout -f $SB_GITBRANCH
@@ -138,7 +111,7 @@ if [ -d $SB_REPO ]; then
     fi
   fi
 else
-  echo "$SB_REPO does not exist"
+  echo "Git repository $SB_REPO does not exist; creating it..."
   git clone git://slackbuilds.org/slackbuilds.git $SB_REPO
   cd $SB_REPO
   git fetch -a

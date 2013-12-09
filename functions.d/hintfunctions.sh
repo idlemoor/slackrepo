@@ -104,7 +104,7 @@ function hint_cleanup
   #   * Removing specific files and directories that removepkg doesn't remove
   #   * Running depmod to remove references to removed kernel modules
   [ -f $SB_HINTS/$prg.cleanup ] || return 1
-  echo "Hint: running $SB_HINTS/$prg.cleanup..."
+  echo "Hint: running $SB_HINTS/$prg.cleanup ..."
   . $SB_HINTS/$prg.cleanup >>$SB_LOGDIR/$prg.log 2>&1
   return 0
 }

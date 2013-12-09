@@ -1,0 +1,112 @@
+sboggit is an automated SlackBuild package builder.
+
+It can be used for building and installing just a few SlackBuilds for
+local use, or for bulk testing many SlackBuilds. Built packages can be
+stored in a repository (maintained with AlienBOB's gen_repos_files.sh),
+and the repository can then be used by zerouno's slackpkg+.
+
+BEWARE! This is experimental software. Use with extreme caution!
+
+
+Features
+--------
+
+Clean repeatable building
+Suitable for bulk testing (no interaction required)
+Package updates detected by tracking upstream git revisions
+Output suitable for use with gen_repos_files.sh and slackpkg+
+Optional logging directly into dokuwiki
+
+
+Usage
+-----
+
+Usage: sboggit option|category|item ...
+
+Options:
+  --install      install built packages
+  --no-install   do not install built packages [default]
+  --rebuild      rebuild packages that are up-to-date
+  --no-rebuild   do not rebuild packages that are up-to-date [default]
+  --clean-repos  remove dead packages from source cache and output repo
+
+All arguments are processed in order, left to right. Each control argument will
+apply to all following arguments, until reversed by another control argument,
+for example
+  sboggit --install ffmpeg libquicktime --no-install kino
+
+
+Configuration
+-------------
+
+The following configuration options are defined in /etc/sboggit/sboggit.conf.
+They may be redefined by editing that file or by setting environment variables.
+
+SB_HINTS=/etc/sboggit/hints
+  Location of 'hints' (see below)
+
+SB_LIBDIR=/var/lib/sboggit
+  Location of sboggit repositories
+
+SB_REPO=/var/lib/sboggit/slackbuilds
+  Location of sboggit slackbuilds repository (normally cloned from SBo git)
+
+SB_SRC=/var/lib/sboggit/src
+  Location of downloaded source archives
+
+SB_OUTPUT=/var/lib/sboggit/output
+  Location of sboggit output repository
+
+SB_GITBRANCH=14.1
+  Local git branch to be used
+
+SB_TAG=_SBo
+  Tag for built packages
+
+SB_TMP=/tmp/SBo
+  Temporary directory
+
+SB_ARCH=''
+  Arch for built packages (normally determined from the build host)
+
+SB_LOGDIR=/var/log/sboggit
+  Log directory
+
+SB_USE_DOKUWIKI='' [not yet implemented]
+SB_USE_GENREPOS='' [not yet implemented]
+
+
+Hints
+-----
+
+'Hints' for each package may be set by creating files in /etc/sboggit/hints.
+An initial set of hint files is supplied, but you are encouraged to review and
+modify them (particularly the hints controlling options and dependencies).
+
+The possible types of hint files are as follows --
+
+* prg.readmedeps  dependencies to substitute for %README% in REQUIRES="..."
+* prg.options     options to supply to the SlackBuild
+* prg.moredeps    more dependencies, eg. to support options
+* prg.uidgid      groupadd and useradd commands needed for prg
+* prg.md5ignore   don't check source md5sum
+* prg.makej1      set MAKEFLAGS='-j1' during build
+* prg.cleanup     script to run after prg is uninstalled
+* prg.skipme      don't build prg
+* prg.tar.gz      SBo submission-style tarball to replace prg/* before build
+* prg.answers     answers for prompts printed when the SlackBuild is run
+
+
+Use of git
+----------
+
+If no git repository is found, it will be cloned from SlackBuilds.org, and a
+local branch '14.1' will be created.
+
+If the local branch is '14.1' or 'master', the local branch will be updated by
+fast forward (if possible) from its origin (which is probably SBo, but could be
+a local mirror), but only if more than one day has elapsed since the last
+update.
+
+The local git branch will be brutally cleaned.  Uncommitted changes and
+untracked files and directories will be permanently lost.  You have been warned!

@@ -35,31 +35,31 @@ function dependublaster2000
       return 0
     fi
   done
-  if [ ! -d $SBOREPO/*/$me ]; then
-    echo_yellow "WARNING: Dependency $me not found in $SBOREPO"
+  if [ ! -d $SB_REPO/*/$me ]; then
+    echo_yellow "WARNING: Dependency $me not found in $SB_REPO"
     return 0  # carry on regardless ;-)
   fi
-  if [ -f $HINTS/$me.tar.gz ]; then
+  if [ -f $SB_HINTS/$me.tar.gz ]; then
     echo "Hint: applying tarball for $me"
-    ( cd $SBOREPO/*/$me/..; rm -rf $me/; tar xf $HINTS/$me.tar.gz )
+    ( cd $SB_REPO/*/$me/..; rm -rf $me/; tar xf $SB_HINTS/$me.tar.gz )
   fi
-  . $SBOREPO/*/$me/$me.info
+  . $SB_REPO/*/$me/$me.info
   # ok, ready to go!  First, add my deps:
   mydeps="$REQUIRES"
-  if [ -f $HINTS/$me.moredeps ]; then
-    moredeps="$(cat $HINTS/$me.moredeps)"
+  if [ -f $SB_HINTS/$me.moredeps ]; then
+    moredeps="$(cat $SB_HINTS/$me.moredeps)"
     echo "Hint: adding more deps: $moredeps"
     mydeps="$mydeps $moredeps"
   fi
   for dep in $mydeps; do
     if [ $dep = '%README%' ]; then
-      if [ -f $HINTS/$me.readmedeps ]; then
-        echo "Hint: substituting '$(cat $HINTS/$me.readmedeps)' for %README%"
-        for readmedep in $(cat $HINTS/$me.readmedeps); do 
+      if [ -f $SB_HINTS/$me.readmedeps ]; then
+        echo "Hint: substituting '$(cat $SB_HINTS/$me.readmedeps)' for %README%"
+        for readmedep in $(cat $SB_HINTS/$me.readmedeps); do 
           dependublaster2000 $readmedep
         done
       else
-        echo_yellow "WARNING: %README% in $me.info but $HINTS/$me.readmedeps not found"
+        echo_yellow "WARNING: %README% in $me.info but $SB_HINTS/$me.readmedeps not found"
       fi
     else
       dependublaster2000 $dep

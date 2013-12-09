@@ -9,7 +9,6 @@
 #   install_package
 #   uninstall_with_deps
 #   uninstall_package
-#   arch_unsupported
 #
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.
@@ -36,7 +35,7 @@ function list_direct_deps
 {
   local prg="$1"
   local rdep
-  . $SBOREPO/*/$prg/$prg.info
+  . $SB_REPO/*/$prg/$prg.info
   for rdep in $REQUIRES; do
     echo $rdep
   done
@@ -68,10 +67,10 @@ function check_package
   local pkgname=$(basename $pkgpath)
   # Check the package name
   case $pkgname in
-    $PRGNAM-${VERSION}-$SLKARCH-$BUILD$TAG.t?z | \
-    $PRGNAM-${VERSION}-noarch-$BUILD$TAG.t?z | \
-    $PRGNAM-${VERSION}_*-$SLKARCH-$BUILD$TAG.t?z | \
-    $PRGNAM-${VERSION}_*-noarch-$BUILD$TAG.t?z )
+    $PRGNAM-${VERSION}-$SB_ARCH-$BUILD$SB_TAG.t?z | \
+    $PRGNAM-${VERSION}-noarch-$BUILD$SB_TAG.t?z | \
+    $PRGNAM-${VERSION}_*-$SB_ARCH-$BUILD$SB_TAG.t?z | \
+    $PRGNAM-${VERSION}_*-noarch-$BUILD$SB_TAG.t?z )
       : ;;
     *)
       echo_yellow "WARNING: abnormal package name $pkgname"
@@ -83,10 +82,10 @@ function check_package
       pext=$(echo $pkgname | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
       [  "$pprgnam" != "$PRGNAM"  ] && echo_yellow "PRGNAM is $pprgnam not $PRGNAM"
       [ "$pversion" != "$VERSION" ] && echo_yellow "VERSION is $pversion not $VERSION"
-      [    "$parch" != "$SLKARCH" -a "$parch" != "noarch" ] && \
-        echo_yellow "ARCH is $parch not $SLKARCH or noarch"
+      [    "$parch" != "$SB_ARCH" -a "$parch" != "noarch" ] && \
+        echo_yellow "ARCH is $parch not $SB_ARCH or noarch"
       [   "$pbuild" != "$BUILD"   ] && echo_yellow "BUILD is $pbuild not $BUILD"
-      [     "$ptag" != "$TAG"     ] && echo_yellow "TAG is $ptag not $TAG"
+      [     "$ptag" != "$SB_TAG"     ] && echo_yellow "TAG is $ptag not $SB_TAG"
       [ "$pext" != 'tgz' -a "$pext" != 'tbz' -a "$pext" != 'tlz' -a "$pext" != 'txz' ] && \
         echo_yellow "Suffix .$pext is not .t[gblx]z"
       ;;
@@ -110,11 +109,11 @@ function install_with_deps
 function install_prebuilt_packages
 {
   local p="$1"
-  c=$(cd $SBOREPO/*/$p/..; basename $(pwd))
+  c=$(cd $SB_REPO/*/$p/..; basename $(pwd))
   echo_lined "$c/$p"
-  pkglist=$(ls $OUTREPO/$p/*$TAG.t?z 2>/dev/null)
+  pkglist=$(ls $SB_OUTPUT/$p/*$SB_TAG.t?z 2>/dev/null)
   for pkgpath in $pkglist; do
-    pkgid=$(echo $(basename $pkgpath) | sed "s/$TAG\.t.z\$//")
+    pkgid=$(echo $(basename $pkgpath) | sed "s/$SB_TAG\.t.z\$//")
     if [ -e /var/log/packages/$pkgid ]; then
       echo_yellow "WARNING: $p is already installed:" $(ls /var/log/packages/$pkgid)
     else
@@ -154,7 +153,7 @@ function uninstall_package
 {
   local prg="$1"
   # filter out false matches in /var/log/packages
-  plist=$(ls /var/log/packages/$prg-*$TAG 2>/dev/null)
+  plist=$(ls /var/log/packages/$prg-*$SB_TAG 2>/dev/null)
   pkgid=''
   for ppath in $plist; do
     p=$(basename $ppath)
@@ -186,8 +185,8 @@ function uninstall_package
 function arch_unsupported
 {
   local prg="$1"
-  . $SBOREPO/*/$prg/$prg.info
-  case $SLKARCH in
+  . $SB_REPO/*/$prg/$prg.info
+  case $SB_ARCH in
     i?86) DOWNLIST="$DOWNLOAD" ;;
   x86_64) DOWNLIST="${DOWNLOAD_x86_64:-$DOWNLOAD}" ;;
        *) DOWNLIST="$DOWNLOAD" ;;
@@ -195,6 +194,6 @@ function arch_unsupported
   if [ "$DOWNLIST" != "UNSUPPORTED" -a "$DOWNLIST" != "UNTESTED" ]; then
     return 1
   fi
-  echo_yellow "$prg is $DOWNLIST on $SLKARCH"
+  echo_yellow "$prg is $DOWNLIST on $SB_ARCH"
   return 0
 }

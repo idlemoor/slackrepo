@@ -35,44 +35,47 @@ function build_package
   # 5 - skipped by hint, or unsupported on this arch
   # 6 - build returned 0 but nothing in $OUTPUT
 
-  local category=$(cd $SBOREPO/*/$prg/..; basename $(pwd))
+  local category=$(cd $SB_REPO/*/$prg/..; basename $(pwd))
   echo_lined "$category/$prg"
-  rm -f $LOGDIR/$prg.log
+  hint_skipme $prg && return 5
+  rm -f $SB_LOGDIR/$prg.log
 
   # Load up the .info (and BUILD from the SlackBuild)
-  . $SBOREPO/$category/$prg/$prg.info
-  if [ "$PRGNAM" != "$prg" ]; then
-    echo_yellow "WARNING: PRGNAM in $SBOREPO/$category/$prg/$prg.info is '$PRGNAM', not $prg"
-  fi
+  unset PRGNAM VERSION ARCH BUILD TAG DOWNLOAD DOWNLOAD_${SB_ARCH} MD5SUM MD5SUM_${SB_ARCH}
+  . $SB_REPO/$category/$prg/$prg.info
   unset BUILD
-  buildassign=$(grep '^BUILD=' $SBOREPO/*/$PRGNAM/$PRGNAM.SlackBuild)
+  buildassign=$(grep '^BUILD=' $SB_REPO/*/$PRGNAM/$PRGNAM.SlackBuild)
   eval $buildassign
+  TAG=$SB_TAG
   # At this point we have a full set of environment variables for called functions to use:
-  # PRGNAM VERSION SLKARCH BUILD TAG DOWNLOAD* MD5SUM* etc
-
-  arch_unsupported $prg && return 5
-  hint_skipme $prg && return 5
-
-  # Get the source and symlink it into the SlackBuild directory
-  if [ -d $SRCCACHE/$prg ]; then
-    if ! check_src ; then
-      echo "Note: bad checksums in cached source, will download again"
-      download_src
-      case $? in
-        0) check_src || { save_bad_src; itfailed; return 3; } ;;
-        2) rm -rf $SRCCACHE/$prg;  return 5 ;;
-        *) save_bad_src; itfailed; return 2 ;;
-      esac
-    fi
-  else
-    download_src
-    case $? in
-      0) check_src || { save_bad_src; itfailed; return 3; } ;;
-      2) rm -rf $SRCCACHE/$prg;  return 5 ;;
-      *) save_bad_src; itfailed; return 2 ;;
-    esac
+  # PRGNAM VERSION SB_ARCH BUILD TAG DOWNLOAD* MD5SUM* etc
+  # (use SB_ARCH not ARCH, as SlackBuilds sometimes set ARCH unconditionally)
+  if [ "$PRGNAM" != "$prg" ]; then
+    echo_yellow "WARNING: PRGNAM in $SB_REPO/$category/$prg/$prg.info is '$PRGNAM', not $prg"
   fi
-  ln -sf -t $SBOREPO/$category/$prg/ $SRCCACHE/$prg/*
+
+  # Get the source (including check for unsupported/untested)
+  check_src
+  case $? in
+    0) # already got source, and it's good
+       ;;
+  1|2) # already got source, but it's bad => get it
+       # (note: this includes old source when a package has been upversioned)
+       echo "Note: bad checksums in cached source, will download again"
+       download_src
+       check_src || { save_bad_src; itfailed; return 3; }
+       ;;
+    3) # not got source => get it
+       download_src
+       check_src || { save_bad_src; itfailed; return 3; }
+       ;;
+    4) # unsupported/untested
+       return 5
+       ;;
+  esac
+
+  # Symlink the source into the SlackBuild directory
+  ln -sf -t $SB_REPO/$category/$prg/ $SB_SRC/$prg/*
 
   # Get any hints for the build
   hint_uidgid $prg
@@ -81,17 +84,17 @@ function build_package
   options="$(hint_options $prg)"
   [ -n "$options" ] && echo "Hint: options=\"$options\""
   BUILDCMD="env $tempmakeflags $options sh ./$prg.SlackBuild"
-  if [ -f $HINTS/$prg.answers ]; then
-    echo "Hint: supplying answers from $HINTS/$prg.answers"
-    BUILDCMD="cat $HINTS/$prg.answers | $BUILDCMD"
+  if [ -f $SB_HINTS/$prg.answers ]; then
+    echo "Hint: supplying answers from $SB_HINTS/$prg.answers"
+    BUILDCMD="cat $SB_HINTS/$prg.answers | $BUILDCMD"
   fi
 
   # Build it
   echo "SlackBuilding $prg.SlackBuild ..."
-  export OUTPUT=$OUTREPO/$prg
+  export OUTPUT=$SB_OUTPUT/$prg
   rm -rf $OUTPUT/*
   mkdir -p $OUTPUT
-  ( cd $SBOREPO/$category/$prg; eval $BUILDCMD ) >>$LOGDIR/$prg.log 2>&1
+  ( cd $SB_REPO/$category/$prg; eval $BUILDCMD ) >>$SB_LOGDIR/$prg.log 2>&1
   stat=$?
   if [ $stat != 0 ]; then
     echo "ERROR: $prg.SlackBuild failed (status $stat)"

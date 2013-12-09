@@ -8,15 +8,17 @@ Clean repeatable building
 
 [done] Do something more intelligent for UNSUPPORTED/UNTESTED
 
-Combine i486 and x86_64 source repositories
+[done] Combine i486 and x86_64 source repositories
 
 Nicer logging (+ export logs to dokuwiki)
 
 Alien-style metafiles and add support for calling gen_repos_files.sh
 
-Put everything in a proper place instead of a stupid top level directory
+[done] Put everything in a proper place instead of a stupid top level directory
 
 Add control arguments to control installs and rebuilds
+
+Support for end-user builds (user mode/bulk test mode)
 
 Support for Slackware SlackBuilds (SBo mode/Slack mode)
 

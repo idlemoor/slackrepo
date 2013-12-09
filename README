@@ -45,9 +45,6 @@ They may be redefined by editing that file or by setting environment variables.
 SB_HINTS=/etc/sboggit/hints
   Location of 'hints' (see below)
 
-SB_LIBDIR=/var/lib/sboggit
-  Location of sboggit repositories
-
 SB_REPO=/var/lib/sboggit/slackbuilds
   Location of sboggit slackbuilds repository (normally cloned from SBo git)
 

@@ -44,15 +44,17 @@ function log_error
 
 function log_pass
 {
-  log_success ":-) PASS (-: $c/$p $gitrev"
+  local c="$1" p="$2"
+  log_success ":-) PASS (-: $c/$p"
   echo "$c/$p" >> $SB_LOGDIR/PASSLIST
   mv $SB_LOGDIR/$p.log $SB_LOGDIR/PASS/
 }
 
 function log_fail
 {
+  local c="$1" p="$2"
   log_error ":-( FAIL )-: $c/$p"
-  grep -q "^$c/$p\$" $SB_LOGDIR/FAILLIST || echo $c/$p >> $SB_LOGDIR/FAILLIST
+  grep -q "^$c/$p\$" $SB_LOGDIR/FAILLIST || echo "$c/$p" >> $SB_LOGDIR/FAILLIST
   # leave the wreckage in $TMP for investigation
   if [ -f $SB_LOGDIR/$p.log ]; then
     mv $SB_LOGDIR/$p.log $SB_LOGDIR/FAIL/$p.log

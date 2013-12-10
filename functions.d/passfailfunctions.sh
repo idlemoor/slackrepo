@@ -26,7 +26,7 @@ function itpassed
     echo "$(cd $SB_REPO/$c/$p; git status .)" > $OUTPUT/gitrev-$gitrev+dirty
     git reset --hard
   fi
-  log_pass $c/$p
+  log_pass $c $p
 }
 
 #-------------------------------------------------------------------------------
@@ -35,6 +35,6 @@ function itfailed
 {
   local p="${1:-$prg}"
   c=$(cd $SB_REPO/*/$p/..; basename $(pwd))
-  log_fail $c/$p
+  log_fail $c $p
   find $SB_REPO/$c/$p/ -type l -exec rm {} \;
 }

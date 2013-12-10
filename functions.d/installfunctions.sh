@@ -31,11 +31,11 @@ function install_prebuilt_packages
 function install_package
 {
   local pkgpath="$1"
-  echo "Installing $pkgpath ..."
+  log_normal "Installing $pkgpath ..."
   installpkg --terse $pkgpath
   stat=$?
   if [ $stat != 0 ]; then
-    echo "ERROR: installpkg $pkgpath failed (status $stat)"
+    log_error "ERROR: installpkg $pkgpath failed (status $stat)"
     itfailed
     return 1
   fi
@@ -58,11 +58,11 @@ function uninstall_package
       break
     fi
   done
-  [ -n "$pkgid" ] || { echo "Not removing $prg (not installed)"; return 1; }
+  [ -n "$pkgid" ] || { log_normal "Not removing $prg (not installed)"; return 1; }
   # Save a list of potential detritus in /etc
   etcnewfiles=$(grep '^etc/.*\.new$' /var/log/packages/$pkgid)
   etcdirs=$(grep '^etc/.*/$' /var/log/packages/$pkgid)
-  echo "Removing $pkgid"
+  log_normal "Removing $pkgid"
   removepkg $pkgid >/dev/null 2>&1
   # Remove any surviving detritus
   for f in $etcnewfiles; do
@@ -86,10 +86,10 @@ function dotprofilizer
   if grep -q -E 'etc/profile\.d/.*\.sh(\.new)?' $varlogpkg; then
     for script in $(grep 'etc/profile\.d/.*\.sh' $varlogpkg | sed 's/.new$//'); do
       if [ -f /$script ]; then
-        echo "Running profile script /$script"
+        log_normal "Running profile script /$script"
         . /$script
       elif [ -f /$script.new ]; then
-        echo "Running profile script /$script.new"
+        log_normal "Running profile script /$script.new"
         . /$script.new
       fi
     done
@@ -100,12 +100,12 @@ function dotprofilizer
 
 function clean_outputdir
 {
-  echo "Cleaning output directory $SB_OUTPUT ..."
+  log_normal "Cleaning output directory $SB_OUTPUT ..."
   for outpath in $(ls $SB_OUTPUT/* 2>/dev/null); do
     pkgname=$(basename $outpath)
     if [ ! -d "$(ls -d $SB_REPO/*/$pkgname 2>/dev/null)" ]; then
       rm -rf -v "$SB_OUTPUT/$pkgname"
     fi
   done
-  echo "Finished cleaning output directory."
+  log_normal "Finished cleaning output directory."
 }

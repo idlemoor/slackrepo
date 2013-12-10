@@ -86,7 +86,7 @@ function dependublaster2000
     return 0  # carry on regardless ;-)
   fi
   if [ -f $SB_HINTS/$me.tar.gz ]; then
-    echo "Hint: applying tarball for $me"
+    log_normal "Hint: applying tarball for $me"
     ( cd $SB_REPO/*/$me/..; rm -rf $me/; tar xf $SB_HINTS/$me.tar.gz )
   fi
   . $SB_REPO/*/$me/$me.info
@@ -94,13 +94,13 @@ function dependublaster2000
   mydeps="$REQUIRES"
   if [ -f $SB_HINTS/$me.moredeps ]; then
     moredeps="$(cat $SB_HINTS/$me.moredeps)"
-    echo "Hint: adding more deps: $moredeps"
+    log_normal "Hint: adding more deps: $moredeps"
     mydeps="$mydeps $moredeps"
   fi
   for dep in $mydeps; do
     if [ $dep = '%README%' ]; then
       if [ -f $SB_HINTS/$me.readmedeps ]; then
-        echo "Hint: substituting '$(cat $SB_HINTS/$me.readmedeps)' for %README%"
+        log_normal "Hint: substituting '$(cat $SB_HINTS/$me.readmedeps)' for %README%"
         for readmedep in $(cat $SB_HINTS/$me.readmedeps); do 
           dependublaster2000 $readmedep
         done

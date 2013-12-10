@@ -5,6 +5,7 @@
 # logfunctions.sh - logging and display functions for sboggit:
 #   log_start
 #   log_depstart
+#   log_normal
 #   log_success
 #   log_warning
 #   log_error
@@ -25,6 +26,11 @@ function log_depstart
   echo "${msg:0:79}"
 }
 
+#-------------------------------------------------------------------------------
+
+function log_normal
+{ echo "$@"; }
+
 function log_success
 { tput bold; tput setaf 2; echo "$@"; tput sgr0; }
 
@@ -33,3 +39,23 @@ function log_warning
 
 function log_error
 { tput bold; tput setaf 1; echo "$@"; tput sgr0; }
+
+#-------------------------------------------------------------------------------
+
+function log_pass
+{
+  log_success ":-) PASS (-: $c/$p $gitrev"
+  echo "$c/$p" >> $SB_LOGDIR/PASSLIST
+  mv $SB_LOGDIR/$p.log $SB_LOGDIR/PASS/
+}
+
+function log_fail
+{
+  log_error ":-( FAIL )-: $c/$p"
+  grep -q "^$c/$p\$" $SB_LOGDIR/FAILLIST || echo $c/$p >> $SB_LOGDIR/FAILLIST
+  # leave the wreckage in $TMP for investigation
+  if [ -f $SB_LOGDIR/$p.log ]; then
+    mv $SB_LOGDIR/$p.log $SB_LOGDIR/FAIL/$p.log
+    log_error "See $SB_LOGDIR/FAIL/$p.log"
+  fi
+}

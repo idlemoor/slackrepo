@@ -43,7 +43,7 @@ function build_package
        ;;
   1|2) # already got source, but it's bad => get it
        # (note: this includes old source when a package has been upversioned)
-       echo "Note: bad checksums in cached source, will download again"
+       log_normal "Note: bad checksums in cached source, will download again"
        download_src
        check_src || { save_bad_src; itfailed; return 3; }
        ;;
@@ -62,24 +62,24 @@ function build_package
   # Get any hints for the build
   hint_uidgid $prg
   tempmakeflags="$(hint_makeflags $prg)"
-  [ -n "$tempmakeflags" ] && echo "Hint: $tempmakeflags"
+  [ -n "$tempmakeflags" ] && log_normal "Hint: $tempmakeflags"
   options="$(hint_options $prg)"
-  [ -n "$options" ] && echo "Hint: options=\"$options\""
+  [ -n "$options" ] && log_normal "Hint: options=\"$options\""
   BUILDCMD="env $tempmakeflags $options sh ./$prg.SlackBuild"
   if [ -f $SB_HINTS/$prg.answers ]; then
-    echo "Hint: supplying answers from $SB_HINTS/$prg.answers"
+    log_normal "Hint: supplying answers from $SB_HINTS/$prg.answers"
     BUILDCMD="cat $SB_HINTS/$prg.answers | $BUILDCMD"
   fi
 
   # Build it
-  echo "SlackBuilding $prg.SlackBuild ..."
+  log_normal "SlackBuilding $prg.SlackBuild ..."
   export OUTPUT=$SB_OUTPUT/$prg
   rm -rf $OUTPUT/*
   mkdir -p $OUTPUT
   ( cd $SB_REPO/$category/$prg; eval $BUILDCMD ) >>$SB_LOGDIR/$prg.log 2>&1
   stat=$?
   if [ $stat != 0 ]; then
-    echo "ERROR: $prg.SlackBuild failed (status $stat)"
+    log_error "ERROR: $prg.SlackBuild failed (status $stat)"
     itfailed
     return 1
   fi
@@ -87,7 +87,7 @@ function build_package
   # Make sure we got *something* :-)
   pkglist=$(ls $OUTPUT/*.t?z 2>/dev/null)
   if [ -z "$pkglist" ]; then
-    echo "ERROR: no packages found in $OUTPUT"
+    log_error "ERROR: no packages found in $OUTPUT"
     itfailed
     return 6
   fi

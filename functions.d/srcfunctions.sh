@@ -34,10 +34,10 @@ function check_src
     return 3
   fi
   ( cd $DOWNDIR
-    echo "Checking source files ..."
+    log_normal "Checking source files ..."
     numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| wc -l)
     numwant=$(echo $MD5LIST | wc -w)
-    [ $numgot = $numwant ] || { echo "ERROR: want $numwant source files but got $numgot"; return 2; }
+    [ $numgot = $numwant ] || { log_error "ERROR: need $numwant source files but got $numgot"; return 2; }
     hint_md5ignore $prg && return 0
     allok='y'
     for f in *; do
@@ -47,7 +47,7 @@ function check_src
         ok='n'
         # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
         for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
-        [ "$ok" = 'y' ] || { echo "ERROR: Failed md5sum: '$f'"; allok='n'; }
+        [ "$ok" = 'y' ] || { log_error "ERROR: Failed md5sum: '$f'"; allok='n'; }
       fi
     done
     [ "$allok" = 'y' ] || { return 1; }
@@ -66,10 +66,10 @@ function download_src
   # 1 - wget failed
   mkdir -p $DOWNDIR
   find $DOWNDIR -maxdepth 1 -type f -exec rm {} \;
-  echo "Downloading ..."
+  log_normal "Downloading ..."
   ( cd $DOWNDIR
     for src in $DOWNLIST; do
-      echo "wget $src ..."
+      log_normal "wget $src ..."
       wget --no-check-certificate --content-disposition --tries=2 -T 240 "$src" >> $SB_LOGDIR/$p.log 2>&1
       wstat=$?
       if [ $wstat != 0 ]; then
@@ -95,13 +95,13 @@ function save_bad_src
   if [ -d $SB_SRC/${p}/$SB_ARCH ]; then
     mkdir -p $baddir
     mv $SB_SRC/${p}/$SB_ARCH $baddir/
-    echo "Note: bad sources saved in $baddir/$SB_ARCH"
+    log_normal "Note: bad sources saved in $baddir/$SB_ARCH"
     # if there's stuff from other arches, leave it
     rmdir --ignore-fail-on-non-empty $SB_SRC/${p}
   elif [ -d $SB_SRC/${p} ]; then
     # this isn't perfect, but it'll do
     mv $SB_SRC/${p} $baddir
-    echo "Note: bad sources saved in $baddir"
+    log_normal "Note: bad sources saved in $baddir"
   fi
 }
 
@@ -110,12 +110,12 @@ function save_bad_src
 function clean_srcdir
 {
   # will remove *_BAD directories as well as obsolete/removed directories :-)
-  echo "Cleaning source directory $SB_SRC ..."
+  log_normal "Cleaning source directory $SB_SRC ..."
   for srcpath in $(ls $SB_SRC/* 2>/dev/null); do
     pkgname=$(basename $srcpath)
     if [ ! -d "$(ls -d $SB_REPO/*/$pkgname 2>/dev/null)" ]; then
       rm -rf -v "$SB_SRC/$pkgname"
     fi
   done
-  echo "Finished cleaning source directory."
+  log_normal "Finished cleaning source directory."
 }

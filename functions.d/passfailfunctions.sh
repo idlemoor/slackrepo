@@ -26,9 +26,7 @@ function itpassed
     echo "$(cd $SB_REPO/$c/$p; git status .)" > $OUTPUT/gitrev-$gitrev+dirty
     git reset --hard
   fi
-  log_success ":-) PASS (-: $c/$p $gitrev"
-  echo "$c/$p" >> $SB_LOGDIR/PASSLIST
-  mv $SB_LOGDIR/$p.log $SB_LOGDIR/PASS/
+  log_pass $c/$p
 }
 
 #-------------------------------------------------------------------------------
@@ -37,12 +35,6 @@ function itfailed
 {
   local p="${1:-$prg}"
   c=$(cd $SB_REPO/*/$p/..; basename $(pwd))
-  log_error ":-( FAIL )-: $c/$p"
-  grep -q "^$c/$p\$" $SB_LOGDIR/FAILLIST || echo $c/$p >> $SB_LOGDIR/FAILLIST
-  # leave the wreckage in $TMP for investigation
-  if [ -f $SB_LOGDIR/$p.log ]; then
-    mv $SB_LOGDIR/$p.log $SB_LOGDIR/FAIL/$p.log
-    log_error "See $SB_LOGDIR/FAIL/$p.log"
-  fi
+  log_fail $c/$p
   find $SB_REPO/$c/$p/ -type l -exec rm {} \;
 }

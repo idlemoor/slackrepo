@@ -55,10 +55,10 @@ function test_package_is_uptodate
   gitrevfilename=$(ls $SB_OUTPUT/$p/gitrev-* 2>/dev/null)
   pkglist=$(ls $SB_OUTPUT/$p/*$SB_TAG.t?z 2>/dev/null)
   if [ -z "$pkglist" -o $(echo $gitrevfilename | wc -w) != 1 ]; then
-    echo "$p not found, needs to be built."
+    log_normal "$p not found, needs to be built."
     return 1
   elif [ -n "$(cd $SB_REPO/*/$p; git status -s .)" ]; then
-    echo "$p has been modified."
+    log_normal "$p has been modified."
     # Note, if a tar.gz hint is identical to upstream git (eg. if merged),
     # git status won't know that the hint was applied.  This is a Good Thing.
     return 2
@@ -66,10 +66,10 @@ function test_package_is_uptodate
     pkgrev=$(echo $gitrevfilename | sed 's/^.*gitrev-//')
     prgrev=$(git log -n 1 --format=format:%h $SB_REPO/*/$p)
     if [ $pkgrev != $prgrev ]; then
-      echo "$p $pkgrev is not up-to-date ($SB_GITBRANCH is $prgrev)."
+      log_normal "$p $pkgrev is not up-to-date ($SB_GITBRANCH is $prgrev)."
       return 3
     else
-      echo "$p $pkgrev is up-to-date."
+      log_normal "$p $pkgrev is up-to-date."
       return 0
     fi
   fi

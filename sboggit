@@ -89,14 +89,14 @@ for f in /usr/libexec/sboggit/functions.d/*functions.sh; do
   fi
 done
 
-echo "Removing $SB_TMP ..."
+log_normal "Removing $SB_TMP ..."
 rm -rf $SB_TMP
 mkdir -p $SB_HINTS $SB_SRC $SB_OUTPUT $SB_TMP
 mkdir -p $SB_LOGDIR/PASS $SB_LOGDIR/FAIL
 rm -f $SB_LOGDIR/PASSLIST $SB_LOGDIR/FAILLIST $SB_LOGDIR/READMELIST
 touch $SB_LOGDIR/PASSLIST $SB_LOGDIR/FAILLIST $SB_LOGDIR/READMELIST
 
-echo "Initialising git ..."
+log_normal "Initialising git ..."
 if [ -d $SB_REPO/.git ]; then
   cd $SB_REPO
   # This bit is going to be nasty, brutish and short :P
@@ -111,15 +111,14 @@ if [ -d $SB_REPO/.git ]; then
     fi
   fi
 else
-  echo "Git repository $SB_REPO does not exist; creating it..."
+  log_normal "Git repository $SB_REPO does not exist; creating it..."
   git clone git://slackbuilds.org/slackbuilds.git $SB_REPO
   cd $SB_REPO
   git fetch -a
   git remote update
   git checkout -b "$gitstable" -t origin/"$gitstable"
 fi
-echo "Finished initialising git."
-echo ""
+log_normal "Finished initialising git."
 
 #-------------------------------------------------------------------------------
 # Main loop
@@ -129,6 +128,7 @@ INSTALLFLAG='n'
 REBUILDFLAG='n'
 
 while [ $# != 0 ]; do
+  echo ""
 
   ARG=${1%%/}; shift
 
@@ -173,10 +173,8 @@ while [ $# != 0 ]; do
 
   # Quick check whether the item is unsupported or should be skipped
   if hint_skipme $PRG; then
-    echo ""
     continue
   elif ! test_arch_is_supported $PRG; then
-    echo ""
     continue
   fi
 
@@ -185,7 +183,7 @@ while [ $# != 0 ]; do
   export DEPLIST=""
   dependublaster2000 $PRG
   if [ "$(echo $DEPLIST)" != "$PRG" ]; then
-    echo "Package stack for $PRG:" $DEPLIST
+    log_normal "Package stack for $PRG:" $DEPLIST
   fi
   INSTLIST=""
   TODOLIST=""
@@ -208,7 +206,7 @@ while [ $# != 0 ]; do
   # If there's nothing in TODOLIST, don't bother installing :D
   if [ "$TODOLIST" != '' ]; then
     if [ "$TODOLIST" != "$PRG" ]; then
-      echo "To-do list for $PRG:" $DEPLIST
+      log_normal "To-do list for $PRG:" $DEPLIST
     fi
     instok='y'
     for instprg in $INSTLIST; do
@@ -233,7 +231,6 @@ while [ $# != 0 ]; do
       uninstall_package $instprg
     done
   fi
-  echo ""
 
 done
 

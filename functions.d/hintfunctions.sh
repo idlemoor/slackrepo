@@ -33,7 +33,7 @@ function hint_md5ignore
   if [ ! -f $SB_HINTS/$prg.md5ignore ]; then
     return 1
   fi
-  echo "Hint: ignoring md5sums for $prg"
+  log_normal "Hint: ignoring md5sums for $prg"
   cat $SB_HINTS/$prg.md5ignore
   return 0
 }
@@ -50,7 +50,7 @@ function hint_uidgid
   # *or* a script to make the UID and/or the GID, if it's not straightforward.
   [ -f $SB_HINTS/$prg.uidgid ] || return 1
   unset UIDGIDNUMBER
-  echo "Hint: setup uid/gid for $prg"
+  log_normal "Hint: setup uid/gid for $prg"
   . $SB_HINTS/$prg.uidgid
   [ -n "$UIDGIDNUMBER" ] || return 0
   UIDGIDNAME=${UIDGIDNAME:-$prg}
@@ -104,7 +104,7 @@ function hint_cleanup
   #   * Removing specific files and directories that removepkg doesn't remove
   #   * Running depmod to remove references to removed kernel modules
   [ -f $SB_HINTS/$prg.cleanup ] || return 1
-  echo "Hint: running $SB_HINTS/$prg.cleanup ..."
+  log_normal "Hint: running $SB_HINTS/$prg.cleanup ..."
   . $SB_HINTS/$prg.cleanup >>$SB_LOGDIR/$prg.log 2>&1
   return 0
 }

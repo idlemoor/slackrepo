@@ -19,7 +19,7 @@ function hint_skipme
     return 1
   fi
   category=$(cd $SB_REPO/*/$prg/..; basename $(pwd))
-  echo_yellow "SKIPPED $category/$prg due to hint"
+  log_warning "SKIPPED $category/$prg due to hint"
   cat $SB_HINTS/$prg.skipme
   return 0
 }

@@ -18,7 +18,7 @@ function build_package
   # 6 - build returned 0 but nothing in $OUTPUT
 
   local category=$(cd $SB_REPO/*/$prg/..; basename $(pwd))
-  echo_lined "$category/$prg"
+  log_depstart "$category/$prg"
   hint_skipme $prg && return 5
   rm -f $SB_LOGDIR/$prg.log
 
@@ -33,7 +33,7 @@ function build_package
   # PRGNAM VERSION SB_ARCH BUILD TAG DOWNLOAD* MD5SUM* etc
   # (use SB_ARCH not ARCH, as SlackBuilds sometimes set ARCH unconditionally)
   if [ "$PRGNAM" != "$prg" ]; then
-    echo_yellow "WARNING: PRGNAM in $SB_REPO/$category/$prg/$prg.info is '$PRGNAM', not $prg"
+    log_warning "WARNING: PRGNAM in $SB_REPO/$category/$prg/$prg.info is '$PRGNAM', not $prg"
   fi
 
   # Get the source (including check for unsupported/untested)

@@ -14,12 +14,12 @@ function install_prebuilt_packages
 {
   local p="$1"
   c=$(cd $SB_REPO/*/$p/..; basename $(pwd))
-  echo_lined "$c/$p"
+  log_depstart "$c/$p"
   pkglist=$(ls $SB_OUTPUT/$p/*$SB_TAG.t?z 2>/dev/null)
   for pkgpath in $pkglist; do
     pkgid=$(echo $(basename $pkgpath) | sed "s/$SB_TAG\.t.z\$//")
     if [ -e /var/log/packages/$pkgid ]; then
-      echo_yellow "WARNING: $p is already installed:" $(ls /var/log/packages/$pkgid)
+      log_warning "WARNING: $p is already installed:" $(ls /var/log/packages/$pkgid)
     else
       install_package $pkgpath || return 1
     fi

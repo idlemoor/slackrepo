@@ -165,11 +165,11 @@ while [ $# != 0 ]; do
   # otherwise, the last component should be an item
   PRG=$(basename ${ARG%%/})
   if [ ! -d $SB_REPO/*/$PRG ]; then
-    echo_boxed "ERROR: $PRG is neither a category nor an application"
+    log_start "ERROR: $PRG is neither a category nor an application"
     continue
   fi
   CATEGORY=$(cd $SB_REPO/*/$PRG/..; basename $(pwd))
-  echo_boxed "$CATEGORY/$PRG"
+  log_start "$CATEGORY/$PRG"
 
   # Quick check whether the item is unsupported or should be skipped
   if hint_skipme $PRG; then
@@ -215,7 +215,7 @@ while [ $# != 0 ]; do
       install_prebuilt_packages $instprg
       if [ $? != 0 ]; then
         instok='n'
-        [ $instprg != $PRG ] && echo_red "ABORTED $CATEGORY/$PRG"
+        [ $instprg != $PRG ] && log_error "ABORTED $CATEGORY/$PRG"
         break
       fi
     done
@@ -223,7 +223,7 @@ while [ $# != 0 ]; do
       for todoprg in $TODOLIST; do
         build_package $todoprg
         if [ $? != 0 ]; then
-          [ $todoprg != $PRG ] && echo_red "ABORTED $CATEGORY/$PRG"
+          [ $todoprg != $PRG ] && log_error "ABORTED $CATEGORY/$PRG"
           break
         fi
       done

@@ -2,15 +2,15 @@
 # Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
-# echofunctions.sh - fancy display functions for sboggit:
-#   echo_boxed
-#   echo_lined
-#   echo_red
-#   echo_green
-#   echo_yellow
+# logfunctions.sh - logging and display functions for sboggit:
+#   log_start
+#   log_depstart
+#   log_success
+#   log_warning
+#   log_error
 #-------------------------------------------------------------------------------
 
-function echo_boxed
+function log_start
 {
   msg="${*}                                                                      "
   echo "==============================================================================="
@@ -19,17 +19,17 @@ function echo_boxed
   echo ""
 }
 
-function echo_lined
+function log_depstart
 {
   msg="--${*}------------------------------------------------------------------------------"
   echo "${msg:0:79}"
 }
 
-function echo_red
-{ tput bold; tput setaf 1; echo "$@"; tput sgr0; }
-
-function echo_green
+function log_success
 { tput bold; tput setaf 2; echo "$@"; tput sgr0; }
 
-function echo_yellow
+function log_warning
 { tput bold; tput setaf 3; echo "$@"; tput sgr0; }
+
+function log_error
+{ tput bold; tput setaf 1; echo "$@"; tput sgr0; }

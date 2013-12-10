@@ -20,26 +20,26 @@ function test_package_is_sane
     $PRGNAM-${VERSION}_*-noarch-$BUILD$SB_TAG.t?z )
       : ;;
     *)
-      echo_yellow "WARNING: abnormal package name $pkgname"
+      log_warning "WARNING: abnormal package name $pkgname"
       pprgnam=$(echo $pkgname | rev | cut -f4- -d- | rev)
       pversion=$(echo $pkgname | rev | cut -f3 -d- | rev)
       parch=$(echo $pkgname | rev | cut -f2 -d- | rev)
       pbuild=$(echo $pkgname | rev | cut -f1 -d- | rev | sed 's/[^0-9]*$//')
       ptag=$(echo $pkgname | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
       pext=$(echo $pkgname | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
-      [  "$pprgnam" != "$PRGNAM"  ] && echo_yellow "PRGNAM is $pprgnam not $PRGNAM"
-      [ "$pversion" != "$VERSION" ] && echo_yellow "VERSION is $pversion not $VERSION"
+      [  "$pprgnam" != "$PRGNAM"  ] && log_warning "PRGNAM is $pprgnam not $PRGNAM"
+      [ "$pversion" != "$VERSION" ] && log_warning "VERSION is $pversion not $VERSION"
       [    "$parch" != "$SB_ARCH" -a "$parch" != "noarch" ] && \
-        echo_yellow "ARCH is $parch not $SB_ARCH or noarch"
-      [   "$pbuild" != "$BUILD"   ] && echo_yellow "BUILD is $pbuild not $BUILD"
-      [     "$ptag" != "$SB_TAG"     ] && echo_yellow "TAG is $ptag not $SB_TAG"
+        log_warning "ARCH is $parch not $SB_ARCH or noarch"
+      [   "$pbuild" != "$BUILD"   ] && log_warning "BUILD is $pbuild not $BUILD"
+      [     "$ptag" != "$SB_TAG"     ] && log_warning "TAG is $ptag not $SB_TAG"
       [ "$pext" != 'tgz' -a "$pext" != 'tbz' -a "$pext" != 'tlz' -a "$pext" != 'txz' ] && \
-        echo_yellow "Suffix .$pext is not .t[gblx]z"
+        log_warning "Suffix .$pext is not .t[gblx]z"
       ;;
     esac
   # Check the package contents
   if tar tf $pkgpath | grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)'; then
-    echo_yellow "WARNING: $pkgpath installs some weird shit"
+    log_warning "WARNING: $pkgpath installs some weird shit"
   fi
 }
 
@@ -87,7 +87,7 @@ function test_arch_is_supported
        *) DOWNLIST="$DOWNLOAD" ;;
   esac
   if [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ]; then
-    echo_yellow "$prg is $DOWNLIST on $SB_ARCH"
+    log_warning "$prg is $DOWNLIST on $SB_ARCH"
     return 1
   fi
   return 0

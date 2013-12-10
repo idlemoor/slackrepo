@@ -28,7 +28,7 @@ function check_src
     MD5LIST="$MD5SUM"
   fi
   if [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ]; then
-    echo_yellow "$prg is $DOWNLIST on $SB_ARCH"
+    log_warning "$prg is $DOWNLIST on $SB_ARCH"
     return 4
   elif [ ! -d $DOWNDIR ]; then
     return 3
@@ -73,7 +73,7 @@ function download_src
       wget --no-check-certificate --content-disposition --tries=2 -T 240 "$src" >> $SB_LOGDIR/$p.log 2>&1
       wstat=$?
       if [ $wstat != 0 ]; then
-        echo_red "ERROR: wget error (status $wstat)"
+        log_error "ERROR: wget error (status $wstat)"
         return 1
       fi
     done

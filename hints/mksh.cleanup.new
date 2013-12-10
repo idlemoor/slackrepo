@@ -1,0 +1,1 @@
+sed -i '/\/bin\/mksh/d' /etc/shells

@@ -47,7 +47,7 @@ function check_src
         ok='n'
         # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
         for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
-        [ "$ok" = 'y' ] || { log_error "ERROR: Failed md5sum: '$f'"; allok='n'; }
+        [ "$ok" = 'y' ] || { log_normal "Note: failed md5sum: '$f'"; allok='n'; }
       fi
     done
     [ "$allok" = 'y' ] || { return 1; }

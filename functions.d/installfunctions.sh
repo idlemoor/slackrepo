@@ -68,8 +68,10 @@ function uninstall_package
   for f in $etcnewfiles; do
     rm -f /"$f" /"$(echo "$f" | sed 's/\.new$//')"
   done
-  for d in $etcnewdirs; do
-    rmdir --ignore-fail-on-non-empty /"$d"
+  for d in $etcdirs; do
+    if [ -d "$d" ]; then
+      find "$d" -type d -depth -exec rmdir --ignore-fail-on-non-empty {} \;
+    fi
   done
   # Do this last so it can mend things we broke
   # (e.g. by reinstalling a Slackware package)

@@ -38,7 +38,7 @@ function test_package_is_sane
       ;;
     esac
   # Check the package contents
-  if tar tf $pkgpath | grep -q -v -E '^(bin)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)'; then
+  if tar tf $pkgpath | grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)'; then
     echo_yellow "WARNING: $pkgpath installs some weird shit"
   fi
 }
@@ -49,7 +49,7 @@ function test_package_is_uptodate
 {
   # Returns:
   # 1 - not found (or unstamped with git rev)
-  # 2 - git thinks the directory has been modified locally
+  # 2 - git thinks the slackbuild directory has been modified locally
   # 3 - previous git rev != current git rev
   local p="${1:-$prg}"
   gitrevfilename=$(ls $SB_OUTPUT/$p/gitrev-* 2>/dev/null)

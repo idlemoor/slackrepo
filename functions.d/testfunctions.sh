@@ -39,8 +39,9 @@ function test_package_is_sane
     esac
   # Check the package contents
   if tar tf $pkgpath | grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)'; then
-    log_warning "WARNING: $pkgpath installs some weird shit"
+    log_warning "WARNING: $pkgpath installs to unusual location"
   fi
+  echo "$pprgnam: Added version $pversion. NEWLINE" >>$SB_CHANGELOG
 }
 
 #-------------------------------------------------------------------------------

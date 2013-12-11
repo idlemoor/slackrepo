@@ -107,6 +107,7 @@ function clean_outputdir
     pkgname=$(basename $outpath)
     if [ ! -d "$(ls -d $SB_REPO/*/$pkgname 2>/dev/null)" ]; then
       rm -rf -v "$SB_OUTPUT/$pkgname"
+      echo "$pkgname: Removed. NEWLINE" >>$SB_CHANGELOG
     fi
   done
   log_normal "Finished cleaning output directory."

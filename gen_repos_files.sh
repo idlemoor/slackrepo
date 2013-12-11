@@ -31,6 +31,7 @@ cat <<"EOT"
 # $Id: gen_repos_files.sh,v 1.88 2013/11/20 14:45:20 root Exp root $ #
 # -------------------------------------------------------------------#
 EOT
+# Modified to add -l arg by David Spencer <baildon.research@googlemail.com>
 
 # The script's basename will be displayed in the RSS feed:
 BASENAME=$( basename $0 )
@@ -148,12 +149,13 @@ PIDFILE=/var/tmp/$(basename $0 .sh).pid
 trap 'rm -f $PIDFILE; exit 1' TERM INT
 
 # Command line parameter processing:
-while getopts ":ahmn:prstv" Option
+while getopts ":ahl:mn:prstv" Option
 do
   case $Option in
     h ) echo "Parameters are:"
         echo "  -h        : This help text"
         echo "  -a        : Force generation of .asc gpg signature files"
+        echo "  -l <log>  : Use file <log> as input for ChangeLog"
         echo "  -m        : Force generation of .md5 files"
         echo "  -n <days> : Only look for packages not older than <days> days"
         echo "  -p        : Force generation of package .meta files"
@@ -164,6 +166,8 @@ do
         exit
         ;;
     a ) FORCEASC="yes"
+        ;;
+    l ) LOGINPUT=${OPTARG}
         ;;
     m ) FORCEMD5="yes"
         ;;
@@ -476,8 +480,12 @@ function upd_changelog {
   local LOGTEXT=""
   local i=0
 
-  # Ask for a new ChangeLog entry
-  read -er -p "Enter ChangeLog.txt description: "
+  if [ "$LOGINPUT" == "" ]; then
+    # Ask for a new ChangeLog entry
+    read -er -p "Enter ChangeLog.txt description: "
+  else
+    REPLY=$(cat $LOGINPUT 2>/dev/null)
+  fi
 
   if [ "$REPLY" == "" ]; then
     echo "No input, so I won't update your $CHANGELOG"

@@ -7,28 +7,46 @@
 
 SB_REPO=/var/lib/sboggit/slackbuilds
 
+# Local git branch to use
 SB_GITBRANCH=14.1
 
+# Where to store cached sources (you will need plenty of space)
 SB_SRC=/var/lib/sboggit/src
 
+# Where to store built packages (you will need plenty of space)
 SB_OUTPUT=/var/lib/sboggit/output
 
+# Tag for built packages.
+# If you are publishing these packages, please change this to something else
+# (see )
 SB_TAG=_SBo
 
+# Arch for building. Leave blank to have this automatically determined.
 SB_ARCH=''
 
+# Where to find 'hints'
 SB_HINTS=/etc/sboggit/hints
 
+# Where to store temporary files (you will need plenty of space)
 SB_TMP=/tmp/SBo
 
+# Where to store log files
 SB_LOGDIR=/var/log/sboggit
 
-SB_USE_DOKUWIKI=''
+# Change this to 1 if you want to have local web pages
+SB_USE_WEBPAGE='0'
 
-SB_USE_GENREPOS=''
+# Directory for local web pages
+SB_WEBPAGE_DIR=/var/www/htdocs/sboggit
 
 #-------------------------------------------------------------------------------
+# Parameters for calling gen_repos_files.sh
+# You must review and set correct values for all the variables below!
 
+# Change this to 1 if you want to call gen_repos_files.sh
+SB_USE_GENREPOS='0'
+
+# Don't change this - it is needed so gen_repos_files.sh can find your packages
 REPOSROOT=${REPOSROOT:-$SB_OUTPUT}
 
 # Repository maintainer

@@ -48,6 +48,9 @@ function log_pass
   log_success ":-) PASS (-: $c/$p"
   echo "$c/$p" >> $SB_LOGDIR/PASSLIST
   mv $SB_LOGDIR/$p.log $SB_LOGDIR/PASS/
+  if [ "$SB_USE_WEBPAGE" = 1 ]; then
+    :
+  fi
 }
 
 function log_fail
@@ -59,5 +62,8 @@ function log_fail
   if [ -f $SB_LOGDIR/$p.log ]; then
     mv $SB_LOGDIR/$p.log $SB_LOGDIR/FAIL/$p.log
     log_error "See $SB_LOGDIR/FAIL/$p.log"
+  fi
+  if [ "$SB_USE_WEBPAGE" = 1 ]; then
+    :
   fi
 }

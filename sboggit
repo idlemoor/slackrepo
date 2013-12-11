@@ -234,4 +234,8 @@ while [ $# != 0 ]; do
 
 done
 
+if [ "$SB_USE_GENREPOS" = 1 ]; then
+  sh /usr/libexec/sboggit/gen_repos_files.sh
+fi
+
 exit 0

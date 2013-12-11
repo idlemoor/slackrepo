@@ -10,7 +10,7 @@ Clean repeatable building
 
 [done] Combine i486 and x86_64 source repositories
 
-Nicer logging (+ export logs to dokuwiki)
+Nicer logging (+ export logs to web pages)
 
 Alien-style metafiles and add support for calling gen_repos_files.sh
 

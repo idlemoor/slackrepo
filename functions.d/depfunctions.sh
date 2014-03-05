@@ -140,7 +140,7 @@ function build_with_deps
   if [ "$UPDATEDRYRUN" = 'y' ]; then
     opmsg="would be $(echo "$opmsg" | sed -e 's/^add /added /' -e 's/^update /updated /' -e 's/^rebuild /rebuilt /')"
     log_important "$me $opmsg"
-    echo "$OP $me" >> $SR_UPDATEFILE
+    echo "$me $opmsg" >> $SR_UPDATEFILE
     return 0
   fi
 

@@ -57,7 +57,7 @@ function process_remove
 
   if [ "$UPDATEDRYRUN" = 'y' ]; then
     log_important "$ITEMNAME would be removed"
-    echo "remove $ITEMNAME" >> $SR_UPDATEFILE
+    echo "$ITEMNAME would be removed" >> $SR_UPDATEFILE
   else
     log_important "Removing $ITEMNAME"
     rm -rf $SR_PKGREPO/$ITEMNAME/

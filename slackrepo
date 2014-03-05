@@ -87,13 +87,13 @@ while [ $# != 0 ]; do
       # --apply is incompatible with --dry-run
       [ "$UPDATEDRYRUN" = 'y' ] && { print_usage; exit 3; }
       UPDATEAPPLY='y'
-      SR_UPDATEFILE=$(echo "$1" | sed 's/^--apply=//')
+      SR_UPDATEFILE="$(echo "$1" | sed 's/^--apply=//')"
       shift; continue ;;
     --apply )
       # --apply is incompatible with --dry-run
       [ "$UPDATEDRYRUN" = 'y' ] && { print_usage; exit 3; }
       UPDATEAPPLY='y'
-      SR_UPDATEFILE='' # set this when we know where the log dir is
+      SR_UPDATEFILE=""  # fill this in later when we've read the config
       shift; continue ;;
     --* )
       print_usage; exit 3 ;;
@@ -125,7 +125,7 @@ done
 # Configuration
 #-------------------------------------------------------------------------------
 
-# Set the repo ID: from env, or from config, or "SBo" (in that order)
+# Set the repo ID: from control arg, or env, or from config, or just "SBo"
 SR_REPO="$REPO"
 srconf="/etc/slackrepo/slackrepo.conf"
 [ -f $srconf ] && { set -e; . $srconf; set +e; }
@@ -175,12 +175,16 @@ if [ -z "$SR_BRANCH" ]; then
   SR_BRANCH="$SLACKVER"
 fi
 
+# For update mode:
+[ -z "$SR_UPDATEFILE" ] && SR_UPDATEFILE="$SR_LOGDIR/slackrepo_dryrun.log"
+
 [ "$VERBOSE" = 'y' ] && echo ""
 log_verbose "Configuration:"
+[ "$VERBOSE" = 'y' ] && log_verbose "  --verbose"
 log_verbose "  --repo=$SR_REPO"
 log_verbose "  --$PROCMODE"
 [ "$UPDATEDRYRUN" = 'y' ] && log_verbose "  --dry-run"
-[ "$VERBOSE" = 'y' ]      && log_verbose "  --verbose"
+[ "$UPDATEAPPLY"  = 'y' ] && log_verbose "  --apply=$SR_UPDATEFILE"
 for var in $varlist; do
   myvar="SR_$var"
   log_verbose "  $var='${!myvar}'"
@@ -227,8 +231,10 @@ SR_CHANGELOG=${TMPDIR:-/tmp}/sr_changelog.tmp
 # Don't clear the changelog, it may contain changes from a previous interrupted
 # run, and gen_repos_files.sh can catch up with them at the end.
 touch $SR_CHANGELOG
-SR_UPDATEFILE=${TMPDIR:-/tmp}/sr_updates
->$SR_UPDATEFILE
+
+if [ "$UPDATEDRYRUN" = 'y' ]; then
+  >$SR_UPDATEFILE
+fi
 
 log_normal "Initialising git ..."
 if [ -d $SR_GITREPO/.git ]; then
@@ -307,8 +313,8 @@ echo "Time:      ${h}h ${m}m ${s}s"
 echo "Processed: $PROCTOTAL"
 
 if [ "$PROCMODE" = 'update' -a "$UPDATEDRYRUN" = 'y' ]; then
-  sort -u -k 2,2 -o $SR_UPDATEFILE $SR_UPDATEFILE
-  cat $SR_UPDATEFILE | sed -e 's/^add/add    /' -e 's/^update/update /' -e 's/^remove/remove /' -e 's/^/Would /'
+  sort -u -k 1,1 -o $SR_UPDATEFILE $SR_UPDATEFILE
+  cat $SR_UPDATEFILE
 else
   if [ "$PROCMODE" = 'test' ]; then
     PASSEDLIST="$(echo -n $PASSEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
@@ -371,9 +377,12 @@ if [ "$PROCMODE" != 'test' -a -s $SR_CHANGELOG ]; then
     log_important "Finished gen_repos_files.sh at $(date +%T)"
   fi
 fi
-rm $SR_CHANGELOG
 
 #-------------------------------------------------------------------------------
+
+rm -f \
+  $SR_CHANGELOG \
+  $SR_UPDATEFILE
 
 echo ""
 exit 0

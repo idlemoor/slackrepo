@@ -127,8 +127,8 @@ done
 
 # Set the repo ID: from control arg, or env, or from config, or just "SBo"
 SR_REPO="$REPO"
-srconf="/etc/slackrepo/slackrepo.conf"
-[ -f $srconf ] && { set -e; . $srconf; set +e; }
+repodefault="/etc/slackrepo/repo.default"
+[ -f $repodefault ] && { set -e; . $repodefault; set +e; }
 [ -z "${SR_REPO:=$REPO}" ] && SR_REPO="SBo"
 
 # Set config variables from environment:

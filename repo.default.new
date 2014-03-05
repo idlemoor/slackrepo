@@ -3,4 +3,4 @@
 # Currently, the only thing in this file is the ID of the default repo.
 # For everything else see /etc/slackrepo/repo_SBo.conf
 
-SR_REPOID=SBo
+REPO=SBo

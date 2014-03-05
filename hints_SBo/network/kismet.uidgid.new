@@ -1,0 +1,3 @@
+if ! getent group kismet | grep -q ^kismet: 2>/dev/null ; then
+  groupadd -g 234 kismet
+fi

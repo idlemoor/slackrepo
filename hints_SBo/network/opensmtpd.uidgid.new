@@ -1,0 +1,15 @@
+if ! getent group smtpd | grep -q ^smtpd: 2>/dev/null ; then
+  groupadd -g 270 smtpd
+fi
+
+if ! getent passwd smtpd | grep -q ^smtpd: 2>/dev/null ; then
+  useradd -u 270 -g 0 -r -s /bin/false -d /var/empty smtpd
+fi
+
+if ! getent group smtpq | grep -q ^smtpq: 2>/dev/null ; then
+  groupadd -g 271 smtpq
+fi
+
+if ! getent passwd smtpq | grep -q ^smtpq: 2>/dev/null ; then
+  useradd -u 271 -g 271 -r -s /bin/false -d /var/empty smtpq
+fi

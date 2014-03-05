@@ -1,0 +1,379 @@
+#!/bin/bash
+#-------------------------------------------------------------------------------
+# slackrepo - Automated SlackBuilding from git repo into package repo,
+#             for more details see /usr/doc/slackrepo-*/HOWTO
+#
+# Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#-------------------------------------------------------------------------------
+
+function print_usage
+{
+  echo 'Usage:'
+  echo '  slackrepo add     [--repo=ID] [item...]'
+  echo '  slackrepo rebuild [--repo=ID] [item...]'
+  echo '  slackrepo test    [--repo=ID] [item...]'
+  echo '  slackrepo remove  [--repo=ID] item...'
+  echo '  slackrepo update  [--repo=ID] [--dry-run ] [item...]'
+  echo '  slackrepo update  [--repo=ID] --apply[=file]'
+  return
+}
+
+[ $# = 0 ] && { print_usage; exit 0; }
+
+starttime=$(date +%s)
+
+#-------------------------------------------------------------------------------
+# Mode and control args
+#-------------------------------------------------------------------------------
+
+PROCMODE=''
+UPDATEDRYRUN='n'
+UPDATEAPPLY='n'
+VERBOSE='n'
+
+while [ $# != 0 ]; do
+  case "$1" in
+    add | --add )
+      # we'll accept add/rebuild/test/remove/update with or without '--'
+      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
+      PROCMODE='add'
+      shift; continue ;;
+    rebuild | --rebuild )
+      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
+      PROCMODE='rebuild'
+      shift; continue ;;
+    test | --test )
+      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
+      PROCMODE='test'
+      shift; continue ;;
+    remove | --remove )
+      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
+      PROCMODE='remove'
+      shift; continue ;;
+    update | --update )
+      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
+      PROCMODE='update'
+      shift; continue ;;
+    --verbose | -v )
+      VERBOSE='y'
+      shift; continue ;;
+    --repo=* )
+      SR_REPO=$(echo "$1" | sed 's/^--repo=//')
+      shift; continue ;;
+    --dry-run )
+      # --dry-run is incompatible with --apply
+      [ "$UPDATEAPPLY" = 'y' ] && { print_usage; exit 3; }
+      UPDATEDRYRUN='y'
+      shift; continue ;;
+    --apply=* )
+      # --apply is incompatible with --dry-run
+      [ "$UPDATEDRYRUN" = 'y' ] && { print_usage; exit 3; }
+      UPDATEAPPLY='y'
+      SR_UPDATEFILE=$(echo "$1" | sed 's/^--apply=//')
+      shift; continue ;;
+    --apply )
+      # --apply is incompatible with --dry-run
+      [ "$UPDATEDRYRUN" = 'y' ] && { print_usage; exit 3; }
+      UPDATEAPPLY='y'
+      SR_UPDATEFILE='' # set this when we know where the log dir is
+      shift; continue ;;
+    --* )
+      print_usage; exit 3 ;;
+    * )
+      break ;;
+  esac
+done
+
+[ -z "$PROCMODE" ] && \
+  { print_usage; exit 3; }
+[ \( "$UPDATEAPPLY" = 'y' -o "$UPDATEDRYRUN" = 'y' \) -a "$PROCMODE" != 'update' ] && \
+  { print_usage; exit 3; }
+
+#-------------------------------------------------------------------------------
+# Startup
+#-------------------------------------------------------------------------------
+
+# Ensure ctrl-c exits the whole thing, not just a random subshell
+trap "exit 2" SIGINT SIGQUIT SIGTERM
+
+# Get the support functions
+for f in /usr/libexec/slackrepo/functions.d/*functions.sh; do
+  if [ -x $f ]; then
+    . $f
+  fi
+done
+
+#-------------------------------------------------------------------------------
+# Configuration
+#-------------------------------------------------------------------------------
+
+# Set the repo ID: from env, or from config, or "SBo" (in that order)
+SR_REPO="$REPO"
+srconf="/etc/slackrepo/slackrepo.conf"
+[ -f $srconf ] && { set -e; . $srconf; set +e; }
+[ -z "${SR_REPO:=$REPO}" ] && SR_REPO="SBo"
+
+# Set config variables from environment:
+varlist="GITREPO BRANCH UPSTREAM STYLE SRCREPO PKGREPO TAG \
+         HINTS LOGDIR TMP ARCH PKGTYPE NUMJOBS USE_GENREPOS"
+# We'll prefix all these with SR_ to stop SlackBuilds picking them up
+for envvar in $varlist ; do
+  myvar="SR_$envvar"
+  eval $myvar="${!envvar}"
+done
+# Read the config files:
+repoconf="/etc/slackrepo/repo_${SR_REPO}.conf"
+##### and ~/.slackrepo
+if [ -f "$repoconf" ]; then
+  set -e; . "$repoconf"; set +e
+else
+  echo "Error: repo configuration file not found: $repoconf"; exit 2
+fi
+# Backfill the SR_ variables from config and unset the config variables
+for confvar in $varlist ; do
+  myvar="SR_$confvar"
+  [ -z "${!myvar}" ] && eval $myvar="${!confvar}"
+  eval unset $confvar
+done
+
+# Do this now so we can log the config:
+mkdir -p $SR_LOGDIR
+SR_LOGFILE=$SR_LOGDIR/slackrepo_$(date '+%F_%T').log
+> $SR_LOGFILE
+
+# If arch not set, work it out
+if [ -z "$SR_ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) SR_ARCH=i486 ;;
+    arm*) SR_ARCH=arm ;;
+       *) SR_ARCH=$( uname -m ) ;;
+  esac
+fi
+
+# Find out the version of Slackware (we'll also need this later)
+[ -f /etc/slackware-version ] || { log_error "$(basename $0): /etc/slackware-version not found"; exit 4; }
+SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
+if [ -z "$SR_BRANCH" ]; then
+  SR_BRANCH="$SLACKVER"
+fi
+
+[ "$VERBOSE" = 'y' ] && echo ""
+log_verbose "Configuration:"
+log_verbose "  --repo=$SR_REPO"
+log_verbose "  --$PROCMODE"
+[ "$UPDATEDRYRUN" = 'y' ] && log_verbose "  --dry-run"
+[ "$VERBOSE" = 'y' ]      && log_verbose "  --verbose"
+for var in $varlist; do
+  myvar="SR_$var"
+  log_verbose "  $var='${!myvar}'"
+done
+[ "$VERBOSE" = 'y' ] && echo ""
+
+[ -d "$SR_GITREPO" ] || { log_warning "$(basename $0): Creating git repository: $SR_GITREPO"     ; mkdir -p "$SR_GITREPO" ; }
+[ -d "$SR_SRCREPO" ] || { log_warning "$(basename $0): Creating source repository: $SR_SRCREPO"  ; mkdir -p "$SR_SRCREPO" ; }
+[ -d "$SR_PKGREPO" ] || { log_warning "$(basename $0): Creating package repository: $SR_PKGREPO" ; mkdir -p "$SR_PKGREPO" ; }
+[ -d "$SR_LOGDIR" ]  || { log_warning "$(basename $0): Creating log directory: $SR_LOGDIR"       ; mkdir -p "$SR_LOGDIR"  ; }
+[ -d "$SR_HINTS" ]   || { log_warning "$(basename $0): Creating hints directory: $SR_HINTS"      ; mkdir -p "$SR_HINTS"   ; }
+
+#-------------------------------------------------------------------------------
+# Initialisation
+#-------------------------------------------------------------------------------
+
+# Associative arrays to speed up dependency and revision calculations:
+declare -A DEPCACHE REVCACHE
+
+# How clean is the system?
+if [ -n "$SR_TAG" ]; then
+  installed=$(ls /var/log/packages/*$SR_TAG 2>/dev/null)
+  if [ -n "$installed" ]; then
+    for pkg in $installed; do
+      log_warning "$(basename $pkg): package is already installed"
+    done
+  fi
+fi
+
+SR_TMP=${SR_TMP:-/tmp/SBo}
+log_normal "Removing $SR_TMP/* ..."
+# really really don't want the next line to go badly ;-)
+[ -n "$SR_TMP" ] && rm -rf "${SR_TMP}"/*
+
+mkdir -p $SR_TMP $SR_SRCREPO $SR_PKGREPO
+if [ "$PROCMODE" = 'test' ]; then
+  SR_TESTREPO=$SR_TMP/test_$SR_REPO
+  rm -rf $SR_TESTREPO
+  mkdir -p $SR_TESTREPO
+fi
+
+# Don't use SR_TMP for this (we clean SR_TMP)
+SR_CHANGELOG=${TMPDIR:-/tmp}/sr_changelog.tmp
+# Don't clear the changelog, it may contain changes from a previous interrupted
+# run, and gen_repos_files.sh can catch up with them at the end.
+touch $SR_CHANGELOG
+SR_UPDATEFILE=${TMPDIR:-/tmp}/sr_updates
+>$SR_UPDATEFILE
+
+log_normal "Initialising git ..."
+if [ -d $SR_GITREPO/.git ]; then
+  cd $SR_GITREPO
+  ###### This bit needs a redo
+  ###### don't update if UPDATEAPPLY is happening
+  ###### git checkout -f $SR_BRANCH
+  if [ -n "$SR_UPSTREAM" -a "$SR_BRANCH" = "$SLACKVER" ]; then
+    if [ -n "$(find $SR_GITREPO/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
+      git fetch -a
+      git merge --ff-only origin/$SR_BRANCH
+    fi
+  fi
+else
+  mkdir -p $SR_GITREPO
+  log_normal "Git repository $SR_GITREPO does not exist; creating it..."
+  git clone "$SR_UPSTREAM" "$SR_GITREPO"
+  cd "$SR_GITREPO"
+  git fetch -a
+  git remote update
+  git checkout -b "$SR_BRANCH" -t origin/"$SR_BRANCH"
+fi
+log_normal "Finished initialising git."
+
+#-------------------------------------------------------------------------------
+# Main loop
+#-------------------------------------------------------------------------------
+
+PASSEDLIST=''
+SKIPPEDLIST=''
+FAILEDLIST=''
+ABORTEDLIST=''
+
+if [ "$PROCMODE" = 'update' ]; then
+  if [ "$UPDATEAPPLY" = 'y' ]; then
+    # update apply => throw away all the args, get the stored arg list
+    set -- $(cat "$SR_UPDATEFILE" | cut -f1 -d' ')
+  elif [ $# = 0 ]; then
+    # update mode with no args => process everything in the package repo
+    set -- $(cd $SR_PKGREPO; find * -maxdepth 0 -type d 2>/dev/null)
+  fi
+elif [ $# = 0 ]; then
+  if [ "$PROCMODE" = 'remove' ]; then
+    # remove mode with no args => do nothing
+    echo "Usage: slackrepo remove [--repo=ID] item..."
+    echo "In remove mode, you *must* specify the items to be removed."
+    exit 3
+  else
+    # other modes with no args => process everything in the git repo
+    set -- $(cd $SR_GITREPO; find * -maxdepth 0 -type d 2>/dev/null)
+  fi
+fi
+
+BLAME="$(basename $0)"
+parse_items $*
+# ignore status - we'll just process the items that were ok
+unset BLAME
+PROCTOTAL=0
+for ITEMNAME in $ITEMLIST; do
+  PROCTOTAL=$(( $PROCTOTAL + 1 ))
+  process_item $ITEMNAME
+done
+
+#-------------------------------------------------------------------------------
+# Print a summary of what happened
+#-------------------------------------------------------------------------------
+
+echo ""
+echo "==============================================================================="
+echo "! SUMMARY                                                            $(date +%T) !"
+echo "==============================================================================="
+echo ""
+secs=$(( $(date +%s) - $starttime ))
+h=$(( $secs / 3600 )); m=$(( ( $secs / 60) % 60 )); s=$(( $secs % 60 ))
+echo "Time:      ${h}h ${m}m ${s}s"
+echo "Processed: $PROCTOTAL"
+
+if [ "$PROCMODE" = 'update' -a "$UPDATEDRYRUN" = 'y' ]; then
+  sort -u -k 2,2 -o $SR_UPDATEFILE $SR_UPDATEFILE
+  cat $SR_UPDATEFILE | sed -e 's/^add/add    /' -e 's/^update/update /' -e 's/^remove/remove /' -e 's/^/Would /'
+else
+  if [ "$PROCMODE" = 'test' ]; then
+    PASSEDLIST="$(echo -n $PASSEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
+    echo "Passed:    $(echo -n $PASSEDLIST | wc -w)"
+    [ "$VERBOSE" = 'y' -a -n "$PASSEDLIST" ] && echo "$PASSEDLIST"
+  else
+    echo "Added:     $(grep ': Added'   $SR_CHANGELOG | wc -l)"
+    [ "$VERBOSE" = 'y' ] && \
+      grep ': Added'   $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+    echo "Updated:   $(grep ': Updated' $SR_CHANGELOG | wc -l)"
+    [ "$VERBOSE" = 'y' ] && \
+      grep ': Updated' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+    echo "Rebuilt:   $(grep ': Rebuilt' $SR_CHANGELOG | wc -l)"
+    [ "$VERBOSE" = 'y' ] && \
+      grep ': Rebuilt' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+    echo "Removed:   $(grep ': Removed' $SR_CHANGELOG | wc -l)"
+    [ "$VERBOSE" = 'y' ] && \
+      grep ': Removed' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+  fi
+  SKIPPEDLIST="$(echo -n $SKIPPEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
+  echo "Skipped:   $(echo -n $SKIPPEDLIST | wc -w)"
+  [ "$VERBOSE" = 'y' -a -n "$SKIPPEDLIST" ] && echo "$SKIPPEDLIST"
+  FAILEDLIST="$(echo -n $FAILEDLIST   | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
+  echo "Failed:    $(echo -n $FAILEDLIST | wc -w)"
+  [ "$VERBOSE" = 'y' -a -n "$FAILEDLIST" ] && echo "$FAILEDLIST"
+  ABORTEDLIST="$(echo -n $ABORTEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
+  echo "Aborted:   $(echo -n $ABORTEDLIST | wc -w)"
+  [ "$VERBOSE" = 'y' -a -n "$ABORTEDLIST" ] && echo "$ABORTEDLIST"
+fi
+WARNCOUNT=$(grep '^WARNING: ' $SR_LOGFILE | wc -l)
+echo "Warnings:  $WARNCOUNT"
+[ "$VERBOSE" = 'y' ] && grep '^WARNING: ' $SR_LOGFILE | sed 's/^WARNING: /  /'
+
+#-------------------------------------------------------------------------------
+# Package repository maintenance: gen_repos_files.sh
+#-------------------------------------------------------------------------------
+
+if [ "$PROCMODE" != 'test' -a -s $SR_CHANGELOG ]; then
+  rcfile=~/.genreposrc
+  [ -f $rcfile ] && { set -e; . $rcfile; set +e; }
+  if [ "$SR_USE_GENREPOS" = 1 ]; then
+    echo ""
+    log_start "gen_repos_files.sh"
+    # 'man sort' says an in-place sort is ok, so let's be lazy :-)
+    sort -o $SR_CHANGELOG $SR_CHANGELOG
+    if [ "$RSS_UUID" = '' ]; then
+      setrssuuid="RSS_UUID=\"$(uuidgen -t)\""
+      log_normal "Note: setting $setrssuuid in $rcfile"
+      echo "$setrssuuid" >> $rcfile
+      eval $setrssuuid
+    fi
+    REPOSROOT="$REPOSROOT" REPOSOWNER="$REPOSOWNER" REPOSOWNERGPG="$REPOSOWNERGPG" DL_URL="$DL_URL" \
+    RSS_TITLE="$RSS_TITLE" RSS_ICON="$RSS_ICON" RSS_LINK="$RSS_LINK" RSS_CLURL="$RSS_CLURL" \
+    RSS_DESCRIPTION="$RSS_DESCRIPTION" RSS_FEEDMAX="$RSS_FEEDMAX" RSS_UUID="$RSS_UUID" \
+    GPGBIN="$GPGBIN" USE_GPGAGENT="$USE_GPGAGENT" FOR_SLAPTGET="$FOR_SLAPTGET" \
+    FOLLOW_SYMLINKS="$FOLLOW_SYMLINKS" REPO_SUBDIRS="$REPO_SUBDIRS" \
+    sh /usr/libexec/slackrepo/gen_repos_files.sh -l $SR_CHANGELOG
+    ###### extra control args to run faster?
+    echo ""
+    log_important "Finished gen_repos_files.sh at $(date +%T)"
+  fi
+fi
+rm $SR_CHANGELOG
+
+#-------------------------------------------------------------------------------
+
+echo ""
+exit 0

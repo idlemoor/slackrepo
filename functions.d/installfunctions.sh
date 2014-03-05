@@ -1,42 +1,53 @@
 #!/bin/bash
-# Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
+# Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
-# installfunctions.sh - package install functions for sboggit:
-#   install_prebuilt_packages
+# installfunctions.sh - package install functions for slackrepo
 #   install_package
 #   uninstall_package
 #   dotprofilizer
-#   clean_outputdir
-#-------------------------------------------------------------------------------
-
-function install_prebuilt_packages
-{
-  local p="$1"
-  c=$(cd $SB_REPO/*/$p/..; basename $(pwd))
-  log_depstart "$c/$p"
-  pkglist=$(ls $SB_OUTPUT/$p/*$SB_TAG.t?z 2>/dev/null)
-  for pkgpath in $pkglist; do
-    pkgid=$(echo $(basename $pkgpath) | sed "s/$SB_TAG\.t.z\$//")
-    if [ -e /var/log/packages/$pkgid ]; then
-      log_warning "WARNING: $p is already installed:" $(ls /var/log/packages/$pkgid)
-    else
-      install_package $pkgpath || return 1
-    fi
-  done
-}
-
 #-------------------------------------------------------------------------------
 
 function install_package
+# Run installpkg if the package is not already installed,
+# finding the package in either the package or the test repository
+# $1 = itemname
+# Return status:
+# 0 = installed ok or already installed
+# 1 = install failed or not found
 {
-  local pkgpath="$1"
-  log_normal "Installing $pkgpath ..."
+  local itemname="$1"
+  local prg=$(basename $itemname)
+
+  # Is it already installed? Find it in /var/log/packages
+  plist=$(ls /var/log/packages/$prg-* 2>/dev/null)
+  # filter out false matches
+  pkgid=''
+  for ppath in $plist; do
+    p=$(basename $ppath)
+    if [ "$(echo $p | rev | cut -f4- -d- | rev)" = "$prg" ]; then
+      pkgid=$p
+      break
+    fi
+  done
+  # If already installed, return
+  [ -n "$pkgid" ] && return 0
+
+  pkgpath=''
+  # Look for the package.  In test mode, preferentially look in the test repo
+  if [ "$PROCMODE" = 'test' ]; then
+    pkgpath=$(ls $SR_TESTREPO/$itemname/$prg-*.t?z 2>/dev/null)
+    [ -z "$pkgpath" ] && \
+      pkgpath=$(ls $SR_PKGREPO/$itemname/$prg-*.t?z 2>/dev/null)
+  else
+    pkgpath=$(ls $SR_PKGREPO/$itemname/$prg-*.t?z 2>/dev/null)
+  fi
+  [ -n "$pkgpath" ] || { log_error "${itemname}: Can't find any packages in $SR_PKGREPO/$itemname/"; return 1; }
+
   installpkg --terse $pkgpath
   stat=$?
   if [ $stat != 0 ]; then
-    log_error "ERROR: installpkg $pkgpath failed (status $stat)"
-    itfailed
+    log_error "${itemname}: installpkg $pkgpath failed (status $stat)"
     return 1
   fi
   dotprofilizer $pkgpath
@@ -46,10 +57,16 @@ function install_package
 #-------------------------------------------------------------------------------
 
 function uninstall_package
+# Run removepkg, and do extra cleanup
+# $1 = itemname
+# Return status: always 0
 {
-  local prg="$1"
-  # filter out false matches in /var/log/packages
-  plist=$(ls /var/log/packages/$prg-*$SB_TAG 2>/dev/null)
+  local itemname="$1"
+  local prg=$(basename $itemname)
+
+  # is it installed?
+  plist=$(ls /var/log/packages/$prg-* 2>/dev/null)
+  # filter out false matches
   pkgid=''
   for ppath in $plist; do
     p=$(basename $ppath)
@@ -58,14 +75,19 @@ function uninstall_package
       break
     fi
   done
-  [ -n "$pkgid" ] || { log_normal "Not removing $prg (not installed)"; return 1; }
+  if [ -z "$pkgid" ]; then return 0; fi
+
   # Save a list of potential detritus in /etc
   etcnewfiles=$(grep '^etc/.*\.new$' /var/log/packages/$pkgid)
   etcdirs=$(grep '^etc/.*/$' /var/log/packages/$pkgid)
-  log_normal "Removing $pkgid"
+
+  log_verbose "Uninstalling $pkgid ..."
   removepkg $pkgid >/dev/null 2>&1
+
   # Remove any surviving detritus
+  if hint_nocleanup $itemname ; then return 0; fi
   for f in $etcnewfiles; do
+    # (this is why we shouldn't run on an end user system!)
     rm -f /"$f" /"$(echo "$f" | sed 's/\.new$//')"
   done
   for d in $etcdirs; do
@@ -73,42 +95,33 @@ function uninstall_package
       find "$d" -type d -depth -exec rmdir --ignore-fail-on-non-empty {} \;
     fi
   done
-  # Do this last so it can mend things we broke
+  # Do this last so it can mend things the package broke
   # (e.g. by reinstalling a Slackware package)
   hint_cleanup $prg
+
+  return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function dotprofilizer
+# Execute the /etc/profile.d scriptlets that came with a specific package
+# $1 = path of package
+# Return status: always 0
 {
-  local p="${1:-$prg}"
+  local pkgpath="$1"
   # examine /var/log/packages/xxxx because it's quicker than looking inside a .t?z
-  varlogpkg=/var/log/packages/$(basename $p | sed 's/\.t.z$//')
+  varlogpkg=/var/log/packages/$(basename $pkgpath | sed 's/\.t.z$//')
   if grep -q -E 'etc/profile\.d/.*\.sh(\.new)?' $varlogpkg; then
     for script in $(grep 'etc/profile\.d/.*\.sh' $varlogpkg | sed 's/.new$//'); do
       if [ -f /$script ]; then
-        log_normal "Running profile script /$script"
+        log_verbose "Running profile script /$script"
         . /$script
       elif [ -f /$script.new ]; then
-        log_normal "Running profile script /$script.new"
+        log_verbose "Running profile script /$script.new"
         . /$script.new
       fi
     done
   fi
-}
-
-#-------------------------------------------------------------------------------
-
-function clean_outputdir
-{
-  log_normal "Cleaning output directory $SB_OUTPUT ..."
-  for outpath in $(ls $SB_OUTPUT/* 2>/dev/null); do
-    pkgname=$(basename $outpath)
-    if [ ! -d "$(ls -d $SB_REPO/*/$pkgname 2>/dev/null)" ]; then
-      rm -rf -v "$SB_OUTPUT/$pkgname"
-      echo "$pkgname: Removed. NEWLINE" >>$SB_CHANGELOG
-    fi
-  done
-  log_normal "Finished cleaning output directory."
+  return
 }

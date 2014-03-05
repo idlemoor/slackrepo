@@ -1,11 +1,13 @@
 #!/bin/bash
-# Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
+# Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
-# logfunctions.sh - logging and display functions for sboggit:
+# logfunctions.sh - logging and web page functions for slackrepo
 #   log_start
-#   log_depstart
+#   log_prgstart
+#   log_verbose
 #   log_normal
+#   log_important
 #   log_success
 #   log_warning
 #   log_error
@@ -13,57 +15,123 @@
 
 function log_start
 {
+  PRG=${logprg:-$prg}
   msg="${*}                                                                      "
-  echo "==============================================================================="
+  line="==============================================================================="
+  echo "$line"
   echo "! ${msg:0:66} $(date +%T) !"
-  echo "==============================================================================="
+  echo "$line"
   echo ""
+  echo "$line"                      >>$SR_LOGFILE
+  echo "STARTING $@ $(date '+%F %T')" >>$SR_LOGFILE
+  [ -n "$PRG" ] && \
+  echo "STARTING $@ $(date '+%F %T')" >>$SR_LOGDIR/$PRG.log
 }
 
-function log_depstart
+#-------------------------------------------------------------------------------
+
+function log_prgstart
 {
-  msg="--${*}------------------------------------------------------------------------------"
-  echo "${msg:0:79}"
+  PRG=${logprg:-$prg}
+  line="-------------------------------------------------------------------------------"
+  pad=$(( ${#line} - ${#1} - 1 ))
+  tput bold; tput setaf 7
+  echo "$@ ${line:0:$pad}"
+  tput sgr0
+  echo "$line"          >>$SR_LOGFILE
+  echo "$@ $(date '+%F %T')" >>$SR_LOGFILE
+  [ -n "$PRG" ] && \
+  echo "$line"          >>$SR_LOGDIR/$PRG.log
+  [ -n "$PRG" ] && \
+  echo "$@ $(date '+%F %T')" >>$SR_LOGDIR/$PRG.log
+}
+
+#-------------------------------------------------------------------------------
+
+function log_verbose
+{
+  PRG=${logprg:-$prg}
+  if [ "$VERBOSE" = 'y' ]; then
+    echo "$@"
+  fi
+  echo "$@" >>$SR_LOGFILE
+  [ -n "$PRG" ] && \
+  echo "$@" >>$SR_LOGDIR/$PRG.log
 }
 
 #-------------------------------------------------------------------------------
 
 function log_normal
-{ echo "$@"; }
-
-function log_success
-{ tput bold; tput setaf 2; echo "$@"; tput sgr0; }
-
-function log_warning
-{ tput bold; tput setaf 3; echo "$@"; tput sgr0; }
-
-function log_error
-{ tput bold; tput setaf 1; echo "$@"; tput sgr0; }
+{
+  PRG=${logprg:-$prg}
+  echo "$@"
+  echo "$@" >>$SR_LOGFILE
+  [ -n "$PRG" ] && \
+  echo "$@" >>$SR_LOGDIR/$PRG.log
+}
 
 #-------------------------------------------------------------------------------
 
-function log_pass
+function log_important
 {
-  local c="$1" p="$2"
-  log_success ":-) PASS (-: $c/$p"
-  echo "$c/$p" >> $SB_LOGDIR/PASSLIST
-  mv $SB_LOGDIR/$p.log $SB_LOGDIR/PASS/
-  if [ "$SB_USE_WEBPAGE" = 1 ]; then
-    :
-  fi
+  PRG=${logprg:-$prg}
+  tput bold; tput setaf 7
+  echo "$@"
+  tput sgr0
+  echo "$@" >>$SR_LOGFILE
+  [ -n "$PRG" ] && \
+  echo "$@" >>$SR_LOGDIR/$PRG.log
 }
 
-function log_fail
+#-------------------------------------------------------------------------------
+
+function log_success
 {
-  local c="$1" p="$2"
-  log_error ":-( FAIL )-: $c/$p"
-  grep -q "^$c/$p\$" $SB_LOGDIR/FAILLIST || echo "$c/$p" >> $SB_LOGDIR/FAILLIST
-  # leave the wreckage in $TMP for investigation
-  if [ -f $SB_LOGDIR/$p.log ]; then
-    mv $SB_LOGDIR/$p.log $SB_LOGDIR/FAIL/$p.log
-    log_error "See $SB_LOGDIR/FAIL/$p.log"
+  PRG=${logprg:-$prg}
+  tput bold; tput setaf 2
+  echo "$@"
+  tput sgr0
+  echo "$@" >>$SR_LOGFILE
+  [ -n "$PRG" ] && \
+  echo "$@" >>$SR_LOGDIR/$PRG.log
+}
+
+#-------------------------------------------------------------------------------
+
+function log_warning
+{
+  if [ "$1" = '-n' ]; then
+    W=''
+    shift
+  else
+    W='WARNING: '
   fi
-  if [ "$SB_USE_WEBPAGE" = 1 ]; then
-    :
+  PRG=${logprg:-$prg}
+  tput bold; tput setaf 3
+  echo "${W}$@"
+  tput sgr0
+  echo "${W}$@" >>$SR_LOGFILE
+  [ -n "$PRG" ] && \
+  echo "${W}$@" >>$SR_LOGDIR/$PRG.log
+}
+
+#-------------------------------------------------------------------------------
+
+function log_error
+{
+  if [ "$1" = '-n' ]; then
+    E=''
+    shift
+  else
+    E='ERROR: '
   fi
+  PRG=${logprg:-$prg}
+  tput bold; tput setaf 1
+  echo "${E}$@"
+  tput sgr0
+  # We might be called before SR_LOGFILE is set (unlike the other log funcs)
+  [ -z "$SR_LOGFILE" ] && return 0
+  echo "${E}$@" >>$SR_LOGFILE
+  [ -n "$PRG" ] && \
+  echo "${E}$@" >>$SR_LOGDIR/$PRG.log
 }

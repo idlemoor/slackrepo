@@ -1,0 +1,3 @@
+if ! getent passwd znc | grep -q ^znc: 2>/dev/null ; then
+  useradd -u 219 -g 99 -c "ZNC User" -d /etc/znc znc
+fi

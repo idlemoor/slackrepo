@@ -1,44 +1,56 @@
 #!/bin/bash
-# Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
+# Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
-# srcfunctions.sh - source functions for sboggit:
-#   check_src
+# srcfunctions.sh - source functions for slackrepo
+#   verify_src
 #   download_src
 #   save_bad_src
-#   clean_srcdir
 #-------------------------------------------------------------------------------
 
-function check_src
+function verify_src
+# Verify item's source files in the source cache
+# $1 = itemname
+# Also uses global variables MD5SUM* previously read from .info
+# Return status:
+# 0 - all files passed, or check suppressed
+# 1 - one or more files had a bad md5sum
+# 2 - no. of files != no. of md5sums
+# 3 - directory not found => not cached, need to download
+# 4 - version mismatch, need to download new version
+# 5 - .info says item is unsupported/untested on this arch
 {
-  local p="${1:-$prg}"
-  # This function also uses global variables MD5SUM* previously read from .info
-  # Returns:
-  # 1 - one or more files had a bad md5sum
-  # 2 - no. of files != no. of md5sums
-  # 3 - directory not found => not yet downloaded
-  # 4 - unsupported/untested
-  if [ -n "$(eval echo \$DOWNLOAD_$SB_ARCH)" ]; then
-    DOWNDIR=$SB_SRC/$p/$SB_ARCH
-    DOWNLIST="$(eval echo \$DOWNLOAD_$SB_ARCH)"
-    MD5LIST="$(eval echo \$MD5SUM_$SB_ARCH)"
+  local itemname="$1"
+  local prg=$(basename $itemname)
+
+  if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
+    DOWNDIR=$SR_SRCREPO/$itemname/$SR_ARCH
+    DOWNLIST="$(eval echo \$DOWNLOAD_$SR_ARCH)"
+    MD5LIST="$(eval echo \$MD5SUM_$SR_ARCH)"
   else
-    DOWNDIR=$SB_SRC/$p
+    DOWNDIR=$SR_SRCREPO/$itemname
     DOWNLIST="$DOWNLOAD"
     MD5LIST="$MD5SUM"
   fi
   if [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ]; then
-    log_warning "$prg is $DOWNLIST on $SB_ARCH"
-    return 4
+    log_warning -n "$itemname is $DOWNLIST on $SR_ARCH"
+    return 5
   elif [ ! -d $DOWNDIR ]; then
     return 3
   fi
+
   ( cd $DOWNDIR
-    log_normal "Checking source files ..."
-    numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| wc -l)
+    log_normal "Verifying source files ..."
+    if [ "$VERSION" != "$(cat .version 2>/dev/null)" ]; then
+      log_verbose "Note: removing old source files"
+      find . -maxdepth 1 -type f -exec rm -f {} \;
+      return 4
+    fi
+    numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '.version' | wc -l)
     numwant=$(echo $MD5LIST | wc -w)
-    [ $numgot = $numwant ] || { log_error "ERROR: need $numwant source files but got $numgot"; return 2; }
-    hint_md5ignore $prg && return 0
+    [ $numgot = $numwant ] || { log_verbose "Note: need $numwant source files, but have $numgot"; return 2; }
+    hint_md5ignore $itemname && return 0
+    [ -n "$NEWVERSION" ] && { log_verbose "Note: not checking md5sums due to version hint"; return 0; }
     allok='y'
     for f in *; do
       # check that it's a file (arch-specific subdirectories may exist)
@@ -47,36 +59,42 @@ function check_src
         ok='n'
         # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
         for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
-        [ "$ok" = 'y' ] || { log_normal "Note: failed md5sum: '$f'"; allok='n'; }
+        [ "$ok" = 'y' ] || { log_verbose "Note: failed md5sum: $f"; allok='n'; }
       fi
     done
     [ "$allok" = 'y' ] || { return 1; }
+    ##### Would it be nice to remove _BAD if all files passed?
   )
-  return $?  # status comes from subshell
+  return $?  # status comes directly from subshell
 }
 
 #-------------------------------------------------------------------------------
 
 function download_src
+# Download the sources for itemname into the cache, and stamp the cache with a .version file
+# $1 = itemname
+# Also uses global variables $DOWNLOAD* previously read from .info,
+# and $DOWNDIR and $DOWNLIST previously set by verify_src
+# Return status:
+# 1 - wget failed
 {
-  local p="${1:-$prg}"
-  # This function also uses global variables DOWNLOAD* previously read from .info
-  # and DOWNDIR/DOWNLIST previously set by check_src
-  # Returns:
-  # 1 - wget failed
+  local itemname="$1"
+  local prg=$(basename $itemname)
+
   mkdir -p $DOWNDIR
   find $DOWNDIR -maxdepth 1 -type f -exec rm {} \;
-  log_normal "Downloading ..."
+  log_normal "Downloading source files ..."
   ( cd $DOWNDIR
     for src in $DOWNLIST; do
-      log_normal "wget $src ..."
-      wget --no-check-certificate --content-disposition --tries=2 -T 240 "$src" >> $SB_LOGDIR/$p.log 2>&1
+      log_verbose "wget $src ..."
+      wget --no-check-certificate --content-disposition --tries=2 -T 240 "$src" >> $SR_LOGDIR/$prg.log 2>&1
       wstat=$?
       if [ $wstat != 0 ]; then
-        log_error "ERROR: wget error (status $wstat)"
+        log_error "Download failed (wget status $wstat)"
         return 1
       fi
     done
+    echo "$VERSION" > .version
   )
   return 0
 }
@@ -84,38 +102,30 @@ function download_src
 #-------------------------------------------------------------------------------
 
 function save_bad_src
+# Move $SR_SRCREPO/<itemname>/[<arch>/] to $SR_SRCREPO/<itemname>_BAD/[<arch>/],
+# in case it's useful for diagnostic purposes or can be resurrected.
+# $1 = itemname
+# Return status: always 0
 {
-  local p="${1:-$prg}"
-  baddir=$SB_SRC/${p}_BAD
+  local itemname="$1"
+  local prg=$(basename $itemname)
+
+  baddir=$SR_SRCREPO/${itemname}_BAD
   # remove any previous bad sources
   rm -rf $baddir
   # remove empty directories
-  find $SB_SRC/${p} -depth -type d -exec rmdir --ignore-fail-on-non-empty {} \;
+  find $SR_SRCREPO/${itemname} -depth -type d -exec rmdir --ignore-fail-on-non-empty {} \;
   # save whatever survives
-  if [ -d $SB_SRC/${p}/$SB_ARCH ]; then
+  if [ -d $SR_SRCREPO/${itemname}/$SR_ARCH ]; then
     mkdir -p $baddir
-    mv $SB_SRC/${p}/$SB_ARCH $baddir/
-    log_normal "Note: bad sources saved in $baddir/$SB_ARCH"
+    mv $SR_SRCREPO/${itemname}/$SR_ARCH $baddir/
+    log_normal "Note: bad sources saved in $baddir/$SR_ARCH"
     # if there's stuff from other arches, leave it
-    rmdir --ignore-fail-on-non-empty $SB_SRC/${p}
-  elif [ -d $SB_SRC/${p} ]; then
+    rmdir --ignore-fail-on-non-empty $SR_SRCREPO/${itemname}
+  elif [ -d $SR_SRCREPO/${itemname} ]; then
     # this isn't perfect, but it'll do
-    mv $SB_SRC/${p} $baddir
+    mv $SR_SRCREPO/${itemname} $baddir
     log_normal "Note: bad sources saved in $baddir"
   fi
-}
-
-#-------------------------------------------------------------------------------
-
-function clean_srcdir
-{
-  # will remove *_BAD directories as well as obsolete/removed directories :-)
-  log_normal "Cleaning source directory $SB_SRC ..."
-  for srcpath in $(ls $SB_SRC/* 2>/dev/null); do
-    pkgname=$(basename $srcpath)
-    if [ ! -d "$(ls -d $SB_REPO/*/$pkgname 2>/dev/null)" ]; then
-      rm -rf -v "$SB_SRC/$pkgname"
-    fi
-  done
-  log_normal "Finished cleaning source directory."
+  return 0
 }

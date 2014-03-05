@@ -1,0 +1,114 @@
+# This is the slackrepo configuration file for the SBo repository.
+#
+# The priority order for configuration is:
+# (1) Environment variables when slackrepo is called
+# (2) ~/.genreprc   [for gen_repos_files.sh only]
+# (3) /etc/slackrepo/repo_SBo.conf
+#-------------------------------------------------------------------------------
+
+# Where is the local git repo
+GITREPO=/var/lib/slackrepo/git_SBo
+
+# Local git branch to use: empty implies '14.1' for Slackware 14.1, etc
+BRANCH=''
+
+# URL of the upstream git repo: empty implies don't fetch from upstream
+UPSTREAM=git://slackbuilds.org/slackbuilds
+
+# Style of SlackBuilds (one of: SBo, Slackware)
+STYLE='SBo'
+
+# Where to store cached sources (you will need plenty of space)
+SRCREPO=/var/lib/slackrepo/src_SBo
+
+# Where to store built packages (you will need plenty of space)
+PKGREPO=/var/lib/slackrepo/pkg_SBo
+
+# Tag for built packages
+# If you are publishing packages from SlackBuilds.org, *please* change SBo to something else
+# (see http://slackbuilds.org/faq/ item 20)
+TAG=_SBo
+
+# Where to find hints for this repo
+HINTS=/etc/slackrepo/hints_SBo
+
+# Where to store log files
+LOGDIR=/var/log/slackrepo/log_SBo
+
+# Where to store temporary files (you will need plenty of space)
+TMP=/tmp/SBo
+
+# Some other variables you might want to change:
+# Arch for building. Leave blank to have this automatically determined.
+ARCH=''
+# Package compression type:
+PKGTYPE=tgz
+# Number of make jobs to set in MAKEFLAGS
+NUMJOBS=' -j2 '
+
+#-------------------------------------------------------------------------------
+
+# Parameters for calling gen_repos_files.sh
+# If enabled, you *must* set correct values for all the variables below!
+# Change this to 1 if you want to enable gen_repos_files.sh
+USE_GENREPOS='0'
+
+# Don't change this! it is needed so gen_repos_files.sh can find your packages
+REPOSROOT=${REPOSROOT:-$PKGREPO}
+
+# Repository maintainer
+REPOSOWNER=${REPOSOWNER:-"Local administrator <root@localhost>"}
+
+# The GPG key for the repository owner can contain a different string than
+# the value of $REPOSOWNER . If you leave $REPOSOWNERGPG empty, the script will
+# use the value you've set for $REPOSOWNER instead to search the GPG keyfile.
+REPOSOWNERGPG=${REPOSOWNERGPG:-""}
+
+# Under what URL is the repository accessible:
+DL_URL=${DL_URL:-""}
+
+# The title of the generated RSS feed:
+RSS_TITLE=${RSS_TITLE:-"Local SlackBuild Packages"}
+
+# The logo picture used for the RSS feed:
+RSS_ICON=${RSS_ICON:-"http://www.slackware.com/~alien/graphics/blueorb.png"}
+
+# The URL linked to when clicking on the logo:
+RSS_LINK=${RSS_LINK:-"file://$REPOSROOT/ChangeLog.txt"}
+
+# URL to the full changelog.txt:
+RSS_CLURL=${RSS_CLURL:-"file://$REPOSROOT/ChangeLog.txt"}
+
+# The descriptive text for the RSS feed:
+RSS_DESCRIPTION=${RSS_DESCRIPTION:-"Local SlackBuild Packages"}
+
+# Maximum number of RSS feed entries to display:
+RSS_FEEDMAX=${RSS_FEEDMAX:-15}
+
+# The RSS generator must use a unique feed identifier.
+# Generate one for your feed by using the string returned by "uuidgen -t":
+RSS_UUID=${RSS_UUID:-""}
+
+# Either use gpg or gpg2:
+GPGBIN=${GPGBIN:-"/usr/bin/gpg"}
+
+# Optionally use gpg-agent to cache the gpg passphrase instead of letting the
+# script keep it in the environment (note that if you define USE_GPGAGENT=1
+# but gpg-agent is not running, you will get prompted for a passphrase every
+# single time gpg runs):
+USE_GPGAGENT=${USE_GPGAGENT:-0}
+
+# Generate slack-requires, slack-suggests, and slack-conflicts lines in the
+# metadata files by setting FOR_SLAPTGET to "1" -- these are used by slapt-get 
+FOR_SLAPTGET=${FOR_SLAPTGET:-0}
+
+# Follow symlinks in case the repository has symlinks like 14.0 -> 13.37
+# indicating that one package works for those two Slackware releases.
+# If the script does _not_ follow symlinks, then the symlinks will appear in
+# the repository listing instead of the packages they point to.
+FOLLOW_SYMLINKS=${FOLLOW_SYMLINKS:-1}
+
+# If the repository has separate package subdirectories (for separate
+# Slackware releases or architectures) then define them here.
+# Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them:
+REPO_SUBDIRS=${REPO_SUBDIRS:-""}

@@ -1,0 +1,5 @@
+UIDGIDNUMBER=279
+UIDGIDNAME=plex
+UIDGIDCOMMENT=
+UIDGIDDIR=/var/lib/plexmediaserver
+UIDGIDSHELL=/bin/false

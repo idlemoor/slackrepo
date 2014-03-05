@@ -1,4 +1,7 @@
-Clean repeatable building
+TODO
+----
+
+[done] Clean repeatable building
 
 [done] Review current hints & add to git
 
@@ -10,16 +13,43 @@ Clean repeatable building
 
 [done] Combine i486 and x86_64 source repositories
 
-Nicer logging (+ export logs to web pages)
-
-Alien-style metafiles and add support for calling gen_repos_files.sh
+[done] Alien-style metafiles and add support for calling gen_repos_files.sh
 
 [done] Put everything in a proper place instead of a stupid top level directory
 
-Add control arguments to control installs and rebuilds
+[done] Add control arguments (build/test/update)
 
-Support for end-user builds (user mode/bulk test mode)
+Additional QA tests for test mode
+ - check source isn't 404
+ - package contents
+ - non-SBo SlackBuilds
 
-Support for Slackware SlackBuilds (SBo mode/Slack mode)
+update --apply
 
-arm support?
+Slackware style repos
+
+Non-Git SlackBuild repos
+
+Per-ARCH package repos
+
+Multilevel repos
+
+Better logging
+
+Multiple built packages from one SlackBuild
+
+Slackware style SlackBuilds
+
+ARM support
+
+github tarball detection
+
+manpage
+
+more documentation
+
+NUMJOBS (is it working ok)
+
+hints in SlackBuild dir
+
+speed up gen_repos

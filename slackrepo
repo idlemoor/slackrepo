@@ -193,11 +193,11 @@ for var in $varlist; do
 done
 [ "$VERBOSE" = 'y' ] && echo ""
 
-[ -d "$SR_GITREPO" ] || { log_warning "$(basename $0): Creating git repository: $SR_GITREPO"     ; mkdir -p "$SR_GITREPO" ; }
-[ -d "$SR_SRCREPO" ] || { log_warning "$(basename $0): Creating source repository: $SR_SRCREPO"  ; mkdir -p "$SR_SRCREPO" ; }
-[ -d "$SR_PKGREPO" ] || { log_warning "$(basename $0): Creating package repository: $SR_PKGREPO" ; mkdir -p "$SR_PKGREPO" ; }
-[ -d "$SR_LOGDIR" ]  || { log_warning "$(basename $0): Creating log directory: $SR_LOGDIR"       ; mkdir -p "$SR_LOGDIR"  ; }
-[ -d "$SR_HINTS" ]   || { log_warning "$(basename $0): Creating hints directory: $SR_HINTS"      ; mkdir -p "$SR_HINTS"   ; }
+[ -d "$SR_GITREPO" ] || { log_normal "$(basename $0): Creating git repository: $SR_GITREPO"     ; mkdir -p "$SR_GITREPO" ; }
+[ -d "$SR_SRCREPO" ] || { log_normal "$(basename $0): Creating source repository: $SR_SRCREPO"  ; mkdir -p "$SR_SRCREPO" ; }
+[ -d "$SR_PKGREPO" ] || { log_normal "$(basename $0): Creating package repository: $SR_PKGREPO" ; mkdir -p "$SR_PKGREPO" ; }
+[ -d "$SR_LOGDIR" ]  || { log_normal "$(basename $0): Creating log directory: $SR_LOGDIR"       ; mkdir -p "$SR_LOGDIR"  ; }
+[ -d "$SR_HINTS" ]   || { log_normal "$(basename $0): Creating hints directory: $SR_HINTS"      ; mkdir -p "$SR_HINTS"   ; }
 
 #-------------------------------------------------------------------------------
 # Initialisation

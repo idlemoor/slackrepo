@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.
+# Line up the first '|' above the ':' following the base package name, and
+# the '|' on the right side marks the last column you can put a character in.
+# You must make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':' except on otherwise blank lines.
+
+         |-----handy-ruler------------------------------------------------------|
+slackrepo: slackrepo (automated SlackBuild package builder)
+slackrepo:
+slackrepo: This is an experimental SlackBuild package builder.
+slackrepo:
+slackrepo: Features:
+slackrepo:  - Clean repeatable building, including dependencies
+slackrepo:  - Suitable for bulk testing (no interaction required)
+slackrepo:  - Package updates detected by tracking upstream git revisions
+slackrepo:  - Output repository suitable for use with slackpkg+
+slackrepo:
+slackrepo: BEWARE! This is experimental software! Use with caution!

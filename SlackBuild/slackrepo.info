@@ -1,6 +1,6 @@
 PRGNAM="slackrepo"
 VERSION="0.0.1"
-HOMEPAGE="http://github.com/idlemoor/slackrepo"
+HOMEPAGE="https://github.com/idlemoor/slackrepo/wiki"
 DOWNLOAD="http://github.com/idlemoor/slackrepo/archive/v0.0.1.tar.gz"
 MD5SUM="340ea34f0257020cd40da0cee6bf55ad"
 DOWNLOAD_x86_64=""

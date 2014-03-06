@@ -3,8 +3,8 @@ SLACKREPO HOWTO
 
 For some important warnings, please see the end of this file.
 
-slackrepo is an automated SlackBuild package builder.  Its emphasis is
-on clean building, updating and testing.  It builds packages from an
+slackrepo is a highly automated SlackBuild package builder.  Its emphasis
+is on clean building, updating and testing.  It builds packages from an
 input git repository of SlackBuilds (for example, a clone of
 SlackBuilds.org), and then outputs them to a package repository.  The
 SlackBuild repository's git revisions determine updates and rebuilds of
@@ -16,8 +16,8 @@ installation of dependencies during builds, slackrepo does not install,
 upgrade or remove packages on the host system.  For that, you should
 continue to use pkgtool, installpkg/upgradepkg/removepkg, and slackpkg+.
 For package building, most users will find that the existing popular
-tools work much better for their needs: sbopkg (with sqg), sbotools,
-slack, or src2pkg.
+tools are much better for their needs: sbopkg (with sqg), sbotools,
+slacktrack, slack, or src2pkg.
 
 For best results, slackrepo is intended to be run on a "clean" standard
 Slackware environment (like a "build box" or a virtual machine), with a
@@ -31,9 +31,9 @@ for example with 'su -'.
 
 You are encouraged to take full control of the building process by
 reviewing, customising and creating 'hints'.  These are small
-configuration files (in the directory /etc/slackrepo/hints) that
-determine the processing of each item, including options and optional
-dependencies.  A sample set of hints for SlackBuilds.org are supplied.
+configuration files that determine the processing of each item,
+including options and optional dependencies.  A sample set of hints for
+SlackBuilds.org are supplied (in the directory /etc/slackrepo/hints_SBo).
 For more information, see below.
 
 Dependencies are built and installed automatically, according to the
@@ -68,7 +68,7 @@ OPERATION
 ---------
 
 slackrepo has five modes of operation: add mode, rebuild mode, test mode,
-update mode, and remove mode.
+remove mode, and update mode.
 
 (1) Add mode:
 
@@ -128,18 +128,18 @@ Operation Details:
 Sources are downloaded on demand (unless already available in the
 local cache).  A well-functioning network connection is assumed.
 
-A package is considered to be out-of-date if, since it was built,
+A package is considered to be out-of-date if, since it was built --
 
 * the git revision in the directory containing the SlackBuild has changed
 * the directory containing the SlackBuilds has untracked/uncommited files
- (i.e. "git is dirty") and they are newer than the package
+  (i.e. "git is dirty") and they are newer than the package
 * any relevant hint (see below) has changed
 * any of its direct dependencies has been updated
 * the version of Slackware has changed
 
-Changes in the SlackBuilds repository, and changes to the relevant hints, are
-classified as 'updates', which will cause directly depending items to be
-rebuilt.  Other changes are classified as 'rebuilds' and do not cause
+Changes in the SlackBuilds repository, and changes to the relevant hints,
+are classified as 'updates', which will cause directly depending items to
+be rebuilt.  Other changes are classified as 'rebuilds' and do not cause
 depending items to be rebuilt.
 
 When a package is rebuilt, and when a package is updated but its
@@ -160,10 +160,10 @@ In particular, *please* review the README files of the packages you are
 building, and then *please* modify the supplied option and dependency hints
 for your own requirements!
 
-The possible types of hint files are as follows --
+The types of hints are as follows --
 
-* prg.readmedeps  dependencies to substitute for %README% in REQUIRES="..."
 * prg.options     options to supply to the SlackBuild
+* prg.readmedeps  dependencies to substitute for %README% in REQUIRES="..."
 * prg.moredeps    more dependencies, eg. to support options
 * prg.uidgid      groupadd and useradd commands needed for prg
 * prg.md5ignore   don't check source md5sum

@@ -49,10 +49,10 @@ function list_direct_deps
     fi
   done
 
-  if [ -f $SR_HINTS/$itemname.moredeps ]; then
-    log_verbose "Hint: Adding more deps: \"$(cat $SR_HINTS/$itemname.moredeps)\""
-    BLAME="$prg.moredeps"
-    parse_items $(cat $SR_HINTS/$itemname.moredeps)
+  if [ -f $SR_HINTS/$itemname.optdeps ]; then
+    log_verbose "Hint: Adding optional deps: \"$(cat $SR_HINTS/$itemname.optdeps)\""
+    BLAME="$prg.optdeps"
+    parse_items $(cat $SR_HINTS/$itemname.optdeps)
     unset BLAME
     deplist="$deplist $ITEMLIST"
   fi

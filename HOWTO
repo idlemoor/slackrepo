@@ -163,8 +163,8 @@ for your own requirements!
 The types of hints are as follows --
 
 * prg.options     options to supply to the SlackBuild
+* prg.optdeps     optional dependencies, including deps for options
 * prg.readmedeps  dependencies to substitute for %README% in REQUIRES="..."
-* prg.moredeps    more dependencies, eg. to support options
 * prg.uidgid      groupadd and useradd commands needed for prg
 * prg.md5ignore   don't check source md5sum
 * prg.makej1      set MAKEFLAGS='-j1' during build

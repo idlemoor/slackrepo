@@ -1,18 +1,26 @@
 TODO
 ----
 
+nocleanup hint -> don't uninstall
+
+version hint -> update (not rebuild) if it changed; also .version in srcrepo
+
 Better logging
 
 manpages
 
-revise documentation
+revise documentation & do github wiki
+
+document link to slackpkg+
+
+sbopkg compatibility (env vars & filestore)
 
 Additional QA tests for test mode
  - check source isn't 404
  - package contents
  - non-SBo SlackBuilds
 
-NUMJOBS (is it working ok)
+NUMJOBS (is it working ok) no it isn't :-(
 
 hints in SlackBuild dir
 

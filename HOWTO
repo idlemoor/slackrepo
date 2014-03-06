@@ -3,9 +3,9 @@ SLACKREPO HOWTO
 
 For some important warnings, please see the end of this file.
 
-slackrepo is an automated SlackBuild package builder.  Its emphasis is 
-on clean building, updating and testing.  It builds packages from an 
-input git repository of SlackBuilds (for example, a clone of 
+slackrepo is an automated SlackBuild package builder.  Its emphasis is
+on clean building, updating and testing.  It builds packages from an
+input git repository of SlackBuilds (for example, a clone of
 SlackBuilds.org), and then outputs them to a package repository.  The
 SlackBuild repository's git revisions determine updates and rebuilds of
 packages.
@@ -16,12 +16,12 @@ installation of dependencies during builds, slackrepo does not install,
 upgrade or remove packages on the host system.  For that, you should
 continue to use pkgtool, installpkg/upgradepkg/removepkg, and slackpkg+.
 For package building, most users will find that the existing popular
-tools work much better for their needs: sbopkg (with sqg), asbt, sbotools,
-or src2pkg.
+tools work much better for their needs: sbopkg (with sqg), sbotools,
+slack, or src2pkg.
 
-For best results, slackrepo is intended to be run on a "clean" standard 
-Slackware environment (like a "build box" or a virtual machine), with a 
-full installation of Slackware and no additional packages (or very 
+For best results, slackrepo is intended to be run on a "clean" standard
+Slackware environment (like a "build box" or a virtual machine), with a
+full installation of Slackware and no additional packages (or very
 few).  You can then use the package repository to install the packages on
 other hosts (e.g. with slackpkg+).
 
@@ -29,9 +29,9 @@ slackrepo runs from the command line.  It is not interactive.  Like other
 Slackware package management tools, it should be run as the root user,
 for example with 'su -'.
 
-You are encouraged to take full control of the building process by 
-reviewing, customising and creating 'hints'.  These are small 
-configuration files (in the directory /etc/slackrepo/hints) that 
+You are encouraged to take full control of the building process by
+reviewing, customising and creating 'hints'.  These are small
+configuration files (in the directory /etc/slackrepo/hints) that
 determine the processing of each item, including options and optional
 dependencies.  A sample set of hints for SlackBuilds.org are supplied.
 For more information, see below.
@@ -54,12 +54,12 @@ reinstall the standard Slackware package.
 Optionally, Eric Hameleers' gen_repos_files.sh (which is included) can
 be used to maintain additional package metadata in the package repository,
 such as signing and a changelog.  Thanks, Eric!  To use it, you will
-need to set a few configuration values in the file /etc/slackrepo.conf
-(but, if you already use gen_repos_files.sh, slackrepo will read your
-existing ~/.genreprc config file).
+need to set a few configuration values in the repository's configuration
+file /etc/slackrepo/repo_SBo.conf (but, if you use gen_repos_files.sh
+already, slackrepo will read your existing ~/.genreprc config file).
 
-slackrepo is not affiliated with, or endorsed by, SlackBuilds.org or 
-the Slackware Team.  The author thanks those projects for their 
+slackrepo is not affiliated with, or endorsed by, SlackBuilds.org or
+the Slackware Team.  The author thanks those projects for their
 continuing generosity to the community.
 
 
@@ -72,29 +72,37 @@ update mode, and remove mode.
 
 (1) Add mode:
 
-  slackrepo add [--repo=ID] item...
+  slackrepo add [--repo=ID] [item...]
 
 In add mode, each specified item in the SlackBuild repository is
 built and stored into the package repository if there is no up-to-date
 package already stored.  Missing or out-of-date dependencies are also
-built and stored into the package repository.
+built and stored into the package repository.  If no items are specified,
+everything in the SlackBuild repository is built and stored.
 
 (2) Rebuild mode:
 
-  slackrepo rebuild [--repo=ID] item...
+  slackrepo rebuild [--repo=ID] [item...]
 
 Rebuild mode is like add mode, except that packages already in the package
 repository will be rebuilt, even if they are up-to-date.
 
 (3) Test mode:
 
-  slackrepo test [--repo=ID] item...
+  slackrepo test [--repo=ID] [item...]
 
 Test mode is like rebuild mode, except that the SlackBuilds and
-packages are subjected to additional quality assurance tests, and 
+packages are subjected to additional quality assurance tests, and
 the packages are not stored into the package repository.
 
-(4) Update mode:
+(4) Remove mode:
+
+  slackrepo remove [--repo=ID] item...
+
+In remove mode, each item is removed from the package repository.  Also,
+any cached source files are removed.
+
+(5) Update mode:
 
   slackrepo update [--repo=ID] [--dry-run] [item...]
   slackrepo update [--repo=ID] --apply[=filename]
@@ -108,13 +116,6 @@ rebuilt, upgraded or removed, but none of these actions are performed.
 If --apply is specified, the changes previously reported by --dry-run
 are applied.
 
-(5) Remove mode:
-
-  slackrepo remove [--repo=ID] item...
-
-In remove mode, each item is removed from the package repository.  Also,
-any cached source files are removed. 
-
 Usage Notes:
 
 Items can be specified as the name of an individual item (e.g. 'wxPython')
@@ -127,14 +128,19 @@ Operation Details:
 Sources are downloaded on demand (unless already available in the
 local cache).  A well-functioning network connection is assumed.
 
-A package is considered to be out-of-date if the git revision in the
-SlackBuilds Repository has changed, or if any of its hints (see below)
-have changed, or if any of its direct dependencies has changed, or if
-the version of Slackware itself has changed.  Changes to the git
-repository, and changes to the relevant hints, are classified as
-'updates' which cause directly depending items to be rebuilt.  Other
-changes are classified as 'rebuilds' and do not cause depending items
-to be rebuilt.
+A package is considered to be out-of-date if, since it was built,
+
+* the git revision in the directory containing the SlackBuild has changed
+* the directory containing the SlackBuilds has untracked/uncommited files
+ (i.e. "git is dirty") and they are newer than the package
+* any relevant hint (see below) has changed
+* any of its direct dependencies has been updated
+* the version of Slackware has changed
+
+Changes in the SlackBuilds repository, and changes to the relevant hints, are
+classified as 'updates', which will cause directly depending items to be
+rebuilt.  Other changes are classified as 'rebuilds' and do not cause
+depending items to be rebuilt.
 
 When a package is rebuilt, and when a package is updated but its
 version number is unchanged, the BUILD number in the package repository
@@ -165,7 +171,6 @@ The possible types of hint files are as follows --
 * prg.cleanup     script to run after prg is uninstalled
 * prg.nocleanup   just do normal Slackware cleanup when uninstalling
 * prg.skipme      don't build prg
-* prg.tar.gz      SBo submission-style tarball to replace prg before build
 * prg.answers     answers for prompts printed when the SlackBuild is run
 * prg.version     attempt to patch .info and .SlackBuild for a new version
 
@@ -174,26 +179,31 @@ The possible types of hint files are as follows --
 REPOSITORIES
 ------------
 
-Multiple repositories are supported.  A Repository ID (specified by
-the --repo=ID control argument) selects a configuration file, for
-example /etc/slackrepo/repo_ID.conf, and the configuration file gives
-the paths of the Git Repository, the source cache, the output repository,
-and the log directory.
+Multiple repositories are supported.  The Repository ID, e.g. 'SBo',
+selects a configuration file, e.g. /etc/slackrepo/repo_SBo.conf, and the
+configuration file sets the paths of the git repository, the source
+repository, the package repository, the hints directory, and the log
+directory.  The Repository ID can be specified by the --repo=ID control
+argument, or by the REPO environment variable, and the default ID is set
+in the file /etc/slackrepo/repo.default.  By default, the default default
+is 'SBo'.
 
-Example showing repository trees for SBo 
+Example showing repository trees for Repository ID 'SBo':
 
-/etc/slackrepo/repo_SBo.conf               [SR_REPOID]
-      |
-      |----/var/lib/slackrepo/git_SBo/...  [SR_GITREPO and SR_GITBRANCH]
-      |----/var/lib/slackrepo/src_SBo/...  [SR_SRC]
-      |----/var/lib/slackrepo/out_SBo/...  [SR_OUTREPO]
-      |
-      |----/etc/slackrepo/hints_SBo/...    [SR_HINTS]
-      |
-      |----/var/log/slackrepo/log_SBo/...  [SR_LOGDIR]
+[REPO=SBo]  /etc/slackrepo/repo_SBo.conf
+              |
+[GITREPO]     |--/var/lib/slackrepo/git_SBo/category/item/item.SlackBuild (etc)
+[SRCREPO]     |--/var/lib/slackrepo/src_SBo/category/item/item-1.0.tar.gz
+[PKGREPO]     |--/var/lib/slackrepo/pkg_SBo/category/item/item-1.0-i486-1_SBo.tgz
+              |
+[HINTS]       |--/etc/slackrepo/hints_SBo/category/item.options
+              |
+[LOGDIR]      |--/var/log/slackrepo/log_SBo/item.log
 
-Under each of git_SBo, src_SBo and out_SBo is a tree of directories for
-each SBo category, and subdirectories for each SBo item.  
+Under each of git_SBo, src_SBo and pkg_SBo is a directory for each SBo
+category, and under each category directory is a subdirectory for each
+item.  Under hints_SBo is a directory for each category, but there are
+no subdirectories.  Under log_SBo there are no category directories.
 
 
 
@@ -204,35 +214,35 @@ These configuration options are set in /etc/slackrepo/repo_SBo.conf.
 They may be redefined by editing that file, or by setting environment
 variables, or by creating the file ~/.slackreporc.
 
-SR_GITREPO=/var/lib/slackrepo/git_SBo
-  Location of Git Repository
+GITREPO=/var/lib/slackrepo/git_SBo
+  Location of SlackBuilds git repository
 
-SR_GITBRANCH=''
+BRANCH=''
   Local git branch to use (see USE OF GIT section below)
 
-SR_SRC=/var/lib/slackrepo/src_SBo
+SRCREPO=/var/lib/slackrepo/src_SBo
   Location of downloaded source cache
 
-SR_OUTREPO=/var/lib/slackrepo/out_SBo
+PKGREPO=/var/lib/slackrepo/pkg_SBo
   Location of package repository
 
-SR_HINTS=/etc/slackrepo/hints_SBo
+HINTS=/etc/slackrepo/hints_SBo
   Location of 'hints' (see HINTS section above)
 
-SR_LOGDIR=/var/log/slackrepo/log_SBo
+LOGDIR=/var/log/slackrepo/log_SBo
   Location of log files
 
-SR_TAG=_SBo
+TAG=_SBo
   Tag for built packages (PLEASE CHANGE THIS if your packages will be
   publicly available)
 
-SR_ARCH=''
+ARCH=''
   Arch for built packages (normally determined from the build host)
 
-SR_TMP=/tmp/SBo
+TMP=/tmp/SBo
   Temporary directory
 
-SR_USE_GENREPOS='0'
+USE_GENREPOS='0'
   Whether to use gen_repos_files.sh (to enable it, change 0 to 1)
 
 If you enable gen_repos_files.sh, you *must* set correct values for its
@@ -252,10 +262,6 @@ be updated by fast forward (if possible) from its origin, but only if
 more than one day has elapsed since the last update.  If you need to
 force an immediate update, you can do that manually.
 
-The local git branch will be brutally cleaned.  Uncommitted changes
-and untracked files and directories will be permanently lost.  You have
-been warned!
-
 
 
 WARNINGS
@@ -263,7 +269,7 @@ WARNINGS
 
 (1) BEWARE! This is experimental software! Use with caution!
 
-(2) When slackrepo removes a package, it is very aggressive, and *will*
+(2) When slackrepo uninstalls a package, it is very aggressive, and will
 damage or remove local package configuration or customisation in order to
-restore a clean system after the relevant package is built.  To suppress 
+restore a clean system after the relevant package is built.  To suppress
 this for a specific package, you can create a .nocleanup hint.

@@ -1,55 +1,33 @@
 TODO
 ----
 
-[done] Clean repeatable building
+Better logging
 
-[done] Review current hints & add to git
+manpages
 
-[done] Support for uidgid hints & create initial set of hints
-
-[done] Support for cleanup hints & create initial set of hints
-
-[done] Do something more intelligent for UNSUPPORTED/UNTESTED
-
-[done] Combine i486 and x86_64 source repositories
-
-[done] Alien-style metafiles and add support for calling gen_repos_files.sh
-
-[done] Put everything in a proper place instead of a stupid top level directory
-
-[done] Add control arguments (build/test/update)
+revise documentation
 
 Additional QA tests for test mode
  - check source isn't 404
  - package contents
  - non-SBo SlackBuilds
 
-update --apply
-
-Slackware style repos
-
-Non-Git SlackBuild repos
-
-Per-ARCH package repos
-
-Multilevel repos
-
-Better logging
-
-Multiple built packages from one SlackBuild
-
-Slackware style SlackBuilds
-
-ARM support
-
-github tarball detection
-
-manpage
-
-more documentation
-
 NUMJOBS (is it working ok)
 
 hints in SlackBuild dir
 
+Multilevel repos
+
+github tarball detection
+
 speed up gen_repos
+
+Slackware style SlackBuilds
+
+Non-Git SlackBuild repos
+
+Multiple built packages from one SlackBuild
+
+Per-ARCH package repos
+
+ARM support

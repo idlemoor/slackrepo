@@ -98,13 +98,21 @@ function qa_package
     log_normal "Testing $pkgpath..."
     # Check the package name
     parse_package_name $pkgname
-    [  "$PN_PRGNAM" != "$PRGNAM"     ] && log_warning "${pkgname}: PRGNAM is $PN_PRGNAM not $PRGNAM"
-    [ "$PN_VERSION" != "$VERSION"    ] && log_warning "${pkgname}: VERSION is $PN_VERSION not $VERSION"
-    [    "$PN_ARCH" != "$SR_ARCH" -a "$PN_ARCH" != "noarch" -a "$PN_ARCH" != "fw" ] && \
+    [ "$PN_PRGNAM" != "$PRGNAM" ] && \
+      log_warning "${pkgname}: PRGNAM is $PN_PRGNAM not $PRGNAM"
+    [ "$PN_VERSION" != "$VERSION" -o \
+      "$PN_VERSION" != "${VERSION}_$(uname -r)" ] && \
+      log_warning "${pkgname}: VERSION is $PN_VERSION not $VERSION"
+    [ "$PN_ARCH" != "$SR_ARCH" -a \
+      "$PN_ARCH" != "noarch" -a \
+      "$PN_ARCH" != "fw" ] && \
       log_warning "${pkgname}: ARCH is $PN_ARCH not $SR_ARCH or noarch or fw"
-    [   "$PN_BUILD" != "$SR_BUILD"   ] && log_warning "${pkgname}: BUILD is $PN_BUILD not $SR_BUILD"
-    [     "$PN_TAG" != "$SR_TAG"     ] && log_warning "${pkgname}: TAG is '$PN_TAG' not '$SR_TAG'"
-    [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && log_warning "${pkgname}: Package type is .$PN_PKGTYPE not .$SR_PKGTYPE"
+    [ "$PN_BUILD" != "$SR_BUILD" ] && \
+      log_warning "${pkgname}: BUILD is $PN_BUILD not $SR_BUILD"
+    [ "$PN_TAG" != "$SR_TAG" ] && \
+      log_warning "${pkgname}: TAG is '$PN_TAG' not '$SR_TAG'"
+    [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && \
+      log_warning "${pkgname}: Package type is .$PN_PKGTYPE not .$SR_PKGTYPE"
     # Check the package contents
     tar tf $pkgpath > $TMP/sr_pkgt
     if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)' $TMP/sr_pkgt; then

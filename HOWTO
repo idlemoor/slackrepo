@@ -23,7 +23,7 @@ For best results, slackrepo is intended to be run on a "clean" standard
 Slackware environment (like a "build box" or a virtual machine), with a
 full installation of Slackware and no additional packages (or very
 few).  You can then use the package repository to install the packages on
-other hosts (e.g. with slackpkg+).
+other hosts (e.g. with slackpkg+, see below).
 
 slackrepo runs from the command line.  It is not interactive.  Like other
 Slackware package management tools, it should be run as the root user,
@@ -56,10 +56,10 @@ be used to maintain additional package metadata in the package repository,
 such as signing and a changelog.  Thanks, Eric!  To use it, you will
 need to set a few configuration values in the repository's configuration
 file /etc/slackrepo/repo_SBo.conf (but, if you use gen_repos_files.sh
-already, slackrepo will read your existing ~/.genreprc config file).
+already, your existing ~/.genreprc config file will be read).
 
 slackrepo is not affiliated with, or endorsed by, SlackBuilds.org or
-the Slackware Team.  The author thanks those projects for their
+the Slackware Team.  The author thanks those awesome projects for their
 continuing generosity to the community.
 
 
@@ -162,17 +162,17 @@ for your own requirements!
 
 The types of hints are as follows --
 
-* prg.options     options to supply to the SlackBuild
-* prg.optdeps     optional dependencies, including deps for options
-* prg.readmedeps  dependencies to substitute for %README% in REQUIRES="..."
-* prg.uidgid      groupadd and useradd commands needed for prg
-* prg.md5ignore   don't check source md5sum
-* prg.makej1      set MAKEFLAGS='-j1' during build
-* prg.cleanup     script to run after prg is uninstalled
-* prg.nocleanup   just do normal Slackware cleanup when uninstalling
-* prg.skipme      don't build prg
-* prg.answers     answers for prompts printed when the SlackBuild is run
-* prg.version     attempt to patch .info and .SlackBuild for a new version
+* prg.options       options to supply to the SlackBuild
+* prg.optdeps       optional dependencies, including deps for options
+* prg.readmedeps    dependencies to substitute for %README% in REQUIRES="..."
+* prg.uidgid        groupadd and useradd commands needed for prg
+* prg.md5ignore     don't check source md5sum
+* prg.makej1        set MAKEFLAGS='-j1' during build
+* prg.skipme        do not build prg
+* prg.cleanup       script to run after prg is uninstalled
+* prg.no_uninstall  do not uninstall prg
+* prg.answers       answers for prompts printed when the SlackBuild is run
+* prg.version       attempt to patch .info and .SlackBuild for a new version
 
 
 
@@ -255,12 +255,54 @@ USE OF GIT
 ----------
 
 If no Git Repository is found, it will be cloned from SlackBuilds.org,
-and a local branch '14.1' will be created that tracks 'origin/14.1'.
+and a local branch '14.1' will be created that tracks 'origin/14.1' (i.e.
+the stable branch at SlackBuilds.org).  As a special arrangement, if this
+local branch named '14.1' is being used, it will automatically be updated
+by fast forward (if possible) from its origin, but only if more than one
+day has elapsed since the last update.
 
-If the local branch is a remote tracking branch, the local branch will
-be updated by fast forward (if possible) from its origin, but only if
-more than one day has elapsed since the last update.  If you need to
-force an immediate update, you can do that manually.
+
+
+SLACKPKG+
+---------
+
+The repositories created by slackrepo are suitable for use with slackpkg+
+(http://slakfinder.org/slackpkg+.html), which is a plugin for slackpkg
+that allows you to use slackpkg to manage packages from third party
+repositories.
+
+To make your slackrepo package repositories accessible you will need to
+export them as a shared directory (e.g. NFS or a Virtualbox shared folder),
+or perhaps serve them via a local webserver on the build host (e.g. by
+setting PKGREPO=/var/www/htdocs/pkg_SBo in /etc/slackrepo/repo_SBo.conf).
+
+For example, on a client system, to configure slackpkg+ to use a shared
+directory, /etc/slackpkg/slackpkgplus.conf would have something like this:
+
+  REPOPLUS=( SBo slackpkgplus restricted alienbob )
+  MIRRORPLUS['SBo']=dir://repositories/pkg_SBo/
+
+Or to configure slackpkg+ to use a web-served repository on the build
+host, you would have something like this:
+
+  REPOPLUS=( SBo slackpkgplus restricted alienbob )
+  MIRRORPLUS['SBo']=http://buildhost/pkg_SBo/
+
+If you choose not to sign your packages with gen_repos_files.sh, you will
+need to tell slackpkg+ not to check GPG signatures.  There are two ways
+of doing this: (1) set "CHECKGPG=off" in /etc/slackpkg/slackpkg.conf, or
+(2) use the slackpkg control argument '-checkgpg=off'.
+
+Note that slackpkg+ will not detect added new packages in the repository
+when you run 'slackpkg install-new'.  This command searches for new packages
+ONLY in the official Slackware repository.  To install specific packages
+in your own repository you can use
+
+  slackpkg install <packagename>
+
+or to install and update everything in your own repository, you can use
+
+  slackpkg add <reponame>
 
 
 
@@ -269,7 +311,11 @@ WARNINGS
 
 (1) BEWARE! This is experimental software! Use with caution!
 
-(2) When slackrepo uninstalls a package, it is very aggressive, and will
-damage or remove local package configuration or customisation in order to
-restore a clean system after the relevant package is built.  To suppress
-this for a specific package, you can create a .nocleanup hint.
+(2) After it builds or tests a package, slackrepo uninstalls the package
+and all its dependencies, and it aggressively removes files from /etc that
+Slackware's own tools would normally leave in place.  This will cause serious
+damage if you attempt to rebuild a package that is already installed and in
+active use (for example, if you use slackrepo to test slackrepo, or if you
+rebuild nvidia-driver on a system that uses nvidia-driver).  You can avoid
+this by creating a prg.no_uninstall hint file, and then the package will
+not be uninstalled.  Just create an empty file; its contents are not read.

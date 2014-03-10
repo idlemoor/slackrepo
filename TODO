@@ -1,17 +1,19 @@
 TODO
 ----
 
-nocleanup hint -> don't uninstall
+[done] nocleanup hint -> no_uninstall
 
 version hint -> update (not rebuild) if it changed; also .version in srcrepo
 
-Better logging
+Better logging (incl. --quiet)
 
 manpages
 
 revise documentation & do github wiki
 
-document link to slackpkg+
+[done] document link to slackpkg+
+
+finish doing comments at top of funcs
 
 sbopkg compatibility (env vars & filestore)
 
@@ -20,15 +22,21 @@ Additional QA tests for test mode
  - package contents
  - non-SBo SlackBuilds
 
+Test --test
+
+Report fails back to SBo
+
 NUMJOBS (is it working ok) no it isn't :-(
 
 hints in SlackBuild dir
+
+Rebuilds to permit circular deps
 
 Multilevel repos
 
 github tarball detection
 
-speed up gen_repos
+speed up gen_repos, check that .genreprc works
 
 Slackware style SlackBuilds
 

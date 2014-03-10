@@ -9,17 +9,16 @@
 #-------------------------------------------------------------------------------
 
 function create_metadata
-# Create .rev and .dep files in package dir, and changelog entry
+# Create metadata files in package dir, and changelog entry
 # $1    = operation (add, update, rebuild)
 # $2    = itemname
 # $3... = list of dependencies
 # Return status:
-# 
-# 
+# 9 = bizarre existential error, otherwise 0
 {
   local op="$1"
   local itemname="$2"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
   shift 2
 
   MYREPO="$SR_PKGREPO"
@@ -29,8 +28,10 @@ function create_metadata
   for pkg in $pkglist; do
     pkgbase=$(basename $pkg | sed 's/\.t.z$//')
 
+    # .rev file
     print_current_revinfo $itemname $* > $MYREPO/$itemname/${pkgbase}.rev
 
+    # .dep file (no deps => no file)
     if [ $# != 0 ]; then
       > $MYREPO/$itemname/${pkgbase}.dep
       while [ $# != 0 ]; do
@@ -40,6 +41,7 @@ function create_metadata
       done
     fi
 
+    # changelog entry
     if [ "$PROCMODE" != 'test' ]; then
       case "$op" in
         add )     OPERATION='Added' ;;
@@ -54,6 +56,14 @@ function create_metadata
       mv $TMP/sr_changelog.new $SR_CHANGELOG
     fi
 
+    # Although gen_repos_files.sh can create the following files, it's quicker to
+    # create them here (we don't have to extract the slack-desc from the package)
+    # .txt file
+    #### $COMPEXE -cd $PKG | tar xOf - install/slack-desc | sed -n '/^#/d;/:/p' > $LOCATION/$TXTFILE
+    # .md5 file
+    #### ( cd $LOCATION; md5sum $NAME > $MD5FILE )
+    # .meta file is really more complex :-(
+
   done
   return 0
 }
@@ -61,11 +71,15 @@ function create_metadata
 #-------------------------------------------------------------------------------
 
 function print_current_revinfo
-  # $1    = item name
-  # $2... = list of dependencies
+# Prints a revision info summary on standard output
+##### (document the format here)
+# $1    = item name
+# $2... = list of dependencies
+##### do we need that list, or can we get it from DEPCACHE?
+# Return status always 0
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
   shift
 
   gitrev="$(cd $SR_GITREPO/$itemname; git log -n 1 --format=format:%H .)"
@@ -95,21 +109,24 @@ function print_current_revinfo
 #-------------------------------------------------------------------------------
 
 function get_rev_status
+# Compares print_current_revinfo with old revision info (from .rev file) and
+# returns a status value summarising the difference.
 # $1    = item name
 # $2... = list of dependencies
+##### do we need that list, or can we get it from DEPCACHE?
 # Return status:
 # 0 = up to date
-# 1 = package not found (or no .rev metadata file)
-# 2 = git revision changed
-# 3 = git is dirty, files seem to have changed
+# 1 = package not found, or has no .rev metadata file
+# 2 = git revision changed, or git is dirty and files seem to have changed
+# 3 = upstream version has changed (special case of 2, for friendlier messages)
 # 4 = hints changed
 # 5 = deps changed
 # 6 = Slackware changed
 # and the same status code is stored in $REVCACHE[$itemname]
-# DO NOT FORGET to set $REVCACHE[$itemname] before each return!
+# => DO NOT FORGET to set $REVCACHE[$itemname] before each return!
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
   shift
 
   # If $REVCACHE already has an entry for $itemname, just return that ;-)
@@ -117,7 +134,7 @@ function get_rev_status
     return "${REVCACHE[$itemname]}"
   fi
 
-  # owt or nowt?
+  # Is there an old package?
   if [ "$PROCMODE" = 'test' ]; then
     pkglist=$(ls $SR_TESTREPO/$itemname/*.t?z 2>/dev/null)
     [ -z "$pkglist" ] && \
@@ -127,13 +144,18 @@ function get_rev_status
   fi
   [ -z "$pkglist" ] && { REVCACHE[$itemname]=1; return 1; }
 
+  # is there a version hint that differs from the old package's version?
+  hint_version $itemname
+  [ -n "$NEWVERSION" ] && { REVCACHE[$itemname]=3; return 3; }
+
+  # if git is dirty, have any of the files been modified since the package was built?
   gitdirt="$(cd $SR_GITREPO/$itemname; git status -s .)"
   if [ -n "$gitdirt" ]; then
     log_warning "${itemname}: git is dirty"
     # is anything in the git dir newer than the corresponding package dir?
     if [ -n "$(find $SR_GITREPO/$itemname -newer $SR_PKGREPO/$itemname 2>/dev/null)" ]; then
-      REVCACHE[$itemname]=3
-      return 3
+      REVCACHE[$itemname]=2
+      return 2
     fi
   fi
 
@@ -147,16 +169,23 @@ function get_rev_status
 
   # compare the current rev to each old package's rev file
   for pkgfile in $pkglist; do
+    # is the rev file missing?
     prevfile=$(echo $pkgfile | sed 's/\.t.z$/.rev/')
-    [ -f "$prevfile" ] || { REVCACHE[$itemname]=1; return 1; }
+    [ ! -f "$prevfile" ] && { REVCACHE[$itemname]=1; return 1; }
+    # has the git revision changed?
     prevgit=$(head -q -n 1 "$prevfile" | sed -e 's/^.* git://' -e 's/ .*//')
-    [ "$currgit" = "$prevgit" ] || { REVCACHE[$itemname]=2; return 2; }
+    if [ "$currgit" != "$prevgit" ]; then
+      ##### if the version has changed, return 3, else...
+      REVCACHE[$itemname]=2; return 2
+    fi
+    # has a hint changed?
     prevhints=$(head -q -n 1 "$prevfile" | sed -e 's/^.* hints://' -e 's/ .*//')
-    [ "$currhints" = "$prevhints" ] || { REVCACHE[$itemname]=4; return 4; }
+    [ "$currhints" != "$prevhints" ] && { REVCACHE[$itemname]=4; return 4; }
+    # has Slackware changed?
     prevslack=$(head -q -n 1 "$prevfile" | sed -e 's/^.* slack://' -e 's/ .*//')
-    [ "$currslack" = "$prevslack" ] || { REVCACHE[$itemname]=6; return 6; }
-    # Check the deps by comparing the entire files
-    # (by now we know that the first line must be the same)
+    [ "$currslack" != "$prevslack" ] && { REVCACHE[$itemname]=6; return 6; }
+    # Have the deps changed?  Check them by comparing the entire files
+    # (note, by now we know that the first line must be the same)
     cmp -s "$currfile" "$prevfile" || { REVCACHE[$itemname]=5; return 5; }
   done
 

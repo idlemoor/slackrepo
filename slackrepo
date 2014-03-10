@@ -355,7 +355,7 @@ echo "Warnings:  $WARNCOUNT"
 #-------------------------------------------------------------------------------
 
 if [ "$PROCMODE" != 'test' -a -s $SR_CHANGELOG ]; then
-  rcfile=~/.genreposrc
+  rcfile=~/.genreprc
   [ -f $rcfile ] && { set -e; . $rcfile; set +e; }
   if [ "$SR_USE_GENREPOS" = 1 ]; then
     echo ""

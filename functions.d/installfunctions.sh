@@ -17,7 +17,7 @@ function install_package
 # 1 = install failed or not found
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
 
   # Is it already installed? Find it in /var/log/packages
   plist=$(ls /var/log/packages/$prg-* 2>/dev/null)
@@ -30,6 +30,7 @@ function install_package
       break
     fi
   done
+  ###### check the version (might need upgradepkg)
   # If already installed, return
   [ -n "$pkgid" ] && return 0
 
@@ -62,7 +63,9 @@ function uninstall_package
 # Return status: always 0
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
+
+  if hint_no_uninstall $itemname ; then return 0; fi
 
   # is it installed?
   plist=$(ls /var/log/packages/$prg-* 2>/dev/null)
@@ -85,7 +88,6 @@ function uninstall_package
   removepkg $pkgid >/dev/null 2>&1
 
   # Remove any surviving detritus
-  if hint_nocleanup $itemname ; then return 0; fi
   for f in $etcnewfiles; do
     # (this is why we shouldn't run on an end user system!)
     rm -f /"$f" /"$(echo "$f" | sed 's/\.new$//')"

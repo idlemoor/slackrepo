@@ -12,6 +12,10 @@
 #-------------------------------------------------------------------------------
 
 function process_item
+# Either build or remove an item
+# $1 = itemname
+# Sets global variable ITEMNAME so the top level item can be identified
+# Return status: always 0 -- if an error occurs, exit with status 4
 {
   local ITEMNAME="$1"
   local PRG=$(basename $ITEMNAME)
@@ -43,6 +47,11 @@ function process_item
 #-------------------------------------------------------------------------------
 
 function process_remove
+# Remove an item from the package repository and the source repository
+# $1 = itemname
+# Return status:
+# 0 = item removed
+# 1 = item was skipped
 {
   local ITEMNAME="$1"
   local PRG=$(basename $ITEMNAME)
@@ -65,5 +74,4 @@ function process_remove
     echo "$ITEMNAME: Removed. NEWLINE" >>$SR_CHANGELOG
   fi
   return
-
 }

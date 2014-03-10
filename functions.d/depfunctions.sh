@@ -15,7 +15,7 @@ function list_direct_deps
 # Return status: always 0
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
   local dep deps deplist
 
   # If $DEPCACHE already has an entry for $itemname, just return that ;-)
@@ -126,10 +126,10 @@ function build_with_deps
       fi
       ;;
   1)  OP='add';     opmsg="add" ;;
-  2|3)
-      shortrev=$(cd $SR_GITREPO/$me; git log -n 1 --format=format:%h .)
+  2)  shortrev=$(cd $SR_GITREPO/$me; git log -n 1 --format=format:%h .)
       [ -n "$(cd $SR_GITREPO/$itemname; git status -s .)" ] && shortrev="$shortrev+dirty"
       OP='update';  opmsg="update for git $shortrev" ;;
+  3)  OP='update';  opmsg="update for new version" ;;
   4)  OP='rebuild'; opmsg="rebuild for changed hints" ;;
   5)  OP='rebuild'; opmsg="rebuild for updated deps" ;;
   6)  OP='rebuild'; opmsg="rebuild for Slackware upgrade" ;;

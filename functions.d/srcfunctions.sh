@@ -21,7 +21,7 @@ function verify_src
 # 5 - .info says item is unsupported/untested on this arch
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
 
   if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
     DOWNDIR=$SR_SRCREPO/$itemname/$SR_ARCH
@@ -50,6 +50,7 @@ function verify_src
     numwant=$(echo $MD5LIST | wc -w)
     [ $numgot = $numwant ] || { log_verbose "Note: need $numwant source files, but have $numgot"; return 2; }
     hint_md5ignore $itemname && return 0
+    # also ignore md5sum if we upversioned
     [ -n "$NEWVERSION" ] && { log_verbose "Note: not checking md5sums due to version hint"; return 0; }
     allok='y'
     for f in *; do
@@ -74,12 +75,12 @@ function download_src
 # Download the sources for itemname into the cache, and stamp the cache with a .version file
 # $1 = itemname
 # Also uses global variables $DOWNLOAD* previously read from .info,
-# and $DOWNDIR and $DOWNLIST previously set by verify_src
+# $DOWNDIR and $DOWNLIST previously set by verify_src, and $VERSION
 # Return status:
 # 1 - wget failed
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
 
   mkdir -p $DOWNDIR
   find $DOWNDIR -maxdepth 1 -type f -exec rm {} \;
@@ -108,7 +109,7 @@ function save_bad_src
 # Return status: always 0
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
 
   baddir=$SR_SRCREPO/${itemname}_BAD
   # remove any previous bad sources

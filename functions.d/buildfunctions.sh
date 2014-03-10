@@ -23,7 +23,7 @@ function build_package
 # 7 = excessively dramatic qa test fail
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
 
   if hint_skipme $prg; then
     SKIPPEDLIST="$SKIPPEDLIST $itemname"
@@ -45,7 +45,6 @@ function build_package
   . $SR_TMPIN/$prg.info
 
   # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
-  unset NEWVERSION
   hint_version $itemname
   if [ -n "$NEWVERSION" ]; then
     sed -i -e "s/$VERSION/$NEWVERSION/g" "$SR_TMPIN/$prg.info"
@@ -130,6 +129,7 @@ function build_package
     PKGTYPE=$SR_PKGTYPE \
     NUMJOBS=$SR_NUMJOBS
   log_normal "Running $prg.SlackBuild ..."
+  log_verbose "Command line is $SLACKBUILDCMD"
   ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$SR_LOGDIR/$prg.log 2>&1
   stat=$?
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
@@ -160,7 +160,7 @@ function build_package
 function check_arch_is_supported
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
 
   . $SR_GITREPO/$itemname/$prg.info
   case $SR_ARCH in
@@ -180,7 +180,7 @@ function check_arch_is_supported
 function build_ok
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
 
   rm -rf $SR_TMPIN
 
@@ -212,7 +212,7 @@ function build_ok
 function build_failed
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
 
   rm -rf $SR_TMPIN $SR_TMPOUT
   # but don't remove files from $TMP, they can help to diagnose why it failed

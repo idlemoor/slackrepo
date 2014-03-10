@@ -14,6 +14,9 @@
 #-------------------------------------------------------------------------------
 
 function log_start
+# Log the start of a top level item on screen and in logfile
+# $* = message
+# Return status: always 0
 {
   PRG=${logprg:-$prg}
   msg="${*}                                                                      "
@@ -31,6 +34,9 @@ function log_start
 #-------------------------------------------------------------------------------
 
 function log_prgstart
+# Log the start of a sub-item on screen and in logfile
+# $* = message
+# Return status: always 0
 {
   PRG=${logprg:-$prg}
   line="-------------------------------------------------------------------------------"
@@ -49,6 +55,10 @@ function log_prgstart
 #-------------------------------------------------------------------------------
 
 function log_verbose
+# Log a message to the logfile, and also to the screen if global variable
+# VERBOSE is set.
+# $* = message
+# Return status: always 0
 {
   PRG=${logprg:-$prg}
   if [ "$VERBOSE" = 'y' ]; then
@@ -62,6 +72,9 @@ function log_verbose
 #-------------------------------------------------------------------------------
 
 function log_normal
+# Print message on screen, and log to logfile
+# $* = message
+# Return status: always 0
 {
   PRG=${logprg:-$prg}
   echo "$@"
@@ -73,6 +86,9 @@ function log_normal
 #-------------------------------------------------------------------------------
 
 function log_important
+# Print message on screen in white highlight, and log to logfile
+# $* = message
+# Return status: always 0
 {
   PRG=${logprg:-$prg}
   tput bold; tput setaf 7
@@ -86,6 +102,9 @@ function log_important
 #-------------------------------------------------------------------------------
 
 function log_success
+# Print message on screen in green highlight, and log to logfile
+# $* = message
+# Return status: always 0
 {
   PRG=${logprg:-$prg}
   tput bold; tput setaf 2
@@ -99,6 +118,10 @@ function log_success
 #-------------------------------------------------------------------------------
 
 function log_warning
+# Print message on screen in yellow highlight, and log to logfile
+# Message is automatically prefixed with 'WARNING', unless $1 = '-n'
+# $* = message
+# Return status: always 0
 {
   if [ "$1" = '-n' ]; then
     W=''
@@ -118,6 +141,10 @@ function log_warning
 #-------------------------------------------------------------------------------
 
 function log_error
+# Print message on screen in red highlight, and log to logfile
+# Message is automatically prefixed with 'ERROR', unless $1 = '-n'
+# $* = message
+# Return status: always 0
 {
   if [ "$1" = '-n' ]; then
     E=''
@@ -129,7 +156,7 @@ function log_error
   tput bold; tput setaf 1
   echo "${E}$@"
   tput sgr0
-  # We might be called before SR_LOGFILE is set (unlike the other log funcs)
+  # In case we are called before SR_LOGFILE is set:
   [ -z "$SR_LOGFILE" ] && return 0
   echo "${E}$@" >>$SR_LOGFILE
   [ -n "$PRG" ] && \

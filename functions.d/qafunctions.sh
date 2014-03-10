@@ -15,7 +15,7 @@ function qa_sbfiles
 # 1 = significant error
 {
   local itemname="$1"
-  local prg=$(basename $itemname)
+  local prg=${itemname##*/}
 
   local PRGNAM VERSION HOMEPAGE
   local DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
@@ -114,6 +114,12 @@ function qa_package
     [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && \
       log_warning "${pkgname}: Package type is .$PN_PKGTYPE not .$SR_PKGTYPE"
     # Check the package contents
+
+    #### check the compression matches the suffix
+    #### COMPEXE=$( pkgcomp $pkg )
+    #### if $COMPEXE -cd $pkg | tar tOf - install/slack-desc 1>/dev/null 2>&1 ; then
+    #### check that install/slack-desc exists
+
     tar tf $pkgpath > $TMP/sr_pkgt
     if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)' $TMP/sr_pkgt; then
       log_warning "${pkgname}: files are installed in unusual locations"

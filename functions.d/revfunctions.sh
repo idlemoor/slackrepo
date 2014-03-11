@@ -10,13 +10,13 @@
 
 function create_metadata
 # Create metadata files in package dir, and changelog entry
-# $1    = operation (add, update, rebuild)
+# $1    = operation (add, update, rebuild) and extra message
 # $2    = itempath
 # $3... = list of dependencies
 # Return status:
 # 9 = bizarre existential error, otherwise 0
 {
-  local op="$1"
+  local opmsg="$1"
   local itempath="$2"
   local prgnam=${itempath##*/}
   shift 2
@@ -41,28 +41,34 @@ function create_metadata
       done
     fi
 
-    # changelog entry
+    # changelog entry: needlessly elaborate :-)
     if [ "$PROCMODE" != 'test' ]; then
+      OPERATION="$(echo $opmsg | sed -e 's/^add /Added /' -e 's/^update /Updated /' -e 's/^rebuild.*/Rebuilt/')"
+      extrastuff=''
       case "$op" in
-        add )     OPERATION='Added' ;;
-        update )  OPERATION='Updated' ;;
-        rebuild ) OPERATION='Rebuilt' ;;
-        * )       log_error "$(basename $0): Unrecognised operation '$op'" ; return 9 ;;
+      add*)
+          extrastuff="LINEFEED $(grep "^$prgnam: " $SR_GITREPO/$itemname/slack-desc | head -n 1 | sed -e 's/.*(//' -e 's/).*//')"
+          ;;
+      'update for git'*)
+          extrastuff="LINEFEED $(cd $SR_GITREPO/$itemname; git log --pretty=format:%s . | sed -e 's/.*: //')"
+          ;;
+      *)  :
+          ;;
       esac
       # Filter previous entries for this item from the changelog
       # (it may contain info from a previous run that was interrupted)
       grep -v "^${itempath}: " $SR_CHANGELOG > $TMP/sr_changelog.new
-      echo "$itempath: $OPERATION version $VERSION. NEWLINE" >> $TMP/sr_changelog.new
+      echo "$itempath: ${OPERATION}. $extrastuff NEWLINE" >> $TMP/sr_changelog.new
       mv $TMP/sr_changelog.new $SR_CHANGELOG
     fi
 
     # Although gen_repos_files.sh can create the following files, it's quicker to
-    # create them here (we don't have to extract the slack-desc from the package)
+    # create the .txt file here (we don't have to extract the slack-desc from the package)
     # .txt file
-    #### $COMPEXE -cd $PKG | tar xOf - install/slack-desc | sed -n '/^#/d;/:/p' > $LOCATION/$TXTFILE
+    cat $SR_GITREPO/$itempath/slack-desc | sed -n '/^#/d;/:/p' > $MYREPO/$itempath/${pkgbase}.txt
     # .md5 file
-    #### ( cd $LOCATION; md5sum $NAME > $MD5FILE )
-    # .meta file is really more complex :-(
+    ( cd $MYREPO/$itempath/; md5sum $pkg > ${pkg##*/}.md5 )
+    # .meta and .lst files are a bit more complex
 
   done
   return 0

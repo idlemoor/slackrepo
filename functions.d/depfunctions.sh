@@ -195,8 +195,7 @@ function build_with_deps
   [ $myresult != 0 ] && return 1
 
   # If build_package succeeded, do some housekeeping:
-  # create .dep and .rev files
-  create_metadata $OP $me $mydeplist
+  create_metadata "$opmsg" $me $mydeplist
   # update the cached revision status
   REVCACHE[$me]=0
 

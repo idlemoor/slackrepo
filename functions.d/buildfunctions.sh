@@ -159,8 +159,9 @@ function check_arch_is_supported
   local itempath="$1"
   local prgnam=${itempath##*/}
 
-  if [ "${DOWNLIST[$itempath]}" = "UNSUPPORTED" -o "${DOWNLIST[$itempath]}" = "UNTESTED" ]; then
-    log_warning -n ":-/ $itempath is ${DOWNLIST[$itempath]} on $SR_ARCH /-:"
+  downlist="${INFODOWNLIST[$itempath]}"
+  if [ "$downlist" = "UNSUPPORTED" -o "$downlist" = "UNTESTED" ]; then
+    log_warning -n ":-/ $itempath is $downlist on $SR_ARCH /-:"
     return 1
   fi
   return 0

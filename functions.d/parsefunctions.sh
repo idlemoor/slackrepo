@@ -8,6 +8,9 @@
 #-------------------------------------------------------------------------------
 
 function parse_items
+########  BUGBUGBUGBUGBUG
+########  IN UPDATE MODE, CURRENTLY LOOKS UP DEPS AS PACKAGES INSTEAD OF SLACKBUILDS
+########  BUGBUGBUGBUGBUG
 # Parse item names
 # $* = the item names to be parsed :-)
 #    - can be <prgnam>, or <directory>/.../<prgnam>
@@ -88,7 +91,9 @@ function parse_items
           if [ -d "$TOPLEVEL/$a" ]; then
             # push the whole category onto $*
             cd $TOPLEVEL
-            ITEMLIST="$ITEMLIST $(ls -d $a/*)"
+            for i in $(ls -d $a/*); do
+              prepare_itempath $i
+            done
             cd - >/dev/null
           else
             log_warning "${blamemsg}${a} not found in $TOPLEVEL"
@@ -130,7 +135,7 @@ function prepare_itempath
   local prgnam=${itempath##*/}
 
   unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
-  . $itempath/$prgnam.info
+  . $SR_GITREPO/$itempath/$prgnam.info
   INFOVERSION[$itempath]="$VERSION"
   if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
     SRCDIR[$itempath]=$SR_SRCREPO/$itempath/$SR_ARCH

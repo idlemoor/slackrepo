@@ -126,15 +126,29 @@ function build_with_deps
         return 0
       fi
       ;;
-  1)  OP='add';     opmsg="add" ;;
-  2)  shortrev=$(cd $SR_GITREPO/$me; git log -n 1 --format=format:%h .)
-      [ -n "$(cd $SR_GITREPO/$itempath; git status -s .)" ] && shortrev="$shortrev+dirty"
-      OP='update';  opmsg="update for git $shortrev" ;;
-  3)  OP='update';  opmsg="update for new version" ;;
-  4)  OP='rebuild'; opmsg="rebuild for changed hints" ;;
-  5)  OP='rebuild'; opmsg="rebuild for updated deps" ;;
-  6)  OP='rebuild'; opmsg="rebuild for Slackware upgrade" ;;
-  *)  log_error "${me}: Unrecognised revstatus=$revstatus"; return 1 ;;
+  1)  OP='add'
+      opmsg="add"
+      ;;
+  2)  OP='update'
+      shortrev="${GITREV[$me]:0:7}"
+      [ "${GITDIRTY[$me]}" = 'y' ] && shortrev="$shortrev+dirty"
+      opmsg="update for git $shortrev"
+      ;;
+  3)  OP='update'
+      opmsg="update for version ${NEWVERSION:-${INFOVERSION[$me]}}"
+      ;;
+  4)  OP='rebuild'
+      opmsg="rebuild for changed hints"
+      ;;
+  5)  OP='rebuild'
+      opmsg="rebuild for updated deps"
+      ;;
+  6)  OP='rebuild'
+      opmsg="rebuild for Slackware upgrade"
+      ;;
+  *)  log_error "${me}: Unrecognised revstatus=$revstatus"
+      return 1
+      ;;
   esac
 
   # Stop here if update --dry-run

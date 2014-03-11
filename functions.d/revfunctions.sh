@@ -83,7 +83,7 @@ function print_current_revinfo
   shift
 
   gitrev="${GITREV[$itempath]}"
-  if [ "${GITDIRTY[$itempath]" = 'y' ]; then
+  if [ "${GITDIRTY[$itempath]}" = 'y' ]; then
     gitrev="${gitrev}+dirty"
   fi
   md5sums="$(cd $SR_HINTS; md5sum $itempath.* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
@@ -174,8 +174,12 @@ function get_rev_status
     # has the git revision changed?
     prevgit=$(head -q -n 1 "$prevfile" | sed -e 's/^.* git://' -e 's/ .*//')
     if [ "$currgit" != "$prevgit" ]; then
-      ##### if the version has changed, return 3, else...
-      REVCACHE[$itempath]=2; return 2
+      prevver=$(echo $pkgfile | rev | cut -f3 -d- | rev)
+      if [ "${INFOVERSION[$itempath]}" != "$prevver" ]; then
+        REVCACHE[$itempath]=3; return 3
+      else
+        REVCACHE[$itempath]=2; return 2
+      fi
     fi
     # has a hint changed?
     prevhints=$(head -q -n 1 "$prevfile" | sed -e 's/^.* hints://' -e 's/ .*//')

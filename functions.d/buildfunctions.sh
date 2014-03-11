@@ -154,7 +154,11 @@ function build_package
 #-------------------------------------------------------------------------------
 
 function check_arch_is_supported
-########
+# Check whether the .info file says this item is unsupported on this arch
+# $1 = itempath
+# Return status:
+# 0 = supported
+# 1 = unsupported
 {
   local itempath="$1"
   local prgnam=${itempath##*/}
@@ -170,7 +174,9 @@ function check_arch_is_supported
 #-------------------------------------------------------------------------------
 
 function build_ok
-########
+# Log, cleanup and store the packages for a build that has succeeded
+# $1 = itempath
+# Return status: always 0
 {
   local itempath="$1"
   local prgnam=${itempath##*/}
@@ -182,14 +188,13 @@ function build_ok
     mkdir -p $SR_TESTREPO/$itempath
     rm -rf $SR_TESTTREPO/$itempath/*
     mv $SR_TMPOUT/* $SR_TESTREPO/$itempath/
-    rm -rf $SR_TMPOUT
   else
     # put it into the real package repo
     mkdir -p $SR_PKGREPO/$itempath
     rm -rf $SR_PKGREPO/$itempath/*
     mv $SR_TMPOUT/* $SR_PKGREPO/$itempath/
-    rm -rf $SR_TMPOUT
   fi
+  rm -rf $SR_TMPOUT
 
   # This won't always kill everything, but it's good enough for saving space
   rm -rf $SR_TMP/${prgnam}* $SR_TMP/package-${prgnam}
@@ -197,13 +202,15 @@ function build_ok
   msg="$OP OK"
   log_success ":-) $itempath $msg (-:"
   PASSEDLIST="$PASSEDLIST $itempath"
-  return
+  return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function build_failed
-########
+# Log and cleanup for a build that has failed
+# $1 = itempath
+# Return status: always 0
 {
   local itempath="$1"
   local prgnam=${itempath##*/}
@@ -215,5 +222,5 @@ function build_failed
   log_error -n ":-( $itempath $msg )-:"
   log_error -n "See $SR_LOGDIR/$prgnam.log"
   FAILEDLIST="$FAILEDLIST $itempath"
-  return
+  return 0
 }

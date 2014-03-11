@@ -136,10 +136,12 @@ function qa_package
     #### if $COMPEXE -cd $pkg | tar tOf - install/slack-desc 1>/dev/null 2>&1 ; then
     #### check that install/slack-desc exists
 
+    #### TODO: check it's tar-1.13 compatible
     tar tf $pkgpath > $TMP/sr_pkgt
     if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)' $TMP/sr_pkgt; then
       log_warning "${pkgnam}: files are installed in unusual locations"
     fi
+    #### TODO: check nothing into /usr/local
     if ! grep -q 'install/slack-desc' $TMP/sr_pkgt; then
       log_warning "${pkgnam}: package does not contain slack-desc"
     fi

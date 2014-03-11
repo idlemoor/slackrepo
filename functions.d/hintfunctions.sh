@@ -15,19 +15,19 @@
 
 function hint_skipme
 # Is there a skipme hint for this item?
-# $1 = itemname
+# $1 = itempath
 # Return status:
 # 0 = skip
 # 1 = do not skip
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
-  if [ ! -f $SR_HINTS/$itemname.skipme ]; then
+  if [ ! -f $SR_HINTS/$itempath.skipme ]; then
     return 1
   fi
-  log_warning -n "SKIPPED $itemname due to hint"
-  cat $SR_HINTS/$itemname.skipme
+  log_warning -n "SKIPPED $itempath due to hint"
+  cat $SR_HINTS/$itempath.skipme
   return 0
 }
 
@@ -35,18 +35,18 @@ function hint_skipme
 
 function hint_md5ignore
 # Is there an md5ignore hint for this item?
-# $1 = itemname
+# $1 = itempath
 # Return status:
 # 0 = ignore md5sum
 # 1 = do not ignore md5sum
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
-  if [ ! -f $SR_HINTS/$itemname.md5ignore ]; then
+  if [ ! -f $SR_HINTS/$itempath.md5ignore ]; then
     return 1
   fi
-  log_verbose "Hint: $prg: ignoring md5sums"
+  log_verbose "Hint: $prgnam: ignoring md5sums"
   return 0
 }
 
@@ -54,26 +54,26 @@ function hint_md5ignore
 
 function hint_uidgid
 # If there is a uidgid hint for this item, set up the uidgid.
-# The prg.uidgid file should contain
+# The prgnam.uidgid file should contain
 # *either* an assignment of UIDGIDNUMBER and (optionally) UIDGIDNAME,
 #          UIDGIDCOMMENT, UIDGIDDIR, UIDGIDSHELL
 # *or* a script to make the UID and/or the GID, if it's not straightforward.
-# $1 = itemname
+# $1 = itempath
 # Return status:
 # 0 = There is a uidgid hint, and an attempt was made to process it
 # 1 = There is no uidgid hint
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
-  [ -f $SR_HINTS/$itemname.uidgid ] || return 1
+  [ -f $SR_HINTS/$itempath.uidgid ] || return 1
 
   unset UIDGIDNUMBER
-  log_verbose "Hint: $prg: setup uid/gid"
+  log_verbose "Hint: $prgnam: setup uid/gid"
   ####### trap errors!!!
-  . $SR_HINTS/$itemname.uidgid
+  . $SR_HINTS/$itempath.uidgid
   [ -n "$UIDGIDNUMBER" ] || return 0
-  UIDGIDNAME=${UIDGIDNAME:-$prg}
+  UIDGIDNAME=${UIDGIDNAME:-$prgnam}
   if ! getent group $UIDGIDNAME | grep -q ^$UIDGIDNAME: 2>/dev/null ; then
     groupadd -g $UIDGIDNUMBER $UIDGIDNAME
   fi
@@ -93,14 +93,14 @@ function hint_uidgid
 
 function hint_options
 # Prints options to standard output, if there is an options hint
-# $1 = itemname
+# $1 = itempath
 # Return status: always 0
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
-  if [ -f $SR_HINTS/$itemname.options ]; then
-    echo "$(cat $SR_HINTS/$itemname.options)"
+  if [ -f $SR_HINTS/$itempath.options ]; then
+    echo "$(cat $SR_HINTS/$itempath.options)"
   fi
   return 0
 }
@@ -110,13 +110,13 @@ function hint_options
 function hint_makeflags
 # Prints makeflags to standard output according to hints.  Currently handles
 # only makej1 hint file and -j1 flag (no requirement for anything else atm).
-# $1 = itemname
+# $1 = itempath
 # Return status: always 0
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
-  if [ -f $SR_HINTS/$itemname.makej1 ]; then
+  if [ -f $SR_HINTS/$itempath.makej1 ]; then
     echo "MAKEFLAGS='-j1'"
   fi
   return 0
@@ -126,22 +126,22 @@ function hint_makeflags
 
 function hint_cleanup
 # Execute any cleanup hint file.
-# The prg.cleanup file can contain any required shell commands, for example:
-#   * Reinstalling Slackware packages that conflict with prg
-#   * Unsetting any environment variables set in prg's /etc/profile.d script
+# The prgnam.cleanup file can contain any required shell commands, for example:
+#   * Reinstalling Slackware packages that conflict with prgnam
+#   * Unsetting any environment variables set in prgnam's /etc/profile.d script
 #   * Removing specific files and directories that removepkg doesn't remove
 #   * Running depmod to remove references to removed kernel modules
-# $1 = itemname
+# $1 = itempath
 # Return status:
 # 0 = cleanup hint found and executed
 # 1 = no hint found
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
-  [ -f $SR_HINTS/$itemname.cleanup ] || return 1
-  log_verbose "Hint: $prg: running $SR_HINTS/$itemname.cleanup ..."
-  . $SR_HINTS/$itemname.cleanup >>$SR_LOGDIR/$prg.log 2>&1
+  [ -f $SR_HINTS/$itempath.cleanup ] || return 1
+  log_verbose "Hint: $prgnam: running $SR_HINTS/$itempath.cleanup ..."
+  . $SR_HINTS/$itempath.cleanup >>$SR_LOGDIR/$prgnam.log 2>&1
   ###### handle errors
   return 0
 }
@@ -150,16 +150,16 @@ function hint_cleanup
 
 function hint_no_uninstall
 # Is there a no_uninstall hint for this item?
-# $1 = itemname
+# $1 = itempath
 # Return status:
 # 0 = hint found, don't uninstall
 # 1 = no hint found, do uninstall
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
-  [ -f $SR_HINTS/$itemname.no_uninstall ] || return 1
-  log_verbose "Hint: $prg: not uninstalling"
+  [ -f $SR_HINTS/$itempath.no_uninstall ] || return 1
+  log_verbose "Hint: $prgnam: not uninstalling"
   return 0
 }
 
@@ -167,22 +167,23 @@ function hint_no_uninstall
 
 function hint_version
 # Is there a version hint for this item?
-# $1 = itemname
+# $1 = itempath
 # Returns these global variables:
 # $NEWVERSION (empty if no hint or no actual version change: see below)
 # Return status: always 0
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
+
   NEWVERSION=''
-  if [ -f $SR_HINTS/$itemname.version ]; then
-    NEWVERSION=$(cat $SR_HINTS/$itemname.version)
-    OLDVERSION="$VERSION"  ########### this may not be right :-(
+  if [ -f $SR_HINTS/$itempath.version ]; then
+    NEWVERSION=$(cat $SR_HINTS/$itempath.version)
+    OLDVERSION="${INFOVERSION[$itemname]}"
     if [ "$NEWVERSION" = "$OLDVERSION" ]; then
-      log_verbose "Hint: $prg.version: current version is already $OLDVERSION"
+      log_verbose "Hint: $prgnam.version: current version is already $OLDVERSION"
       NEWVERSION=''
     else
-      log_verbose "Hint: $prg: setting VERSION=$NEWVERSION (was $OLDVERSION)"
+      log_verbose "Hint: $prgnam: setting VERSION=$NEWVERSION (was $OLDVERSION)"
     fi
   fi
   return 0

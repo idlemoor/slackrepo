@@ -3,19 +3,19 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # qafunctions.sh - functions for various quality assurance tests in slackrepo
-#   qa_sbfiles
+#   qa_slackbuild
 #   qa_package
 #-------------------------------------------------------------------------------
 
-function qa_sbfiles
-# Test prg.info, prg.SlackBuild, README and slack-desc files
-# $1 = itemname
+function qa_slackbuild
+# Test prgnam.SlackBuild, slack-desc, prgnam.info and README files
+# $1 = itempath
 # Return status:
 # 0 = all good or warnings only
 # 1 = significant error
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
   local PRGNAM VERSION HOMEPAGE
   local DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
@@ -24,60 +24,71 @@ function qa_sbfiles
   log_normal "Testing SlackBuild files..."
 
   #-----------------------------#
-  # (1) Check the .SlackBuild
-  [ -f $SR_GITREPO/$itemname/$prg.SlackBuild ] || \
-    { log_error "${itemname}: $prg.SlackBuild not found"; return 1; }
+  # (1) Check prgnam.SlackBuild
+  [ -f $SR_GITREPO/$itempath/$prgnam.SlackBuild ] || \
+    { log_error "${itempath}: $prgnam.SlackBuild not found"; return 1; }
 
   #-----------------------------#
-  # (2) check the slack-desc
-  SLACKDESC="$SR_GITREPO/$itemname/slack-desc"
+  # (2) check slack-desc
+  SLACKDESC="$SR_GITREPO/$itempath/slack-desc"
   [ -f $SLACKDESC ] || \
-    { log_error "${itemname}: slack-desc file not found"; return 1; }
+    { log_error "${itempath}: slack-desc file not found"; return 1; }
   HR='|-----handy-ruler------------------------------------------------------|'
   # 11 line description pls
-  lc=$(grep "^${prg}:" $SLACKDESC | wc -l)
+  lc=$(grep "^${prgnam}:" $SLACKDESC | wc -l)
   [ "$lc" != 11 ] && \
-    log_warning "${itemname}: slack-desc: $lc lines of description, should be 11"
+    log_warning "${itempath}: slack-desc: $lc lines of description, should be 11"
   # no trailing spaces kthxbye
-  grep -q "^${prg}:.* $"  $SLACKDESC && \
-    log_warning "${itemname}: slack-desc: description has trailing spaces"
+  grep -q "^${prgnam}:.* $"  $SLACKDESC && \
+    log_warning "${itempath}: slack-desc: description has trailing spaces"
   # dont mess with my handy ruler
   grep -q "^ *$HR\$" $SLACKDESC || \
-    log_warning "${itemname}: slack-desc: handy-ruler is corrupt or missing"
-  [ $(grep "^ *$HR\$" $SLACKDESC | sed "s/|.*|//" | wc -c) -ne $(( ${#prg} + 1 )) ] && \
-    log_warning "${itemname}: slack-desc: handy-ruler is misaligned"
+    log_warning "${itempath}: slack-desc: handy-ruler is corrupt or missing"
+  [ $(grep "^ *$HR\$" $SLACKDESC | sed "s/|.*|//" | wc -c) -ne $(( ${#prgnam} + 1 )) ] && \
+    log_warning "${itempath}: slack-desc: handy-ruler is misaligned"
   # check line length
-  [ $(grep "^${prg}:" $SLACKDESC | sed "s/^${prg}://" | wc -L) -gt 73 ] && \
-    log_warning "${itemname}: slack-desc: description lines too long"
+  [ $(grep "^${prgnam}:" $SLACKDESC | sed "s/^${prgnam}://" | wc -L) -gt 73 ] && \
+    log_warning "${itempath}: slack-desc: description lines too long"
   # did u get teh wrong appname dude
-  grep -q -v -e '^#' -e "^${prg}:" -e '^$' -e '^ *|-.*-|$' $SLACKDESC && \
-    log_warning "${itemname}: slack-desc: unrecognised text (appname wrong?)"
+  grep -q -v -e '^#' -e "^${prgnam}:" -e '^$' -e '^ *|-.*-|$' $SLACKDESC && \
+    log_warning "${itempath}: slack-desc: unrecognised text (appname wrong?)"
   # This one turns out to be far too picky:
-  # [ "$(grep "^${prg}:" $SLACKDESC | head -n 1 | sed "s/^${prg}: ${prg} (.*)$//")" != '' ] && \
-  #   log_warning "${itemname}: slack-desc: first line of description is unconventional"
+  # [ "$(grep "^${prgnam}:" $SLACKDESC | head -n 1 | sed "s/^${prgnam}: ${prgnam} (.*)$//")" != '' ] && \
+  #   log_warning "${itempath}: slack-desc: first line of description is unconventional"
 
   #-----------------------------#
-  # (3) Check the .info
-  [ -f $SR_GITREPO/$itemname/$prg.info ] || \
-    { log_error "${itemname}: $prg.info not found"; return 1; }
-  trap "log_error \"${itemname}: command error in $prg.info\"; return 1" ERR
-  . $SR_GITREPO/$itemname/$prg.info
-  trap - ERR
+  # (3) Check prgnam.info
+  [ -f $SR_GITREPO/$itempath/$prgnam.info ] || \
+    { log_error "${itempath}: $prgnam.info not found"; return 1; }
 
-  [ "$PRGNAM" = "$prg" ] || \
-    log_warning "${itemname}: PRGNAM in $prg.info is '$PRGNAM', not $prg"
+  unset PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM REQUIRES MAINTAINER EMAIL
+  . $SR_GITREPO/$itempath/$prgnam.info
+
+  [ "$PRGNAM" = "$prgnam" ] || \
+    log_warning "${itempath}: PRGNAM in $prgnam.info is '$PRGNAM', not $prgnam"
   [ -n "$VERSION" ] || \
-    log_warning "${itemname}: VERSION not set in $prg.info"
+    log_warning "${itempath}: VERSION not set in $prgnam.info"
+  [ -v HOMEPAGE ] || \
+    log_warning "${itempath}: HOMEPAGE not set in $prgnam.info"
+  [ -v DOWNLOAD ] || \
+    log_warning "${itempath}: DOWNLOAD not set in $prgnam.info"
+  [ -v MD5SUM ] || \
+    log_warning "${itempath}: MD5SUM not set in $prgnam.info"
   [ -v REQUIRES ] || \
-    log_warning "${itemname}: REQUIRES not set in $prg.info"
-  #### would be good to check URLs to see if they still exist
+    log_warning "${itempath}: REQUIRES not set in $prgnam.info"
+  [ -v MAINTAINER ] || \
+    log_warning "${itempath}: MAINTAINER not set in $prgnam.info"
+  [ -v EMAIL ] || \
+    log_warning "${itempath}: EMAIL not set in $prgnam.info"
+
+  #### would be good to check HOMEPAGE and DOWNLOAD URLs to see if they still exist
 
   #-----------------------------#
-  # (4) Check the README
-  [ -f $SR_GITREPO/$itemname/README ] || \
-    { log_error "${itemname}: README not found"; return 1; }
-  [ "$(wc -L < $SR_GITREPO/$itemname/README)" -le 76 ] || \
-    log_warning "${itemname}: long lines in README"
+  # (4) Check README
+  [ -f $SR_GITREPO/$itempath/README ] || \
+    { log_error "${itempath}: README not found"; return 1; }
+  [ "$(wc -L < $SR_GITREPO/$itempath/README)" -le 76 ] || \
+    log_warning "${itempath}: long lines in README"
 
   return 0
 }
@@ -86,33 +97,38 @@ function qa_sbfiles
 
 function qa_package
 # Test a package (check its name, and check its contents)
-# $* = paths of packages to be checked
+# $1    = itempath
+# $2... = paths of packages to be checked
 # Return status:
 # 0 = all good or warnings only
 # 1 = significant error
 {
+  local itempath="$1"
+  local prgnam=${itempath##*/}
+  shift
+
   while [ $# != 0 ]; do
     local pkgpath=$1
-    local pkgname=$(basename $pkgpath)
+    local pkgnam=${pkgpath##*/}
     shift
     log_normal "Testing $pkgpath..."
     # Check the package name
-    parse_package_name $pkgname
-    [ "$PN_PRGNAM" != "$PRGNAM" ] && \
-      log_warning "${pkgname}: PRGNAM is $PN_PRGNAM not $PRGNAM"
-    [ "$PN_VERSION" != "$VERSION" -o \
-      "$PN_VERSION" != "${VERSION}_$(uname -r)" ] && \
-      log_warning "${pkgname}: VERSION is $PN_VERSION not $VERSION"
+    parse_package_name $pkgnam
+    [ "$PN_PRGNAM" != "$prgnam" ] && \
+      log_warning "${pkgnam}: PRGNAM is $PN_PRGNAM not $prgnam"
+    [ "$PN_VERSION" != "${INFOVERSION[$itempath]}" -o \
+      "$PN_VERSION" != "${INFOVERSION[$itempath]}_$(uname -r)" ] && \
+      log_warning "${pkgnam}: VERSION is $PN_VERSION not ${INFOVERSION[$itempath]}"
     [ "$PN_ARCH" != "$SR_ARCH" -a \
       "$PN_ARCH" != "noarch" -a \
       "$PN_ARCH" != "fw" ] && \
-      log_warning "${pkgname}: ARCH is $PN_ARCH not $SR_ARCH or noarch or fw"
+      log_warning "${pkgnam}: ARCH is $PN_ARCH not $SR_ARCH or noarch or fw"
     [ "$PN_BUILD" != "$SR_BUILD" ] && \
-      log_warning "${pkgname}: BUILD is $PN_BUILD not $SR_BUILD"
+      log_warning "${pkgnam}: BUILD is $PN_BUILD not $SR_BUILD"
     [ "$PN_TAG" != "$SR_TAG" ] && \
-      log_warning "${pkgname}: TAG is '$PN_TAG' not '$SR_TAG'"
+      log_warning "${pkgnam}: TAG is '$PN_TAG' not '$SR_TAG'"
     [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && \
-      log_warning "${pkgname}: Package type is .$PN_PKGTYPE not .$SR_PKGTYPE"
+      log_warning "${pkgnam}: Package type is .$PN_PKGTYPE not .$SR_PKGTYPE"
     # Check the package contents
 
     #### check the compression matches the suffix
@@ -122,17 +138,17 @@ function qa_package
 
     tar tf $pkgpath > $TMP/sr_pkgt
     if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)' $TMP/sr_pkgt; then
-      log_warning "${pkgname}: files are installed in unusual locations"
+      log_warning "${pkgnam}: files are installed in unusual locations"
     fi
     if ! grep -q 'install/slack-desc' $TMP/sr_pkgt; then
-      log_warning "${pkgname}: package does not contain slack-desc"
+      log_warning "${pkgnam}: package does not contain slack-desc"
     fi
     #### TODO: check modes of package contents
     #### TODO: check whether a noarch package is really noarch
     # If this is the top level item, install it to see what happens :D
-    if [ "$PRGNAM" = "$(basename $ITEMNAME)" ]; then
-      install_package $ITEMNAME || return 1
-      uninstall_package $ITEMNAME
+    if [ "$PRGNAM" = "$(basename $ITEMPATH)" ]; then
+      install_package $ITEMPATH || return 1
+      uninstall_package $ITEMPATH
     # else it's a dep and it'll be installed soon anyway.
     fi
 

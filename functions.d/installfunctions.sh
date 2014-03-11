@@ -11,21 +11,21 @@
 function install_package
 # Run installpkg if the package is not already installed,
 # finding the package in either the package or the test repository
-# $1 = itemname
+# $1 = itempath
 # Return status:
 # 0 = installed ok or already installed
 # 1 = install failed or not found
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
   # Is it already installed? Find it in /var/log/packages
-  plist=$(ls /var/log/packages/$prg-* 2>/dev/null)
+  plist=$(ls /var/log/packages/$prgnam-* 2>/dev/null)
   # filter out false matches
   pkgid=''
   for ppath in $plist; do
     p=$(basename $ppath)
-    if [ "$(echo $p | rev | cut -f4- -d- | rev)" = "$prg" ]; then
+    if [ "$(echo $p | rev | cut -f4- -d- | rev)" = "$prgnam" ]; then
       pkgid=$p
       break
     fi
@@ -37,18 +37,18 @@ function install_package
   pkgpath=''
   # Look for the package.  In test mode, preferentially look in the test repo
   if [ "$PROCMODE" = 'test' ]; then
-    pkgpath=$(ls $SR_TESTREPO/$itemname/$prg-*.t?z 2>/dev/null)
+    pkgpath=$(ls $SR_TESTREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
     [ -z "$pkgpath" ] && \
-      pkgpath=$(ls $SR_PKGREPO/$itemname/$prg-*.t?z 2>/dev/null)
+      pkgpath=$(ls $SR_PKGREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
   else
-    pkgpath=$(ls $SR_PKGREPO/$itemname/$prg-*.t?z 2>/dev/null)
+    pkgpath=$(ls $SR_PKGREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
   fi
-  [ -n "$pkgpath" ] || { log_error "${itemname}: Can't find any packages in $SR_PKGREPO/$itemname/"; return 1; }
+  [ -n "$pkgpath" ] || { log_error "${itempath}: Can't find any packages in $SR_PKGREPO/$itempath/"; return 1; }
 
   installpkg --terse $pkgpath
   stat=$?
   if [ $stat != 0 ]; then
-    log_error "${itemname}: installpkg $pkgpath failed (status $stat)"
+    log_error "${itempath}: installpkg $pkgpath failed (status $stat)"
     return 1
   fi
   dotprofilizer $pkgpath
@@ -59,21 +59,21 @@ function install_package
 
 function uninstall_package
 # Run removepkg, and do extra cleanup
-# $1 = itemname
+# $1 = itempath
 # Return status: always 0
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
-  if hint_no_uninstall $itemname ; then return 0; fi
+  if hint_no_uninstall $itempath ; then return 0; fi
 
   # is it installed?
-  plist=$(ls /var/log/packages/$prg-* 2>/dev/null)
+  plist=$(ls /var/log/packages/$prgnam-* 2>/dev/null)
   # filter out false matches
   pkgid=''
   for ppath in $plist; do
     p=$(basename $ppath)
-    if [ "$(echo $p | rev | cut -f4- -d- | rev)" = "$prg" ]; then
+    if [ "$(echo $p | rev | cut -f4- -d- | rev)" = "$prgnam" ]; then
       pkgid=$p
       break
     fi
@@ -99,7 +99,7 @@ function uninstall_package
   done
   # Do this last so it can mend things the package broke
   # (e.g. by reinstalling a Slackware package)
-  hint_cleanup $prg
+  hint_cleanup $itempath
 
   return 0
 }

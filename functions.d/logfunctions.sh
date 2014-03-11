@@ -18,7 +18,7 @@ function log_start
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prg}
+  PRG=${logprg:-$prgnam}
   msg="${*}                                                                      "
   line="==============================================================================="
   echo "$line"
@@ -38,7 +38,7 @@ function log_prgstart
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prg}
+  PRG=${logprg:-$prgnam}
   line="-------------------------------------------------------------------------------"
   pad=$(( ${#line} - ${#1} - 1 ))
   tput bold; tput setaf 7
@@ -60,7 +60,7 @@ function log_verbose
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prg}
+  PRG=${logprg:-$prgnam}
   if [ "$VERBOSE" = 'y' ]; then
     echo "$@"
   fi
@@ -76,7 +76,7 @@ function log_normal
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prg}
+  PRG=${logprg:-$prgnam}
   echo "$@"
   echo "$@" >>$SR_LOGFILE
   [ -n "$PRG" ] && \
@@ -90,7 +90,7 @@ function log_important
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prg}
+  PRG=${logprg:-$prgnam}
   tput bold; tput setaf 7
   echo "$@"
   tput sgr0
@@ -106,7 +106,7 @@ function log_success
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prg}
+  PRG=${logprg:-$prgnam}
   tput bold; tput setaf 2
   echo "$@"
   tput sgr0
@@ -129,7 +129,7 @@ function log_warning
   else
     W='WARNING: '
   fi
-  PRG=${logprg:-$prg}
+  PRG=${logprg:-$prgnam}
   tput bold; tput setaf 3
   echo "${W}$@"
   tput sgr0
@@ -152,7 +152,7 @@ function log_error
   else
     E='ERROR: '
   fi
-  PRG=${logprg:-$prg}
+  PRG=${logprg:-$prgnam}
   tput bold; tput setaf 1
   echo "${E}$@"
   tput sgr0

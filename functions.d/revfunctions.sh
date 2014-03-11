@@ -11,32 +11,32 @@
 function create_metadata
 # Create metadata files in package dir, and changelog entry
 # $1    = operation (add, update, rebuild)
-# $2    = itemname
+# $2    = itempath
 # $3... = list of dependencies
 # Return status:
 # 9 = bizarre existential error, otherwise 0
 {
   local op="$1"
-  local itemname="$2"
-  local prg=${itemname##*/}
+  local itempath="$2"
+  local prgnam=${itempath##*/}
   shift 2
 
   MYREPO="$SR_PKGREPO"
   [ "$PROCMODE" = 'test' ] && MYREPO="$SR_TESTREPO"
 
-  pkglist=$(ls $MYREPO/$itemname/$prg-*.t?z 2>/dev/null)
+  pkglist=$(ls $MYREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
   for pkg in $pkglist; do
     pkgbase=$(basename $pkg | sed 's/\.t.z$//')
 
     # .rev file
-    print_current_revinfo $itemname $* > $MYREPO/$itemname/${pkgbase}.rev
+    print_current_revinfo $itempath $* > $MYREPO/$itempath/${pkgbase}.rev
 
     # .dep file (no deps => no file)
     if [ $# != 0 ]; then
-      > $MYREPO/$itemname/${pkgbase}.dep
+      > $MYREPO/$itempath/${pkgbase}.dep
       while [ $# != 0 ]; do
         echo "${1##*/}" \
-          >> $MYREPO/$itemname/${pkgbase}.dep
+          >> $MYREPO/$itempath/${pkgbase}.dep
         shift
       done
     fi
@@ -51,8 +51,8 @@ function create_metadata
       esac
       # Filter previous entries for this item from the changelog
       # (it may contain info from a previous run that was interrupted)
-      grep -v "^${itemname}: " $SR_CHANGELOG > $TMP/sr_changelog.new
-      echo "$itemname: $OPERATION version $VERSION. NEWLINE" >> $TMP/sr_changelog.new
+      grep -v "^${itempath}: " $SR_CHANGELOG > $TMP/sr_changelog.new
+      echo "$itempath: $OPERATION version $VERSION. NEWLINE" >> $TMP/sr_changelog.new
       mv $TMP/sr_changelog.new $SR_CHANGELOG
     fi
 
@@ -78,19 +78,19 @@ function print_current_revinfo
 ##### do we need that list, or can we get it from DEPCACHE?
 # Return status always 0
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
   shift
 
-  gitrev="$(cd $SR_GITREPO/$itemname; git log -n 1 --format=format:%H .)"
-  if [ -n "$(cd $SR_GITREPO/$itemname; git status -s .)" ]; then
+  gitrev="${GITREV[$itempath]}"
+  if [ "${GITDIRTY[$itempath]" = 'y' ]; then
     gitrev="${gitrev}+dirty"
   fi
-  md5sums="$(cd $SR_HINTS; md5sum $itemname.* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
+  md5sums="$(cd $SR_HINTS; md5sum $itempath.* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
   if [ -n "$md5sums" ]; then
-    echo "$prg git:$gitrev slack:$SLACKVER hints:$md5sums"
+    echo "$prgnam git:$gitrev slack:$SLACKVER hints:$md5sums"
   else
-    echo "$prg git:$gitrev slack:$SLACKVER"
+    echo "$prgnam git:$gitrev slack:$SLACKVER"
   fi
 
   # capture revision of each dep from its .rev file
@@ -122,46 +122,45 @@ function get_rev_status
 # 4 = hints changed
 # 5 = deps changed
 # 6 = Slackware changed
-# and the same status code is stored in $REVCACHE[$itemname]
-# => DO NOT FORGET to set $REVCACHE[$itemname] before each return!
+# and the same status code is stored in $REVCACHE[$itempath]
+# => DO NOT FORGET to set $REVCACHE[$itempath] before each return!
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
   shift
 
-  # If $REVCACHE already has an entry for $itemname, just return that ;-)
-  if [ "${REVCACHE[$itemname]+yesitsset}" = 'yesitsset' ]; then
-    return "${REVCACHE[$itemname]}"
+  # If $REVCACHE already has an entry for $itempath, just return that ;-)
+  if [ "${REVCACHE[$itempath]+yesitsset}" = 'yesitsset' ]; then
+    return "${REVCACHE[$itempath]}"
   fi
 
   # Is there an old package?
   if [ "$PROCMODE" = 'test' ]; then
-    pkglist=$(ls $SR_TESTREPO/$itemname/*.t?z 2>/dev/null)
+    pkglist=$(ls $SR_TESTREPO/$itempath/*.t?z 2>/dev/null)
     [ -z "$pkglist" ] && \
-      pkglist=$(ls $SR_PKGREPO/$itemname/*.t?z 2>/dev/null)
+      pkglist=$(ls $SR_PKGREPO/$itempath/*.t?z 2>/dev/null)
   else
-    pkglist=$(ls $SR_PKGREPO/$itemname/*.t?z 2>/dev/null)
+    pkglist=$(ls $SR_PKGREPO/$itempath/*.t?z 2>/dev/null)
   fi
-  [ -z "$pkglist" ] && { REVCACHE[$itemname]=1; return 1; }
+  [ -z "$pkglist" ] && { REVCACHE[$itempath]=1; return 1; }
 
   # is there a version hint that differs from the old package's version?
-  hint_version $itemname
-  [ -n "$NEWVERSION" ] && { REVCACHE[$itemname]=3; return 3; }
+  hint_version $itempath
+  [ -n "$NEWVERSION" ] && { REVCACHE[$itempath]=3; return 3; }
 
   # if git is dirty, have any of the files been modified since the package was built?
-  gitdirt="$(cd $SR_GITREPO/$itemname; git status -s .)"
-  if [ -n "$gitdirt" ]; then
-    log_warning "${itemname}: git is dirty"
+  if [ "${GITDIRTY[$itempath]}" = 'y' ]; then
+    log_warning "${itempath}: git is dirty"
     # is anything in the git dir newer than the corresponding package dir?
-    if [ -n "$(find $SR_GITREPO/$itemname -newer $SR_PKGREPO/$itemname 2>/dev/null)" ]; then
-      REVCACHE[$itemname]=2
+    if [ -n "$(find $SR_GITREPO/$itempath -newer $SR_PKGREPO/$itempath 2>/dev/null)" ]; then
+      REVCACHE[$itempath]=2
       return 2
     fi
   fi
 
   # capture current rev into a temp file
   currfile=$SR_TMP/slackrepo_rev
-  print_current_revinfo $itemname $* > $currfile
+  print_current_revinfo $itempath $* > $currfile
   # and extract some key stats into variables
   currgit=$(head -q -n 1 "$currfile" | sed -e 's/^.* git://' -e 's/ .*//')
   currhints=$(head -q -n 1 "$currfile" | sed -e 's/^.* hints://' -e 's/ .*//')
@@ -171,24 +170,24 @@ function get_rev_status
   for pkgfile in $pkglist; do
     # is the rev file missing?
     prevfile=$(echo $pkgfile | sed 's/\.t.z$/.rev/')
-    [ ! -f "$prevfile" ] && { REVCACHE[$itemname]=1; return 1; }
+    [ ! -f "$prevfile" ] && { REVCACHE[$itempath]=1; return 1; }
     # has the git revision changed?
     prevgit=$(head -q -n 1 "$prevfile" | sed -e 's/^.* git://' -e 's/ .*//')
     if [ "$currgit" != "$prevgit" ]; then
       ##### if the version has changed, return 3, else...
-      REVCACHE[$itemname]=2; return 2
+      REVCACHE[$itempath]=2; return 2
     fi
     # has a hint changed?
     prevhints=$(head -q -n 1 "$prevfile" | sed -e 's/^.* hints://' -e 's/ .*//')
-    [ "$currhints" != "$prevhints" ] && { REVCACHE[$itemname]=4; return 4; }
+    [ "$currhints" != "$prevhints" ] && { REVCACHE[$itempath]=4; return 4; }
     # has Slackware changed?
     prevslack=$(head -q -n 1 "$prevfile" | sed -e 's/^.* slack://' -e 's/ .*//')
-    [ "$currslack" != "$prevslack" ] && { REVCACHE[$itemname]=6; return 6; }
+    [ "$currslack" != "$prevslack" ] && { REVCACHE[$itempath]=6; return 6; }
     # Have the deps changed?  Check them by comparing the entire files
     # (note, by now we know that the first line must be the same)
-    cmp -s "$currfile" "$prevfile" || { REVCACHE[$itemname]=5; return 5; }
+    cmp -s "$currfile" "$prevfile" || { REVCACHE[$itempath]=5; return 5; }
   done
 
-  REVCACHE[$itemname]=0
+  REVCACHE[$itempath]=0
   return 0
 }

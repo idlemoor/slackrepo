@@ -10,8 +10,8 @@
 
 function verify_src
 # Verify item's source files in the source cache
-# $1 = itemname
-# Also uses global variables MD5SUM* previously read from .info
+# $1 = itempath
+# Also uses variables $VERSION and $NEWVERSION set by build_package
 # Return status:
 # 0 - all files passed, or check suppressed
 # 1 - one or more files had a bad md5sum
@@ -20,20 +20,15 @@ function verify_src
 # 4 - version mismatch, need to download new version
 # 5 - .info says item is unsupported/untested on this arch
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
-  if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
-    DOWNDIR=$SR_SRCREPO/$itemname/$SR_ARCH
-    DOWNLIST="$(eval echo \$DOWNLOAD_$SR_ARCH)"
-    MD5LIST="$(eval echo \$MD5SUM_$SR_ARCH)"
-  else
-    DOWNDIR=$SR_SRCREPO/$itemname
-    DOWNLIST="$DOWNLOAD"
-    MD5LIST="$MD5SUM"
-  fi
+  DOWNLIST="${INFODOWNLIST[$itempath]}"
+  MD5LIST="${INFOMD5LIST[$itempath]}"
+  DOWNDIR="${SRCDIR[$itempath]}"
+
   if [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ]; then
-    log_warning -n "$itemname is $DOWNLIST on $SR_ARCH"
+    log_warning -n "$itempath is $DOWNLIST on $SR_ARCH"
     return 5
   elif [ ! -d $DOWNDIR ]; then
     return 3
@@ -49,7 +44,7 @@ function verify_src
     numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '.version' | wc -l)
     numwant=$(echo $MD5LIST | wc -w)
     [ $numgot = $numwant ] || { log_verbose "Note: need $numwant source files, but have $numgot"; return 2; }
-    hint_md5ignore $itemname && return 0
+    hint_md5ignore $itempath && return 0
     # also ignore md5sum if we upversioned
     [ -n "$NEWVERSION" ] && { log_verbose "Note: not checking md5sums due to version hint"; return 0; }
     allok='y'
@@ -72,15 +67,15 @@ function verify_src
 #-------------------------------------------------------------------------------
 
 function download_src
-# Download the sources for itemname into the cache, and stamp the cache with a .version file
-# $1 = itemname
-# Also uses global variables $DOWNLOAD* previously read from .info,
-# $DOWNDIR and $DOWNLIST previously set by verify_src, and $VERSION
+# Download the sources for itempath into the cache, and stamp the cache with a .version file
+# $1 = itempath
+# Also uses variables $DOWNDIR and $DOWNLIST previously set by verify_src,
+# and $VERSION set by build_package
 # Return status:
 # 1 - wget failed
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
   mkdir -p $DOWNDIR
   find $DOWNDIR -maxdepth 1 -type f -exec rm {} \;
@@ -88,7 +83,7 @@ function download_src
   ( cd $DOWNDIR
     for src in $DOWNLIST; do
       log_verbose "wget $src ..."
-      wget --no-check-certificate --content-disposition --tries=2 -T 240 "$src" >> $SR_LOGDIR/$prg.log 2>&1
+      wget --no-check-certificate --content-disposition --tries=2 -T 240 "$src" >> $SR_LOGDIR/$prgnam.log 2>&1
       wstat=$?
       if [ $wstat != 0 ]; then
         log_error "Download failed (wget status $wstat)"
@@ -103,29 +98,29 @@ function download_src
 #-------------------------------------------------------------------------------
 
 function save_bad_src
-# Move $SR_SRCREPO/<itemname>/[<arch>/] to $SR_SRCREPO/<itemname>_BAD/[<arch>/],
+# Move $SR_SRCREPO/<itempath>/[<arch>/] to $SR_SRCREPO/<itempath>_BAD/[<arch>/],
 # in case it's useful for diagnostic purposes or can be resurrected.
-# $1 = itemname
+# $1 = itempath
 # Return status: always 0
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
 
-  baddir=$SR_SRCREPO/${itemname}_BAD
+  baddir=$SR_SRCREPO/${itempath}_BAD
   # remove any previous bad sources
   rm -rf $baddir
   # remove empty directories
-  find $SR_SRCREPO/${itemname} -depth -type d -exec rmdir --ignore-fail-on-non-empty {} \;
+  find $SR_SRCREPO/${itempath} -depth -type d -exec rmdir --ignore-fail-on-non-empty {} \;
   # save whatever survives
-  if [ -d $SR_SRCREPO/${itemname}/$SR_ARCH ]; then
+  if [ -d $SR_SRCREPO/${itempath}/$SR_ARCH ]; then
     mkdir -p $baddir
-    mv $SR_SRCREPO/${itemname}/$SR_ARCH $baddir/
+    mv $SR_SRCREPO/${itempath}/$SR_ARCH $baddir/
     log_normal "Note: bad sources saved in $baddir/$SR_ARCH"
     # if there's stuff from other arches, leave it
-    rmdir --ignore-fail-on-non-empty $SR_SRCREPO/${itemname}
-  elif [ -d $SR_SRCREPO/${itemname} ]; then
-    # this isn't perfect, but it'll do
-    mv $SR_SRCREPO/${itemname} $baddir
+    rmdir --ignore-fail-on-non-empty $SR_SRCREPO/${itempath}
+  elif [ -d $SR_SRCREPO/${itempath} ]; then
+    # this isn't perfect, but it'll do ###### need arch code
+    mv $SR_SRCREPO/${itempath} $baddir
     log_normal "Note: bad sources saved in $baddir"
   fi
   return 0

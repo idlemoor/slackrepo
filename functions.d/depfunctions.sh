@@ -11,48 +11,44 @@
 
 function list_direct_deps
 # Returns list of deps of a named item in global variable $DEPLIST
-# $1 = itemname
+# $1 = itempath
 # Return status: always 0
 {
-  local itemname="$1"
-  local prg=${itemname##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
   local dep deps deplist
 
-  # If $DEPCACHE already has an entry for $itemname, just return that ;-)
-  if [ "${DEPCACHE[$itemname]+yesitisset}" = 'yesitisset' ]; then
-    DEPLIST="${DEPCACHE[$itemname]}"
+  # If $DEPCACHE already has an entry for $itempath, just return that ;-)
+  if [ "${DEPCACHE[$itempath]+yesitisset}" = 'yesitisset' ]; then
+    DEPLIST="${DEPCACHE[$itempath]}"
     return 0
   fi
 
-  set -e
-  . $SR_GITREPO/$itemname/$prg.info
-  set +e
-  deps="$REQUIRES"
-
+  deps="${INFOREQUIRES[$itempath]}"
   deplist=''
   for dep in $deps; do
     if [ $dep = '%README%' ]; then
-      if [ -f $SR_HINTS/$itemname.readmedeps ]; then
-        log_verbose "Hint: Using \"$(cat $SR_HINTS/$itemname.readmedeps)\" for %README% in $prg.info"
-        BLAME="$prg.readmedeps"
-        parse_items $(cat $SR_HINTS/$itemname.readmedeps)
+      if [ -f $SR_HINTS/$itempath.readmedeps ]; then
+        log_verbose "Hint: Using \"$(cat $SR_HINTS/$itempath.readmedeps)\" for %README% in $prgnam.info"
+        BLAME="$prgnam.readmedeps"
+        parse_items $(cat $SR_HINTS/$itempath.readmedeps)
         unset BLAME
         deplist="$deplist $ITEMLIST"
       else
-        log_warning "${itemname}: Unhandled %README% in $prg.info - please create $SR_HINTS/$itemname.readmedeps"
+        log_warning "${itempath}: Unhandled %README% in $prgnam.info - please create $SR_HINTS/$itempath.readmedeps"
       fi
     else
-      BLAME="$prg.info"
+      BLAME="$prgnam.info"
       parse_items $dep
       unset BLAME
       deplist="$deplist $ITEMLIST"
     fi
   done
 
-  if [ -f $SR_HINTS/$itemname.optdeps ]; then
-    log_verbose "Hint: Adding optional deps: \"$(cat $SR_HINTS/$itemname.optdeps)\""
-    BLAME="$prg.optdeps"
-    parse_items $(cat $SR_HINTS/$itemname.optdeps)
+  if [ -f $SR_HINTS/$itempath.optdeps ]; then
+    log_verbose "Hint: Adding optional deps: \"$(cat $SR_HINTS/$itempath.optdeps)\""
+    BLAME="$prgnam.optdeps"
+    parse_items $(cat $SR_HINTS/$itempath.optdeps)
     unset BLAME
     deplist="$deplist $ITEMLIST"
   fi
@@ -60,7 +56,7 @@ function list_direct_deps
   # don't look at this, it's a horrible deduplicate and whitespace tidy
   DEPLIST="$(echo $deplist | tr -s '[:space:]' '\n' | sort -u | tr -s '[:space:]' ' ' | sed 's/ *$//')"
   # Remember it for later:
-  DEPCACHE[$itemname]="$DEPLIST"
+  DEPCACHE[$itempath]="$DEPLIST"
   return 0
 }
 
@@ -68,14 +64,14 @@ function list_direct_deps
 
 function build_with_deps
 # Recursively build all dependencies, and then build the named item
-# $1 = itemname
+# $1 = itempath
 # $2 = list of parents (for circular dep detection)
 # Return status:
 # 0 = build ok, or already up-to-date so not built, or dry run
 # 1 = build failed, or sub-build failed => abort parent, or any other error
 {
   local me="$1"
-  local prg=$(basename $me)
+  local prgnam=${me##*/}
   local parents="$2 $me"
   local mydeplist mydep
   local subresult revstatus op reason
@@ -106,9 +102,9 @@ function build_with_deps
       build_with_deps $mydep "$parents"
       subresult=$?
       if [ $subresult != 0 ]; then
-        if [ "$me" = "$ITEMNAME" ]; then
-          log_error -n "$ITEMNAME ABORTED"
-          ABORTEDLIST="$ABORTEDLIST $ITEMNAME"
+        if [ "$me" = "$ITEMPATH" ]; then
+          log_error -n "$ITEMPATH ABORTED"
+          ABORTEDLIST="$ABORTEDLIST $ITEMPATH"
         fi
         return 1
       fi
@@ -119,15 +115,20 @@ function build_with_deps
   get_rev_status $me $mydeplist
   revstatus=$?
   case $revstatus in
-  0)  if [ "$me" = "$ITEMNAME" -a \( "$PROCMODE" = 'rebuild' -o "$PROCMODE" = 'test' \) ]; then
+  0)  if [ "$me" = "$ITEMPATH" -a \( "$PROCMODE" = 'rebuild' -o "$PROCMODE" = 'test' \) ]; then
         OP='rebuild'; opmsg='rebuild'
       else
-        log_normal "$me is up-to-date." ; return 0
+        if [ "$me" = "$ITEMPATH" ]; then
+          log_important "$me is up-to-date."
+        else
+          log_normal "$me is up-to-date."
+        fi
+        return 0
       fi
       ;;
   1)  OP='add';     opmsg="add" ;;
   2)  shortrev=$(cd $SR_GITREPO/$me; git log -n 1 --format=format:%h .)
-      [ -n "$(cd $SR_GITREPO/$itemname; git status -s .)" ] && shortrev="$shortrev+dirty"
+      [ -n "$(cd $SR_GITREPO/$itempath; git status -s .)" ] && shortrev="$shortrev+dirty"
       OP='update';  opmsg="update for git $shortrev" ;;
   3)  OP='update';  opmsg="update for new version" ;;
   4)  OP='rebuild'; opmsg="rebuild for changed hints" ;;
@@ -192,13 +193,13 @@ function build_with_deps
 
 function install_with_deps
 # Recursive package install, bottom up for neatness :-)
-# $1 = itemname
+# $1 = itempath
 # Return status:
 # 0 = all installs succeeded
 # 1 = any install failed
 {
   local me="$1"
-  local prg=$(basename $me)
+  local prgnam=${me##*/}
   local mydeplist mydep
 
   list_direct_deps $me
@@ -216,11 +217,11 @@ function install_with_deps
 function uninstall_with_deps
 # Recursive package uninstall
 # We'll be particularly O.C.D. by uninstalling from the top down :-)
-# $1 = itemname
+# $1 = itempath
 # Return status always 0
 {
   local me="$1"
-  local prg=$(basename $me)
+  local prgnam=${me##*/}
   local mydeplist mydep
 
   uninstall_package $me

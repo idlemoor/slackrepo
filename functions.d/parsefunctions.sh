@@ -10,16 +10,17 @@
 function parse_items
 # Parse item names
 # $* = the item names to be parsed :-)
-#    - can be <prg>, or <category>, or <category>/<prg>
-#    - both one-level and two-level repos are supported
-#    - if <prg> is unambiguous in a two-level repo, <category> can be omitted
+#    - can be <prgnam>, or <directory>/.../<prgnam>
+#    - any number of directories are supported
+#    - if <prgnam> is unambiguous, directories can be omitted
 # Also uses $BLAME which the caller can set for extra info in errors and warnings
-# Returns canonical [<category>/]<prg> name or names in $ITEMLIST
+# Returns canonical [<directory>/]<prgnam> name (or names) in $ITEMLIST
+# and populates associative arrays with values from the .info file:
+# INFOVERSION INFODOWNLIST INFOMD5LIST INFOREQUIRES
 # Return status:
 # 0 = all ok
 # 1 = any item not found
 # 9 = existential crisis
-##### TODO: Multilevel repos
 {
   ITEMLIST=''
   errstat=0
@@ -71,13 +72,13 @@ function parse_items
       # one name supplied
       if [ -f $TOPLEVEL/$a/$a$SEARCHFILE ]; then
         # one-level repo, exact match :-)
-        ITEMLIST="$ITEMLIST $a"
+        prepare_itempath $a
       else
         # is it a prog in a two-level repo?
         progcount=$(ls $TOPLEVEL/*/$a/$a$SEARCHFILE 2>/dev/null | wc -l)
         if [ $progcount = 1 ]; then
           # two-level repo, one matching prog :-)
-          ITEMLIST="$ITEMLIST $(cd $TOPLEVEL/*/$a/..; basename $(pwd))/$a"
+          prepare_itempath "$(cd $TOPLEVEL/*/$a/..; basename $(pwd))/$a"
         elif [ $progcount != 0 ]; then
           log_warning "${blamemsg}Multiple matches for $a in $TOPLEVEL, please specify the category"
           errstat=1
@@ -100,7 +101,7 @@ function parse_items
       # two names supplied, so it should be a prog in a two-level repo:
       if [ -f $TOPLEVEL/$a/$b/$b$SEARCHFILE ]; then
         # two-level repo, exact match :-)
-        ITEMLIST="$ITEMLIST $a/$b"
+        prepare_itempath "$a/$b"
       else
         # let's try to be user-friendly:
         if [ -d "$TOPLEVEL/$a/$b" ]; then
@@ -123,18 +124,50 @@ function parse_items
 
 #-------------------------------------------------------------------------------
 
+function prepare_itempath
+{
+  local itempath="$1"
+  local prgnam=${itempath##*/}
+
+  unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
+  . $itempath/$prgnam.info
+  INFOVERSION[$itempath]="$VERSION"
+  if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
+    SRCDIR[$itempath]=$SR_SRCREPO/$itempath/$SR_ARCH
+    INFODOWNLIST[$itempath]="$(eval echo \$DOWNLOAD_$SR_ARCH)"
+    INFOMD5LIST[$itempath]="$(eval echo \$MD5SUM_$SR_ARCH)"
+  else
+    SRCDIR[$itempath]=$SR_SRCREPO/$itempath
+    INFODOWNLIST[$itempath]="$DOWNLOAD"
+    INFOMD5LIST[$itempath]="$MD5SUM"
+  fi
+  INFOREQUIRES[$itempath]="$REQUIRES"
+
+  GITREV[$itempath]="$(cd $SR_GITREPO/$itempath; git log -n 1 --format=format:%H .)"
+  GITDIRTY[$itempath]="n"
+  if [ -n "$(cd $SR_GITREPO/$itempath; git status -s .)" ]; then
+    GITDIRTY[$itempath]="y"
+  fi
+
+  ITEMLIST="$ITEMLIST $itempath"
+
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
 function parse_package_name
 # Split a package name into its component fields
 # $1 = the package's pathname (or just the filename - we don't care)
 # Returns global variables PN_{PRGNAM,VERSION,ARCH,BUILD,TAG,PKGTYPE}
 # Return status: always 0
 {
-  local pkgname=$(basename $1)
-  PN_PRGNAM=$(echo $pkgname | rev | cut -f4- -d- | rev)
-  PN_VERSION=$(echo $pkgname | rev | cut -f3 -d- | rev)
-  PN_ARCH=$(echo $pkgname | rev | cut -f2 -d- | rev)
-  PN_BUILD=$(echo $pkgname | rev | cut -f1 -d- | rev | sed 's/[^0-9]*$//')
-  PN_TAG=$(echo $pkgname | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
-  PN_PKGTYPE=$(echo $pkgname | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
+  local pkgnam=$(basename $1)
+  PN_PRGNAM=$(echo $pkgnam | rev | cut -f4- -d- | rev)
+  PN_VERSION=$(echo $pkgnam | rev | cut -f3 -d- | rev)
+  PN_ARCH=$(echo $pkgnam | rev | cut -f2 -d- | rev)
+  PN_BUILD=$(echo $pkgnam | rev | cut -f1 -d- | rev | sed 's/[^0-9]*$//')
+  PN_TAG=$(echo $pkgnam | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
+  PN_PKGTYPE=$(echo $pkgnam | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
   return
 }

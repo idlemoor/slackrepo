@@ -203,8 +203,10 @@ done
 # Initialisation
 #-------------------------------------------------------------------------------
 
-# Associative arrays to speed up dependency and revision calculations:
-declare -A DEPCACHE REVCACHE
+# Associative arrays to store stuff from .info files:
+declare -A INFOVERSION INFOREQUIRES INFODOWNLIST INFOMD5LIST
+# and to store dependency, revision and other stuff:
+declare -A SRCDIR GITREV GITDIRTY DEPCACHE REVCACHE
 
 # How clean is the system?
 if [ -n "$SR_TAG" ]; then
@@ -295,9 +297,9 @@ parse_items $*
 # ignore status - we'll just process the items that were ok
 unset BLAME
 PROCTOTAL=0
-for ITEMNAME in $ITEMLIST; do
+for ITEMPATH in $ITEMLIST; do
   PROCTOTAL=$(( $PROCTOTAL + 1 ))
-  process_item $ITEMNAME
+  process_item $ITEMPATH
 done
 
 #-------------------------------------------------------------------------------

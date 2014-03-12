@@ -75,13 +75,13 @@ function parse_items
       # one name supplied
       if [ -f $TOPLEVEL/$a/$a$SEARCHFILE ]; then
         # one-level repo, exact match :-)
-        prepare_itempath $a
+        ITEMLIST="$ITEMLIST $a"
       else
         # is it a prog in a two-level repo?
         progcount=$(ls $TOPLEVEL/*/$a/$a$SEARCHFILE 2>/dev/null | wc -l)
         if [ $progcount = 1 ]; then
           # two-level repo, one matching prog :-)
-          prepare_itempath "$(cd $TOPLEVEL/*/$a/..; basename $(pwd))/$a"
+          ITEMLIST="$ITEMLIST $(cd $TOPLEVEL/*/$a/..; basename $(pwd))/$a"
         elif [ $progcount != 0 ]; then
           log_warning "${blamemsg}Multiple matches for $a in $TOPLEVEL, please specify the category"
           errstat=1
@@ -91,9 +91,7 @@ function parse_items
           if [ -d "$TOPLEVEL/$a" ]; then
             # push the whole category onto $*
             cd $TOPLEVEL
-            for i in $(ls -d $a/*); do
-              prepare_itempath $i
-            done
+            ITEMLIST="$ITEMLIST $(ls -d $a/*)"
             cd - >/dev/null
           else
             log_warning "${blamemsg}${a} not found in $TOPLEVEL"
@@ -106,7 +104,7 @@ function parse_items
       # two names supplied, so it should be a prog in a two-level repo:
       if [ -f $TOPLEVEL/$a/$b/$b$SEARCHFILE ]; then
         # two-level repo, exact match :-)
-        prepare_itempath "$a/$b"
+        ITEMLIST="$ITEMLIST $a/$b"
       else
         # let's try to be user-friendly:
         if [ -d "$TOPLEVEL/$a/$b" ]; then
@@ -125,38 +123,6 @@ function parse_items
 
   return $errstat
 
-}
-
-#-------------------------------------------------------------------------------
-
-function prepare_itempath
-{
-  local itempath="$1"
-  local prgnam=${itempath##*/}
-
-  unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
-  . $SR_GITREPO/$itempath/$prgnam.info
-  INFOVERSION[$itempath]="$VERSION"
-  if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
-    SRCDIR[$itempath]=$SR_SRCREPO/$itempath/$SR_ARCH
-    INFODOWNLIST[$itempath]="$(eval echo \$DOWNLOAD_$SR_ARCH)"
-    INFOMD5LIST[$itempath]="$(eval echo \$MD5SUM_$SR_ARCH)"
-  else
-    SRCDIR[$itempath]=$SR_SRCREPO/$itempath
-    INFODOWNLIST[$itempath]="$DOWNLOAD"
-    INFOMD5LIST[$itempath]="$MD5SUM"
-  fi
-  INFOREQUIRES[$itempath]="$REQUIRES"
-
-  GITREV[$itempath]="$(cd $SR_GITREPO/$itempath; git log -n 1 --format=format:%H .)"
-  GITDIRTY[$itempath]="n"
-  if [ -n "$(cd $SR_GITREPO/$itempath; git status -s .)" ]; then
-    GITDIRTY[$itempath]="y"
-  fi
-
-  ITEMLIST="$ITEMLIST $itempath"
-
-  return 0
 }
 
 #-------------------------------------------------------------------------------

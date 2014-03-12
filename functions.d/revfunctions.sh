@@ -43,14 +43,14 @@ function create_metadata
 
     # changelog entry: needlessly elaborate :-)
     if [ "$PROCMODE" != 'test' ]; then
-      OPERATION="$(echo $opmsg | sed -e 's/^add /Added /' -e 's/^update /Updated /' -e 's/^rebuild.*/Rebuilt/')"
+      OPERATION="$(echo $opmsg | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/')"
       extrastuff=''
-      case "$op" in
+      case "$opmsg" in
       add*)
-          extrastuff="LINEFEED $(grep "^$prgnam: " $SR_GITREPO/$itemname/slack-desc | head -n 1 | sed -e 's/.*(//' -e 's/).*//')"
+          extrastuff="LINEFEED $(grep "^$prgnam: " $SR_GITREPO/$itempath/slack-desc | head -n 1 | sed -e 's/.*(/(/' -e 's/).*/)/')"
           ;;
       'update for git'*)
-          extrastuff="LINEFEED $(cd $SR_GITREPO/$itemname; git log --pretty=format:%s . | sed -e 's/.*: //')"
+          extrastuff="LINEFEED $(cd $SR_GITREPO/$itempath; git log --pretty=format:%s . | sed -e 's/.*: //')"
           ;;
       *)  :
           ;;

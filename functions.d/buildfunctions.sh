@@ -18,6 +18,7 @@ function build_package
 # 1 = build failed
 # 2 = download failed
 # 3 = checksum failed
+# 4 = [not used]
 # 5 = skipped by hint, or unsupported on this arch
 # 6 = SlackBuild returned 0 status, but nothing in $SR_TMPOUT
 # 7 = excessively dramatic qa test fail
@@ -41,6 +42,7 @@ function build_package
   fi
 
   # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
+  VERSION="${INFOVERSION[$itempath]}"
   hint_version $itempath
   if [ -n "$NEWVERSION" ]; then
     sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$SR_TMPIN/$prgnam.SlackBuild"

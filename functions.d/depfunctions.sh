@@ -86,6 +86,28 @@ function build_with_deps
     return 1
   fi
 
+  # Surprisingly this is the ideal place to load up .info and cache it
+  if [ "${INFOVERSION[$me]+yesitisset}" != 'yesitisset' ]; then
+    unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
+    . $SR_GITREPO/$me/$prgnam.info
+    INFOVERSION[$me]="$VERSION"
+    if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
+      SRCDIR[$me]=$SR_SRCREPO/$me/$SR_ARCH
+      INFODOWNLIST[$me]="$(eval echo \$DOWNLOAD_$SR_ARCH)"
+      INFOMD5LIST[$me]="$(eval echo \$MD5SUM_$SR_ARCH)"
+    else
+      SRCDIR[$me]=$SR_SRCREPO/$me
+      INFODOWNLIST[$me]="$DOWNLOAD"
+      INFOMD5LIST[$me]="$MD5SUM"
+    fi
+    INFOREQUIRES[$me]="$REQUIRES"
+    GITREV[$me]="$(cd $SR_GITREPO/$me; git log -n 1 --format=format:%H .)"
+    GITDIRTY[$me]="n"
+    if [ -n "$(cd $SR_GITREPO/$me; git status -s .)" ]; then
+      GITDIRTY[$me]="y"
+    fi
+  fi
+
   # First, get all my deps built
   list_direct_deps $me
   mydeplist="$DEPLIST"
@@ -127,7 +149,7 @@ function build_with_deps
       fi
       ;;
   1)  OP='add'
-      opmsg="add"
+      opmsg="add version ${NEWVERSION:-${INFOVERSION[$me]}}"
       ;;
   2)  OP='update'
       shortrev="${GITREV[$me]:0:7}"

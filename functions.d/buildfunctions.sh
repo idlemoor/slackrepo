@@ -125,7 +125,6 @@ function build_package
     PKGTYPE=$SR_PKGTYPE \
     NUMJOBS=$SR_NUMJOBS
   log_normal "Running $prgnam.SlackBuild ..."
-  log_verbose "Command line is $SLACKBUILDCMD"
   ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$SR_LOGDIR/$prgnam.log 2>&1
   stat=$?
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS

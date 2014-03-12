@@ -178,7 +178,11 @@ function hint_version
   NEWVERSION=''
   if [ -f $SR_HINTS/$itempath.version ]; then
     NEWVERSION=$(cat $SR_HINTS/$itempath.version)
-    OLDVERSION="${INFOVERSION[$itempath]}"
+    if [ -f $SR_PKGREPO/$itempath/$prgnam-*.t?z ]; then
+      OLDVERSION=$(echo $SR_PKGREPO/$itempath/$prgnam-*.t?z | rev | cut -f3 -d- | rev)
+    else
+      OLDVERSION="${INFOVERSION[$itempath]}"
+    fi
     if [ "$NEWVERSION" = "$OLDVERSION" ]; then
       log_verbose "Hint: $prgnam.version: current version is already $OLDVERSION"
       NEWVERSION=''

@@ -116,7 +116,7 @@ function qa_package
     parse_package_name $pkgnam
     [ "$PN_PRGNAM" != "$prgnam" ] && \
       log_warning "${pkgnam}: PRGNAM is $PN_PRGNAM not $prgnam"
-    [ "$PN_VERSION" != "${INFOVERSION[$itempath]}" -o \
+    [ "$PN_VERSION" != "${INFOVERSION[$itempath]}" -a \
       "$PN_VERSION" != "${INFOVERSION[$itempath]}_$(uname -r)" ] && \
       log_warning "${pkgnam}: VERSION is $PN_VERSION not ${INFOVERSION[$itempath]}"
     [ "$PN_ARCH" != "$SR_ARCH" -a \

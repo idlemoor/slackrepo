@@ -35,9 +35,14 @@ function install_package
   [ -n "$pkgid" ] && return 0
 
   pkgpath=''
-  # Look for the package.  In test mode, preferentially look in the test repo
+  # Look for the package.
   if [ "$PROCMODE" = 'test' ]; then
+    # In test mode, preferentially look in the test repo
     pkgpath=$(ls $SR_TESTREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
+    # or in the temp output dir
+    [ -z "$pkgpath" ] && \
+      pkgpath=$(ls $SR_TMPOUT/$prgnam-*.t?z 2>/dev/null)
+    # or in the proper package repo
     [ -z "$pkgpath" ] && \
       pkgpath=$(ls $SR_PKGREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
   else

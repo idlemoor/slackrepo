@@ -3,7 +3,7 @@ TODO
 
 [done] nocleanup hint -> no_uninstall
 
-version hint -> update (not rebuild) if it changed; also .version in srcrepo
+[done] version hint -> update (not rebuild) if it changed; also .version in srcrepo
 
 Better logging (incl. --quiet)
 
@@ -13,7 +13,7 @@ revise documentation & do github wiki
 
 [done] document link to slackpkg+
 
-finish doing comments at top of funcs
+[done] finish doing comments at top of funcs
 
 sbopkg compatibility (env vars & filestore)
 
@@ -23,6 +23,8 @@ Additional QA tests for test mode
  - non-SBo SlackBuilds
 
 Test --test
+
+Install accelerator
 
 Report fails back to SBo
 

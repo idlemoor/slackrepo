@@ -48,6 +48,7 @@ PROCMODE=''
 UPDATEDRYRUN='n'
 UPDATEAPPLY='n'
 VERBOSE='n'
+QUIET='n'
 
 while [ $# != 0 ]; do
   case "$1" in
@@ -73,7 +74,10 @@ while [ $# != 0 ]; do
       PROCMODE='update'
       shift; continue ;;
     --verbose | -v )
-      VERBOSE='y'
+      VERBOSE='y'; QUIET='n'
+      shift; continue ;;
+    --quiet | -q )
+      QUIET='y'; VERBOSE='n'
       shift; continue ;;
     --repo=* )
       SR_REPO=$(echo "$1" | sed 's/^--repo=//')
@@ -183,6 +187,7 @@ fi
 [ "$VERBOSE" = 'y' ] && echo ""
 log_verbose "Configuration:"
 [ "$VERBOSE" = 'y' ] && log_verbose "  --verbose"
+[ "$QUIET" = 'y'   ] && log_verbose "  --quiet"
 log_verbose "  --repo=$SR_REPO"
 log_verbose "  --$PROCMODE"
 [ "$UPDATEDRYRUN" = 'y' ] && log_verbose "  --dry-run"

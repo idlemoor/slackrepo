@@ -72,12 +72,15 @@ function log_verbose
 #-------------------------------------------------------------------------------
 
 function log_normal
-# Print message on screen, and log to logfile
+# Print message on screen (unless global variable QUIET is set),
+# and log to logfile
 # $* = message
 # Return status: always 0
 {
   PRG=${logprg:-$prgnam}
-  echo "$@"
+  if [ "$QUIET" != 'y' ]; then
+    echo "$@"
+  fi
   echo "$@" >>$SR_LOGFILE
   [ -n "$PRG" ] && \
   echo "$@" >>$SR_LOGDIR/$PRG.log

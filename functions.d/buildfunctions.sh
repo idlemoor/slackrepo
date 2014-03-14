@@ -218,7 +218,7 @@ function build_failed
   local prgnam=${itempath##*/}
 
   rm -rf $SR_TMPIN $SR_TMPOUT
-  # but don't remove files from $TMP, they can help to diagnose why it failed
+  # but don't remove files from $SR_TMP, they can help to diagnose why it failed
 
   msg="$OP FAILED"
   log_error -n ":-( $itempath $msg )-:"

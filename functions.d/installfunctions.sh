@@ -37,17 +37,16 @@ function install_package
   pkgpath=''
   # Look for the package.
   if [ "$OPT_DRYRUN" = 'y' ]; then
-    # preferentially look in the dryrun repo
+    # look in the dryrun repo
     pkgpath=$(ls $SR_DRYREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
-    # or in the temp output dir
-    [ -z "$pkgpath" ] && \
-      pkgpath=$(ls $SR_TMPOUT/$prgnam-*.t?z 2>/dev/null)
-    # or in the proper package repo
-    [ -z "$pkgpath" ] && \
-      pkgpath=$(ls $SR_PKGREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
-  else
-    pkgpath=$(ls $SR_PKGREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
   fi
+  # look in the temp output dir
+  [ -z "$pkgpath" ] && \
+    pkgpath=$(ls $SR_TMPOUT/$prgnam-*.t?z 2>/dev/null)
+  # look in the proper package repo
+  [ -z "$pkgpath" ] && \
+    pkgpath=$(ls $SR_PKGREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
+  # should have it by now!
   [ -n "$pkgpath" ] || { log_error "${itempath}: Can't find any packages in $SR_PKGREPO/$itempath/"; return 1; }
 
   if [ "$OPT_VERBOSE" = 'y' ]; then

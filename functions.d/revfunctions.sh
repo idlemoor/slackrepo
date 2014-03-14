@@ -57,9 +57,10 @@ function create_metadata
       esac
       # Filter previous entries for this item from the changelog
       # (it may contain info from a previous run that was interrupted)
-      grep -v "^${itempath}: " $SR_CHANGELOG > $TMP/sr_changelog.new
-      echo "$itempath: ${OPERATION}. $extrastuff NEWLINE" >> $TMP/sr_changelog.new
-      mv $TMP/sr_changelog.new $SR_CHANGELOG
+      newchangelog=$TMPDIR/sr_changelog.new
+      grep -v "^${itempath}: " $SR_CHANGELOG > $newchangelog
+      echo "$itempath: ${OPERATION}. $extrastuff NEWLINE" >> $newchangelog
+      mv $newchangelog $SR_CHANGELOG
     fi
 
     # Although gen_repos_files.sh can create the following files, it's quicker to
@@ -165,7 +166,7 @@ function get_rev_status
   fi
 
   # capture current rev into a temp file
-  currfile=$SR_TMP/slackrepo_rev
+  currfile=$TMPDIR/sr_curr_rev
   print_current_revinfo $itempath $* > $currfile
   # and extract some key stats into variables
   currgit=$(head -q -n 1 "$currfile" | sed -e 's/^.* git://' -e 's/ .*//')
@@ -197,6 +198,7 @@ function get_rev_status
     # (note, by now we know that the first line must be the same)
     cmp -s "$currfile" "$prevfile" || { REVCACHE[$itempath]=5; return 5; }
   done
+  rm -f $currfile
 
   REVCACHE[$itempath]=0
   return 0

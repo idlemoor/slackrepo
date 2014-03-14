@@ -137,16 +137,19 @@ function qa_package
     #### check that install/slack-desc exists
 
     #### TODO: check it's tar-1.13 compatible
-    tar tf $pkgpath > $TMP/sr_pkgt
-    if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)' $TMP/sr_pkgt; then
+    temptarlist=$TMPDIR/sr_tarlist
+    tar tf $pkgpath > $temptarlist
+    if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)' $temptarlist; then
       log_warning "${pkgnam}: files are installed in unusual locations"
     fi
     #### TODO: check nothing into /usr/local
-    if ! grep -q 'install/slack-desc' $TMP/sr_pkgt; then
+    if ! grep -q 'install/slack-desc' $temptarlist; then
       log_warning "${pkgnam}: package does not contain slack-desc"
     fi
     #### TODO: check modes of package contents
     #### TODO: check whether a noarch package is really noarch
+    rm -f $temptarlist
+
     # If this is the top level item, install it to see what happens :D
     if [ "$PRGNAM" = "$(basename $ITEMPATH)" ]; then
       install_package $ITEMPATH || return 1
@@ -155,5 +158,6 @@ function qa_package
     fi
 
   done
+
   return
 }

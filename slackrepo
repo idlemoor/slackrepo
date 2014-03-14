@@ -159,6 +159,9 @@ for confvar in $varlist ; do
   eval unset $confvar
 done
 
+# This is for things that SR_TMP wouldn't be good for (we clean SR_TMP)
+TMPDIR=${TMPDIR:-/tmp}
+
 # Do this now so we can log the config:
 mkdir -p $SR_LOGDIR
 SR_LOGFILE=$SR_LOGDIR/slackrepo_$(date '+%F_%T').log
@@ -234,8 +237,7 @@ if [ "$OPT_DRYRUN" = 'y' ]; then
   mkdir -p $SR_DRYREPO
 fi
 
-# Don't use SR_TMP for this (we clean SR_TMP)
-SR_CHANGELOG=${TMPDIR:-/tmp}/sr_changelog.tmp
+SR_CHANGELOG=$TMPDIR/sr_changelog.tmp
 # Don't clear the changelog, it may contain changes from a previous interrupted
 # run, and gen_repos_files.sh can catch up with them at the end.
 touch $SR_CHANGELOG

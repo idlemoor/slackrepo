@@ -104,10 +104,11 @@ are applied.
 
 (4) Remove mode:
 
-  slackrepo remove [--repo=ID] item...
+  slackrepo remove [--repo=ID] [--dry-run] item...
 
-In remove mode, each item is removed from the package repository, and
-any cached source files are removed.
+In remove mode, each item's packages are removed from the repository, and
+any cached source files are removed.  If --dry-run is specified, the
+packages and source files are not removed.
 
 
 USAGE NOTES

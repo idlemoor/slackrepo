@@ -79,7 +79,6 @@ while [ $# != 0 ]; do
       OPT_QUIET='y'; OPT_VERBOSE='n'
       shift; continue ;;
     --test )
-      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
       OPT_TEST='y'
       shift; continue ;;
     --dry-run )
@@ -108,7 +107,7 @@ done
 
 [ -z "$PROCMODE" ] && \
   { print_usage; exit 3; }
-[ \( "$OPT_APPLY" = 'y' -o "$OPT_DRYRUN" = 'y' \) -a "$PROCMODE" != 'update' ] && \
+[ "$OPT_APPLY" = 'y' -a "$PROCMODE" != 'update' ] && \
   { print_usage; exit 3; }
 
 #-------------------------------------------------------------------------------
@@ -241,7 +240,7 @@ SR_CHANGELOG=${TMPDIR:-/tmp}/sr_changelog.tmp
 # run, and gen_repos_files.sh can catch up with them at the end.
 touch $SR_CHANGELOG
 
-if [ "$OPT_DRYRUN" = 'y' ]; then
+if [ "$OPT_DRYRUN" = 'y' -a "$PROCMODE" = "update" ]; then
   >$SR_UPDATEFILE
 fi
 

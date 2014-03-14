@@ -174,7 +174,7 @@ function build_with_deps
   esac
 
   # Stop here if update --dry-run
-  if [ "$OPT_DRYRUN" = 'y' ]; then
+  if [ "$PROCMODE" = 'update' -a "$OPT_DRYRUN" = 'y' ]; then
     opmsg="would be $(echo "$opmsg" | sed -e 's/^add /added /' -e 's/^update /updated /' -e 's/^rebuild /rebuilt /')"
     log_important "$me $opmsg"
     echo "$me $opmsg" >> $SR_UPDATEFILE

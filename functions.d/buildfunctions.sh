@@ -37,7 +37,7 @@ function build_package
   rm -rf $SR_TMPIN
   cp -a $SR_GITREPO/$itempath $SR_TMPIN
 
-  if [ "$PROCMODE" = 'test' ]; then
+  if [ "$OPT_TEST" = 'y' ]; then
     qa_slackbuild $itempath || return 7
   fi
 
@@ -88,7 +88,7 @@ function build_package
     log_warning "${itempath}: \"BUILD=\" not found in SlackBuild; using 1"
   fi
   eval $buildassign
-  if [ "$OP" = 'add' -o "$PROCMODE" = 'test' ]; then
+  if [ "$OP" = 'add' -o "$OPT_DRYRUN" = 'y' ]; then
     # just use the SlackBuild's BUILD
     SR_BUILD="$BUILD"
   else
@@ -144,7 +144,7 @@ function build_package
     return 6
   fi
 
-  if [ "$PROCMODE" = 'test' ]; then
+  if [ "$OPT_TEST" = 'y' ]; then
     qa_package $itempath $pkglist || { build_failed $itempath; return 7; }
   fi
 
@@ -184,11 +184,11 @@ function build_ok
 
   rm -rf $SR_TMPIN
 
-  if [ "$PROCMODE" = 'test' ]; then
-    # put the package into the special test repo
-    mkdir -p $SR_TESTREPO/$itempath
-    rm -rf $SR_TESTTREPO/$itempath/*
-    mv $SR_TMPOUT/* $SR_TESTREPO/$itempath/
+  if [ "$OPT_DRYRUN" = 'y' ]; then
+    # put the package into the special dryrun repo
+    mkdir -p $SR_DRYREPO/$itempath
+    rm -rf $SR_DRYREPO/$itempath/*
+    mv $SR_TMPOUT/* $SR_DRYREPO/$itempath/
   else
     # put it into the real package repo
     mkdir -p $SR_PKGREPO/$itempath

@@ -137,7 +137,7 @@ function build_with_deps
   get_rev_status $me $mydeplist
   revstatus=$?
   case $revstatus in
-  0)  if [ "$me" = "$ITEMPATH" -a \( "$PROCMODE" = 'rebuild' -o "$PROCMODE" = 'test' \) ]; then
+  0)  if [ "$me" = "$ITEMPATH" -a "$PROCMODE" = 'rebuild' ]; then
         OP='rebuild'; opmsg='rebuild'
       else
         if [ "$me" = "$ITEMPATH" ]; then
@@ -174,15 +174,15 @@ function build_with_deps
   esac
 
   # Stop here if update --dry-run
-  if [ "$UPDATEDRYRUN" = 'y' ]; then
+  if [ "$OPT_DRYRUN" = 'y' ]; then
     opmsg="would be $(echo "$opmsg" | sed -e 's/^add /added /' -e 's/^update /updated /' -e 's/^rebuild /rebuilt /')"
     log_important "$me $opmsg"
     echo "$me $opmsg" >> $SR_UPDATEFILE
     return 0
   fi
 
-  # Tweak the message for test mode
-  [ "$PROCMODE" = 'test' ] && opmsg="test $opmsg"
+  # Tweak the message for dryrun
+  [ "$OPT_DRYRUN" = 'y' ] && opmsg="$opmsg --dry-run"
 
   # Now the real work starts :-)
   log_prgstart "Starting $me ($opmsg)"

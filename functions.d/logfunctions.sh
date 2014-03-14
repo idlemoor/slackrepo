@@ -56,12 +56,12 @@ function log_prgstart
 
 function log_verbose
 # Log a message to the logfile, and also to the screen if global variable
-# VERBOSE is set.
+# OPT_VERBOSE is set.
 # $* = message
 # Return status: always 0
 {
   PRG=${logprg:-$prgnam}
-  if [ "$VERBOSE" = 'y' ]; then
+  if [ "$OPT_VERBOSE" = 'y' ]; then
     echo "$@"
   fi
   echo "$@" >>$SR_LOGFILE
@@ -72,13 +72,13 @@ function log_verbose
 #-------------------------------------------------------------------------------
 
 function log_normal
-# Print message on screen (unless global variable QUIET is set),
+# Print message on screen (unless global variable OPT_QUIET is set),
 # and log to logfile
 # $* = message
 # Return status: always 0
 {
   PRG=${logprg:-$prgnam}
-  if [ "$QUIET" != 'y' ]; then
+  if [ "$OPT_QUIET" != 'y' ]; then
     echo "$@"
   fi
   echo "$@" >>$SR_LOGFILE

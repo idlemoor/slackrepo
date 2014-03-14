@@ -52,15 +52,12 @@ function parse_items
     fi
 
     case "$PROCMODE" in
-    'add' | \
-    'rebuild' | \
-    'test' )
+    'add' | 'rebuild' )
       # look for xxx.SlackBuild in $SR_GITREPO
       SEARCHFILE='.SlackBuild'
       TOPLEVEL="$SR_GITREPO"
       ;;
-    'update' | \
-    'remove' )
+    'update' | 'remove' )
       # look for xxx-*.t?z in $SR_PKGREPO
       SEARCHFILE='-*.t?z'
       TOPLEVEL="$SR_PKGREPO"

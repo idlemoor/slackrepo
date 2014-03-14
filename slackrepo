@@ -29,7 +29,6 @@ function print_usage
   echo 'Usage:'
   echo '  slackrepo add     [--repo=ID] [item...]'
   echo '  slackrepo rebuild [--repo=ID] [item...]'
-  echo '  slackrepo test    [--repo=ID] [item...]'
   echo '  slackrepo remove  [--repo=ID] item...'
   echo '  slackrepo update  [--repo=ID] [--dry-run ] [item...]'
   echo '  slackrepo update  [--repo=ID] --apply[=file]'
@@ -45,15 +44,16 @@ starttime=$(date +%s)
 #-------------------------------------------------------------------------------
 
 PROCMODE=''
-UPDATEDRYRUN='n'
-UPDATEAPPLY='n'
-VERBOSE='n'
-QUIET='n'
+OPT_TEST='n'
+OPT_DRYRUN='n'
+OPT_APPLY='n'
+OPT_VERBOSE='n'
+OPT_QUIET='n'
 
 while [ $# != 0 ]; do
   case "$1" in
+    # we'll accept add/rebuild/update/remove with or without '--'
     add | --add )
-      # we'll accept add/rebuild/test/remove/update with or without '--'
       [ -n "$PROCMODE" ] && { print_usage; exit 3; }
       PROCMODE='add'
       shift; continue ;;
@@ -61,42 +61,42 @@ while [ $# != 0 ]; do
       [ -n "$PROCMODE" ] && { print_usage; exit 3; }
       PROCMODE='rebuild'
       shift; continue ;;
-    test | --test )
+    update | --update )
       [ -n "$PROCMODE" ] && { print_usage; exit 3; }
-      PROCMODE='test'
+      PROCMODE='update'
       shift; continue ;;
     remove | --remove )
       [ -n "$PROCMODE" ] && { print_usage; exit 3; }
       PROCMODE='remove'
       shift; continue ;;
-    update | --update )
-      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
-      PROCMODE='update'
-      shift; continue ;;
-    --verbose | -v )
-      VERBOSE='y'; QUIET='n'
-      shift; continue ;;
-    --quiet | -q )
-      QUIET='y'; VERBOSE='n'
-      shift; continue ;;
     --repo=* )
       SR_REPO=$(echo "$1" | sed 's/^--repo=//')
       shift; continue ;;
+    --verbose | -v )
+      OPT_VERBOSE='y'; OPT_QUIET='n'
+      shift; continue ;;
+    --quiet | -q )
+      OPT_QUIET='y'; OPT_VERBOSE='n'
+      shift; continue ;;
+    --test )
+      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
+      OPT_TEST='y'
+      shift; continue ;;
     --dry-run )
       # --dry-run is incompatible with --apply
-      [ "$UPDATEAPPLY" = 'y' ] && { print_usage; exit 3; }
-      UPDATEDRYRUN='y'
+      [ "$OPT_APPLY" = 'y' ] && { print_usage; exit 3; }
+      OPT_DRYRUN='y'
       shift; continue ;;
     --apply=* )
       # --apply is incompatible with --dry-run
-      [ "$UPDATEDRYRUN" = 'y' ] && { print_usage; exit 3; }
-      UPDATEAPPLY='y'
+      [ "$OPT_DRYRUN" = 'y' ] && { print_usage; exit 3; }
+      OPT_APPLY='y'
       SR_UPDATEFILE="$(echo "$1" | sed 's/^--apply=//')"
       shift; continue ;;
     --apply )
       # --apply is incompatible with --dry-run
-      [ "$UPDATEDRYRUN" = 'y' ] && { print_usage; exit 3; }
-      UPDATEAPPLY='y'
+      [ "$OPT_DRYRUN" = 'y' ] && { print_usage; exit 3; }
+      OPT_APPLY='y'
       SR_UPDATEFILE=""  # fill this in later when we've read the config
       shift; continue ;;
     --* )
@@ -108,7 +108,7 @@ done
 
 [ -z "$PROCMODE" ] && \
   { print_usage; exit 3; }
-[ \( "$UPDATEAPPLY" = 'y' -o "$UPDATEDRYRUN" = 'y' \) -a "$PROCMODE" != 'update' ] && \
+[ \( "$OPT_APPLY" = 'y' -o "$OPT_DRYRUN" = 'y' \) -a "$PROCMODE" != 'update' ] && \
   { print_usage; exit 3; }
 
 #-------------------------------------------------------------------------------
@@ -184,19 +184,19 @@ fi
 # For update mode:
 [ -z "$SR_UPDATEFILE" ] && SR_UPDATEFILE="$SR_LOGDIR/slackrepo_dryrun.log"
 
-[ "$VERBOSE" = 'y' ] && echo ""
+[ "$OPT_VERBOSE" = 'y' ] && echo ""
 log_verbose "Configuration:"
-[ "$VERBOSE" = 'y' ] && log_verbose "  --verbose"
-[ "$QUIET" = 'y'   ] && log_verbose "  --quiet"
+[ "$OPT_VERBOSE" = 'y' ] && log_verbose "  --verbose"
+[ "$OPT_QUIET" = 'y'   ] && log_verbose "  --quiet"
 log_verbose "  --repo=$SR_REPO"
 log_verbose "  --$PROCMODE"
-[ "$UPDATEDRYRUN" = 'y' ] && log_verbose "  --dry-run"
-[ "$UPDATEAPPLY"  = 'y' ] && log_verbose "  --apply=$SR_UPDATEFILE"
+[ "$OPT_DRYRUN" = 'y' ] && log_verbose "  --dry-run"
+[ "$OPT_APPLY"  = 'y' ] && log_verbose "  --apply=$SR_UPDATEFILE"
 for var in $varlist; do
   myvar="SR_$var"
   log_verbose "  $var='${!myvar}'"
 done
-[ "$VERBOSE" = 'y' ] && echo ""
+[ "$OPT_VERBOSE" = 'y' ] && echo ""
 
 [ -d "$SR_GITREPO" ] || { log_normal "$(basename $0): Creating git repository: $SR_GITREPO"     ; mkdir -p "$SR_GITREPO" ; }
 [ -d "$SR_SRCREPO" ] || { log_normal "$(basename $0): Creating source repository: $SR_SRCREPO"  ; mkdir -p "$SR_SRCREPO" ; }
@@ -229,10 +229,10 @@ log_normal "Removing $SR_TMP/* ..."
 [ -n "$SR_TMP" ] && rm -rf "${SR_TMP}"/*
 
 mkdir -p $SR_TMP $SR_SRCREPO $SR_PKGREPO
-if [ "$PROCMODE" = 'test' ]; then
-  SR_TESTREPO=$SR_TMP/test_$SR_REPO
-  rm -rf $SR_TESTREPO
-  mkdir -p $SR_TESTREPO
+if [ "$OPT_DRYRUN" = 'y' ]; then
+  SR_DRYREPO=$SR_TMP/dryrun_$SR_REPO
+  rm -rf $SR_DRYREPO
+  mkdir -p $SR_DRYREPO
 fi
 
 # Don't use SR_TMP for this (we clean SR_TMP)
@@ -241,7 +241,7 @@ SR_CHANGELOG=${TMPDIR:-/tmp}/sr_changelog.tmp
 # run, and gen_repos_files.sh can catch up with them at the end.
 touch $SR_CHANGELOG
 
-if [ "$UPDATEDRYRUN" = 'y' ]; then
+if [ "$OPT_DRYRUN" = 'y' ]; then
   >$SR_UPDATEFILE
 fi
 
@@ -249,7 +249,7 @@ log_normal "Initialising git ..."
 if [ -d $SR_GITREPO/.git ]; then
   cd $SR_GITREPO
   ###### This bit needs a redo
-  ###### don't update if UPDATEAPPLY is happening
+  ###### don't update if OPT_APPLY is happening
   ###### git checkout -f $SR_BRANCH
   if [ -n "$SR_UPSTREAM" -a "$SR_BRANCH" = "$SLACKVER" ]; then
     if [ -n "$(find $SR_GITREPO/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
@@ -278,7 +278,7 @@ FAILEDLIST=''
 ABORTEDLIST=''
 
 if [ "$PROCMODE" = 'update' ]; then
-  if [ "$UPDATEAPPLY" = 'y' ]; then
+  if [ "$OPT_APPLY" = 'y' ]; then
     # update apply => throw away all the args, get the stored arg list
     set -- $(cat "$SR_UPDATEFILE" | cut -f1 -d' ')
   elif [ $# = 0 ]; then
@@ -323,47 +323,47 @@ h=$(( $secs / 3600 )); m=$(( ( $secs / 60) % 60 )); s=$(( $secs % 60 ))
 echo "Time:      ${h}h ${m}m ${s}s"
 echo "Processed: $PROCTOTAL"
 
-if [ "$PROCMODE" = 'update' -a "$UPDATEDRYRUN" = 'y' ]; then
+if [ "$PROCMODE" = 'update' -a "$OPT_DRYRUN" = 'y' ]; then
   sort -u -k 1,1 -o $SR_UPDATEFILE $SR_UPDATEFILE
   cat $SR_UPDATEFILE
 else
-  if [ "$PROCMODE" = 'test' ]; then
+  if [ "$OPT_TEST" = 'y' ]; then
     PASSEDLIST="$(echo -n $PASSEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
     echo "Passed:    $(echo -n $PASSEDLIST | wc -w)"
-    [ "$VERBOSE" = 'y' -a -n "$PASSEDLIST" ] && echo "$PASSEDLIST"
+    [ "$OPT_VERBOSE" = 'y' -a -n "$PASSEDLIST" ] && echo "$PASSEDLIST"
   else
     echo "Added:     $(grep ': Added'   $SR_CHANGELOG | wc -l)"
-    [ "$VERBOSE" = 'y' ] && \
+    [ "$OPT_VERBOSE" = 'y' ] && \
       grep ': Added'   $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
     echo "Updated:   $(grep ': Updated' $SR_CHANGELOG | wc -l)"
-    [ "$VERBOSE" = 'y' ] && \
+    [ "$OPT_VERBOSE" = 'y' ] && \
       grep ': Updated' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
     echo "Rebuilt:   $(grep ': Rebuilt' $SR_CHANGELOG | wc -l)"
-    [ "$VERBOSE" = 'y' ] && \
+    [ "$OPT_VERBOSE" = 'y' ] && \
       grep ': Rebuilt' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
     echo "Removed:   $(grep ': Removed' $SR_CHANGELOG | wc -l)"
-    [ "$VERBOSE" = 'y' ] && \
+    [ "$OPT_VERBOSE" = 'y' ] && \
       grep ': Removed' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
   fi
   SKIPPEDLIST="$(echo -n $SKIPPEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
   echo "Skipped:   $(echo -n $SKIPPEDLIST | wc -w)"
-  [ "$VERBOSE" = 'y' -a -n "$SKIPPEDLIST" ] && echo "$SKIPPEDLIST"
+  [ "$OPT_VERBOSE" = 'y' -a -n "$SKIPPEDLIST" ] && echo "$SKIPPEDLIST"
   FAILEDLIST="$(echo -n $FAILEDLIST   | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
   echo "Failed:    $(echo -n $FAILEDLIST | wc -w)"
-  [ "$VERBOSE" = 'y' -a -n "$FAILEDLIST" ] && echo "$FAILEDLIST"
+  [ "$OPT_VERBOSE" = 'y' -a -n "$FAILEDLIST" ] && echo "$FAILEDLIST"
   ABORTEDLIST="$(echo -n $ABORTEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
   echo "Aborted:   $(echo -n $ABORTEDLIST | wc -w)"
-  [ "$VERBOSE" = 'y' -a -n "$ABORTEDLIST" ] && echo "$ABORTEDLIST"
+  [ "$OPT_VERBOSE" = 'y' -a -n "$ABORTEDLIST" ] && echo "$ABORTEDLIST"
 fi
 WARNCOUNT=$(grep '^WARNING: ' $SR_LOGFILE | wc -l)
 echo "Warnings:  $WARNCOUNT"
-[ "$VERBOSE" = 'y' ] && grep '^WARNING: ' $SR_LOGFILE | sed 's/^WARNING: /  /'
+[ "$OPT_VERBOSE" = 'y' ] && grep '^WARNING: ' $SR_LOGFILE | sed 's/^WARNING: /  /'
 
 #-------------------------------------------------------------------------------
 # Package repository maintenance: gen_repos_files.sh
 #-------------------------------------------------------------------------------
 
-if [ "$PROCMODE" != 'test' -a -s $SR_CHANGELOG ]; then
+if [ "$OPT_DRYRUN" != 'y' -a -s $SR_CHANGELOG ]; then
   rcfile=~/.genreprc
   [ -f $rcfile ] && { set -e; . $rcfile; set +e; }
   if [ "$SR_USE_GENREPOS" = 1 ]; then

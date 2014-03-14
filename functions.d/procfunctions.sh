@@ -24,17 +24,17 @@ function process_item
   log_start "$ITEMPATH"
 
   case "$PROCMODE" in
-  'add' | 'rebuild' | 'test')
+  'add' | 'rebuild' )
     build_with_deps $ITEMPATH
     ;;
-  'update')
+  'update' )
     if [ -d $SR_GITREPO/$ITEMPATH/ ]; then
       build_with_deps $ITEMPATH
     else
       process_remove $ITEMPATH
     fi
     ;;
-  'remove')
+  'remove' )
     process_remove $ITEMPATH
     ;;
   *)
@@ -64,7 +64,7 @@ function process_remove
     fi
   fi
 
-  if [ "$UPDATEDRYRUN" = 'y' ]; then
+  if [ "$OPT_DRYRUN" = 'y' ]; then
     log_important "$ITEMPATH would be removed"
     echo "$ITEMPATH would be removed" >> $SR_UPDATEFILE
   else

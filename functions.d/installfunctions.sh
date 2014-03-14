@@ -10,7 +10,7 @@
 
 function install_package
 # Run installpkg if the package is not already installed,
-# finding the package in either the package or the test repository
+# finding the package in either the package or the dryrun repository
 # $1 = itempath
 # Return status:
 # 0 = installed ok or already installed
@@ -36,9 +36,9 @@ function install_package
 
   pkgpath=''
   # Look for the package.
-  if [ "$PROCMODE" = 'test' ]; then
-    # In test mode, preferentially look in the test repo
-    pkgpath=$(ls $SR_TESTREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
+  if [ "$OPT_DRYRUN" = 'y' ]; then
+    # preferentially look in the dryrun repo
+    pkgpath=$(ls $SR_DRYREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
     # or in the temp output dir
     [ -z "$pkgpath" ] && \
       pkgpath=$(ls $SR_TMPOUT/$prgnam-*.t?z 2>/dev/null)

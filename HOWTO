@@ -63,49 +63,35 @@ the Slackware Team.  The author thanks those awesome projects for their
 continuing generosity to the community.
 
 
-
 OPERATION
 ---------
 
-slackrepo has five modes of operation: add mode, rebuild mode, test mode,
-remove mode, and update mode.
+slackrepo has four modes of operation: add, rebuild, update and remove.
 
 (1) Add mode:
 
-  slackrepo add [--repo=ID] [item...]
+  slackrepo add [--repo=ID] [--test] [--dry-run] [item...]
 
 In add mode, each specified item in the SlackBuild repository is
 built and stored into the package repository if there is no up-to-date
 package already stored.  Missing or out-of-date dependencies are also
 built and stored into the package repository.  If no items are specified,
-everything in the SlackBuild repository is built and stored.
+everything in the SlackBuild repository is built and stored.  If --test is
+specified, the SlackBuilds and packages are subjected to additional
+quality assurance tests.  If --dry-run is specified, the packages are
+built as normal, but not stored into the package repository.
 
 (2) Rebuild mode:
 
-  slackrepo rebuild [--repo=ID] [item...]
+  slackrepo rebuild [--repo=ID] [--test] [--dry-run] [item...]
 
 Rebuild mode is like add mode, except that packages already in the package
 repository will be rebuilt, even if they are up-to-date.
 
-(3) Test mode:
+(3) Update mode:
 
-  slackrepo test [--repo=ID] [item...]
-
-Test mode is like rebuild mode, except that the SlackBuilds and
-packages are subjected to additional quality assurance tests, and
-the packages are not stored into the package repository.
-
-(4) Remove mode:
-
-  slackrepo remove [--repo=ID] item...
-
-In remove mode, each item is removed from the package repository.  Also,
-any cached source files are removed.
-
-(5) Update mode:
-
-  slackrepo update [--repo=ID] [--dry-run] [item...]
-  slackrepo update [--repo=ID] --apply[=filename]
+  slackrepo update [--repo=ID] [--test] [--dry-run] [item...]
+  slackrepo update [--repo=ID] [--test] --apply[=filename]
 
 In update mode, each specified package (and its dependencies) in the
 package repository is compared to the SlackBuild repository, and built,
@@ -116,14 +102,37 @@ rebuilt, upgraded or removed, but none of these actions are performed.
 If --apply is specified, the changes previously reported by --dry-run
 are applied.
 
-Usage Notes:
+(4) Remove mode:
+
+  slackrepo remove [--repo=ID] item...
+
+In remove mode, each item is removed from the package repository, and
+any cached source files are removed.
+
+
+USAGE NOTES
+-----------
 
 Items can be specified as the name of an individual item (e.g. 'wxPython')
 or as an individual item in a category (e.g. 'libraries/wxPython'), or as
 an entire category of items (e.g. 'libraries').  Obviously, very large
 amounts of storage will be needed if you build entire categories.
 
-Operation Details:
+
+MESSAGES AND LOGGING
+--------------------
+
+All messages from slackrepo are sent to a log file.  Progress messages are
+displayed on the screen.  Control arguments '--verbose' (or '-v') and
+'--quiet' (or '-q') can be specified, to increase or decrease the details
+that are displayed on the screen.
+
+Detailed output from each build process is sent to its own log file, but
+is not displayed on the screen.
+
+
+OPERATION DETAILS
+-----------------
 
 Sources are downloaded on demand (unless already available in the
 local cache).  A well-functioning network connection is assumed.
@@ -146,7 +155,6 @@ When a package is rebuilt, and when a package is updated but its
 version number is unchanged, the BUILD number in the package repository
 is always incremented (and the BUILD number in the SlackBuild file is
 ignored).
-
 
 
 HINTS
@@ -173,7 +181,6 @@ The types of hints are as follows --
 * prg.no_uninstall  do not uninstall prg
 * prg.answers       answers for prompts printed when the SlackBuild is run
 * prg.version       attempt to patch .info and .SlackBuild for a new version
-
 
 
 REPOSITORIES
@@ -204,7 +211,6 @@ Under each of git_SBo, src_SBo and pkg_SBo is a directory for each SBo
 category, and under each category directory is a subdirectory for each
 item.  Under hints_SBo is a directory for each category, but there are
 no subdirectories.  Under log_SBo there are no category directories.
-
 
 
 CONFIGURATION
@@ -250,7 +256,6 @@ configuration options in /etc/slackrepo.conf.  However, if you already
 use gen_repos_files.sh, it will still read your existing ~/.genreprc file.
 
 
-
 USE OF GIT
 ----------
 
@@ -260,7 +265,6 @@ the stable branch at SlackBuilds.org).  As a special arrangement, if this
 local branch named '14.1' is being used, it will automatically be updated
 by fast forward (if possible) from its origin, but only if more than one
 day has elapsed since the last update.
-
 
 
 SLACKPKG+
@@ -303,7 +307,6 @@ in your own repository you can use
 or to install and update everything in your own repository, you can use
 
   slackpkg add <reponame>
-
 
 
 WARNINGS

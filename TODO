@@ -24,6 +24,8 @@ Additional QA tests for test mode
 
 Test --test
 
+pidfile
+
 Install accelerator
 
 Report fails back to SBo

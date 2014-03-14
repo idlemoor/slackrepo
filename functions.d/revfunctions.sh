@@ -22,7 +22,7 @@ function create_metadata
   shift 2
 
   MYREPO="$SR_PKGREPO"
-  [ "$PROCMODE" = 'test' ] && MYREPO="$SR_TESTREPO"
+  [ "$OPT_DRYRUN" = 'y' ] && MYREPO="$SR_DRYREPO"
 
   pkglist=$(ls $MYREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
   for pkg in $pkglist; do
@@ -42,7 +42,7 @@ function create_metadata
     fi
 
     # changelog entry: needlessly elaborate :-)
-    if [ "$PROCMODE" != 'test' ]; then
+    if [ "$OPT_DRYRUN" != 'y' ]; then
       OPERATION="$(echo $opmsg | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/')"
       extrastuff=''
       case "$opmsg" in
@@ -101,8 +101,8 @@ function print_current_revinfo
 
   # capture revision of each dep from its .rev file
   while [ $# != 0 ]; do
-    if [ "$PROCMODE" = 'test' -a -f $SR_TESTREPO/$1/*.rev ]; then
-      head -q -n 1 $SR_TESTREPO/$1/*.rev
+    if [ "$OPT_DRYRUN" = 'y' -a -f $SR_DRYREPO/$1/*.rev ]; then
+      head -q -n 1 $SR_DRYREPO/$1/*.rev
     else
       head -q -n 1 $SR_PKGREPO/$1/*.rev
     fi
@@ -141,8 +141,8 @@ function get_rev_status
   fi
 
   # Is there an old package?
-  if [ "$PROCMODE" = 'test' ]; then
-    pkglist=$(ls $SR_TESTREPO/$itempath/*.t?z 2>/dev/null)
+  if [ "$OPT_DRYRUN" = 'y' ]; then
+    pkglist=$(ls $SR_DRYREPO/$itempath/*.t?z 2>/dev/null)
     [ -z "$pkglist" ] && \
       pkglist=$(ls $SR_PKGREPO/$itempath/*.t?z 2>/dev/null)
   else

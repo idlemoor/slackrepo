@@ -201,8 +201,9 @@ function build_ok
   rm -rf $SR_TMP/${prgnam}* $SR_TMP/package-${prgnam}
 
   msg="$OP OK"
+  [ "$OPT_DRYRUN" = 'y' ] && msg="$OP --dry-run OK"
   log_success ":-) $itempath $msg (-:"
-  PASSEDLIST="$PASSEDLIST $itempath"
+  OKLIST="$OKLIST $itempath"
   return 0
 }
 

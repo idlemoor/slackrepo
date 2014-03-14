@@ -50,8 +50,13 @@ function install_package
   fi
   [ -n "$pkgpath" ] || { log_error "${itempath}: Can't find any packages in $SR_PKGREPO/$itempath/"; return 1; }
 
-  installpkg --terse $pkgpath
-  stat=$?
+  if [ "$OPT_VERBOSE" = 'y' ]; then
+    installpkg --terse $pkgpath | tee -a >>$SR_LOGFILE
+    stat=$?
+  else
+    installpkg --terse $pkgpath >>$SR_LOGFILE
+    stat=$?
+  fi
   if [ $stat != 0 ]; then
     log_error "${itempath}: installpkg $pkgpath failed (status $stat)"
     return 1

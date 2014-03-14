@@ -87,7 +87,7 @@ function qa_slackbuild
   # (4) Check README
   [ -f $SR_GITREPO/$itempath/README ] || \
     { log_error "${itempath}: README not found"; return 1; }
-  [ "$(wc -L < $SR_GITREPO/$itempath/README)" -le 76 ] || \
+  [ "$(wc -L < $SR_GITREPO/$itempath/README)" -le 79 ] || \
     log_warning "${itempath}: long lines in README"
 
   return 0

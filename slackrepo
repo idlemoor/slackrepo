@@ -271,7 +271,7 @@ log_normal "Finished initialising git."
 # Main loop
 #-------------------------------------------------------------------------------
 
-PASSEDLIST=''
+OKLIST=''
 SKIPPEDLIST=''
 FAILEDLIST=''
 ABORTEDLIST=''
@@ -319,43 +319,43 @@ echo "==========================================================================
 echo ""
 secs=$(( $(date +%s) - $starttime ))
 h=$(( $secs / 3600 )); m=$(( ( $secs / 60) % 60 )); s=$(( $secs % 60 ))
-echo "Time:      ${h}h ${m}m ${s}s"
-echo "Processed: $PROCTOTAL"
+echo "Time:       ${h}h ${m}m ${s}s"
+echo "Processed:  $PROCTOTAL"
 
 if [ "$PROCMODE" = 'update' -a "$OPT_DRYRUN" = 'y' ]; then
   sort -u -k 1,1 -o $SR_UPDATEFILE $SR_UPDATEFILE
   cat $SR_UPDATEFILE
 else
-  if [ "$OPT_TEST" = 'y' ]; then
-    PASSEDLIST="$(echo -n $PASSEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
-    echo "Passed:    $(echo -n $PASSEDLIST | wc -w)"
-    [ "$OPT_VERBOSE" = 'y' -a -n "$PASSEDLIST" ] && echo "$PASSEDLIST"
+  if [ "$OPT_DRYRUN" = 'y' ]; then
+    OKLIST="$(echo -n $OKLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
+    echo "Dry run OK: $(echo -n $OKLIST | wc -w)"
+    [ "$OPT_VERBOSE" = 'y' -a -n "$OKLIST" ] && echo "$OKLIST"
   else
-    echo "Added:     $(grep ': Added'   $SR_CHANGELOG | wc -l)"
+    echo "Added:      $(grep ': Added'   $SR_CHANGELOG | wc -l)"
     [ "$OPT_VERBOSE" = 'y' ] && \
       grep ': Added'   $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
-    echo "Updated:   $(grep ': Updated' $SR_CHANGELOG | wc -l)"
+    echo "Updated:    $(grep ': Updated' $SR_CHANGELOG | wc -l)"
     [ "$OPT_VERBOSE" = 'y' ] && \
       grep ': Updated' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
-    echo "Rebuilt:   $(grep ': Rebuilt' $SR_CHANGELOG | wc -l)"
+    echo "Rebuilt:    $(grep ': Rebuilt' $SR_CHANGELOG | wc -l)"
     [ "$OPT_VERBOSE" = 'y' ] && \
       grep ': Rebuilt' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
-    echo "Removed:   $(grep ': Removed' $SR_CHANGELOG | wc -l)"
+    echo "Removed:    $(grep ': Removed' $SR_CHANGELOG | wc -l)"
     [ "$OPT_VERBOSE" = 'y' ] && \
       grep ': Removed' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
   fi
   SKIPPEDLIST="$(echo -n $SKIPPEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
-  echo "Skipped:   $(echo -n $SKIPPEDLIST | wc -w)"
+  echo "Skipped:    $(echo -n $SKIPPEDLIST | wc -w)"
   [ "$OPT_VERBOSE" = 'y' -a -n "$SKIPPEDLIST" ] && echo "$SKIPPEDLIST"
   FAILEDLIST="$(echo -n $FAILEDLIST   | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
-  echo "Failed:    $(echo -n $FAILEDLIST | wc -w)"
+  echo "Failed:     $(echo -n $FAILEDLIST | wc -w)"
   [ "$OPT_VERBOSE" = 'y' -a -n "$FAILEDLIST" ] && echo "$FAILEDLIST"
   ABORTEDLIST="$(echo -n $ABORTEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
-  echo "Aborted:   $(echo -n $ABORTEDLIST | wc -w)"
+  echo "Aborted:    $(echo -n $ABORTEDLIST | wc -w)"
   [ "$OPT_VERBOSE" = 'y' -a -n "$ABORTEDLIST" ] && echo "$ABORTEDLIST"
 fi
 WARNCOUNT=$(grep '^WARNING: ' $SR_LOGFILE | wc -l)
-echo "Warnings:  $WARNCOUNT"
+echo "Warnings:   $WARNCOUNT"
 [ "$OPT_VERBOSE" = 'y' ] && grep '^WARNING: ' $SR_LOGFILE | sed 's/^WARNING: /  /'
 
 #-------------------------------------------------------------------------------

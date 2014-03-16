@@ -300,7 +300,11 @@ fi
 
 log_normal "Preparing list of items..."
 BLAME="$(basename $0)"
-parse_items $*
+if [ "$PROCMODE" = 'add' -o "$PROCMODE" = 'rebuild' ]; then
+  parse_items -s $*
+else
+  parse_items -p $*
+fi
 # ignore status - we'll just process the items that were ok
 unset BLAME
 

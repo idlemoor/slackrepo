@@ -143,6 +143,7 @@ function qa_package
       log_warning -p "${pkgnam}: files are installed in unusual locations"
     fi
     #### TODO: check nothing into /usr/local
+    #### TODO: check nothing into /usr/share/man, and all manpages compressed
     if ! grep -q 'install/slack-desc' $temptarlist; then
       log_warning -p "${pkgnam}: package does not contain slack-desc"
     fi

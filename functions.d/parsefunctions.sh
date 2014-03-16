@@ -8,10 +8,8 @@
 #-------------------------------------------------------------------------------
 
 function parse_items
-########  BUGBUGBUGBUGBUG
-########  IN UPDATE MODE, CURRENTLY LOOKS UP DEPS AS PACKAGES INSTEAD OF SLACKBUILDS
-########  BUGBUGBUGBUGBUG
 # Parse item names
+# $1 = -s => look up in SlackBuild repo, or -p => look up in Package repo
 # $* = the item names to be parsed :-)
 #    - can be <prgnam>, or <directory>/.../<prgnam>
 #    - any number of directories are supported
@@ -29,6 +27,17 @@ function parse_items
   errstat=0
   local blamemsg=''
   [ -n "$BLAME" ] && blamemsg="${BLAME}: "
+
+  if [ "$1" = '-s' ]; then
+    SEARCHFILE='.SlackBuild'
+    TOPLEVEL="$SR_GITREPO"
+  elif [ "$1" = '-p' ]; then
+    SEARCHFILE='-*.t?z'
+    TOPLEVEL="$SR_PKGREPO"
+  else
+    log_error "parse_items: invalid argument '$1'"
+    return 9
+  fi
 
   while [ $# != 0 ]; do
 
@@ -50,23 +59,6 @@ function parse_items
       errstat=1
       continue
     fi
-
-    case "$PROCMODE" in
-    'add' | 'rebuild' )
-      # look for xxx.SlackBuild in $SR_GITREPO
-      SEARCHFILE='.SlackBuild'
-      TOPLEVEL="$SR_GITREPO"
-      ;;
-    'update' | 'remove' )
-      # look for xxx-*.t?z in $SR_PKGREPO
-      SEARCHFILE='-*.t?z'
-      TOPLEVEL="$SR_PKGREPO"
-      ;;
-    * )
-      log_error "$(basename $0): ${blamemsg}Unrecognised PROCMODE = $PROCMODE"
-      return 9
-      ;;
-    esac
 
     if [ -z "$b" ]; then
       # one name supplied

@@ -31,7 +31,7 @@ function list_direct_deps
       if [ -f $SR_HINTS/$itempath.readmedeps ]; then
         log_verbose "Hint: Using \"$(cat $SR_HINTS/$itempath.readmedeps)\" for %README% in $prgnam.info"
         BLAME="$prgnam.readmedeps"
-        parse_items $(cat $SR_HINTS/$itempath.readmedeps)
+        parse_items -s $(cat $SR_HINTS/$itempath.readmedeps)
         unset BLAME
         deplist="$deplist $ITEMLIST"
       else
@@ -39,7 +39,7 @@ function list_direct_deps
       fi
     else
       BLAME="$prgnam.info"
-      parse_items $dep
+      parse_items -s $dep
       unset BLAME
       deplist="$deplist $ITEMLIST"
     fi
@@ -48,7 +48,7 @@ function list_direct_deps
   if [ -f $SR_HINTS/$itempath.optdeps ]; then
     log_verbose "Hint: Adding optional deps: \"$(cat $SR_HINTS/$itempath.optdeps)\""
     BLAME="$prgnam.optdeps"
-    parse_items $(cat $SR_HINTS/$itempath.optdeps)
+    parse_items -s $(cat $SR_HINTS/$itempath.optdeps)
     unset BLAME
     deplist="$deplist $ITEMLIST"
   fi

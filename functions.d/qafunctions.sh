@@ -151,7 +151,8 @@ function qa_package
     rm -f $temptarlist
 
     # If this is the top level item, install it to see what happens :D
-    if [ "$PRGNAM" = "$(basename $ITEMPATH)" ]; then
+    if [ "$itempath" = "$ITEMPATH" ]; then
+      log_verbose "Test installing $ITEMPATH"
       install_package $ITEMPATH || return 1
       uninstall_package $ITEMPATH
     # else it's a dep and it'll be installed soon anyway.

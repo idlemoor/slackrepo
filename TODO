@@ -24,7 +24,9 @@ Additional QA tests for test mode
 
 [done] Test --test
 
-pidfile
+pidfile (or multiple streams)
+
+progress bar/spinner
 
 Install accelerator
 

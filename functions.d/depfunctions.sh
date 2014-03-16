@@ -77,15 +77,6 @@ function build_with_deps
   local subresult revstatus op reason
   local allinstalled
 
-  # Bail out if to be skipped, or unsupported/untested
-  if hint_skipme $itempath; then
-    SKIPPEDLIST="$SKIPPEDLIST $itempath"
-    return 1
-  elif ! check_arch_is_supported $itempath; then
-    SKIPPEDLIST="$SKIPPEDLIST $itempath"
-    return 1
-  fi
-
   # Surprisingly this is the ideal place to load up .info and cache it
   if [ "${INFOVERSION[$itempath]+yesitisset}" != 'yesitisset' ]; then
     unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
@@ -106,6 +97,15 @@ function build_with_deps
     if [ -n "$(cd $SR_GITREPO/$itempath; git status -s .)" ]; then
       GITDIRTY[$itempath]="y"
     fi
+  fi
+
+  # Bail out if to be skipped, or unsupported/untested
+  if hint_skipme $itempath; then
+    SKIPPEDLIST="$SKIPPEDLIST $itempath"
+    return 1
+  elif ! check_arch_is_supported $itempath; then
+    SKIPPEDLIST="$SKIPPEDLIST $itempath"
+    return 1
   fi
 
   # First, get all my deps built

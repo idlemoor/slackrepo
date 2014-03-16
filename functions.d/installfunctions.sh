@@ -32,7 +32,7 @@ function install_package
   done
   ###### check the version (might need upgradepkg)
   # If already installed, return
-  [ -n "$pkgid" ] && return 0
+  [ -n "$pkgid" ] && { log_verbose "$pkgid is already installed"; return 0; }
 
   pkgpath=''
   # Look for the package.

@@ -45,7 +45,7 @@ function log_prgstart
   echo "$line"                 >>$SR_LOGFILE
   echo "$@ $(date '+%F %T')"   >>$SR_LOGFILE
   if [ -n "$prgnam" ]; then
-    mkdir -p $SR_LOGDIR/${itempath#/*}
+    mkdir -p $SR_LOGDIR/${itempath%/*}
     echo "$@ $(date '+%F %T')"  >$SR_LOGDIR/$itempath.log
   fi
 }

@@ -141,7 +141,7 @@ function hint_cleanup
 
   [ -f $SR_HINTS/$itempath.cleanup ] || return 1
   log_verbose "Hint: $prgnam: running $SR_HINTS/$itempath.cleanup ..."
-  . $SR_HINTS/$itempath.cleanup >>$SR_LOGDIR/$prgnam.log 2>&1
+  . $SR_HINTS/$itempath.cleanup >>$SR_LOGDIR/$itempath.log 2>&1
   ###### handle errors
   return 0
 }

@@ -31,8 +31,6 @@ function build_package
     return 5
   fi
 
-  rm -f $SR_LOGDIR/$prgnam.log
-
   SR_TMPIN=$SR_TMP/slackrepo_IN
   rm -rf $SR_TMPIN
   cp -a $SR_GITREPO/$itempath $SR_TMPIN
@@ -58,17 +56,17 @@ function build_package
     0) # already got source, and it's good
        ;;
   1|2) # already got source, but it's bad => get it
-       log_verbose "Note: cached source is bad"
+       log_verbose -p "Note: cached source is bad"
        download_src $itempath
-       verify_src $itempath || { log_error "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
+       verify_src $itempath || { log_error -p "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
        ;;
     3) # not got source => get it
        download_src $itempath
-       verify_src $itempath || { log_error "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
+       verify_src $itempath || { log_error -p "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
        ;;
     4) # wrong version => get it
        download_src $itempath
-       verify_src $itempath || { log_error "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
+       verify_src $itempath || { log_error -p "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
        ;;
     5) # unsupported/untested
        SKIPPEDLIST="$SKIPPEDLIST $itempath"
@@ -85,7 +83,7 @@ function build_package
   buildassign=$(grep '^BUILD=' $SR_TMPIN/$prgnam.SlackBuild)
   if [ -z "$buildassign" ]; then
     buildassign="BUILD=1"
-    log_warning "${itempath}: \"BUILD=\" not found in SlackBuild; using 1"
+    log_warning -p "${itempath}: \"BUILD=\" not found in SlackBuild; using 1"
   fi
   eval $buildassign
   if [ "$OP" = 'add' -o "$OPT_DRYRUN" = 'y' ]; then
@@ -105,12 +103,12 @@ function build_package
   # Get other hints for the build (uidgid, options, makeflags, answers)
   hint_uidgid $itempath
   tempmakeflags="$(hint_makeflags $itempath)"
-  [ -n "$tempmakeflags" ] && log_verbose "Hint: $tempmakeflags"
+  [ -n "$tempmakeflags" ] && log_verbose -p "Hint: $tempmakeflags"
   options="$(hint_options $itempath)"
-  [ -n "$options" ] && log_verbose "Hint: options=\"$options\""
+  [ -n "$options" ] && log_verbose -p "Hint: options=\"$options\""
   SLACKBUILDCMD="env $tempmakeflags $options sh ./$prgnam.SlackBuild"
   if [ -f $SR_HINTS/$itempath.answers ]; then
-    log_verbose "Hint: supplying answers from $SR_HINTS/$itempath.answers"
+    log_verbose -p "Hint: supplying answers from $SR_HINTS/$itempath.answers"
     SLACKBUILDCMD="cat $SR_HINTS/$itempath.answers | $SLACKBUILDCMD"
   fi
 
@@ -126,12 +124,12 @@ function build_package
     OUTPUT=$SR_TMPOUT \
     PKGTYPE=$SR_PKGTYPE \
     NUMJOBS=$SR_NUMJOBS
-  log_normal "Running $prgnam.SlackBuild ..."
-  ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$SR_LOGDIR/$prgnam.log 2>&1
+  log_normal -p "Running $prgnam.SlackBuild ..."
+  ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$SR_LOGDIR/$itempath.log 2>&1
   stat=$?
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
   if [ $stat != 0 ]; then
-    log_error "${itempath}: $prgnam.SlackBuild failed (status $stat)"
+    log_error -p "${itempath}: $prgnam.SlackBuild failed (status $stat)"
     build_failed $itempath
     return 1
   fi
@@ -139,7 +137,7 @@ function build_package
   # Make sure we got *something* :-)
   pkglist=$(ls $SR_TMPOUT/*.t?z 2>/dev/null)
   if [ -z "$pkglist" ]; then
-    log_error "${itempath}: No packages were created in $SR_TMPOUT"
+    log_error -p "${itempath}: No packages were created in $SR_TMPOUT"
     build_failed $itempath
     return 6
   fi
@@ -202,7 +200,7 @@ function build_ok
 
   msg="$OP OK"
   [ "$OPT_DRYRUN" = 'y' ] && msg="$OP --dry-run OK"
-  log_success ":-) $itempath $msg (-:"
+  log_success -p ":-) $itempath $msg (-:"
   OKLIST="$OKLIST $itempath"
   return 0
 }
@@ -221,8 +219,8 @@ function build_failed
   # but don't remove files from $SR_TMP, they can help to diagnose why it failed
 
   msg="$OP FAILED"
-  log_error -n ":-( $itempath $msg )-:"
-  log_error -n "See $SR_LOGDIR/$prgnam.log"
+  log_error -n -p ":-( $itempath $msg )-:"
+  log_error -n "See $SR_LOGDIR/$itempath.log"
   FAILEDLIST="$FAILEDLIST $itempath"
   return 0
 }

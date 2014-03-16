@@ -78,8 +78,12 @@ function create_metadata
 #-------------------------------------------------------------------------------
 
 function print_current_revinfo
-# Prints a revision info summary on standard output
-##### (document the format here)
+# Prints a revision info summary on standard output, format as follows:
+#
+# <prgnam> git:<gitrevision> slack:<slackversion> [hints:<hintname1>:<md5sum1>:[<hintname2>:<md5sum2>:[...]]]
+# [<depnam> git:<gitrevision> slack:<slackversion> [hints:<hintname1>:<md5sum1>:[<hintname2>:<md5sum2>:[...]]]]
+# [...]
+#
 # $1    = item name
 # $2... = list of dependencies
 ##### do we need that list, or can we get it from DEPCACHE?

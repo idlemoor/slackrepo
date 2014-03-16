@@ -5,7 +5,7 @@ TODO
 
 [done] version hint -> update (not rebuild) if it changed; also .version in srcrepo
 
-Better logging (incl. --quiet)
+[done] Better logging (incl. --quiet)
 
 manpages
 
@@ -22,7 +22,7 @@ Additional QA tests for test mode
  - package contents
  - non-SBo SlackBuilds
 
-Test --test
+[done] Test --test
 
 pidfile
 

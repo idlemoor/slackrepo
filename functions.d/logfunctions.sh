@@ -18,7 +18,6 @@ function log_start
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prgnam}
   msg="${*}                                                                      "
   line="==============================================================================="
   echo "$line"
@@ -27,141 +26,158 @@ function log_start
   echo ""
   echo "$line"                      >>$SR_LOGFILE
   echo "STARTING $@ $(date '+%F %T')" >>$SR_LOGFILE
-  [ -n "$PRG" ] && \
-  echo "STARTING $@ $(date '+%F %T')" >>$SR_LOGDIR/$PRG.log
 }
 
 #-------------------------------------------------------------------------------
 
 function log_prgstart
-# Log the start of a sub-item on screen and in logfile
+# Log the start of a sub-item on screen and in logfile.
+# This is where we start logging to $prgnam.log.
+# Uses $prgnam set by caller.
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prgnam}
   line="-------------------------------------------------------------------------------"
   pad=$(( ${#line} - ${#1} - 1 ))
   tput bold; tput setaf 7
   echo "$@ ${line:0:$pad}"
   tput sgr0
-  echo "$line"          >>$SR_LOGFILE
-  echo "$@ $(date '+%F %T')" >>$SR_LOGFILE
-  [ -n "$PRG" ] && \
-  echo "$line"          >>$SR_LOGDIR/$PRG.log
-  [ -n "$PRG" ] && \
-  echo "$@ $(date '+%F %T')" >>$SR_LOGDIR/$PRG.log
+  echo "$line"                 >>$SR_LOGFILE
+  echo "$@ $(date '+%F %T')"   >>$SR_LOGFILE
+  if [ -n "$prgnam" ]; then
+    mkdir -p $SR_LOGDIR/${itempath#/*}
+    echo "$@ $(date '+%F %T')"  >$SR_LOGDIR/$itempath.log
+  fi
 }
 
 #-------------------------------------------------------------------------------
 
 function log_verbose
-# Log a message to the logfile, and also to the screen if global variable
-# OPT_VERBOSE is set.
+# Log a message to the logfile, and also to the screen if OPT_VERBOSE is set
+# (and also to $prgnam.log if '-p' is specified)
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prgnam}
+  P='n'
+  [ "$1" = '-p' ] && { P='y'; shift; }
   if [ "$OPT_VERBOSE" = 'y' ]; then
     echo "$@"
   fi
   echo "$@" >>$SR_LOGFILE
-  [ -n "$PRG" ] && \
-  echo "$@" >>$SR_LOGDIR/$PRG.log
+  [ "$P" = 'y' ] && \
+  echo "$@" >>$SR_LOGDIR/$itempath.log
+  return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function log_normal
-# Print message on screen (unless global variable OPT_QUIET is set),
-# and log to logfile
+# Print message on screen (unless OPT_QUIET is set), and log to logfile
+# (including $prgnam.log if '-p' is specified)
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prgnam}
+  P='n'
+  [ "$1" = '-p' ] && { P='y'; shift; }
   if [ "$OPT_QUIET" != 'y' ]; then
     echo "$@"
   fi
   echo "$@" >>$SR_LOGFILE
-  [ -n "$PRG" ] && \
-  echo "$@" >>$SR_LOGDIR/$PRG.log
+  [ "$P" = 'y' ] && \
+  echo "$@" >>$SR_LOGDIR/$itempath.log
+  return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function log_important
 # Print message on screen in white highlight, and log to logfile
+# (including $prgnam.log if '-p' is specified)
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prgnam}
+  P='n'
+  [ "$1" = '-p' ] && { P='y'; shift; }
   tput bold; tput setaf 7
   echo "$@"
   tput sgr0
   echo "$@" >>$SR_LOGFILE
-  [ -n "$PRG" ] && \
-  echo "$@" >>$SR_LOGDIR/$PRG.log
+  [ "$P" = 'y' ] && \
+  echo "$@" >>$SR_LOGDIR/$itempath.log
+  return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function log_success
 # Print message on screen in green highlight, and log to logfile
+# (including $prgnam.log if '-p' is specified)
 # $* = message
 # Return status: always 0
 {
-  PRG=${logprg:-$prgnam}
+  P='n'
+  [ "$1" = '-p' ] && { P='y'; shift; }
   tput bold; tput setaf 2
   echo "$@"
   tput sgr0
   echo "$@" >>$SR_LOGFILE
-  [ -n "$PRG" ] && \
-  echo "$@" >>$SR_LOGDIR/$PRG.log
+  [ "$P" = 'y' ] && \
+  echo "$@" >>$SR_LOGDIR/$itempath.log
+  return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function log_warning
 # Print message on screen in yellow highlight, and log to logfile
-# Message is automatically prefixed with 'WARNING', unless $1 = '-n'
+# (including $prgnam.log if '-p' is specified)
+# Message is automatically prefixed with 'WARNING' (unless '-n' is specified)
 # $* = message
 # Return status: always 0
 {
-  if [ "$1" = '-n' ]; then
-    W=''
-    shift
-  else
-    W='WARNING: '
-  fi
-  PRG=${logprg:-$prgnam}
+  W='WARNING: '
+  P='n'
+  while [ $# != 0 ]; do
+    case "$1" in
+    '-n') W='';  shift; continue ;;
+    '-p') P='y'; shift; continue ;;
+    *)    break ;;
+    esac
+  done
   tput bold; tput setaf 3
   echo "${W}$@"
   tput sgr0
   echo "${W}$@" >>$SR_LOGFILE
-  [ -n "$PRG" ] && \
-  echo "${W}$@" >>$SR_LOGDIR/$PRG.log
+  [ "$P" = 'y' ] && \
+  echo "${W}$@" >>$SR_LOGDIR/$itempath.log
+  return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function log_error
 # Print message on screen in red highlight, and log to logfile
-# Message is automatically prefixed with 'ERROR', unless $1 = '-n'
+# (including $prgnam.log if '-p' is specified)
+# Message is automatically prefixed with 'ERROR' (unless '-n' is specified)
 # $* = message
 # Return status: always 0
 {
-  if [ "$1" = '-n' ]; then
-    E=''
-    shift
-  else
-    E='ERROR: '
-  fi
-  PRG=${logprg:-$prgnam}
+  E='ERROR: '
+  P='n'
+  while [ $# != 0 ]; do
+    case "$1" in
+    '-n') E='';  shift; continue ;;
+    '-p') P='y'; shift; continue ;;
+    *)    break ;;
+    esac
+  done
   tput bold; tput setaf 1
   echo "${E}$@"
   tput sgr0
   # In case we are called before SR_LOGFILE is set:
   [ -z "$SR_LOGFILE" ] && return 0
   echo "${E}$@" >>$SR_LOGFILE
-  [ -n "$PRG" ] && \
-  echo "${E}$@" >>$SR_LOGDIR/$PRG.log
+  [ "$P" = 'y' ] && \
+  echo "${E}$@" >>$SR_LOGDIR/$itempath.log
+  return 0
 }

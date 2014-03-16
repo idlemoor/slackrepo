@@ -3,21 +3,22 @@ SLACKREPO HOWTO
 
 For some important warnings, please see the end of this file.
 
-slackrepo is a highly automated SlackBuild package builder.  Its emphasis
+Slackrepo is a highly automated SlackBuild package builder.  Its emphasis
 is on clean building, updating and testing.  It builds packages from an
-input git repository of SlackBuilds (for example, a clone of
-SlackBuilds.org), and then outputs them to a package repository.  The
-SlackBuild repository's git revisions determine updates and rebuilds of
-packages.
+input repository of SlackBuilds (for example, a clone of SlackBuilds.org),
+and then stores them in a package repository.  Slackrepo tracks changes
+in the upstream repository, adding, updating and removing packages as
+required, including any rebuilds for updated dependencies.  Optionally,
+it can perform quality assurance tests on the SlackBuild files and on the
+built packages.
 
-This is explicitly a tool for managing package repositories, not a tool
-for managing packages installed on a host.  Except for the temporary
-installation of dependencies during builds, slackrepo does not install,
-upgrade or remove packages on the host system.  For that, you should
-continue to use pkgtool, installpkg/upgradepkg/removepkg, and slackpkg+.
-For package building, most users will find that the existing popular
-tools are much better for their needs: sbopkg (with sqg), sbotools,
-slacktrack, slack, or src2pkg.
+This is a tool for managing package repositories, not a tool for managing
+packages installed on a host.  Except for temporary installations during
+builds, slackrepo does not install, upgrade or remove packages on the host
+system. For that, you should continue to use pkgtool, installpkg, etc., or
+slackpkg+.  For package building, most users will find that the existing
+popular tools are much better for their needs: sbopkg, sqg, sbotools,
+slacktrack, slack, src2pkg, etc.
 
 For best results, slackrepo is intended to be run on a "clean" standard
 Slackware environment (like a "build box" or a virtual machine), with a
@@ -38,7 +39,7 @@ For more information, see below.
 
 Dependencies are built and installed automatically, according to the
 contents of .info files and hints.  This is done as a 'tree' of
-dependencies, not a 'queue', so in some cases dependencies may be
+dependencies (not a 'queue'), so in some cases dependencies may be
 installed and removed multiple times.  Although time consuming, this
 is necessary in some cases to produce clean packages for redistribution.
 Remember that dependencies on standard Slackware packages are not (and
@@ -58,7 +59,7 @@ need to set a few configuration values in the repository's configuration
 file /etc/slackrepo/repo_SBo.conf (but, if you use gen_repos_files.sh
 already, your existing ~/.genreprc config file will be read).
 
-slackrepo is not affiliated with, or endorsed by, SlackBuilds.org or
+Slackrepo is not affiliated with, or endorsed by, SlackBuilds.org or
 the Slackware Team.  The author thanks those awesome projects for their
 continuing generosity to the community.
 
@@ -128,8 +129,8 @@ displayed on the screen.  Control arguments '--verbose' (or '-v') and
 '--quiet' (or '-q') can be specified, to increase or decrease the details
 that are displayed on the screen.
 
-Detailed output from each build process is sent to its own log file, but
-is not displayed on the screen.
+Detailed output from each build process is sent to an item-specific log
+file, but is not displayed on the screen.
 
 
 OPERATION DETAILS
@@ -198,20 +199,20 @@ is 'SBo'.
 
 Example showing repository trees for Repository ID 'SBo':
 
-[REPO=SBo]  /etc/slackrepo/repo_SBo.conf
-              |
-[GITREPO]     |--/var/lib/slackrepo/git_SBo/category/item/item.SlackBuild (etc)
-[SRCREPO]     |--/var/lib/slackrepo/src_SBo/category/item/item-1.0.tar.gz
-[PKGREPO]     |--/var/lib/slackrepo/pkg_SBo/category/item/item-1.0-i486-1_SBo.tgz
-              |
-[HINTS]       |--/etc/slackrepo/hints_SBo/category/item.options
-              |
-[LOGDIR]      |--/var/log/slackrepo/log_SBo/item.log
+[REPO=SBo] /etc/slackrepo/repo_SBo.conf
+            |
+[GITREPO]   |--/var/lib/slackrepo/git_SBo/category/item/item.SlackBuild (etc)
+[SRCREPO]   |--/var/lib/slackrepo/src_SBo/category/item/item-1.0.tar.gz
+[PKGREPO]   |--/var/lib/slackrepo/pkg_SBo/category/item/item-1.0-i486-1_SBo.tgz
+            |
+[HINTS]     |--/etc/slackrepo/hints_SBo/category/item.options
+            |
+[LOGDIR]    |--/var/log/slackrepo/log_SBo/category/item.log
 
 Under each of git_SBo, src_SBo and pkg_SBo is a directory for each SBo
 category, and under each category directory is a subdirectory for each
-item.  Under hints_SBo is a directory for each category, but there are
-no subdirectories.  Under log_SBo there are no category directories.
+item.  Under hints_SBo and log_SBo there are directories for each category, but
+the hints and logs are not in subdirectories.
 
 
 CONFIGURATION

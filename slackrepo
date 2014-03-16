@@ -383,7 +383,7 @@ if [ "$OPT_DRYRUN" != 'y' -a -s $SR_CHANGELOG ]; then
     RSS_DESCRIPTION="$RSS_DESCRIPTION" RSS_FEEDMAX="$RSS_FEEDMAX" RSS_UUID="$RSS_UUID" \
     GPGBIN="$GPGBIN" USE_GPGAGENT="$USE_GPGAGENT" FOR_SLAPTGET="$FOR_SLAPTGET" \
     FOLLOW_SYMLINKS="$FOLLOW_SYMLINKS" REPO_SUBDIRS="$REPO_SUBDIRS" \
-    sh /usr/libexec/slackrepo/gen_repos_files.sh -l $SR_CHANGELOG
+    sh /usr/libexec/slackrepo/gen_repos_files.sh -l $SR_CHANGELOG | tee -a $SR_LOGFILE
     ###### extra control args to run faster?
     echo ""
     log_important "Finished gen_repos_files.sh at $(date +%T)"

@@ -70,61 +70,61 @@ function build_with_deps
 # 0 = build ok, or already up-to-date so not built, or dry run
 # 1 = build failed, or sub-build failed => abort parent, or any other error
 {
-  local me="$1"
-  local prgnam=${me##*/}
-  local parents="$2 $me"
+  local itempath="$1"
+  local prgnam=${itempath##*/}
+  local parents="$2 $itempath"
   local mydeplist mydep
   local subresult revstatus op reason
   local allinstalled
 
   # Bail out if to be skipped, or unsupported/untested
-  if hint_skipme $me; then
-    SKIPPEDLIST="$SKIPPEDLIST $me"
+  if hint_skipme $itempath; then
+    SKIPPEDLIST="$SKIPPEDLIST $itempath"
     return 1
-  elif ! check_arch_is_supported $me; then
-    SKIPPEDLIST="$SKIPPEDLIST $me"
+  elif ! check_arch_is_supported $itempath; then
+    SKIPPEDLIST="$SKIPPEDLIST $itempath"
     return 1
   fi
 
   # Surprisingly this is the ideal place to load up .info and cache it
-  if [ "${INFOVERSION[$me]+yesitisset}" != 'yesitisset' ]; then
+  if [ "${INFOVERSION[$itempath]+yesitisset}" != 'yesitisset' ]; then
     unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
-    . $SR_GITREPO/$me/$prgnam.info
-    INFOVERSION[$me]="$VERSION"
+    . $SR_GITREPO/$itempath/$prgnam.info
+    INFOVERSION[$itempath]="$VERSION"
     if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
-      SRCDIR[$me]=$SR_SRCREPO/$me/$SR_ARCH
-      INFODOWNLIST[$me]="$(eval echo \$DOWNLOAD_$SR_ARCH)"
-      INFOMD5LIST[$me]="$(eval echo \$MD5SUM_$SR_ARCH)"
+      SRCDIR[$itempath]=$SR_SRCREPO/$itempath/$SR_ARCH
+      INFODOWNLIST[$itempath]="$(eval echo \$DOWNLOAD_$SR_ARCH)"
+      INFOMD5LIST[$itempath]="$(eval echo \$MD5SUM_$SR_ARCH)"
     else
-      SRCDIR[$me]=$SR_SRCREPO/$me
-      INFODOWNLIST[$me]="$DOWNLOAD"
-      INFOMD5LIST[$me]="$MD5SUM"
+      SRCDIR[$itempath]=$SR_SRCREPO/$itempath
+      INFODOWNLIST[$itempath]="$DOWNLOAD"
+      INFOMD5LIST[$itempath]="$MD5SUM"
     fi
-    INFOREQUIRES[$me]="$REQUIRES"
-    GITREV[$me]="$(cd $SR_GITREPO/$me; git log -n 1 --format=format:%H .)"
-    GITDIRTY[$me]="n"
-    if [ -n "$(cd $SR_GITREPO/$me; git status -s .)" ]; then
-      GITDIRTY[$me]="y"
+    INFOREQUIRES[$itempath]="$REQUIRES"
+    GITREV[$itempath]="$(cd $SR_GITREPO/$itempath; git log -n 1 --format=format:%H .)"
+    GITDIRTY[$itempath]="n"
+    if [ -n "$(cd $SR_GITREPO/$itempath; git status -s .)" ]; then
+      GITDIRTY[$itempath]="y"
     fi
   fi
 
   # First, get all my deps built
-  list_direct_deps $me
+  list_direct_deps $itempath
   mydeplist="$DEPLIST"
   if [ -n "$mydeplist" ]; then
-    log_normal "Dependencies of $me:"
+    log_normal "Dependencies of $itempath:"
     log_normal "$(echo $mydeplist | sed -e "s/ /\n  /g" -e 's/^ */  /')"
     for mydep in $mydeplist; do
       for p in $parents; do
         if [ "$mydep" = "$p" ]; then
-          log_error "${me}: Circular dependency on $p found in $mydep"
+          log_error "${itempath}: Circular dependency on $p found in $mydep"
           return 1
         fi
       done
       build_with_deps $mydep "$parents"
       subresult=$?
       if [ $subresult != 0 ]; then
-        if [ "$me" = "$ITEMPATH" ]; then
+        if [ "$itempath" = "$ITEMPATH" ]; then
           log_error -n "$ITEMPATH ABORTED"
           ABORTEDLIST="$ABORTEDLIST $ITEMPATH"
         fi
@@ -134,30 +134,30 @@ function build_with_deps
   fi
 
   # Next, work out whether I need to be added, updated or rebuilt
-  get_rev_status $me $mydeplist
+  get_rev_status $itempath $mydeplist
   revstatus=$?
   case $revstatus in
-  0)  if [ "$me" = "$ITEMPATH" -a "$PROCMODE" = 'rebuild' ]; then
+  0)  if [ "$itempath" = "$ITEMPATH" -a "$PROCMODE" = 'rebuild' ]; then
         OP='rebuild'; opmsg='rebuild'
       else
-        if [ "$me" = "$ITEMPATH" ]; then
-          log_important "$me is up-to-date."
+        if [ "$itempath" = "$ITEMPATH" ]; then
+          log_important "$itempath is up-to-date."
         else
-          log_normal "$me is up-to-date."
+          log_normal "$itempath is up-to-date."
         fi
         return 0
       fi
       ;;
   1)  OP='add'
-      opmsg="add version ${NEWVERSION:-${INFOVERSION[$me]}}"
+      opmsg="add version ${NEWVERSION:-${INFOVERSION[$itempath]}}"
       ;;
   2)  OP='update'
-      shortrev="${GITREV[$me]:0:7}"
-      [ "${GITDIRTY[$me]}" = 'y' ] && shortrev="$shortrev+dirty"
+      shortrev="${GITREV[$itempath]:0:7}"
+      [ "${GITDIRTY[$itempath]}" = 'y' ] && shortrev="$shortrev+dirty"
       opmsg="update for git $shortrev"
       ;;
   3)  OP='update'
-      opmsg="update for version ${NEWVERSION:-${INFOVERSION[$me]}}"
+      opmsg="update for version ${NEWVERSION:-${INFOVERSION[$itempath]}}"
       ;;
   4)  OP='rebuild'
       opmsg="rebuild for changed hints"
@@ -168,7 +168,7 @@ function build_with_deps
   6)  OP='rebuild'
       opmsg="rebuild for Slackware upgrade"
       ;;
-  *)  log_error "${me}: Unrecognised revstatus=$revstatus"
+  *)  log_error "${itempath}: Unrecognised revstatus=$revstatus"
       return 1
       ;;
   esac
@@ -176,8 +176,8 @@ function build_with_deps
   # Stop here if update --dry-run
   if [ "$PROCMODE" = 'update' -a "$OPT_DRYRUN" = 'y' ]; then
     opmsg="would be $(echo "$opmsg" | sed -e 's/^add /added /' -e 's/^update /updated /' -e 's/^rebuild /rebuilt /')"
-    log_important "$me $opmsg"
-    echo "$me $opmsg" >> $SR_UPDATEFILE
+    log_important "$itempath $opmsg"
+    echo "$itempath $opmsg" >> $SR_UPDATEFILE
     return 0
   fi
 
@@ -185,41 +185,37 @@ function build_with_deps
   [ "$OPT_DRYRUN" = 'y' ] && opmsg="$opmsg --dry-run"
 
   # Now the real work starts :-)
-  log_prgstart "Starting $me ($opmsg)"
+  log_prgstart "Starting $itempath ($opmsg)"
 
   # Install all my deps
   if [ -n "$mydeplist" ]; then
-    local logprg="$prg"
-    log_normal "Installing dependencies ..."
+    log_normal -p "Installing dependencies ..."
     allinstalled='y'
     for mydep in $mydeplist; do
       install_with_deps $mydep || allinstalled='n'
     done
     [ "$allinstalled" = 'n' ] && return 1  ##### should we uninstall?
-    unset logprg
   fi
 
   # Build me
-  build_package $me
+  build_package $itempath
   myresult=$?
 
   # Even if build_package failed, uninstall all my deps
   if [ -n "$mydeplist" ]; then
-    local logprg="$prg"
-    log_normal "Uninstalling dependencies ..."
+    log_normal -p "Uninstalling dependencies ..."
     for mydep in $mydeplist; do
       uninstall_with_deps $mydep
     done
-    unset logprg
   fi
 
   # Now return if build_package failed
   [ $myresult != 0 ] && return 1
 
   # If build_package succeeded, do some housekeeping:
-  create_metadata "$opmsg" $me $mydeplist
+  create_metadata "$opmsg" $itempath $mydeplist
   # update the cached revision status
-  REVCACHE[$me]=0
+  REVCACHE[$itempath]=0
 
   return 0
 }
@@ -233,17 +229,17 @@ function install_with_deps
 # 0 = all installs succeeded
 # 1 = any install failed
 {
-  local me="$1"
-  local prgnam=${me##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
   local mydeplist mydep
 
-  list_direct_deps $me
+  list_direct_deps $itempath
   mydeplist="$DEPLIST"
   errstat=0
   for mydep in $mydeplist; do
     install_with_deps $mydep || errstat=1 # but keep going
   done
-  install_package $me || errstat=1
+  install_package $itempath || errstat=1
   return $errstat
 }
 
@@ -255,12 +251,12 @@ function uninstall_with_deps
 # $1 = itempath
 # Return status always 0
 {
-  local me="$1"
-  local prgnam=${me##*/}
+  local itempath="$1"
+  local prgnam=${itempath##*/}
   local mydeplist mydep
 
-  uninstall_package $me
-  list_direct_deps $me
+  uninstall_package $itempath
+  list_direct_deps $itempath
   mydeplist="$DEPLIST"
   for mydep in $mydeplist; do
     uninstall_with_deps $mydep

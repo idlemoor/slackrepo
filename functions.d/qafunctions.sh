@@ -41,7 +41,7 @@ function qa_slackbuild
   # no trailing spaces kthxbye
   grep -q "^${prgnam}:.* $"  $SLACKDESC && \
     log_warning -p "${itempath}: slack-desc: description has trailing spaces"
-  # dont mess with my handy ruler
+  # don't mess with my handy ruler
   grep -q "^ *$HR\$" $SLACKDESC || \
     log_warning -p "${itempath}: slack-desc: handy-ruler is corrupt or missing"
   [ $(grep "^ *$HR\$" $SLACKDESC | sed "s/|.*|//" | wc -c) -ne $(( ${#prgnam} + 1 )) ] && \
@@ -142,8 +142,12 @@ function qa_package
     if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)' $temptarlist; then
       log_warning -p "${pkgnam}: files are installed in unusual locations"
     fi
-    #### TODO: check nothing into /usr/local
-    #### TODO: check nothing into /usr/share/man, and all manpages compressed
+    for verboten in usr/local usr/share/man; do
+      if grep -q '^'$verboten $temptarlist; then
+        log_warning -p "${pkgnam}: files are installed in $verboten"
+      fi
+    done
+    #### TODO: check all manpages compressed
     if ! grep -q 'install/slack-desc' $temptarlist; then
       log_warning -p "${pkgnam}: package does not contain slack-desc"
     fi
@@ -153,7 +157,7 @@ function qa_package
 
     # If this is the top level item, install it to see what happens :D
     if [ "$itempath" = "$ITEMPATH" ]; then
-      log_verbose "Test installing $ITEMPATH"
+      log_verbose "Installing ${ITEMPATH}..."
       install_package $ITEMPATH || return 1
       uninstall_package $ITEMPATH
     # else it's a dep and it'll be installed soon anyway.

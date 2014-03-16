@@ -134,7 +134,7 @@ function build_with_deps
   fi
 
   # Next, work out whether I need to be added, updated or rebuilt
-  get_rev_status $itempath $mydeplist
+  get_rev_status $itempath
   revstatus=$?
   case $revstatus in
   0)  if [ "$itempath" = "$ITEMPATH" -a "$PROCMODE" = 'rebuild' ]; then
@@ -194,7 +194,12 @@ function build_with_deps
     for mydep in $mydeplist; do
       install_with_deps $mydep || allinstalled='n'
     done
-    [ "$allinstalled" = 'n' ] && return 1  ##### should we uninstall?
+    if [ "$allinstalled" = 'n' ]; then
+      for mydep in $mydeplist; do
+        uninstall_with_deps $mydep
+      done
+      return 1
+    fi
   fi
 
   # Build me

@@ -70,7 +70,6 @@ function hint_uidgid
 
   unset UIDGIDNUMBER
   log_verbose "Hint: $prgnam: setup uid/gid"
-  ####### trap errors!!!
   . $SR_HINTS/$itempath.uidgid
   [ -n "$UIDGIDNUMBER" ] || return 0
   UIDGIDNAME=${UIDGIDNAME:-$prgnam}
@@ -142,7 +141,6 @@ function hint_cleanup
   [ -f $SR_HINTS/$itempath.cleanup ] || return 1
   log_verbose "Hint: $prgnam: running $SR_HINTS/$itempath.cleanup ..."
   . $SR_HINTS/$itempath.cleanup >>$SR_LOGDIR/$itempath.log 2>&1
-  ###### handle errors
   return 0
 }
 

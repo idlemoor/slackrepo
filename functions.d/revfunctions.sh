@@ -85,13 +85,10 @@ function print_current_revinfo
 # [...]
 #
 # $1    = item name
-# $2... = list of dependencies
-##### do we need that list, or can we get it from DEPCACHE?
 # Return status always 0
 {
   local itempath="$1"
   local prgnam=${itempath##*/}
-  shift
 
   gitrev="${GITREV[$itempath]}"
   if [ "${GITDIRTY[$itempath]}" = 'y' ]; then
@@ -105,13 +102,12 @@ function print_current_revinfo
   fi
 
   # capture revision of each dep from its .rev file
-  while [ $# != 0 ]; do
-    if [ "$OPT_DRYRUN" = 'y' -a -f $SR_DRYREPO/$1/*.rev ]; then
-      head -q -n 1 $SR_DRYREPO/$1/*.rev
+  for dep in ${DEPCACHE[$itempath]}; do
+    if [ "$OPT_DRYRUN" = 'y' -a -f $SR_DRYREPO/$dep/*.rev ]; then
+      head -q -n 1 $SR_DRYREPO/$dep/*.rev
     else
-      head -q -n 1 $SR_PKGREPO/$1/*.rev
+      head -q -n 1 $SR_PKGREPO/$dep/*.rev
     fi
-    shift
   done
 
   return 0
@@ -123,8 +119,6 @@ function get_rev_status
 # Compares print_current_revinfo with old revision info (from .rev file) and
 # returns a status value summarising the difference.
 # $1    = item name
-# $2... = list of dependencies
-##### do we need that list, or can we get it from DEPCACHE?
 # Return status:
 # 0 = up to date
 # 1 = package not found, or has no .rev metadata file
@@ -138,7 +132,6 @@ function get_rev_status
 {
   local itempath="$1"
   local prgnam=${itempath##*/}
-  shift
 
   # If $REVCACHE already has an entry for $itempath, just return that ;-)
   if [ "${REVCACHE[$itempath]+yesitsset}" = 'yesitsset' ]; then
@@ -171,7 +164,7 @@ function get_rev_status
 
   # capture current rev into a temp file
   currfile=$TMPDIR/sr_curr_rev
-  print_current_revinfo $itempath $* > $currfile
+  print_current_revinfo $itempath > $currfile
   # and extract some key stats into variables
   currgit=$(head -q -n 1 "$currfile" | sed -e 's/^.* git://' -e 's/ .*//')
   currhints=$(head -q -n 1 "$currfile" | sed -e 's/^.* hints://' -e 's/ .*//')

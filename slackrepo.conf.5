@@ -46,7 +46,7 @@ in the form
 The files are 'sourced' by
 .BR bash ,
 so spaces are not permitted either side of '='.
-Lines starting with '#' and empty lines are ignored. 
+Lines starting with '#' and empty lines are ignored.
 Assigned values may optionally be enclosed in single or double quotes.
 .P
 Any values specified in the configuration files are overridden by
@@ -184,13 +184,15 @@ Example:
 .
 .TP
 .B NUMJOBS
-Number of make jobs to set in MAKEFLAGS.
+Number of make jobs to set in MAKEFLAGS (e.g., '-j2').
+Leave blank to have this automatically determined as one more than
+the number of processors on the build host.
 .br
 Example:
-.B NUMJOBS='-j2'
+.B NUMJOBS=''
 .
 .
-.SS gen_repos_files.sh
+.SS Calling gen_repos_files.sh
 .P
 The following configuration variables relate to the optional use of
 gen_repos_files.sh.  They can be set in

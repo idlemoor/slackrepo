@@ -4,12 +4,6 @@ BUGS
 It is possible to have multiple progs named 'x' under different categories,
 but there is currently no way of having different hints for each prog.
 
-Log directory is currently one level, so building multiple progs with the same
-name will overwrite the same log file.
-
 Inconsistent support for SlackBuilds that create multiple packages.
 
 Embedded spaces in directory names, package names, etc, will cause problems.
-
-A category name or a two-level name could be listed in REQUIRES= (and it would
-actually work) but should not pass qa tests.

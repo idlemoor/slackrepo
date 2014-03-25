@@ -6,49 +6,46 @@
 # (3) /etc/slackrepo/repo_SBo.conf
 #-------------------------------------------------------------------------------
 
-# Where is the local git repo
-GITREPO=/var/lib/slackrepo/git_SBo
+# Where is the local SlackBuild repo:
+SBREPO=/var/lib/slackrepo/git_SBo
 
-# Local git branch to use: empty implies '14.1' for Slackware 14.1, etc
-BRANCH=''
-
-# URL of the upstream git repo: empty implies don't fetch from upstream
-UPSTREAM=git://slackbuilds.org/slackbuilds
-
-# Style of SlackBuilds (one of: SBo, Slackware)
-STYLE='SBo'
-
-# Where to store cached sources (you will need plenty of space)
+# Where to store cached sources (you will need plenty of space):
 SRCREPO=/var/lib/slackrepo/src_SBo
 
-# Where to store built packages (you will need plenty of space)
+# Where to store built packages (you will need plenty of space):
 PKGREPO=/var/lib/slackrepo/pkg_SBo
 
-# Tag for built packages
-# If you are publishing packages from SlackBuilds.org, *please* change SBo to something else
-# (see http://slackbuilds.org/faq/ item 20)
-TAG=_SBo
-
-# Where to find hints for this repo
+# Where to find hints for this repo:
 HINTS=/etc/slackrepo/hints_SBo
 
-# Where to store log files
+# Where to store log files:
 LOGDIR=/var/log/slackrepo/log_SBo
 
-# Where to store temporary files (you will need plenty of space)
+# Where to store temporary files (you will need plenty of space):
 TMP=/tmp/SBo
 
-# Some other variables you might want to change:
-# Arch for building. Leave blank to have this automatically determined.
+# Number of make jobs to set in MAKEFLAGS:
+# specify it as (for example) '-j2'.
+# Leave blank to have this automatically determined: -j$(( $(nproc) + 1 ))
+NUMJOBS=''
+
+# Arch for building.
+# Leave blank to have this automatically determined by the build host:
 ARCH=''
-# Package compression type:
+
+# Tag for built packages.
+# If you are publishing packages from SlackBuilds.org,
+# *please* change SBo to something else
+# (see http://slackbuilds.org/faq/ item 20).
+TAG=_SBo
+
+# Package compression type.
+# Valid values are: tgz, txz, tbz, tlz
 PKGTYPE=tgz
-# Number of make jobs to set in MAKEFLAGS
-NUMJOBS=' -j2 '
 
 #-------------------------------------------------------------------------------
 
-# Parameters for calling gen_repos_files.sh
+# Variables for calling gen_repos_files.sh
 # If enabled, you *must* set correct values for all the variables below!
 # Change this to 1 if you want to enable gen_repos_files.sh
 USE_GENREPOS='0'
@@ -112,3 +109,14 @@ FOLLOW_SYMLINKS=${FOLLOW_SYMLINKS:-1}
 # Slackware releases or architectures) then define them here.
 # Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them:
 REPO_SUBDIRS=${REPO_SUBDIRS:-""}
+
+#-------------------------------------------------------------------------------
+
+# Variables for creating the SlackBuild repository if it does not already exist.
+
+# URL of the remote git repo to be cloned:
+INIT_GITCLONE=git://slackbuilds.org/slackbuilds
+
+# Git branch to set up: empty implies '14.1' for Slackware 14.1, etc
+# (i.e., if you want 'master', change this to 'master' ;-)
+INIT_GITBRANCH=''

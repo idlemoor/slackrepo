@@ -60,7 +60,7 @@ then its options hint file will be
 .P
 A sample set of hints for SlackBuilds.org are supplied in the directory
 .IR /etc/slackrepo/hints_SBo ,
-but the sample hints are ignored until you rename them without the 
+but the sample hints are ignored until you rename them without the
 .I .sample
 suffix. You are encouraged to review and modify the sample hints and to create
 more hints. In particular, you should always read the README files of the
@@ -90,12 +90,12 @@ a52dec faac libdv libmpeg2 mjpegtools libquicktime x264 xvidcore
 .EE
 .RE
 .P
-The 
+The
 .IB prgnam .optdeps
 file should be used for optional dependencies
 listed in the SlackBuild's README file.
 .P
-The 
+The
 .IB prgnam .readmedeps
 file should be used where the REQUIRES="..." list in
 .IB prgnam .info
@@ -125,7 +125,7 @@ UIDGIDSHELL=
 .EE
 .RE
 .P
-but if necessary for more complicated setup, 
+but if necessary for more complicated setup,
 the file can contain a small shell script, like this:
 .P
 .RS
@@ -229,7 +229,7 @@ or if you rebuild
 .B nvidia-driver
 on a system that uses
 .BR nvidia-driver ).
-You can avoid this by creating a 
+You can avoid this by creating a
 .IB prgnam .no_uninstall
 file, and then the package will not be uninstalled. Just create an
 empty file; its contents are not read.

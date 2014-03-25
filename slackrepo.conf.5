@@ -1,0 +1,390 @@
+.\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
+.\" All rights reserved.  For licence details, see the file 'LICENCE'.
+.
+.TH SLACKREPO.CONF 5 "2014-04-01" slackrepo-0.1.0
+.
+.
+.
+.SH NAME
+slackrepo.conf \- repository configuration files for slackrepo
+.
+.
+.
+.SH SYNOPSIS
+.TP
+.B ~/.slackreporc
+.TQ
+.B ~/.genreprc
+.TQ
+.BI /etc/slackrepo/slackrepo_ ID .conf
+(where
+.I ID
+is a repository ID, for example,
+.BR SBo )
+.
+.
+.
+.SH DESCRIPTION
+.
+.BR slackrepo (8)
+reads configuration data from
+.I ~/.slackreporc
+and
+.I ~/.genreprc
+and
+.I /etc/slackrepo/slackrepo_ID.conf
+.P
+These files contain assignments of configuration variables, one per line,
+in the form
+.P
+.RS +4n
+.EX
+.IR NAME = VALUE
+.EE
+.RE
+.P
+The files are 'sourced' by
+.BR bash ,
+so spaces are not permitted either side of '='.
+Lines starting with '#' and empty lines are ignored. 
+Assigned values may optionally be enclosed in single or double quotes.
+.P
+Any values specified in the configuration files are overridden by
+environment variables or control arguments on the
+.B slackrepo
+command line.  Values specified in
+.IR ~/.slackreporc " and " ~/.genreprc
+override values specified in
+.IR /etc/slackrepo/slackrepo_ID.conf .
+.P
+Note that all the examples below show the values that are set in the
+supplied configuration file for the
+.B SBo
+(SlackBuilds.org) repository ID.
+.
+.SS Default repo ID
+.P
+The following configuration variable can be set only in
+.IR ~/.slackreporc ,
+but can be overridden by an environment variable or
+by the command line option '--repo=ID'.
+.
+.TP
+.B REPO
+The default repo ID. This determines the configuration file
+.I /etc/slackrepo/slackrepo_ID.conf
+from which other configuration variables will be read.
+.br
+Example:
+.B REPO=SBo
+.
+.SS Repository filestore locations
+.P
+The following configuration variables determine
+repository filestore locations.
+These variables can be set in
+.I ~/.slackreporc
+or
+.IR /etc/slackrepo/slackrepo_ID.conf ,
+or can be overridden by environment variables.
+.
+.TP
+.B SBREPO
+Filestore location of the local SlackBuilds repository.
+.br
+Example:
+.B SBREPO=/var/lib/slackrepo/git_SBo
+.
+.TP
+.B PKGREPO
+Filestore location of the local package repository, i.e., where to store
+built packages. (You will need plenty of space.)
+.br
+Example:
+.B PKGREPO=/var/lib/slackrepo/pkg_SBo
+.IP
+If you intend to use the package repository with slackpkg+,
+you may wish to change this to a location accessible by a
+local web server (e.g., somewhere under
+.IR /var/www/htdocs/ ).
+.
+.TP
+.B SRCREPO
+Where to store cached sources. (You will need plenty of space.)
+.br
+Example:
+.B SRCREPO=/var/lib/slackrepo/src_SBo
+.
+.TP
+.B HINTS
+Where to find hints for this repository.
+.br
+Example:
+.B HINTS=/etc/slackrepo/hints_SBo
+.
+.TP
+.B LOGDIR
+Where to store log files.
+.br
+Example:
+.B LOGDIR=/var/log/slackrepo/log_SBo
+.
+.TP
+.B TMP
+Where to store temporary files. (You will need plenty of space.)
+.br
+Example:
+.B TMP=/tmp/SBo
+.
+.
+.SS Building packages
+.P
+The following configuration variables affect
+the building of packages.
+These variables can be set in
+.I ~/.slackreporc
+or
+.IR /etc/slackrepo/slackrepo_ID.conf ,
+or can be overridden by environment variables.
+.
+.TP
+.B ARCH
+Arch for built packages.
+Leave this blank to have the arch automatically determined by the build host.
+.br
+Example:
+.B ARCH=''
+.
+.TP
+.B TAG
+Tag for built packages.
+.br
+Example:
+.B TAG=_SBo
+.IP
+If you are publishing packages from SlackBuilds.org,
+please change
+.B SBo
+to something else (see SlackBuilds.org FAQ, item 20).
+.
+.TP
+.B PKGTYPE
+Package compression type. This can be
+.B tgz
+(gzip compressed),
+.B txz
+(xz),
+.B tbz
+(bzip2), or
+.B tlz
+(lzma).
+.br
+Example:
+.B PKGTYPE=tgz
+.
+.TP
+.B NUMJOBS
+Number of make jobs to set in MAKEFLAGS.
+.br
+Example:
+.B NUMJOBS='-j2'
+.
+.
+.SS gen_repos_files.sh
+.P
+The following configuration variables relate to the optional use of
+gen_repos_files.sh.  They can be set in
+.I ~/.slackreporc
+or
+.IR /etc/slackrepo/slackrepo_ID.conf ,
+or can be overridden by environment variables.
+.
+.P
+.TP
+.B USE_GENREPOS
+Whether to use
+.IR gen_repos_files.sh .
+For
+.BR SBo ,
+the value supplied is
+.B 0
+(disabled). To enable it, change this to
+.BR 1 .
+.br
+Example:
+.B USE_GENREPOS=0
+.
+.TP
+.B REPOSROOT=${REPOSROOT:-$PKGREPO}
+Don't change this! it is needed so gen_repos_files.sh can find your package
+repository.
+.
+.P
+The following gen_repos_files.sh configuration variables can be set in
+.IR ~/.genreprc ,
+.IR ~/.slackreporc ,
+or
+.IR /etc/slackrepo/slackrepo_ID.conf ,
+or can be overridden by environment variables.
+.P
+If USE_GENREPOS is enabled, you must review and set correct values
+for all these variables - the default values will not be sufficient.
+.
+.P
+.TP
+.B REPOSOWNER
+Repository maintainer.
+.br
+Example:
+.B REPOSOWNER=${REPOSOWNER:-"Local administrator <root@localhost>"}
+.
+.TP
+.B REPOSOWNERGPG
+The GPG key for the repository owner can contain a different string than
+the value of $REPOSOWNER . If you leave $REPOSOWNERGPG empty, the script will
+use the value you've set for $REPOSOWNER instead to search the GPG keyfile.
+.br
+Example
+.B REPOSOWNERGPG=${REPOSOWNERGPG:-""}
+.
+.TP
+.B DL_URL
+Under what URL is the repository accessible.
+.br
+Example:
+.B DL_URL=${DL_URL:-""}
+.
+.TP
+.B RSS_TITLE
+The title of the generated RSS feed.
+.br
+Example:
+.B RSS_TITLE=${RSS_TITLE:-"Local SlackBuild Packages"}
+.
+.TP
+.B RSS_ICON
+The logo picture used for the RSS feed.
+.br
+Example:
+.B RSS_ICON=${RSS_ICON:-"http://www.slackware.com/~alien/graphics/blueorb.png"}
+.
+.TP
+.B RSS_LINK
+The URL linked to when clicking on the logo.
+.br
+Example:
+.B RSS_LINK=${RSS_LINK:-"file://$REPOSROOT/ChangeLog.txt"}
+.
+.TP
+.B RSS_CLURL
+URL to the full ChangeLog.txt.
+.br
+Example:
+.B RSS_CLURL=${RSS_CLURL:-"file://$REPOSROOT/ChangeLog.txt"}
+.
+.TP
+.B RSS_DESCRIPTION
+The descriptive text for the RSS feed.
+.br
+Example:
+.B RSS_DESCRIPTION=${RSS_DESCRIPTION:-"Local SlackBuild Packages"}
+.
+.TP
+.B RSS_FEEDMAX
+Maximum number of RSS feed entries to display.
+.br
+Example:
+.B RSS_FEEDMAX=${RSS_FEEDMAX:-15}
+.
+.TP
+.B RSS_UUID
+The RSS generator must use a unique feed identifier.
+Generate one for your feed by using the string returned by "uuidgen -t".
+.br
+Example:
+.B RSS_UUID=${RSS_UUID:-""}
+.
+.TP
+.B GPGBIN
+Either use gpg or gpg2.
+.br
+Example:
+.B GPGBIN=${GPGBIN:-"/usr/bin/gpg"}
+.
+.TP
+.B USE_GPGAGENT
+Optionally use gpg-agent to cache the gpg passphrase instead of letting the
+script keep it in the environment (note that if you define USE_GPGAGENT=1
+but gpg-agent is not running, you will get prompted for a passphrase every
+single time gpg runs).
+.br
+Example:
+.B USE_GPGAGENT=${USE_GPGAGENT:-0}
+.
+.TP
+.B FOR_SLAPTGET
+Generate slack-requires, slack-suggests, and slack-conflicts lines in the
+metadata files by setting FOR_SLAPTGET to "1" -- these are used by slapt-get.
+.br
+Example:
+.B FOR_SLAPTGET=${FOR_SLAPTGET:-0}
+.
+.TP
+.B FOLLOW_SYMLINKS
+Follow symlinks in case the repository has symlinks like 14.0 -> 13.37
+indicating that one package works for those two Slackware releases.
+If the script does _not_ follow symlinks, then the symlinks will appear in
+the repository listing instead of the packages they point to.
+.br
+Example:
+.B FOLLOW_SYMLINKS=${FOLLOW_SYMLINKS:-1}
+.
+.TP
+.B REPO_SUBDIRS
+If the repository has separate package subdirectories (for separate
+Slackware releases or architectures) then define them here.
+Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them.
+.br
+Example:
+.B REPO_SUBDIRS=${REPO_SUBDIRS:-""}
+.
+.
+.SS Initial setup
+.P
+The following configuration variables determine how the SlackBuilds
+repository will be created if it does not already exist.
+These variables are set in
+.IR /etc/slackrepo/slackrepo_ID.conf .
+Normally, they are only read the first time that
+.B slackrepo
+is run.
+.TP
+.B INIT_GITCLONE
+.br
+The remote git repository to be cloned.
+.br
+Example:
+.B INIT_GITCLONE=git://slackbuilds.org/slackbuilds
+.
+.TP
+.B INIT_GITBRANCH
+The local git branch to be created, tracking the remote branch of the
+same name.  An empty value implies a branch named after the current
+Slackware version, i.e., '14.1' for Slackware 14.1.
+.br
+Example:
+.B INIT_GITBRANCH=''
+.
+.
+.
+.SH SEE ALSO
+.
+.BR slackrepo (8),
+.BR slackrepo_hints (5),
+.BR installpkg (8),
+.BR upgradepkg (8),
+.BR removepkg (8),
+.BR pkgtool (8),
+.BR slackpkg (8).
+.
+.

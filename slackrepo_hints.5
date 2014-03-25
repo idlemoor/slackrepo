@@ -1,0 +1,249 @@
+.\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
+.\" All rights reserved.  For licence details, see the file 'LICENCE'.
+.
+.TH SLACKREPO_HINTS 5 "2014-04-01" slackrepo-0.1.0
+.
+.
+.
+.SH NAME
+slackrepo_hints \- hint files for slackrepo
+.
+.
+.
+.SH SYNOPSIS
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .options
+.br
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .optdeps
+.br
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .readmedeps
+.br
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .uidgid
+.br
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .md5ignore
+.br
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .makej1
+.br
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .skipme
+.br
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .answers
+.br
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .version
+.br
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .cleanup
+.br
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .no_uninstall
+.br
+where
+.I ID
+is 'SBo' by default.
+.
+.
+.
+.SH DESCRIPTION
+.
+"Hints" are small configuration files that determine the way that
+.B slackrepo
+processes each item, including options and optional dependencies.
+.P
+Each repository ID should have its own hint directory, as configured in
+the configuration file (see
+.BR slackrepo.conf (5)).
+By default this will be
+.IR /etc/slackrepo/hints_ID/ .
+.P
+The hints directory should contain a structure of subdirectories that is the
+same as the subdirectories in the SlackBuilds repository, but with the last
+level omitted. For example, if the SBo repository's SlackBuild file for wxPython is
+.IR libraries/wxPython/wxPython.SlackBuild ,
+then its options hint file will be
+.IR /etc/slackrepo/hints_SBo/libraries/wxPython.options .
+.P
+A sample set of hints for SlackBuilds.org are supplied in the directory
+.IR /etc/slackrepo/hints_SBo ,
+but the sample hints are ignored until you rename them without the 
+.I .sample
+suffix. You are encouraged to review and modify the sample hints and to create
+more hints. In particular, you should always read the README files of the
+packages you are building for your own requirements.
+.
+.
+.SS prgnam.options
+.P
+This file should contain options described in the SlackBuild's
+README file, for example
+.P
+.RS
+.EX
+GUI=yes
+.EE
+.RE
+.
+.
+.SS prgnam.optdeps and prgnam.readmedeps
+.P
+These files should contain a list of dependencies separated by spaces
+and/or newlines, for example
+.P
+.RS
+.EX
+a52dec faac libdv libmpeg2 mjpegtools libquicktime x264 xvidcore
+.EE
+.RE
+.P
+The 
+.IB prgnam .optdeps
+file should be used for optional dependencies
+listed in the SlackBuild's README file.
+.P
+The 
+.IB prgnam .readmedeps
+file should be used where the REQUIRES="..." list in
+.IB prgnam .info
+contains %README%; the contents will be substituted for %README%, but if you don't
+need any dependencies to be substituted for %README%, you should create
+an empty
+.IB prgnam .readmedeps
+file. (A warning will be printed if %README% is found without a
+.IB prgnam .readmedeps
+file.)
+.
+.
+.SS prgnam.uidgid
+.P
+This file contains instructions for creating groups and usernames.
+In many cases you will want a username and group with the same number
+and name, in which case the file can contain a set of variable assignments
+like this example:
+.P
+.RS
+.EX
+UIDGIDNUMBER=216
+UIDGIDNAME=pulse
+UIDGIDCOMMENT=
+UIDGIDDIR=/var/lib/pulse
+UIDGIDSHELL=
+.EE
+.RE
+.P
+but if necessary for more complicated setup, 
+the file can contain a small shell script, like this:
+.P
+.RS
+.EX
+if ! getent group etherpad | grep -q ^etherpad: 2>/dev/null ; then
+  groupadd -g 264 etherpad
+fi
+if ! getent passwd etherpad | grep -q ^etherpad: 2>/dev/null ; then
+  useradd -u 264 -g etherpad -c "Etherpad lite" -m etherpad
+fi
+.fi
+.EE
+.RE
+.
+.
+.SS prgnam.md5ignore
+.P
+This file can be created if the source archive is known to change
+sometimes without the version number being changed, so that the source
+archive's md5sum will not be checked. Just create an empty file; its
+contents are not read.
+.
+.
+.SS prgnam.makej1
+.P
+This file can be created if the build process fails when multiple 'make'
+jobs are used. The build process will then be executed with MAKEFLAGS='-j1'.
+Just create an empty file; its contents are not read.
+.
+.
+.SS prgnam.skipme
+.P
+This file can be created if you want to skip the package when it would
+otherwise be added, rebuilt, tested or updated. If the file isn't empty,
+its contents will be displayed when the build is skipped, so you can put some
+helpful reminder text into it.
+.
+.
+.SS prgnam.answers
+.P
+This file can be created if the build process wants to read answers
+to its questions during the build process, for example about licence agreements.
+The file is piped into the SlackBuild's standard input, so it should
+contain whatever will make the build process happy.
+.
+.
+.SS prgnam.version
+.P
+This file can be created to attempt an automatic patch of the version
+number in both the SlackBuild and info files. The file should contain
+just the new version number, for example
+.P
+.RS
+.EX
+2.8.2
+.EE
+.RE
+.P
+The automatic patch is done by a simple text substitution. It often won't
+work (particularly if the old version number is something like '1', or if
+the download URL cannot be guessed correctly) but sometimes it's worth a try.
+The md5sum of the source archive will not be checked. The patched SlackBuild
+and info files are not kept.
+.
+.
+.SS prgnam.cleanup
+.P
+This file can be created if the package needs extra cleanup when it
+is uninstalled, for example packages that replace standard Slackware packages,
+or install kernel modules. The file should contain appropriate shell
+commands. For example, to reinstall Slackware packages:
+.P
+.RS
+.EX
+echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex-doc
+.EE
+.RE
+.P
+or to clean up after a kernel module is uninstalled:
+.P
+.RS
+.EX
+depmod -a
+.EE
+.RE
+.
+.
+.SS prgnam.no_uninstall
+.P
+After slackrepo builds or tests a package, it uninstalls the package and
+all its dependencies, and it aggressively removes files from
+.I /etc
+that
+Slackware's own tools would normally leave in place. This will cause
+serious damage if you attempt to rebuild a package that is already
+installed and in active use (for example, if you use
+.B slackrepo
+to rebuild
+.BR slackrepo ,
+or if you rebuild
+.B nvidia-driver
+on a system that uses
+.BR nvidia-driver ).
+You can avoid this by creating a 
+.IB prgnam .no_uninstall
+file, and then the package will not be uninstalled. Just create an
+empty file; its contents are not read.
+.
+.
+.
+.SH SEE ALSO
+.
+.BR slackrepo (8),
+.BR slackrepo.conf (5),
+.BR installpkg (8),
+.BR upgradepkg (8),
+.BR removepkg (8),
+.BR pkgtool (8),
+.BR slackpkg (8).
+.
+.

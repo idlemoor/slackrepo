@@ -1,0 +1,275 @@
+.\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
+.\" All rights reserved.  For licence details, see the file 'LICENCE'.
+.
+.TH SLACKREPO 8 "2014-04-01" slackrepo-0.1.0
+.
+.
+.
+.SH NAME
+slackrepo \- automated SlackBuild package building and repository maintenance
+.
+.
+.
+.SH SYNOPSIS
+.B slackrepo build
+.RI [ OPTIONS ]
+.RI [ ITEM ...]
+.
+.br
+.B slackrepo rebuild
+.RI [ OPTIONS ]
+.RI [ ITEM ...]
+.
+.br
+.B slackrepo remove
+.RI [ OPTIONS ]
+.IR ITEM ...
+.
+.br
+.B slackrepo update
+.RI [ OPTIONS ]
+.RI [ ITEM ...]
+.
+.
+.
+.SH DESCRIPTION
+.
+.B slackrepo\ build
+builds packages from an input repository of SlackBuilds (for example,
+a git clone of SlackBuilds.org), and then stores them in a package repository.
+.
+.P
+.B slackrepo\ rebuild
+rebuilds packages that are already in the package repository.
+.
+.P
+.B slackrepo\ remove
+removes packages from the package repository.
+.
+.P
+.B slackrepo\ update
+builds, rebuilds and removes packages in the package repository,
+according to changes in the SlackBuild repository.
+.
+.TP
+.I ITEM
+An item specifies
+(in build and rebuild mode) a directory in the SlackBuild repository
+that contains a set of SlackBuild files,
+or (in remove and update mode) a directory in the package repository
+that contains one or more packages built from a SlackBuild.
+If no items are specified, all directories in the SlackBuild or package
+repository are processed (except in remove mode, where it is mandatory
+to specify the items to be removed).
+.
+.P
+The filestore locations of the SlackBuild repository and the package repository
+are defined in the configuration file 
+.IR /etc/slackrepo/slackrepo_ID.conf ,
+where ID is
+an identifier for the repositories (by default, SBo).
+.
+.
+.
+.SH OPTIONS
+.
+.TP
+.BR \-v ", " \-\-verbose
+Increase the quantity of messages printed on the console during execution.
+.
+.TP
+.BR \-q ", " \-\-quiet
+Reduce the quantity of messages printed on the console during execution.
+.
+.TP
+.B \-\-repo=ID
+Use the SlackBuild and package repository identified by ID.  
+The location of the SlackBuild and package repositories are determined by
+the configuration file 
+.IR /etc/slackrepo/slackrepo_ID.conf .
+The default repository ID is SBo.
+.
+.TP
+.B \-\-test
+The SlackBuild files and the built packages will be subjected to additional
+quality assurance tests.
+.
+.TP
+.B \-\-dry\-run
+Builds and rebuilds will be performed, and removals will be notified, but no
+changes will be made to the package repository. 
+.
+.
+.
+.SH EXIT STATUS
+.
+.B 0 
+all operations succeeded or only warnings were issued
+.br
+.B 1
+one or more operations failed
+.br
+.B 2
+the configuration file was not found
+.br
+.B 3
+invocation usage error
+.br
+.B 4
+internal error, please report a bug
+.
+.
+.
+.SH ENVIRONMENT
+.
+The behaviour of
+.B slackrepo
+is affected by the following environment variables:
+.P
+.BR REPO ", " SBREPO ", " PKGREPO ", " SRCREPO , 
+.BR HINTS ", " LOGDIR ", " TMP ,
+.BR ARCH ", " TAG ", " PKGTYPE ", " NUMJOBS ", " USE_GENREPOS
+.P
+Each of these environment variables overrides the corresponding configuration
+variable in the file 
+.I /etc/slackrepo/slackrepo_ID.conf
+or
+.IR ~/.slackreporc .
+For details, see
+.BR slackrepo.conf (5).
+.
+.
+.
+.SH FILES
+.
+.TP 5
+.I /etc/slackrepo/slackrepo_SBo.conf
+This file defines the configuration variables for the SBo repository; see
+.BR slackrepo.conf (5).
+.TP 5
+.I ~/.slackreporc
+This file can optionally be created to define the default repository ID
+and override configuration variables set in
+.IR /etc/slackrepo/slackrepo_ID.conf ;
+see
+.BR slackrepo.conf (5).
+.TP 5
+.I /etc/slackrepo/hints_SBo/
+This directory contains the hint files for the SBo repository; see
+.BR slackrepo_hints (5).
+.
+.
+.
+.SH NOTES
+.
+.P
+For best results,
+.B slackrepo
+is intended to be run on a "clean" standard Slackware
+environment (like a "build box" or a virtual machine), with a full installation 
+of Slackware and no additional packages (or very few). You can then use the 
+package repository to install the packages on other hosts (e.g. with
+.BR slackpkg+ ).
+.
+.P
+Packages are updated or rebuilt if required; for example, if a package is being
+built, its dependencies will be updated and/or rebuilt if they are out-of-date.
+A package is out-of-date if:
+.RS
+.IP \(bu 4
+the git revision in the directory containing the SlackBuild has changed since the package was built
+.IP \(bu 4
+the directory containing the SlackBuilds has untracked/uncommited files (i.e., "git is dirty") and they are newer than the package
+.IP \(bu 4
+any relevant hint has changed since the package was built
+.IP \(bu 4
+any of its direct dependencies has been updated since the package was built
+.IP \(bu 4
+the version of Slackware has changed since the package was built
+.RE
+.P
+Changes in the SlackBuilds directory, and changes to the relevant hints, are
+classified as "updates", which will cause directly depending items to be rebuilt.
+Other changes are classified as "rebuilds" and do not cause depending items to be rebuilt.
+For example, ffmpeg depends on x264, and transcode depends on ffmpeg.
+If x264 is updated, ffmpeg will be rebuilt, but transcode will not be rebuilt.
+If x264 is rebuilt, ffmpeg will not be rebuilt.
+If ffmpeg is updated, transcode will be rebuilt.
+.
+.P
+When a package is rebuilt, and when a package is updated but its version 
+is unchanged, the BUILD number in the package repository is always incremented 
+(and the BUILD number in the SlackBuild file is ignored).
+.
+.P
+.B slackrepo
+is not affiliated with, or endorsed by, the SlackBuilds.org Project or
+Slackware. The author thanks those projects for their continuing generosity
+to the community.  Slackware\*R is a registered trademark of Patrick Volkerding.
+.
+.
+.
+.SH EXAMPLES
+.
+Build the whole SBo repository (you will need about four days
+and 61Gb of disk space):
+.P
+.RS
+.EX
+# slackrepo build
+.EE
+.RE
+.P
+Build shotwell, with all its dependencies:
+.P
+.RS
+.EX
+# slackrepo build shotwell
+.EE
+.RE
+.P
+Remove grass (note, its dependencies and dependers will not be removed):
+.P
+.RS
+.EX
+# slackpkg remove grass
+.EE
+.RE
+.P
+Update all the academic/ packages in your package repository for SBo's latest changes:
+.P
+.RS
+.EX
+# slackrepo update academic
+.EE
+.RE
+.P
+Do a "dry run" update of all your SBo packages, with verbose messages:
+.P
+.RS
+.EX
+# slackrepo update --dry-run -v
+.EE
+.RE
+.P
+Test-build myprog in the newstuff repo, with verbose messages; do not store the built package:
+.P
+.RS
+.EX
+# slackrepo build -v --repo=newstuff --test --dry-run myprog
+.EE
+.RE
+.
+.
+.
+.SH SEE ALSO
+.
+.BR slackrepo.conf (5),
+.BR slackrepo_hints (5),
+.BR installpkg (8),
+.BR upgradepkg (8),
+.BR removepkg (8),
+.BR pkgtool (8),
+.BR slackpkg (8).
+.
+.

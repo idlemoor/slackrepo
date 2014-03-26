@@ -74,12 +74,15 @@ cp -a \
 mkdir -p $PKG/var/log/$PRGNAM
 mkdir -p $PKG/var/lib/$PRGNAM
 
-# mkdir -p $PKG/usr/man/man8
-# cp -a slackrepo.8 $PKG/usr/man/man8
-# gzip -9 $PKG/usr/man/man8/slackrepo.8
-# mkdir -p $PKG/usr/man/man5
-# cp -a repo.conf.5 $PKG/usr/man/man5
-# gzip -9 $PKG/usr/man/man5/repo.conf.5
+mkdir -p $PKG/usr/man/man{5,8}
+cp -a \
+  slackrepo.conf.5 \
+  slackrepo_hints.5 \
+  $PKG/usr/man/man5
+cp -a \
+  slackrepo.8 \
+  $PKG/usr/man/man8
+find $PKG/usr/man -type f -exec gzip -9 {} \;
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
 cp -a \

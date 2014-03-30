@@ -30,7 +30,7 @@ function parse_items
 
   if [ "$1" = '-s' ]; then
     SEARCHFILE='.SlackBuild'
-    TOPLEVEL="$SR_GITREPO"
+    TOPLEVEL="$SR_SBREPO"
   elif [ "$1" = '-p' ]; then
     SEARCHFILE='-*.t?z'
     TOPLEVEL="$SR_PKGREPO"
@@ -48,7 +48,7 @@ function parse_items
 
     # We can have zero, one, or two names in $a and $b.
     if [ -z "$a" -a -n "$b" ]; then
-      # this can't happen due to '${1##/}' above, but if it *does* happen, 
+      # this can't happen due to '${1##/}' above, but if it *does* happen,
       # put the only name we've got in $a and make $b empty:
       a="$b"; b=''
     fi

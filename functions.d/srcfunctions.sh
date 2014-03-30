@@ -41,7 +41,7 @@ function verify_src
       find . -maxdepth 1 -type f -exec rm -f {} \;
       return 4
     fi
-    numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '.version' | wc -l)
+    numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '\./^\.version$' | wc -l)
     numwant=$(echo $MD5LIST | wc -w)
     [ $numgot = $numwant ] || { log_verbose -p "Note: need $numwant source files, but have $numgot"; return 2; }
     hint_md5ignore $itempath && return 0
@@ -72,7 +72,7 @@ function download_src
 # Also uses variables $DOWNDIR and $DOWNLIST previously set by verify_src,
 # and $VERSION set by build_package
 # Return status:
-# 1 - wget failed
+# 1 - curl failed
 {
   local itempath="$1"
   local prgnam=${itempath##*/}
@@ -81,15 +81,14 @@ function download_src
   find $DOWNDIR -maxdepth 1 -type f -exec rm {} \;
   log_normal -p "Downloading source files ..."
   ( cd $DOWNDIR
-    for src in $DOWNLIST; do
-      log_verbose -p "wget $src ..."
-      wget --no-check-certificate --content-disposition --tries=2 -T 240 "$src" >> $SR_LOGDIR/$itempath.log 2>&1
-      wstat=$?
-      if [ $wstat != 0 ]; then
-        log_error -p "Download failed (wget status $wstat)"
-        return 1
-      fi
-    done
+    downargs=""
+    for url in $DOWNLIST; do downargs="$downargs -O \"$url\""; done
+    curl -q -f '-#' -k --connect-timeout 60 --retry 2 -J -L $downargs >> $SR_LOGDIR/$itempath.log 2>&1
+    curlstat=$?
+    if [ $curlstat != 0 ]; then
+      log_error -p "Download failed (curl status $curlstat)"
+      return 1
+    fi
     echo "$VERSION" > .version
   )
   return 0

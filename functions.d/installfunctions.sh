@@ -74,7 +74,7 @@ function uninstall_package
   local itempath="$1"
   local prgnam=${itempath##*/}
 
-  if hint_no_uninstall $itempath ; then return 0; fi
+  if [ "${HINT_no_uninstall[$itempath]}" = 'y' ]; then return 0; fi
 
   # is it installed?
   plist=$(ls /var/log/packages/$prgnam-* 2>/dev/null)
@@ -106,9 +106,15 @@ function uninstall_package
       find "$d" -type d -depth -exec rmdir --ignore-fail-on-non-empty {} \;
     fi
   done
-  # Do this last so it can mend things the package broke
-  # (e.g. by reinstalling a Slackware package)
-  hint_cleanup $itempath
+  # Do this last so it can mend things the package broke.
+  # The cleanup file can contain any required shell commands, for example:
+  #   * Reinstalling Slackware packages that conflict with prgnam
+  #   * Unsetting environment variables set in an /etc/profile.d script
+  #   * Removing specific files and directories that removepkg doesn't remove
+  #   * Running depmod to remove references to removed kernel modules
+  if [ "${HINT_cleanup[$itempath]" = 'y' ]; then
+    . $SR_HINTS/$itempath.cleanup >>$SR_LOGDIR/$itempath.log 2>&1
+  fi
 
   return 0
 }

@@ -80,7 +80,7 @@ function build_with_deps
   # Surprisingly this is the ideal place to load up .info and cache it
   if [ "${INFOVERSION[$itempath]+yesitisset}" != 'yesitisset' ]; then
     unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
-    . $SR_GITREPO/$itempath/$prgnam.info
+    . $SR_SBREPO/$itempath/$prgnam.info
     INFOVERSION[$itempath]="$VERSION"
     if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
       SRCDIR[$itempath]=$SR_SRCREPO/$itempath/$SR_ARCH
@@ -92,12 +92,14 @@ function build_with_deps
       INFOMD5LIST[$itempath]="$MD5SUM"
     fi
     INFOREQUIRES[$itempath]="$REQUIRES"
-    GITREV[$itempath]="$(cd $SR_GITREPO/$itempath; git log -n 1 --format=format:%H .)"
+    GITREV[$itempath]="$(cd $SR_SBREPO/$itempath; git log -n 1 --format=format:%H .)"
     GITDIRTY[$itempath]="n"
-    if [ -n "$(cd $SR_GITREPO/$itempath; git status -s .)" ]; then
+    if [ -n "$(cd $SR_SBREPO/$itempath; git status -s .)" ]; then
       GITDIRTY[$itempath]="y"
     fi
   fi
+  # Same for hints
+  set_hints $itemname
 
   # Bail out if to be skipped, or unsupported/untested
   if hint_skipme $itempath; then
@@ -133,7 +135,7 @@ function build_with_deps
     done
   fi
 
-  # Next, work out whether I need to be added, updated or rebuilt
+  # Next, work out whether I need to be built, updated or rebuilt
   get_rev_status $itempath
   revstatus=$?
   case $revstatus in
@@ -148,8 +150,8 @@ function build_with_deps
         return 0
       fi
       ;;
-  1)  OP='add'
-      opmsg="add version ${NEWVERSION:-${INFOVERSION[$itempath]}}"
+  1)  OP='build'
+      opmsg="build version ${NEWVERSION:-${INFOVERSION[$itempath]}}"
       ;;
   2)  OP='update'
       shortrev="${GITREV[$itempath]:0:7}"
@@ -172,14 +174,6 @@ function build_with_deps
       return 1
       ;;
   esac
-
-  # Stop here if update --dry-run
-  if [ "$PROCMODE" = 'update' -a "$OPT_DRYRUN" = 'y' ]; then
-    opmsg="would be $(echo "$opmsg" | sed -e 's/^add /added /' -e 's/^update /updated /' -e 's/^rebuild /rebuilt /')"
-    log_important "$itempath $opmsg"
-    echo "$itempath $opmsg" >> $SR_UPDATEFILE
-    return 0
-  fi
 
   # Tweak the message for dryrun
   [ "$OPT_DRYRUN" = 'y' ] && opmsg="$opmsg --dry-run"

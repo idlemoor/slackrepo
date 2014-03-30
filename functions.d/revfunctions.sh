@@ -10,7 +10,7 @@
 
 function create_metadata
 # Create metadata files in package dir, and changelog entry
-# $1    = operation (add, update, rebuild) and extra message
+# $1    = operation (build, update, rebuild) and extra message
 # $2    = itempath
 # $3... = list of dependencies
 # Return status:
@@ -47,10 +47,10 @@ function create_metadata
       extrastuff=''
       case "$opmsg" in
       add*)
-          extrastuff="LINEFEED $(grep "^$prgnam: " $SR_GITREPO/$itempath/slack-desc | head -n 1 | sed -e 's/.*(/(/' -e 's/).*/)/')"
+          extrastuff="LINEFEED $(grep "^$prgnam: " $SR_SBREPO/$itempath/slack-desc | head -n 1 | sed -e 's/.*(/(/' -e 's/).*/)/')"
           ;;
       'update for git'*)
-          extrastuff="LINEFEED $(cd $SR_GITREPO/$itempath; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //')"
+          extrastuff="LINEFEED $(cd $SR_SBREPO/$itempath; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //')"
           ;;
       *)  :
           ;;
@@ -66,7 +66,7 @@ function create_metadata
     # Although gen_repos_files.sh can create the following files, it's quicker to
     # create the .txt file here (we don't have to extract the slack-desc from the package)
     # .txt file
-    cat $SR_GITREPO/$itempath/slack-desc | sed -n '/^#/d;/:/p' > $MYREPO/$itempath/${pkgbase}.txt
+    cat $SR_SBREPO/$itempath/slack-desc | sed -n '/^#/d;/:/p' > $MYREPO/$itempath/${pkgbase}.txt
     # .md5 file
     ( cd $MYREPO/$itempath/; md5sum $pkg > ${pkg##*/}.md5 )
     # .meta and .lst files are a bit more complex
@@ -156,7 +156,7 @@ function get_rev_status
   if [ "${GITDIRTY[$itempath]}" = 'y' ]; then
     log_warning "${itempath}: git is dirty"
     # is anything in the git dir newer than the corresponding package dir?
-    if [ -n "$(find $SR_GITREPO/$itempath -newer $SR_PKGREPO/$itempath 2>/dev/null)" ]; then
+    if [ -n "$(find $SR_SBREPO/$itempath -newer $SR_PKGREPO/$itempath 2>/dev/null)" ]; then
       REVCACHE[$itempath]=2
       return 2
     fi

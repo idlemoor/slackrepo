@@ -26,17 +26,19 @@ function build_package
   local itempath="$1"
   local prgnam=${itempath##*/}
 
-  if hint_skipme $itempath; then
+  set_hints $itempath
+
+  if [ "$HINT_skipme" ='y' ]; then
     SKIPPEDLIST="$SKIPPEDLIST $itempath"
     return 5
   fi
 
   SR_TMPIN=$SR_TMP/slackrepo_IN
   rm -rf $SR_TMPIN
-  cp -a $SR_GITREPO/$itempath $SR_TMPIN
+  cp -a $SR_SBREPO/$itempath $SR_TMPIN
 
   if [ "$OPT_TEST" = 'y' ]; then
-    qa_slackbuild $itempath || return 7
+    test_slackbuild $itempath || return 7
   fi
 
   # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
@@ -54,6 +56,7 @@ function build_package
   verify_src $itempath
   case $? in
     0) # already got source, and it's good
+       [ "$OPT_TEST" = 'y' ] && test_download $itempath
        ;;
   1|2) # already got source, but it's bad => get it
        log_verbose -p "Note: cached source is bad"
@@ -86,7 +89,7 @@ function build_package
     log_warning -p "${itempath}: \"BUILD=\" not found in SlackBuild; using 1"
   fi
   eval $buildassign
-  if [ "$OP" = 'add' -o "$OPT_DRYRUN" = 'y' ]; then
+  if [ "$OP" = 'build' -o "$OPT_DRYRUN" = 'y' ]; then
     # just use the SlackBuild's BUILD
     SR_BUILD="$BUILD"
   else
@@ -143,7 +146,7 @@ function build_package
   fi
 
   if [ "$OPT_TEST" = 'y' ]; then
-    qa_package $itempath $pkglist || { build_failed $itempath; return 7; }
+    test_package $itempath $pkglist || { build_failed $itempath; return 7; }
   fi
 
   build_ok $itempath  # \o/

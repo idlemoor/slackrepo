@@ -2,12 +2,13 @@
 # Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
-# qafunctions.sh - functions for various quality assurance tests in slackrepo
-#   qa_slackbuild
-#   qa_package
+# testfunctions.sh - functions for various quality assurance tests in slackrepo
+#   test_slackbuild
+#   test_download
+#   test_package
 #-------------------------------------------------------------------------------
 
-function qa_slackbuild
+function test_slackbuild
 # Test prgnam.SlackBuild, slack-desc, prgnam.info and README files
 # $1 = itempath
 # Return status:
@@ -25,12 +26,12 @@ function qa_slackbuild
 
   #-----------------------------#
   # (1) Check prgnam.SlackBuild
-  [ -f $SR_GITREPO/$itempath/$prgnam.SlackBuild ] || \
+  [ -f $SR_SBREPO/$itempath/$prgnam.SlackBuild ] || \
     { log_error -p "${itempath}: $prgnam.SlackBuild not found"; return 1; }
 
   #-----------------------------#
   # (2) check slack-desc
-  SLACKDESC="$SR_GITREPO/$itempath/slack-desc"
+  SLACKDESC="$SR_SBREPO/$itempath/slack-desc"
   [ -f $SLACKDESC ] || \
     { log_error -p "${itempath}: slack-desc file not found"; return 1; }
   HR='|-----handy-ruler------------------------------------------------------|'
@@ -58,11 +59,11 @@ function qa_slackbuild
 
   #-----------------------------#
   # (3) Check prgnam.info
-  [ -f $SR_GITREPO/$itempath/$prgnam.info ] || \
+  [ -f $SR_SBREPO/$itempath/$prgnam.info ] || \
     { log_error -p "${itempath}: $prgnam.info not found"; return 1; }
 
   unset PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM REQUIRES MAINTAINER EMAIL
-  . $SR_GITREPO/$itempath/$prgnam.info
+  . $SR_SBREPO/$itempath/$prgnam.info
 
   [ "$PRGNAM" = "$prgnam" ] || \
     log_warning -p "${itempath}: PRGNAM in $prgnam.info is '$PRGNAM', not $prgnam"
@@ -85,9 +86,9 @@ function qa_slackbuild
 
   #-----------------------------#
   # (4) Check README
-  [ -f $SR_GITREPO/$itempath/README ] || \
+  [ -f $SR_SBREPO/$itempath/README ] || \
     { log_error -p "${itempath}: README not found"; return 1; }
-  [ "$(wc -L < $SR_GITREPO/$itempath/README)" -le 79 ] || \
+  [ "$(wc -L < $SR_SBREPO/$itempath/README)" -le 79 ] || \
     log_warning -p "${itempath}: long lines in README"
 
   return 0
@@ -95,7 +96,29 @@ function qa_slackbuild
 
 #-------------------------------------------------------------------------------
 
-function qa_package
+function test_download
+# Test whether URLs are 404
+# $1    = itempath
+# Return status: always 0
+{
+  local itempath="$1"
+  local prgnam=${itempath##*/}
+
+  log_normal -p "Testing download URLs ..."
+  DOWNLIST="${INFODOWNLIST[$itempath]}"
+  for url in $DOWNLIST; do
+    curl -q -f -k --connect-timeout 60 --retry 2 -J -L -I -O $url >> $SR_LOGDIR/$itempath.log 2>&1
+    curlstat=$?
+    if [ $curlstat != 0 ]; then
+      log_warning -p "Test of $url failed (curl status $curlstat)"
+    fi
+  done
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function test_package
 # Test a package (check its name, and check its contents)
 # $1    = itempath
 # $2... = paths of packages to be checked

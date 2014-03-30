@@ -11,8 +11,6 @@ config() {
   # Otherwise, we leave the .new copy for the admin to consider...
 }
 
-config etc/slackrepo/repo.default.new
-
-for h in etc/slackrepo/repo*.conf.new etc/slackrepo/hints*/*/*.new; do
+for h in etc/slackrepo/slackrepo*.conf.new etc/slackrepo/hints*/*/*.new; do
   config $h
 done

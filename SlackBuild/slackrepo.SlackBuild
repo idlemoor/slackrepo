@@ -66,8 +66,7 @@ cp -a \
 
 mkdir -p $PKG/etc/$PRGNAM
 cp -a \
-  repo.default.new \
-  repo_*.conf.new \
+  slackrepo_*.conf.new \
   hints_*/ \
   $PKG/etc/$PRGNAM
 

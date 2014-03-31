@@ -34,21 +34,22 @@ slackrepo \- automated SlackBuild package building and repository maintenance
 .
 .SH DESCRIPTION
 .
+.TP
 .B slackrepo\ build
-builds packages from an input repository of SlackBuilds (for example,
+Builds packages from an input repository of SlackBuilds (for example,
 a git clone of SlackBuilds.org), and then stores them in a package repository.
 .
-.P
+.TP
 .B slackrepo\ rebuild
-rebuilds packages that are already in the package repository.
+Rebuilds packages that are already in the package repository.
 .
-.P
+.TP
 .B slackrepo\ remove
-removes packages from the package repository.
+Removes packages from the package repository.
 .
-.P
+.TP
 .B slackrepo\ update
-builds, rebuilds and removes packages in the package repository,
+Builds, rebuilds and removes packages in the package repository,
 according to changes in the SlackBuild repository.
 .
 .TP
@@ -62,32 +63,20 @@ If no items are specified, all directories in the SlackBuild or package
 repository are processed (except in remove mode, where it is mandatory
 to specify the items to be removed).
 .
-.P
-The filestore locations of the SlackBuild repository and the package repository
-are defined in the configuration file
-.IR /etc/slackrepo/slackrepo_ID.conf ,
-where ID is
-an identifier for the repositories (by default, SBo).
-.
 .
 .
 .SH OPTIONS
 .
 .TP
-.BR \-v ", " \-\-verbose
-Increase the quantity of messages printed on the console during execution.
-.
-.TP
-.BR \-q ", " \-\-quiet
-Reduce the quantity of messages printed on the console during execution.
-.
-.TP
 .B \-\-repo=ID
 Use the SlackBuild and package repository identified by ID.
-The location of the SlackBuild and package repositories are determined by
+The filestore locations of the SlackBuild and package repositories are defined in
 the configuration file
-.IR /etc/slackrepo/slackrepo_ID.conf .
+.IR /etc/slackrepo/slackrepo_ID.conf ,
+where  ID is an identifier for the repositories.
 The default repository ID is SBo.
+For details, see
+.BR slackrepo.conf(5) .
 .
 .TP
 .B \-\-test
@@ -98,6 +87,14 @@ quality assurance tests.
 .B \-\-dry\-run
 Builds and rebuilds will be performed, and removals will be notified, but no
 changes will be made to the package repository.
+.
+.TP
+.BR \-v ", " \-\-verbose
+Increase the quantity of messages printed on the console during execution.
+.
+.TP
+.BR \-q ", " \-\-quiet
+Reduce the quantity of messages printed on the console during execution.
 .
 .
 .

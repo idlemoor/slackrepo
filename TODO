@@ -9,7 +9,7 @@ TODO
 
 [done] manpages
 
-revise documentation & do github wiki
+[done] revise documentation & do github wiki
 
 [done] document link to slackpkg+
 
@@ -18,8 +18,8 @@ revise documentation & do github wiki
 sbopkg compatibility (env vars & filestore)
 
 Additional QA tests for test mode
- - check source isn't 404
- - package contents
+ - [done] check source isn't 404
+ - [done] package contents
  - non-SBo SlackBuilds
 
 [done] Test --test
@@ -53,3 +53,5 @@ Multiple built packages from one SlackBuild
 Per-ARCH package repos
 
 ARM support
+
+logrotate

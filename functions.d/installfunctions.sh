@@ -112,8 +112,8 @@ function uninstall_package
   #   * Unsetting environment variables set in an /etc/profile.d script
   #   * Removing specific files and directories that removepkg doesn't remove
   #   * Running depmod to remove references to removed kernel modules
-  if [ "${HINT_cleanup[$itempath]}" = 'y' ]; then
-    . $SR_HINTS/$itempath.cleanup >>$SR_LOGDIR/$itempath.log 2>&1
+  if [ -n "${HINT_cleanup[$itempath]}" ]; then
+    . ${HINT_cleanup[$itempath]} >>$SR_LOGDIR/$itempath.log 2>&1
   fi
 
   return 0

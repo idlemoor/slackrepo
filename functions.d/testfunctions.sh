@@ -109,14 +109,29 @@ function test_download
   log_normal -p "Testing download URLs ..."
   DOWNLIST="${INFODOWNLIST[$itempath]}"
   for url in $DOWNLIST; do
-    curl -q -f -s -k --connect-timeout 120 --retry 2 -J -L -I -o $headertmp $url >> $SR_LOGDIR/$itempath.log 2>&1
-    curlstat=$?
-    if [ $curlstat != 0 ]; then
-      log_warning -p "${itempath}: $url failed (curl status $curlstat)"
-      cat $headertmp ##########
-    else
-      : # check 'Content-Length:' against cached files. You can't be too careful ;-)
-    fi
+    case $url in
+    *.googlecode.com/*)
+      # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
+      # https://code.google.com/p/support/issues/detail?id=660
+      # "Don't be evil, but totally lame is fine"
+      curl -q -s -k --connect-timeout 240 --retry 2 -J -L -o /dev/null $url >> $SR_LOGDIR/$itempath.log 2>&1
+      curlstat=$?
+      if [ $curlstat != 0 ]; then
+        log_warning -p "${itempath}: $url failed (curl status $curlstat), but it could just be googlecode.com being stupid again"
+        cat $headertmp ######
+      fi
+      ;;
+    *)
+      curl -q -s -k --connect-timeout 240 --retry 2 -J -L -I -o $headertmp $url >> $SR_LOGDIR/$itempath.log 2>&1
+      curlstat=$?
+      if [ $curlstat != 0 ]; then
+        log_warning -p "${itempath}: $url failed (curl status $curlstat)"
+        cat $headertmp ######
+      else
+        : # check 'Content-Length:' against cached files. You can't be too careful ;-)
+      fi
+      ;;
+    esac
   done
   rm -f $headertmp
   return 0

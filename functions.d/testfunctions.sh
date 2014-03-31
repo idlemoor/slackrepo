@@ -39,14 +39,12 @@ function test_slackbuild
   lc=$(grep "^${prgnam}:" $SLACKDESC | wc -l)
   [ "$lc" != 11 ] && \
     log_warning -p "${itempath}: slack-desc: $lc lines of description, should be 11"
-  # no trailing spaces kthxbye
-  grep -q "^${prgnam}:.* $"  $SLACKDESC && \
-    log_warning -p "${itempath}: slack-desc: description has trailing spaces"
   # don't mess with my handy ruler
-  grep -q "^ *$HR\$" $SLACKDESC || \
+  if ! grep -q "^ *$HR\$" $SLACKDESC ; then
     log_warning -p "${itempath}: slack-desc: handy-ruler is corrupt or missing"
-  [ $(grep "^ *$HR\$" $SLACKDESC | sed "s/|.*|//" | wc -c) -ne $(( ${#prgnam} + 1 )) ] && \
+  elif [ $(grep "^ *$HR\$" $SLACKDESC | sed "s/|.*|//" | wc -c) -ne $(( ${#prgnam} + 1 )) ]; then
     log_warning -p "${itempath}: slack-desc: handy-ruler is misaligned"
+  fi
   # check line length
   [ $(grep "^${prgnam}:" $SLACKDESC | sed "s/^${prgnam}://" | wc -L) -gt 73 ] && \
     log_warning -p "${itempath}: slack-desc: description lines too long"
@@ -56,6 +54,9 @@ function test_slackbuild
   # This one turns out to be far too picky:
   # [ "$(grep "^${prgnam}:" $SLACKDESC | head -n 1 | sed "s/^${prgnam}: ${prgnam} (.*)$//")" != '' ] && \
   #   log_warning -p "${itempath}: slack-desc: first line of description is unconventional"
+  # and this one: no trailing spaces kthxbye
+  # grep -q "^${prgnam}:.* $"  $SLACKDESC && \
+  #   log_warning -p "${itempath}: slack-desc: description has trailing spaces"
 
   #-----------------------------#
   # (3) Check prgnam.info
@@ -108,12 +109,13 @@ function test_download
   log_normal -p "Testing download URLs ..."
   DOWNLIST="${INFODOWNLIST[$itempath]}"
   for url in $DOWNLIST; do
-    curl -q -f -k --connect-timeout 120 --retry 2 -J -L -I -o $headertmp $url >> $SR_LOGDIR/$itempath.log 2>&1
+    curl -q -f -s -k --connect-timeout 120 --retry 2 -J -L -I -o $headertmp $url >> $SR_LOGDIR/$itempath.log 2>&1
     curlstat=$?
     if [ $curlstat != 0 ]; then
       log_warning -p "${itempath}: $url failed (curl status $curlstat)"
+      cat $headertmp ##########
     else
-      : # check 'Content-Length:' against cached files
+      : # check 'Content-Length:' against cached files. You can't be too careful ;-)
     fi
   done
   rm -f $headertmp
@@ -138,24 +140,24 @@ function test_package
     local pkgpath=$1
     local pkgnam=${pkgpath##*/}
     shift
-    log_normal -p "Testing $pkgpath..."
+    log_normal -p "Testing $pkgnam..."
     # Check the package name
     parse_package_name $pkgnam
     [ "$PN_PRGNAM" != "$prgnam" ] && \
-      log_warning -p "${pkgnam}: PRGNAM is $PN_PRGNAM not $prgnam"
+      log_warning -p "${itempath}: ${pkgnam}: PRGNAM is \"$PN_PRGNAM\" not \"$prgnam\""
     [ "$PN_VERSION" != "${INFOVERSION[$itempath]}" -a \
       "$PN_VERSION" != "${INFOVERSION[$itempath]}_$(uname -r)" ] && \
-      log_warning -p "${pkgnam}: VERSION is $PN_VERSION not ${INFOVERSION[$itempath]}"
+      log_warning -p "${itempath}: ${pkgnam}: VERSION is \"$PN_VERSION\" not \"${INFOVERSION[$itempath]}\""
     [ "$PN_ARCH" != "$SR_ARCH" -a \
       "$PN_ARCH" != "noarch" -a \
       "$PN_ARCH" != "fw" ] && \
-      log_warning -p "${pkgnam}: ARCH is $PN_ARCH not $SR_ARCH or noarch or fw"
+      log_warning -p "${itempath}: ${pkgnam}: ARCH is $PN_ARCH not $SR_ARCH or noarch or fw"
     [ "$PN_BUILD" != "$SR_BUILD" ] && \
-      log_warning -p "${pkgnam}: BUILD is $PN_BUILD not $SR_BUILD"
+      log_warning -p "${itempath}: ${pkgnam}: BUILD is $PN_BUILD not $SR_BUILD"
     [ "$PN_TAG" != "$SR_TAG" ] && \
-      log_warning -p "${pkgnam}: TAG is '$PN_TAG' not '$SR_TAG'"
+      log_warning -p "${itempath}: ${pkgnam}: TAG is \"$PN_TAG\" not \"$SR_TAG\""
     [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && \
-      log_warning -p "${pkgnam}: Package type is .$PN_PKGTYPE not .$SR_PKGTYPE"
+      log_warning -p "${itempath}: ${pkgnam}: Package type is .$PN_PKGTYPE not .$SR_PKGTYPE"
     # Check the package contents
 
     #### check the compression matches the suffix
@@ -167,16 +169,16 @@ function test_package
     temptarlist=$TMPDIR/sr_tarlist.$$.tmp
     tar tf $pkgpath > $temptarlist
     if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)' $temptarlist; then
-      log_warning -p "${pkgnam}: files are installed in unusual locations"
+      log_warning -p "${itempath}: ${pkgnam}: files are installed in unusual locations"
     fi
     for verboten in usr/local usr/share/man; do
       if grep -q '^'$verboten $temptarlist; then
-        log_warning -p "${pkgnam}: files are installed in $verboten"
+        log_warning -p "${itempath}: ${pkgnam}: files are installed in $verboten"
       fi
     done
     #### TODO: check all manpages compressed
     if ! grep -q 'install/slack-desc' $temptarlist; then
-      log_warning -p "${pkgnam}: package does not contain slack-desc"
+      log_warning -p "${itempath}: ${pkgnam}: package does not contain slack-desc"
     fi
     #### TODO: check modes of package contents
     #### TODO: check whether a noarch package is really noarch

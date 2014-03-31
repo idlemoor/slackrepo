@@ -26,8 +26,6 @@ function build_package
   local itempath="$1"
   local prgnam=${itempath##*/}
 
-  set_hints $itempath
-
   if [ "${HINT_skipme[$itempath]}" = 'y' ]; then
     SKIPPEDLIST="$SKIPPEDLIST $itempath"
     return 5
@@ -107,11 +105,11 @@ function build_package
   do_hint_uidgid $itempath
   tempmakeflags=""
   [ "${HINT_makej1[$itempath]}" = 'y' ] && tempmakeflags="MAKEFLAGS='-j1'"
-  options="${HINT_options[$itempath]}"
-  SLACKBUILDCMD="env $tempmakeflags $options sh ./$prgnam.SlackBuild"
-  if [ -n "${HINT_answers[$itempath]}" ]; then
-    SLACKBUILDCMD="cat ${HINT_answers[$itempath]} | $SLACKBUILDCMD"
-  fi
+  options=""
+  [ "${HINT_options[$itempath]}" != '%NONE%' ] && options="${HINT_options[$itempath]}"
+  SLACKBUILDCMD="sh ./$prgnam.SlackBuild"
+  [ -n "$tempmakeflags" -o -n "$options" ] && SLKBUILDCMD="env $tempmakeflags $options $SLACKBUILDCMD"
+  [ -n "${HINT_answers[$itempath]}" ] && SLACKBUILDCMD="cat ${HINT_answers[$itempath]} | $SLACKBUILDCMD"
 
   # Build it
   SR_TMPOUT=$SR_TMP/sr_OUT.$$
@@ -125,7 +123,7 @@ function build_package
     OUTPUT=$SR_TMPOUT \
     PKGTYPE=$SR_PKGTYPE \
     NUMJOBS=$SR_NUMJOBS
-  log_normal -p "Running $prgnam.SlackBuild ..."
+  log_normal -p "Running SlackBuild: $SLACKBUILDCMD ..."
   ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$SR_LOGDIR/$itempath.log 2>&1
   stat=$?
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS

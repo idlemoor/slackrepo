@@ -28,7 +28,7 @@ function list_direct_deps
   deplist=''
   for dep in $deps; do
     if [ $dep = '%README%' ]; then
-      if [ -n "${HINT_readmedeps[$itempath]}" ]; then
+      if [ "${HINT_readmedeps[$itempath]}" != '%NONE%' ]; then
         BLAME="$prgnam.readmedeps"
         parse_items -s ${HINT_readmedeps[$itempath]}
         unset BLAME
@@ -44,15 +44,16 @@ function list_direct_deps
     fi
   done
 
-  if [ -n "${HINT_optdeps[$itempath]}" ]; then
+  if [ "${HINT_optdeps[$itempath]}" != '%NONE%' ]; then
     BLAME="$prgnam.optdeps"
     parse_items -s ${HINT_optdeps[$itempath]}
     unset BLAME
     deplist="$deplist $ITEMLIST"
   fi
 
-  # don't look at this, it's a horrible deduplicate and whitespace tidy
-  DEPLIST="$(echo $deplist | tr -s '[:space:]' '\n' | sort -u | tr -s '[:space:]' ' ' | sed 's/ *$//')"
+  # don't look at this, it's a horrible deduplicate and whitespace tidy,
+  # plus an undocumented feature allowing commas as separators:
+  DEPLIST="$(echo $deplist | sed 's/,/ /g' | tr -s '[:space:]' '\n' | sort -u | tr -s '[:space:]' ' ' | sed 's/ *$//')"
   # Remember it for later:
   DEPCACHE[$itempath]="$DEPLIST"
   return 0
@@ -75,7 +76,7 @@ function build_with_deps
   local subresult revstatus op reason
   local allinstalled
 
-  # Surprisingly this is the ideal place to load up .info and cache it
+  # This is the ideal place to load up .info and cache it
   if [ "${INFOVERSION[$itempath]+yesitisset}" != 'yesitisset' ]; then
     unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
     . $SR_SBREPO/$itempath/$prgnam.info

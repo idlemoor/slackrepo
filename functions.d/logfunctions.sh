@@ -38,9 +38,13 @@ function log_prgstart
 # Return status: always 0
 {
   line="-------------------------------------------------------------------------------"
-  pad=$(( ${#line} - ${#1} - 1 ))
   tput bold; tput setaf 7
-  echo "$@ ${line:0:$pad}"
+  if [ ${#1} -ge ${#line} ]; then
+    echo "$@"
+  else
+    pad=$(( ${#line} - ${#1} - 1 ))
+    echo "$@ ${line:0:$pad}"
+  fi
   tput sgr0
   echo "$line"                 >>$SR_LOGFILE
   echo "$@ $(date '+%F %T')"   >>$SR_LOGFILE

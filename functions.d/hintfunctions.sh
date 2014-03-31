@@ -13,7 +13,6 @@ function set_hints
 {
   local itempath="$1"
   local prgnam=${itempath##*/}
-
   gothints=''
 
   FLAGHINTS="skipme md5ignore makej1 no_uninstall"
@@ -31,7 +30,7 @@ function set_hints
   FILEHINTS="cleanup uidgid answers"
   # These are hints where the file contents will be executed or piped.
   # Query them like this: '[ -n "${HINT_xxx[$itempath]}" ]'
-  for hint in $FLAGHINTS; do
+  for hint in $FILEHINTS; do
     if [ -f $SR_HINTS/$itempath.$hint ]; then
       gothints="$gothints $hint"
       eval HINT_$hint[$itempath]="$SR_HINTS/$itempath.$hint"
@@ -42,18 +41,21 @@ function set_hints
 
   VARHINTS="options optdeps readmedeps version"
   # These are hints where the file contents will be used by slackrepo itself.
-  # Query them like this: '[ -n "${HINT_xxx[$itempath]}" ]'
+  # '%NONE%' indicates the file doesn't exist (vs. readmedeps exists and is empty).
+  # Query them like this: '[ "${HINT_xxx[$itempath]}" != '%NONE%' ]'
   for hint in $VARHINTS; do
     if [ -f $SR_HINTS/$itempath.$hint ]; then
       gothints="$gothints $hint"
-      eval HINT_$hint[$itempath]="$(cat $SR_HINTS/$itempath.$hint)"
+      eval HINT_$hint[$itempath]=\"$(cat $SR_HINTS/$itempath.$hint)\"
     else
-      eval HINT_$hint[$itempath]=''
+      eval HINT_$hint[$itempath]='%NONE%'
     fi
   done
 
-  if [ -n "$gothints" ]; then
-    log_normal "Hints for $itempath:$gothints"
+  # Log hints, unless skipme is set (in which case we are about to bail out noisily).
+  if [ "${HINT_skipme[$itempath]}" != 'y' -a -n "$gothints" ]; then
+    log_normal "Hints for ${itempath}:"
+    log_normal " $gothints"
   fi
 
   return 0
@@ -131,7 +133,7 @@ function do_hint_version
   local prgnam=${itempath##*/}
 
   NEWVERSION=''
-  if [ -n "${HINT_version[$itempath]}" ]; then
+  if [ -n "${HINT_version[$itempath]}" -a "${HINT_version[$itempath]}" != '%NONE%' ]; then
     NEWVERSION=${HINT_version[$itempath]}
     if [ -f $SR_PKGREPO/$itempath/$prgnam-*.t?z ]; then
       OLDVERSION=$(echo $SR_PKGREPO/$itempath/$prgnam-*.t?z | rev | cut -f3 -d- | rev)

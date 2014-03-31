@@ -31,9 +31,11 @@ function parse_items
   if [ "$1" = '-s' ]; then
     SEARCHFILE='.SlackBuild'
     TOPLEVEL="$SR_SBREPO"
+    shift
   elif [ "$1" = '-p' ]; then
     SEARCHFILE='-*.t?z'
     TOPLEVEL="$SR_PKGREPO"
+    shift
   else
     log_error "parse_items: invalid argument '$1'"
     return 9

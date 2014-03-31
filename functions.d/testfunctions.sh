@@ -103,16 +103,20 @@ function test_download
 {
   local itempath="$1"
   local prgnam=${itempath##*/}
+  headertmp=$TMPDIR/sr_header.$$.tmp
 
   log_normal -p "Testing download URLs ..."
   DOWNLIST="${INFODOWNLIST[$itempath]}"
   for url in $DOWNLIST; do
-    curl -q -f -k --connect-timeout 60 --retry 2 -J -L -I -O $url >> $SR_LOGDIR/$itempath.log 2>&1
+    curl -q -f -k --connect-timeout 120 --retry 2 -J -L -I -o $headertmp $url >> $SR_LOGDIR/$itempath.log 2>&1
     curlstat=$?
     if [ $curlstat != 0 ]; then
-      log_warning -p "Test of $url failed (curl status $curlstat)"
+      log_warning -p "${itempath}: $url failed (curl status $curlstat)"
+    else
+      : # check 'Content-Length:' against cached files
     fi
   done
+  rm -f $headertmp
   return 0
 }
 
@@ -160,7 +164,7 @@ function test_package
     #### check that install/slack-desc exists
 
     #### TODO: check it's tar-1.13 compatible
-    temptarlist=$TMPDIR/sr_tarlist
+    temptarlist=$TMPDIR/sr_tarlist.$$.tmp
     tar tf $pkgpath > $temptarlist
     if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)' $temptarlist; then
       log_warning -p "${pkgnam}: files are installed in unusual locations"

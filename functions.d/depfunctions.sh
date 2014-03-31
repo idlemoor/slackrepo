@@ -28,10 +28,9 @@ function list_direct_deps
   deplist=''
   for dep in $deps; do
     if [ $dep = '%README%' ]; then
-      if [ -f $SR_HINTS/$itempath.readmedeps ]; then
-        log_verbose "Hint: Using \"$(cat $SR_HINTS/$itempath.readmedeps)\" for %README% in $prgnam.info"
+      if [ -n "${HINT_readmedeps[$itempath]}" ]; then
         BLAME="$prgnam.readmedeps"
-        parse_items -s $(cat $SR_HINTS/$itempath.readmedeps)
+        parse_items -s ${HINT_readmedeps[$itempath]}
         unset BLAME
         deplist="$deplist $ITEMLIST"
       else
@@ -45,10 +44,9 @@ function list_direct_deps
     fi
   done
 
-  if [ -f $SR_HINTS/$itempath.optdeps ]; then
-    log_verbose "Hint: Adding optional deps: \"$(cat $SR_HINTS/$itempath.optdeps)\""
+  if [ -n "${HINT_optdeps[$itempath]}" ]; then
     BLAME="$prgnam.optdeps"
-    parse_items -s $(cat $SR_HINTS/$itempath.optdeps)
+    parse_items -s ${HINT_optdeps[$itempath]}
     unset BLAME
     deplist="$deplist $ITEMLIST"
   fi
@@ -99,10 +97,10 @@ function build_with_deps
     fi
   fi
   # Same for hints
-  set_hints $itemname
+  set_hints $itempath
 
   # Bail out if to be skipped, or unsupported/untested
-  if hint_skipme $itempath; then
+  if [ "${HINT_skipme[$itempath]}" = 'y' ]; then
     SKIPPEDLIST="$SKIPPEDLIST $itempath"
     return 1
   elif ! check_arch_is_supported $itempath; then

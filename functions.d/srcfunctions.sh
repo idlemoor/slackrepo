@@ -41,10 +41,10 @@ function verify_src
       find . -maxdepth 1 -type f -exec rm -f {} \;
       return 4
     fi
-    numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '\./^\.version$' | wc -l)
+    numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$' | wc -l)
     numwant=$(echo $MD5LIST | wc -w)
     [ $numgot = $numwant ] || { log_verbose -p "Note: need $numwant source files, but have $numgot"; return 2; }
-    hint_md5ignore $itempath && return 0
+    [ "${HINT_md5ignore[$itempath]}" = 'y' ] && return 0
     # also ignore md5sum if we upversioned
     [ -n "$NEWVERSION" ] && { log_verbose -p "Note: not checking md5sums due to version hint"; return 0; }
     allok='y'
@@ -82,8 +82,9 @@ function download_src
   log_normal -p "Downloading source files ..."
   ( cd $DOWNDIR
     downargs=""
-    for url in $DOWNLIST; do downargs="$downargs -O \"$url\""; done
-    curl -q -f '-#' -k --connect-timeout 60 --retry 2 -J -L $downargs >> $SR_LOGDIR/$itempath.log 2>&1
+    for url in $DOWNLIST; do downargs="$downargs -O $url"; done
+    log_verbose curl -q -f '-#' -k --connect-timeout 120 --retry 2 -J -L $downargs
+    curl -q -f '-#' -k --connect-timeout 120 --retry 2 -J -L $downargs >> $SR_LOGDIR/$itempath.log 2>&1
     curlstat=$?
     if [ $curlstat != 0 ]; then
       log_error -p "Download failed (curl status $curlstat)"

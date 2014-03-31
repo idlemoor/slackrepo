@@ -28,12 +28,12 @@ function build_package
 
   set_hints $itempath
 
-  if [ "$HINT_skipme" ='y' ]; then
+  if [ "${HINT_skipme[$itempath]}" = 'y' ]; then
     SKIPPEDLIST="$SKIPPEDLIST $itempath"
     return 5
   fi
 
-  SR_TMPIN=$SR_TMP/slackrepo_IN
+  SR_TMPIN=$SR_TMP/sr_IN.$$
   rm -rf $SR_TMPIN
   cp -a $SR_SBREPO/$itempath $SR_TMPIN
 
@@ -43,7 +43,7 @@ function build_package
 
   # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
   VERSION="${INFOVERSION[$itempath]}"
-  hint_version $itempath
+  do_hint_version $itempath
   if [ -n "$NEWVERSION" ]; then
     sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$SR_TMPIN/$prgnam.SlackBuild"
     verpat="$(echo ${INFOVERSION[$itempath]} | sed 's/\./\\\./g')"
@@ -104,19 +104,17 @@ function build_package
   fi
 
   # Get other hints for the build (uidgid, options, makeflags, answers)
-  hint_uidgid $itempath
-  tempmakeflags="$(hint_makeflags $itempath)"
-  [ -n "$tempmakeflags" ] && log_verbose -p "Hint: $tempmakeflags"
-  options="$(hint_options $itempath)"
-  [ -n "$options" ] && log_verbose -p "Hint: options=\"$options\""
+  do_hint_uidgid $itempath
+  tempmakeflags=""
+  [ "${HINT_makej1[$itempath]}" = 'y' ] && tempmakeflags="MAKEFLAGS='-j1'"
+  options="${HINT_options[$itempath]}"
   SLACKBUILDCMD="env $tempmakeflags $options sh ./$prgnam.SlackBuild"
-  if [ -f $SR_HINTS/$itempath.answers ]; then
-    log_verbose -p "Hint: supplying answers from $SR_HINTS/$itempath.answers"
-    SLACKBUILDCMD="cat $SR_HINTS/$itempath.answers | $SLACKBUILDCMD"
+  if [ -n "${HINT_answers[$itempath]}" ]; then
+    SLACKBUILDCMD="cat ${HINT_answers[$itempath]} | $SLACKBUILDCMD"
   fi
 
   # Build it
-  SR_TMPOUT=$SR_TMP/slackrepo_OUT
+  SR_TMPOUT=$SR_TMP/sr_OUT.$$
   rm -rf $SR_TMPOUT
   mkdir -p $SR_TMPOUT
   export \

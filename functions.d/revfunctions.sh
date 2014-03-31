@@ -57,7 +57,7 @@ function create_metadata
       esac
       # Filter previous entries for this item from the changelog
       # (it may contain info from a previous run that was interrupted)
-      newchangelog=$TMPDIR/sr_changelog.new
+      newchangelog=${SR_CHANGELOG}.new
       grep -v "^${itempath}: " $SR_CHANGELOG > $newchangelog
       echo "$itempath: ${OPERATION}. $extrastuff NEWLINE" >> $newchangelog
       mv $newchangelog $SR_CHANGELOG
@@ -123,7 +123,7 @@ function get_rev_status
 # 0 = up to date
 # 1 = package not found, or has no .rev metadata file
 # 2 = git revision changed, or git is dirty and files seem to have changed
-# 3 = upstream version has changed (special case of 2, for friendlier messages)
+# 3 = version has changed (special case of 2, for friendlier messages)
 # 4 = hints changed
 # 5 = deps changed
 # 6 = Slackware changed
@@ -149,7 +149,7 @@ function get_rev_status
   [ -z "$pkglist" ] && { REVCACHE[$itempath]=1; return 1; }
 
   # is there a version hint that differs from the old package's version?
-  hint_version $itempath
+  do_hint_version $itempath #######
   [ -n "$NEWVERSION" ] && { REVCACHE[$itempath]=3; return 3; }
 
   # if git is dirty, have any of the files been modified since the package was built?
@@ -163,7 +163,7 @@ function get_rev_status
   fi
 
   # capture current rev into a temp file
-  currfile=$TMPDIR/sr_curr_rev
+  currfile=$TMPDIR/sr_curr_rev.$$.tmp
   print_current_revinfo $itempath > $currfile
   # and extract some key stats into variables
   currgit=$(head -q -n 1 "$currfile" | sed -e 's/^.* git://' -e 's/ .*//')

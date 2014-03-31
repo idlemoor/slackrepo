@@ -3,14 +3,10 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # hintfunctions.sh - functions for slackrepo hints:
+#   set_hints
 #   hint_skipme
-#   hint_md5ignore
-#   hint_uidgid
-#   hint_options
-#   hint_makeflags
-#   hint_cleanup
-#   hint_no_uninstall
-#   hint_version
+#   do_hint_uidgid
+#   do_hint_version
 #-------------------------------------------------------------------------------
 
 function set_hints
@@ -20,30 +16,44 @@ function set_hints
 
   gothints=''
 
-  FLAGHINTS="skipme md5ignore makej1 no_uninstall cleanup uidgid answers"
-  # Yeah, uidgid, cleanup and answers are not flags, but it's not useful to have
-  # their contents in variables.
+  FLAGHINTS="skipme md5ignore makej1 no_uninstall"
+  # These are Boolean hints.
+  # Query them like this: '[ "${HINT_xxx[$itempath]}" = 'y' ]'
   for hint in $FLAGHINTS; do
     if [ -f $SR_HINTS/$itempath.$hint ]; then
       gothints="$gothints $hint"
-      eval HINT_$hint[$itemname]='y'
+      eval HINT_$hint[$itempath]='y'
     else
-      eval HINT_$hint[$itemname]=''
+      eval HINT_$hint[$itempath]=''
+    fi
+  done
+
+  FILEHINTS="cleanup uidgid answers"
+  # These are hints where the file contents will be executed or piped.
+  # Query them like this: '[ -n "${HINT_xxx[$itempath]}" ]'
+  for hint in $FLAGHINTS; do
+    if [ -f $SR_HINTS/$itempath.$hint ]; then
+      gothints="$gothints $hint"
+      eval HINT_$hint[$itempath]="$SR_HINTS/$itempath.$hint"
+    else
+      eval HINT_$hint[$itempath]=''
     fi
   done
 
   VARHINTS="options optdeps readmedeps version"
+  # These are hints where the file contents will be used by slackrepo itself.
+  # Query them like this: '[ -n "${HINT_xxx[$itempath]}" ]'
   for hint in $VARHINTS; do
     if [ -f $SR_HINTS/$itempath.$hint ]; then
       gothints="$gothints $hint"
-      eval HINT_$hint[$itemname]="$(cat $SR_HINTS/$itempath.$hint)"
+      eval HINT_$hint[$itempath]="$(cat $SR_HINTS/$itempath.$hint)"
     else
-      eval HINT_$hint[$itemname]=''
+      eval HINT_$hint[$itempath]=''
     fi
   done
 
   if [ -n "$gothints" ]; then
-    log_normal "Hints for $itemname:$gothints"
+    log_normal "Hints for $itempath:$gothints"
   fi
 
   return 0
@@ -72,7 +82,7 @@ function hint_skipme
 
 #-------------------------------------------------------------------------------
 
-function hint_uidgid
+function do_hint_uidgid
 # If there is a uidgid hint for this item, set up the uidgid.
 # The prgnam.uidgid file should contain
 # *either* an assignment of UIDGIDNUMBER and (optionally) UIDGIDNAME,
@@ -86,11 +96,11 @@ function hint_uidgid
   local itempath="$1"
   local prgnam=${itempath##*/}
 
-  [ -f $SR_HINTS/$itempath.uidgid ] || return 1
+  [ -n "${HINT_uidgid[$itempath]}" ] || return 1
 
   unset UIDGIDNUMBER
   log_verbose "Hint: $prgnam: setup uid/gid"
-  . $SR_HINTS/$itempath.uidgid
+  . ${HINT_uidgid[$itempath]}
   [ -n "$UIDGIDNUMBER" ] || return 0
   UIDGIDNAME=${UIDGIDNAME:-$prgnam}
   if ! getent group $UIDGIDNAME | grep -q ^$UIDGIDNAME: 2>/dev/null ; then
@@ -110,7 +120,7 @@ function hint_uidgid
 
 #-------------------------------------------------------------------------------
 
-function hint_version
+function do_hint_version
 # Is there a version hint for this item?
 # $1 = itempath
 # Returns these global variables:
@@ -121,8 +131,8 @@ function hint_version
   local prgnam=${itempath##*/}
 
   NEWVERSION=''
-  if [ -f $SR_HINTS/$itempath.version ]; then
-    NEWVERSION=$(cat $SR_HINTS/$itempath.version)
+  if [ -n "${HINT_version[$itempath]}" ]; then
+    NEWVERSION=${HINT_version[$itempath]}
     if [ -f $SR_PKGREPO/$itempath/$prgnam-*.t?z ]; then
       OLDVERSION=$(echo $SR_PKGREPO/$itempath/$prgnam-*.t?z | rev | cut -f3 -d- | rev)
     else

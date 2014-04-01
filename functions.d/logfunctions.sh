@@ -24,17 +24,17 @@ function log_start
   echo "! ${msg:0:66} $(date +%T) !"
   echo "$line"
   echo ""
-  echo "$line"                        >>$SR_MAINLOG
-  echo "STARTING $@ $(date '+%F %T')" >>$SR_MAINLOG
+  echo "$line"                        >>$MAINLOG
+  echo "STARTING $@ $(date '+%F %T')" >>$MAINLOG
 }
 
 #-------------------------------------------------------------------------------
 
 function log_itemstart
 # Log the start of an item on screen and in logfile.
-# This is where we start logging to $SR_ITEMLOG.
-# $SR_ITEMLOG is set here, using $itempath set by our caller.
-# At any time only one SR_ITEMLOG can be active.
+# This is where we start logging to $ITEMLOG.
+# $ITEMLOG is set here, using $itempath set by our caller.
+# At any time only one ITEMLOG can be active.
 # $* = message
 # Return status: always 0
 {
@@ -47,12 +47,12 @@ function log_itemstart
     echo "$@ ${line:0:$pad}"
   fi
   tput sgr0
-  echo "$line"                 >>$SR_MAINLOG
-  echo "$@ $(date '+%F %T')"   >>$SR_MAINLOG
+  echo "$line"                 >>$MAINLOG
+  echo "$@ $(date '+%F %T')"   >>$MAINLOG
   if [ -n "$itempath" ]; then
     mkdir -p $SR_LOGDIR/${itempath%/*}
-    SR_ITEMLOG="$SR_LOGDIR/$itempath.log"
-    echo "$@ $(date '+%F %T')"  >$SR_ITEMLOG
+    ITEMLOG="$SR_LOGDIR/$itempath.log"
+    echo "$@ $(date '+%F %T')"  >$ITEMLOG
   fi
 }
 
@@ -69,9 +69,9 @@ function log_verbose
   if [ "$OPT_VERBOSE" = 'y' ]; then
     echo "$@"
   fi
-  echo "$@" >>$SR_MAINLOG
+  echo "$@" >>$MAINLOG
   [ "$P" = 'y' ] && \
-  echo "$@" >>$SR_ITEMLOG
+  echo "$@" >>$ITEMLOG
   return 0
 }
 
@@ -88,9 +88,9 @@ function log_normal
   if [ "$OPT_QUIET" != 'y' ]; then
     echo "$@"
   fi
-  echo "$@" >>$SR_MAINLOG
+  echo "$@" >>$MAINLOG
   [ "$P" = 'y' ] && \
-  echo "$@" >>$SR_ITEMLOG
+  echo "$@" >>$ITEMLOG
   return 0
 }
 
@@ -107,9 +107,9 @@ function log_important
   tput bold; tput setaf 7
   echo "$@"
   tput sgr0
-  echo "$@" >>$SR_MAINLOG
+  echo "$@" >>$MAINLOG
   [ "$P" = 'y' ] && \
-  echo "$@" >>$SR_ITEMLOG
+  echo "$@" >>$ITEMLOG
   return 0
 }
 
@@ -126,9 +126,9 @@ function log_success
   tput bold; tput setaf 2
   echo "$@"
   tput sgr0
-  echo "$@" >>$SR_MAINLOG
+  echo "$@" >>$MAINLOG
   [ "$P" = 'y' ] && \
-  echo "$@" >>$SR_ITEMLOG
+  echo "$@" >>$ITEMLOG
   return 0
 }
 
@@ -153,9 +153,9 @@ function log_warning
   tput bold; tput setaf 3
   echo "${W}$@"
   tput sgr0
-  echo "${W}$@" >>$SR_MAINLOG
+  echo "${W}$@" >>$MAINLOG
   [ "$P" = 'y' ] && \
-  echo "${W}$@" >>$SR_ITEMLOG
+  echo "${W}$@" >>$ITEMLOG
   return 0
 }
 
@@ -180,10 +180,10 @@ function log_error
   tput bold; tput setaf 1
   echo "${E}$@"
   tput sgr0
-  # In case we are called before SR_MAINLOG is set:
-  [ -z "$SR_MAINLOG" ] && return 0
-  echo "${E}$@" >>$SR_MAINLOG
+  # In case we are called before MAINLOG is set:
+  [ -z "$MAINLOG" ] && return 0
+  echo "${E}$@" >>$MAINLOG
   [ "$P" = 'y' ] && \
-  echo "${E}$@" >>$SR_ITEMLOG
+  echo "${E}$@" >>$ITEMLOG
   return 0
 }

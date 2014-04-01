@@ -38,7 +38,7 @@ function install_package
   # Look for the package.
   if [ "$OPT_DRYRUN" = 'y' ]; then
     # look in the dryrun repo
-    pkgpath=$(ls $SR_DRYREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
+    pkgpath=$(ls $DRYREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
   fi
   # look in the temp output dir
   [ -z "$pkgpath" ] && \
@@ -50,10 +50,10 @@ function install_package
   [ -n "$pkgpath" ] || { log_error -p "${itempath}: Can't find any packages in $SR_PKGREPO/$itempath/"; return 1; }
 
   if [ "$OPT_VERBOSE" = 'y' ]; then
-    installpkg --terse $pkgpath | tee -a $SR_ITEMLOG
+    installpkg --terse $pkgpath | tee -a $ITEMLOG
     stat=$?
   else
-    installpkg --terse $pkgpath >>$SR_ITEMLOG
+    installpkg --terse $pkgpath >>$ITEMLOG
     stat=$?
   fi
   if [ $stat != 0 ]; then
@@ -113,7 +113,7 @@ function uninstall_package
   #   * Removing specific files and directories that removepkg doesn't remove
   #   * Running depmod to remove references to removed kernel modules
   if [ -n "${HINT_cleanup[$itempath]}" ]; then
-    . ${HINT_cleanup[$itempath]} >>$SR_ITEMLOG 2>&1
+    . ${HINT_cleanup[$itempath]} >>$ITEMLOG 2>&1
   fi
 
   return 0

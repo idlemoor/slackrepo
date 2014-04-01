@@ -124,7 +124,7 @@ function build_package
     PKGTYPE=$SR_PKGTYPE \
     NUMJOBS=$SR_NUMJOBS
   log_normal -p "Running SlackBuild: $SLACKBUILDCMD ..."
-  ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$SR_ITEMLOG 2>&1
+  ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$ITEMLOG 2>&1
   stat=$?
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
   if [ $stat != 0 ]; then
@@ -183,9 +183,9 @@ function build_ok
 
   if [ "$OPT_DRYRUN" = 'y' ]; then
     # put the package into the special dryrun repo
-    mkdir -p $SR_DRYREPO/$itempath
-    rm -rf $SR_DRYREPO/$itempath/*
-    mv $SR_TMPOUT/* $SR_DRYREPO/$itempath/
+    mkdir -p $DRYREPO/$itempath
+    rm -rf $DRYREPO/$itempath/*
+    mv $SR_TMPOUT/* $DRYREPO/$itempath/
   else
     # put it into the real package repo
     mkdir -p $SR_PKGREPO/$itempath
@@ -219,7 +219,7 @@ function build_failed
 
   msg="$OP FAILED"
   log_error -n -p ":-( $itempath $msg )-:"
-  log_error -n "See $SR_ITEMLOG"
+  log_error -n "See $ITEMLOG"
   FAILEDLIST="$FAILEDLIST $itempath"
   return 0
 }

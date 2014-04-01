@@ -153,8 +153,8 @@ done
 
 # Do this now so we can log the config:
 mkdir -p $SR_LOGDIR
-SR_MAINLOG=$SR_LOGDIR/slackrepo_$(date '+%F_%T').log
-> $SR_MAINLOG
+MAINLOG=$SR_LOGDIR/slackrepo_$(date '+%F_%T').log
+> $MAINLOG
 
 # If arch not set, work it out
 if [ -z "$SR_ARCH" ]; then
@@ -163,13 +163,6 @@ if [ -z "$SR_ARCH" ]; then
     arm*) SR_ARCH=arm ;;
        *) SR_ARCH=$( uname -m ) ;;
   esac
-fi
-
-# Find out the version of Slackware (we'll also need this later)
-[ -f /etc/slackware-version ] || { log_error "$(basename $0): /etc/slackware-version not found"; exit 4; }
-SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
-if [ -z "$SR_BRANCH" ]; then
-  SR_BRANCH="$SLACKVER"
 fi
 
 # Log the config
@@ -219,44 +212,57 @@ if [ -n "$SR_TAG" ]; then
   fi
 fi
 
+# Temporary directories and files
 SR_TMP=${SR_TMP:-/tmp/SBo}
 log_normal "Removing $SR_TMP/* ..."
 # really really don't want the next line to go badly ;-)
-[ -n "$SR_TMP" ] && rm -rf "${SR_TMP}"/*
-
-mkdir -p $SR_TMP $SR_SRCREPO $SR_PKGREPO
+[ -n "$SR_TMP" ] && rm -rf "${SR_TMP:-dont-tase-me-bro}"/*
+mkdir -p $SR_TMP
 if [ "$OPT_DRYRUN" = 'y' ]; then
-  SR_DRYREPO=$SR_TMP/dryrun_$SR_REPO
-  rm -rf $SR_DRYREPO
-  mkdir -p $SR_DRYREPO
+  DRYREPO=$SR_TMP/dryrun_$SR_REPO
+  rm -rf $DRYREPO
+  mkdir -p $DRYREPO
 fi
 
-SR_CHANGELOG=$TMPDIR/sr_changelog.tmp
+# Changelog
+CHANGELOG=$TMPDIR/sr_changelog.tmp
 # Don't clear the changelog, it may contain changes from a previous interrupted
 # run, and gen_repos_files.sh can catch up with them at the end.
-touch $SR_CHANGELOG
+touch $CHANGELOG
 
-log_normal "Initialising git ..."
-if [ -d $SR_SBREPO/.git ]; then
-  cd $SR_SBREPO
-  ###### This bit needs a redo
-  ###### git checkout -f $SR_BRANCH
-  if [ -n "$SR_UPSTREAM" -a "$SR_BRANCH" = "$SLACKVER" ]; then
-    if [ -n "$(find $SR_SBREPO/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
-      git fetch -a
-      git merge --ff-only origin/$SR_BRANCH
+# Find out the version of Slackware
+# (used by the git stuff below, but we also need this in revfunctions.sh)
+[ -f /etc/slackware-version ] || { log_error "$(basename $0): /etc/slackware-version not found"; exit 4; }
+SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
+
+# Git: this stuff is specially *hardcoded* for the SBo repo
+if [ "$SR_REPO" = 'SBo' ]; then
+  if [ -d $SR_SBREPO/.git ]; then
+    cd $SR_SBREPO
+    # Is git clean, and is the branch SBo's stable branch?
+    log_normal "Checking SBo git status ..."
+    MUCK="$(git status -s .)"
+    BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    if [ -z "$MUCK" -a "$BRANCH" = "$SLACKVER" ]; then
+      if [ -n "$(find $SR_SBREPO/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
+        log_normal "Updating SBo git, branch $BRANCH ..."
+        ####### don't show this on screen if --quiet
+        git fetch -a
+        git merge --ff-only origin/$BRANCH
+        log_normal "Finished updating SBo git."
+      fi
     fi
+  else
+    log_important "SBo git repository $SR_SBREPO does not exist; cloning it ..."
+    git clone "git://slackbuilds.org/slackbuilds" "$SR_SBREPO"
+    cd "$SR_SBREPO"
+    git fetch -a
+    git remote update
+    BRANCH="$SLACKVER"
+    git checkout -b "$BRANCH" -t origin/"$BRANCH"
+    log_normal "Finished cloning SBo git, local branch ${BRANCH}."
   fi
-else
-  mkdir -p $SR_SBREPO
-  log_normal "Git repository $SR_SBREPO does not exist; creating it..."
-  git clone "$SR_UPSTREAM" "$SR_SBREPO"
-  cd "$SR_SBREPO"
-  git fetch -a
-  git remote update
-  git checkout -b "$SR_BRANCH" -t origin/"$SR_BRANCH"
 fi
-log_normal "Finished initialising git."
 
 #-------------------------------------------------------------------------------
 # Main loop
@@ -317,18 +323,18 @@ if [ "$OPT_DRYRUN" = 'y' ]; then
   echo "Dry run OK: $(echo -n $OKLIST | wc -w)"
   [ "$OPT_VERBOSE" = 'y' -a -n "$OKLIST" ] && echo "$OKLIST"
 else
-  echo "Added:      $(grep ': Added'   $SR_CHANGELOG | wc -l)"
+  echo "Added:      $(grep ': Added'   $CHANGELOG | wc -l)"
   [ "$OPT_VERBOSE" = 'y' ] && \
-    grep ': Added'   $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Updated:    $(grep ': Updated' $SR_CHANGELOG | wc -l)"
+    grep ': Added'   $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+  echo "Updated:    $(grep ': Updated' $CHANGELOG | wc -l)"
   [ "$OPT_VERBOSE" = 'y' ] && \
-    grep ': Updated' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Rebuilt:    $(grep ': Rebuilt' $SR_CHANGELOG | wc -l)"
+    grep ': Updated' $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+  echo "Rebuilt:    $(grep ': Rebuilt' $CHANGELOG | wc -l)"
   [ "$OPT_VERBOSE" = 'y' ] && \
-    grep ': Rebuilt' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Removed:    $(grep ': Removed' $SR_CHANGELOG | wc -l)"
+    grep ': Rebuilt' $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+  echo "Removed:    $(grep ': Removed' $CHANGELOG | wc -l)"
   [ "$OPT_VERBOSE" = 'y' ] && \
-    grep ': Removed' $SR_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+    grep ': Removed' $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
 fi
 SKIPPEDLIST="$(echo -n $SKIPPEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
 echo "Skipped:    $(echo -n $SKIPPEDLIST | wc -w)"
@@ -339,22 +345,22 @@ echo "Failed:     $(echo -n $FAILEDLIST | wc -w)"
 ABORTEDLIST="$(echo -n $ABORTEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
 echo "Aborted:    $(echo -n $ABORTEDLIST | wc -w)"
 [ "$OPT_VERBOSE" = 'y' -a -n "$ABORTEDLIST" ] && echo "$ABORTEDLIST"
-WARNCOUNT=$(grep '^WARNING: ' $SR_MAINLOG | wc -l)
+WARNCOUNT=$(grep '^WARNING: ' $MAINLOG | wc -l)
 echo "Warnings:   $WARNCOUNT"
-[ "$OPT_VERBOSE" = 'y' ] && grep '^WARNING: ' $SR_MAINLOG | sed 's/^WARNING: /  /'
+[ "$OPT_VERBOSE" = 'y' ] && grep '^WARNING: ' $MAINLOG | sed 's/^WARNING: /  /'
 
 #-------------------------------------------------------------------------------
 # Package repository maintenance: gen_repos_files.sh
 #-------------------------------------------------------------------------------
 
-if [ "$OPT_DRYRUN" != 'y' -a -s $SR_CHANGELOG ]; then
+if [ "$OPT_DRYRUN" != 'y' -a -s $CHANGELOG ]; then
   rcfile=~/.genreprc
   [ -f $rcfile ] && { set -e; . $rcfile; set +e; }
   if [ "$SR_USE_GENREPOS" = 1 ]; then
     echo ""
     log_start "gen_repos_files.sh"
     # 'man sort' says an in-place sort is ok, so let's be lazy :-)
-    sort -o $SR_CHANGELOG $SR_CHANGELOG
+    sort -o $CHANGELOG $CHANGELOG
     if [ "$RSS_UUID" = '' ]; then
       setrssuuid="RSS_UUID=\"$(uuidgen -t)\""
       log_normal "Note: setting $setrssuuid in $rcfile"
@@ -366,7 +372,7 @@ if [ "$OPT_DRYRUN" != 'y' -a -s $SR_CHANGELOG ]; then
     RSS_DESCRIPTION="$RSS_DESCRIPTION" RSS_FEEDMAX="$RSS_FEEDMAX" RSS_UUID="$RSS_UUID" \
     GPGBIN="$GPGBIN" USE_GPGAGENT="$USE_GPGAGENT" FOR_SLAPTGET="$FOR_SLAPTGET" \
     FOLLOW_SYMLINKS="$FOLLOW_SYMLINKS" REPO_SUBDIRS="$REPO_SUBDIRS" \
-    sh /usr/libexec/slackrepo/gen_repos_files.sh -l $SR_CHANGELOG | tee -a $SR_MAINLOG
+    sh /usr/libexec/slackrepo/gen_repos_files.sh -l $CHANGELOG | tee -a $MAINLOG
     ###### extra control args to run faster?
     echo ""
     log_important "Finished gen_repos_files.sh at $(date +%T)"
@@ -375,7 +381,7 @@ fi
 
 #-------------------------------------------------------------------------------
 
-rm -f $SR_CHANGELOG
+rm -f $CHANGELOG
 
 echo ""
 exit 0

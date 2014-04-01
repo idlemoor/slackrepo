@@ -22,7 +22,7 @@ function create_metadata
   shift 2
 
   MYREPO="$SR_PKGREPO"
-  [ "$OPT_DRYRUN" = 'y' ] && MYREPO="$SR_DRYREPO"
+  [ "$OPT_DRYRUN" = 'y' ] && MYREPO="$DRYREPO"
 
   pkglist=$(ls $MYREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
   for pkg in $pkglist; do
@@ -57,10 +57,10 @@ function create_metadata
       esac
       # Filter previous entries for this item from the changelog
       # (it may contain info from a previous run that was interrupted)
-      newchangelog=${SR_CHANGELOG}.new
-      grep -v "^${itempath}: " $SR_CHANGELOG > $newchangelog
+      newchangelog=${CHANGELOG}.new
+      grep -v "^${itempath}: " $CHANGELOG > $newchangelog
       echo "$itempath: ${OPERATION}. $extrastuff NEWLINE" >> $newchangelog
-      mv $newchangelog $SR_CHANGELOG
+      mv $newchangelog $CHANGELOG
     fi
 
     # Although gen_repos_files.sh can create the following files, it's quicker to
@@ -103,8 +103,8 @@ function print_current_revinfo
 
   # capture revision of each dep from its .rev file
   for dep in ${DEPCACHE[$itempath]}; do
-    if [ "$OPT_DRYRUN" = 'y' -a -f $SR_DRYREPO/$dep/*.rev ]; then
-      head -q -n 1 $SR_DRYREPO/$dep/*.rev
+    if [ "$OPT_DRYRUN" = 'y' -a -f $DRYREPO/$dep/*.rev ]; then
+      head -q -n 1 $DRYREPO/$dep/*.rev
     else
       head -q -n 1 $SR_PKGREPO/$dep/*.rev
     fi
@@ -140,7 +140,7 @@ function get_rev_status
 
   # Is there an old package?
   if [ "$OPT_DRYRUN" = 'y' ]; then
-    pkglist=$(ls $SR_DRYREPO/$itempath/*.t?z 2>/dev/null)
+    pkglist=$(ls $DRYREPO/$itempath/*.t?z 2>/dev/null)
     [ -z "$pkglist" ] && \
       pkglist=$(ls $SR_PKGREPO/$itempath/*.t?z 2>/dev/null)
   else

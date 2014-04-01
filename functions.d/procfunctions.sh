@@ -70,7 +70,7 @@ function process_remove
     log_important "Removing $ITEMPATH"
     rm -rf $SR_PKGREPO/$ITEMPATH/
     rm -rf $SR_SRCREPO/$ITEMPATH/ $SR_SRCREPO/${ITEMPATH}_BAD/
-    echo "$ITEMPATH: Removed. NEWLINE" >>$SR_CHANGELOG
+    echo "$ITEMPATH: Removed. NEWLINE" >>$CHANGELOG
   fi
   return
 }

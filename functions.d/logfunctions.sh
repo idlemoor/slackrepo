@@ -4,7 +4,7 @@
 #-------------------------------------------------------------------------------
 # logfunctions.sh - logging and web page functions for slackrepo
 #   log_start
-#   log_prgstart
+#   log_itemstart
 #   log_verbose
 #   log_normal
 #   log_important
@@ -24,16 +24,17 @@ function log_start
   echo "! ${msg:0:66} $(date +%T) !"
   echo "$line"
   echo ""
-  echo "$line"                      >>$SR_LOGFILE
-  echo "STARTING $@ $(date '+%F %T')" >>$SR_LOGFILE
+  echo "$line"                        >>$SR_MAINLOG
+  echo "STARTING $@ $(date '+%F %T')" >>$SR_MAINLOG
 }
 
 #-------------------------------------------------------------------------------
 
-function log_prgstart
-# Log the start of a sub-item on screen and in logfile.
-# This is where we start logging to $prgnam.log.
-# Uses $prgnam set by caller.
+function log_itemstart
+# Log the start of an item on screen and in logfile.
+# This is where we start logging to $SR_ITEMLOG.
+# $SR_ITEMLOG is set here, using $itempath set by our caller.
+# At any time only one SR_ITEMLOG can be active.
 # $* = message
 # Return status: always 0
 {
@@ -46,11 +47,12 @@ function log_prgstart
     echo "$@ ${line:0:$pad}"
   fi
   tput sgr0
-  echo "$line"                 >>$SR_LOGFILE
-  echo "$@ $(date '+%F %T')"   >>$SR_LOGFILE
-  if [ -n "$prgnam" ]; then
+  echo "$line"                 >>$SR_MAINLOG
+  echo "$@ $(date '+%F %T')"   >>$SR_MAINLOG
+  if [ -n "$itempath" ]; then
     mkdir -p $SR_LOGDIR/${itempath%/*}
-    echo "$@ $(date '+%F %T')"  >$SR_LOGDIR/$itempath.log
+    SR_ITEMLOG="$SR_LOGDIR/$itempath.log"
+    echo "$@ $(date '+%F %T')"  >$SR_ITEMLOG
   fi
 }
 
@@ -67,9 +69,9 @@ function log_verbose
   if [ "$OPT_VERBOSE" = 'y' ]; then
     echo "$@"
   fi
-  echo "$@" >>$SR_LOGFILE
+  echo "$@" >>$SR_MAINLOG
   [ "$P" = 'y' ] && \
-  echo "$@" >>$SR_LOGDIR/$itempath.log
+  echo "$@" >>$SR_ITEMLOG
   return 0
 }
 
@@ -86,9 +88,9 @@ function log_normal
   if [ "$OPT_QUIET" != 'y' ]; then
     echo "$@"
   fi
-  echo "$@" >>$SR_LOGFILE
+  echo "$@" >>$SR_MAINLOG
   [ "$P" = 'y' ] && \
-  echo "$@" >>$SR_LOGDIR/$itempath.log
+  echo "$@" >>$SR_ITEMLOG
   return 0
 }
 
@@ -105,9 +107,9 @@ function log_important
   tput bold; tput setaf 7
   echo "$@"
   tput sgr0
-  echo "$@" >>$SR_LOGFILE
+  echo "$@" >>$SR_MAINLOG
   [ "$P" = 'y' ] && \
-  echo "$@" >>$SR_LOGDIR/$itempath.log
+  echo "$@" >>$SR_ITEMLOG
   return 0
 }
 
@@ -124,9 +126,9 @@ function log_success
   tput bold; tput setaf 2
   echo "$@"
   tput sgr0
-  echo "$@" >>$SR_LOGFILE
+  echo "$@" >>$SR_MAINLOG
   [ "$P" = 'y' ] && \
-  echo "$@" >>$SR_LOGDIR/$itempath.log
+  echo "$@" >>$SR_ITEMLOG
   return 0
 }
 
@@ -151,9 +153,9 @@ function log_warning
   tput bold; tput setaf 3
   echo "${W}$@"
   tput sgr0
-  echo "${W}$@" >>$SR_LOGFILE
+  echo "${W}$@" >>$SR_MAINLOG
   [ "$P" = 'y' ] && \
-  echo "${W}$@" >>$SR_LOGDIR/$itempath.log
+  echo "${W}$@" >>$SR_ITEMLOG
   return 0
 }
 
@@ -178,10 +180,10 @@ function log_error
   tput bold; tput setaf 1
   echo "${E}$@"
   tput sgr0
-  # In case we are called before SR_LOGFILE is set:
-  [ -z "$SR_LOGFILE" ] && return 0
-  echo "${E}$@" >>$SR_LOGFILE
+  # In case we are called before SR_MAINLOG is set:
+  [ -z "$SR_MAINLOG" ] && return 0
+  echo "${E}$@" >>$SR_MAINLOG
   [ "$P" = 'y' ] && \
-  echo "${E}$@" >>$SR_LOGDIR/$itempath.log
+  echo "${E}$@" >>$SR_ITEMLOG
   return 0
 }

@@ -83,7 +83,7 @@ function download_src
   ( cd $DOWNDIR
     downargs=""
     for url in $DOWNLIST; do downargs="$downargs -O $url"; done
-    curl -q -f '-#' -k --connect-timeout 120 --retry 2 -J -L $downargs >> $SR_LOGDIR/$itempath.log 2>&1
+    curl -q -f '-#' -k --connect-timeout 120 --retry 2 -J -L $downargs >> $SR_ITEMLOG 2>&1
     curlstat=$?
     if [ $curlstat != 0 ]; then
       log_error -p "Download failed (curl status $curlstat)"

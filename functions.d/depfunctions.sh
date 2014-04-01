@@ -178,7 +178,7 @@ function build_with_deps
   [ "$OPT_DRYRUN" = 'y' ] && opmsg="$opmsg --dry-run"
 
   # Now the real work starts :-)
-  log_prgstart "Starting $itempath ($opmsg)"
+  log_itemstart "Starting $itempath ($opmsg)"
 
   # Install all my deps
   if [ -n "$mydeplist" ]; then

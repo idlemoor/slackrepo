@@ -124,7 +124,7 @@ function build_package
     PKGTYPE=$SR_PKGTYPE \
     NUMJOBS=$SR_NUMJOBS
   log_normal -p "Running SlackBuild: $SLACKBUILDCMD ..."
-  ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$SR_LOGDIR/$itempath.log 2>&1
+  ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$SR_ITEMLOG 2>&1
   stat=$?
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
   if [ $stat != 0 ]; then
@@ -219,7 +219,7 @@ function build_failed
 
   msg="$OP FAILED"
   log_error -n -p ":-( $itempath $msg )-:"
-  log_error -n "See $SR_LOGDIR/$itempath.log"
+  log_error -n "See $SR_ITEMLOG"
   FAILEDLIST="$FAILEDLIST $itempath"
   return 0
 }

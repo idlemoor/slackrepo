@@ -114,7 +114,7 @@ function test_download
       # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
       # https://code.google.com/p/support/issues/detail?id=660
       # "Don't be evil, but totally lame is fine"
-      curl -q -s -k --connect-timeout 240 --retry 2 -J -L -o /dev/null $url >> $SR_LOGDIR/$itempath.log 2>&1
+      curl -q -s -k --connect-timeout 240 --retry 2 -J -L -o /dev/null $url >> $SR_ITEMLOG 2>&1
       curlstat=$?
       if [ $curlstat != 0 ]; then
         log_warning -p "${itempath}: $url failed (curl status $curlstat), but it could just be googlecode.com being stupid again"
@@ -122,7 +122,7 @@ function test_download
       fi
       ;;
     *)
-      curl -q -s -k --connect-timeout 240 --retry 2 -J -L -I -o $headertmp $url >> $SR_LOGDIR/$itempath.log 2>&1
+      curl -q -s -k --connect-timeout 240 --retry 2 -J -L -I -o $headertmp $url >> $SR_ITEMLOG 2>&1
       curlstat=$?
       if [ $curlstat != 0 ]; then
         log_warning -p "${itempath}: $url failed (curl status $curlstat)"
@@ -201,7 +201,7 @@ function test_package
 
     # If this is the top level item, install it to see what happens :D
     if [ "$itempath" = "$ITEMPATH" ]; then
-      log_verbose "Installing ${ITEMPATH}..."
+      log_verbose "Installing $pkgnam ..."
       install_package $ITEMPATH || return 1
       uninstall_package $ITEMPATH
     # else it's a dep and it'll be installed soon anyway.

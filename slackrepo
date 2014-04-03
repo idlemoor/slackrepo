@@ -241,27 +241,44 @@ if [ "$SR_REPO" = 'SBo' ]; then
     cd $SR_SBREPO
     # Is git clean, and is the branch SBo's stable branch?
     log_normal "Checking SBo git status ..."
-    MUCK="$(git status -s .)"
-    BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    if [ -z "$MUCK" -a "$BRANCH" = "$SLACKVER" ]; then
+    muck="$(git status -s .)"
+    branch=$(git rev-parse --abbrev-ref HEAD)
+    if [ -z "$muck" -a "$branch" = "$SLACKVER" ]; then
       if [ -n "$(find $SR_SBREPO/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
-        log_normal "Updating SBo git, branch $BRANCH ..."
-        ####### don't show this on screen if --quiet
-        git fetch -a
-        git merge --ff-only origin/$BRANCH
+        log_normal "Updating SBo git ..."
+        if [ "$OPT_QUIET" = 'y' ]; then
+          git fetch -a                       >> $MAINLOG 2>&1
+          git merge --ff-only origin/$branch >> $MAINLOG 2>&1
+        else
+          git fetch -a                       2>&1 | tee -a $MAINLOG
+          git merge --ff-only origin/$branch 2>&1 | tee -a $MAINLOG
+        fi
         log_normal "Finished updating SBo git."
       fi
     fi
   else
-    log_important "SBo git repository $SR_SBREPO does not exist; cloning it ..."
+    log_normal "SBo git repository $SR_SBREPO does not exist; cloning it from SlackBuilds.org ..."
     git clone "git://slackbuilds.org/slackbuilds" "$SR_SBREPO"
     cd "$SR_SBREPO"
     git fetch -a
     git remote update
-    BRANCH="$SLACKVER"
-    git checkout -b "$BRANCH" -t origin/"$BRANCH"
-    log_normal "Finished cloning SBo git, local branch ${BRANCH}."
+    branch="$SLACKVER"
+    git checkout -b "$branch" -t origin/"$branch"
+    log_normal "Finished cloning SBo git."
   fi
+fi
+GOTGIT='n'
+if [ -d $SR_SBREPO/.git ]; then
+  GOTGIT='y'
+  [ "$OPT_VERBOSE" = 'y' ] && echo ""
+  log_verbose "Git repo:   $SR_SBREPO"
+  log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"
+  log_verbose "  revision: $(git rev-parse HEAD)"
+  log_verbose "  title:    $(git log -n 1 --format=%s)"
+  if [ -n "$(cd $SR_SBREPO; git status -s .)" ]; then
+    log_warning "Git repository $SR_SBREPO is dirty"
+  fi
+  [ "$OPT_VERBOSE" = 'y' ] && echo ""
 fi
 
 #-------------------------------------------------------------------------------
@@ -341,7 +358,7 @@ echo "Skipped:    $(echo -n $SKIPPEDLIST | wc -w)"
 [ "$OPT_VERBOSE" = 'y' -a -n "$SKIPPEDLIST" ] && echo "$SKIPPEDLIST"
 FAILEDLIST="$(echo -n $FAILEDLIST   | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
 echo "Failed:     $(echo -n $FAILEDLIST | wc -w)"
-[ "$OPT_VERBOSE" = 'y' -a -n "$FAILEDLIST" ] && echo "$FAILEDLIST"
+[ "$OPT_VERBOSE" = 'y' -a -n "$FAILEDLIST" ]  && echo "$FAILEDLIST"
 ABORTEDLIST="$(echo -n $ABORTEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
 echo "Aborted:    $(echo -n $ABORTEDLIST | wc -w)"
 [ "$OPT_VERBOSE" = 'y' -a -n "$ABORTEDLIST" ] && echo "$ABORTEDLIST"

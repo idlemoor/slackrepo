@@ -57,17 +57,17 @@ function build_package
        [ "$OPT_TEST" = 'y' ] && test_download $itempath
        ;;
   1|2) # already got source, but it's bad => get it
-       log_verbose -p "Note: cached source is bad"
+       log_verbose -a "Note: cached source is bad"
        download_src $itempath
-       verify_src $itempath || { log_error -p "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
+       verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
        ;;
     3) # not got source => get it
        download_src $itempath
-       verify_src $itempath || { log_error -p "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
+       verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
        ;;
     4) # wrong version => get it
        download_src $itempath
-       verify_src $itempath || { log_error -p "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
+       verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
        ;;
     5) # unsupported/untested
        SKIPPEDLIST="$SKIPPEDLIST $itempath"
@@ -84,7 +84,7 @@ function build_package
   buildassign=$(grep '^BUILD=' $SR_TMPIN/$prgnam.SlackBuild)
   if [ -z "$buildassign" ]; then
     buildassign="BUILD=1"
-    log_warning -p "${itempath}: \"BUILD=\" not found in SlackBuild; using 1"
+    log_warning -a "${itempath}: \"BUILD=\" not found in SlackBuild; using 1"
   fi
   eval $buildassign
   if [ "$OP" = 'build' -o "$OPT_DRYRUN" = 'y' ]; then
@@ -123,12 +123,12 @@ function build_package
     OUTPUT=$SR_TMPOUT \
     PKGTYPE=$SR_PKGTYPE \
     NUMJOBS=$SR_NUMJOBS
-  log_normal -p "Running SlackBuild: $SLACKBUILDCMD ..."
+  log_normal -a "Running SlackBuild: $SLACKBUILDCMD ..."
   ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$ITEMLOG 2>&1
   stat=$?
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
   if [ $stat != 0 ]; then
-    log_error -p "${itempath}: $prgnam.SlackBuild failed (status $stat)"
+    log_error -a "${itempath}: $prgnam.SlackBuild failed (status $stat)"
     build_failed $itempath
     return 1
   fi
@@ -136,7 +136,7 @@ function build_package
   # Make sure we got *something* :-)
   pkglist=$(ls $SR_TMPOUT/*.t?z 2>/dev/null)
   if [ -z "$pkglist" ]; then
-    log_error -p "${itempath}: No packages were created in $SR_TMPOUT"
+    log_error -a "${itempath}: No packages were created in $SR_TMPOUT"
     build_failed $itempath
     return 6
   fi
@@ -199,7 +199,7 @@ function build_ok
 
   msg="$OP OK"
   [ "$OPT_DRYRUN" = 'y' ] && msg="$OP --dry-run OK"
-  log_success -p ":-) $itempath $msg (-:"
+  log_success -a ":-) $itempath $msg (-:"
   OKLIST="$OKLIST $itempath"
   return 0
 }
@@ -218,7 +218,7 @@ function build_failed
   # but don't remove files from $SR_TMP, they can help to diagnose why it failed
 
   msg="$OP FAILED"
-  log_error -n -p ":-( $itempath $msg )-:"
+  log_error -n -a ":-( $itempath $msg )-:"
   log_error -n "See $ITEMLOG"
   FAILEDLIST="$FAILEDLIST $itempath"
   return 0

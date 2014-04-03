@@ -35,18 +35,18 @@ function verify_src
   fi
 
   ( cd $DOWNDIR
-    log_normal -p "Verifying source files ..."
+    log_normal -a "Verifying source files ..."
     if [ "$VERSION" != "$(cat .version 2>/dev/null)" ]; then
-      log_verbose -p "Note: removing old source files"
+      log_verbose -a "Note: removing old source files"
       find . -maxdepth 1 -type f -exec rm -f {} \;
       return 4
     fi
     numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$' | wc -l)
     numwant=$(echo $MD5LIST | wc -w)
-    [ $numgot = $numwant ] || { log_verbose -p "Note: need $numwant source files, but have $numgot"; return 2; }
+    [ $numgot = $numwant ] || { log_verbose -a "Note: need $numwant source files, but have $numgot"; return 2; }
     [ "${HINT_md5ignore[$itempath]}" = 'y' ] && return 0
     # also ignore md5sum if we upversioned
-    [ -n "$NEWVERSION" ] && { log_verbose -p "Note: not checking md5sums due to version hint"; return 0; }
+    [ -n "$NEWVERSION" ] && { log_verbose -a "Note: not checking md5sums due to version hint"; return 0; }
     allok='y'
     for f in *; do
       # check that it's a file (arch-specific subdirectories may exist)
@@ -55,7 +55,7 @@ function verify_src
         ok='n'
         # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
         for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
-        [ "$ok" = 'y' ] || { log_verbose -p "Note: failed md5sum: $f"; allok='n'; }
+        [ "$ok" = 'y' ] || { log_verbose -a "Note: failed md5sum: $f"; allok='n'; }
       fi
     done
     [ "$allok" = 'y' ] || { return 1; }
@@ -79,14 +79,14 @@ function download_src
 
   mkdir -p $DOWNDIR
   find $DOWNDIR -maxdepth 1 -type f -exec rm {} \;
-  log_normal -p "Downloading source files ..."
+  log_normal -a "Downloading source files ..."
   ( cd $DOWNDIR
     downargs=""
     for url in $DOWNLIST; do downargs="$downargs -O $url"; done
     curl -q -f '-#' -k --connect-timeout 120 --retry 2 -J -L $downargs >> $ITEMLOG 2>&1
     curlstat=$?
     if [ $curlstat != 0 ]; then
-      log_error -p "Download failed (curl status $curlstat)"
+      log_error -a "Download failed (curl status $curlstat)"
       return 1
     fi
     echo "$VERSION" > .version
@@ -114,13 +114,13 @@ function save_bad_src
   if [ -d $SR_SRCREPO/${itempath}/$SR_ARCH ]; then
     mkdir -p $baddir
     mv $SR_SRCREPO/${itempath}/$SR_ARCH $baddir/
-    log_normal -p "Note: bad sources saved in $baddir/$SR_ARCH"
+    log_normal -a "Note: bad sources saved in $baddir/$SR_ARCH"
     # if there's stuff from other arches, leave it
     rmdir --ignore-fail-on-non-empty $SR_SRCREPO/${itempath}
   elif [ -d $SR_SRCREPO/${itempath} ]; then
     # this isn't perfect, but it'll do ###### need arch code
     mv $SR_SRCREPO/${itempath} $baddir
-    log_normal -p "Note: bad sources saved in $baddir"
+    log_normal -a "Note: bad sources saved in $baddir"
   fi
   return 0
 }

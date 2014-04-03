@@ -22,75 +22,88 @@ function test_slackbuild
   local DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
   local REQUIRES MAINTAINER EMAIL
 
-  log_normal -p "Testing SlackBuild files..."
+  log_normal -a "Testing SlackBuild files..."
+
 
   #-----------------------------#
-  # (1) Check prgnam.SlackBuild
+  # (1) prgnam.SlackBuild
+  #-----------------------------#
+
   [ -f $SR_SBREPO/$itempath/$prgnam.SlackBuild ] || \
-    { log_error -p "${itempath}: $prgnam.SlackBuild not found"; return 1; }
+    { log_error -a "${itempath}: $prgnam.SlackBuild not found"; return 1; }
+
 
   #-----------------------------#
-  # (2) check slack-desc
+  # (2) slack-desc
+  #-----------------------------#
+
   SLACKDESC="$SR_SBREPO/$itempath/slack-desc"
   [ -f $SLACKDESC ] || \
-    { log_error -p "${itempath}: slack-desc file not found"; return 1; }
+    { log_error -a "${itempath}: slack-desc file not found"; return 1; }
   HR='|-----handy-ruler------------------------------------------------------|'
   # 11 line description pls
   lc=$(grep "^${prgnam}:" $SLACKDESC | wc -l)
   [ "$lc" != 11 ] && \
-    log_warning -p "${itempath}: slack-desc: $lc lines of description, should be 11"
+    log_warning -a "${itempath}: slack-desc: $lc lines of description, should be 11"
   # don't mess with my handy ruler
   if ! grep -q "^ *$HR\$" $SLACKDESC ; then
-    log_warning -p "${itempath}: slack-desc: handy-ruler is corrupt or missing"
+    log_warning -a "${itempath}: slack-desc: handy-ruler is corrupt or missing"
   elif [ $(grep "^ *$HR\$" $SLACKDESC | sed "s/|.*|//" | wc -c) -ne $(( ${#prgnam} + 1 )) ]; then
-    log_warning -p "${itempath}: slack-desc: handy-ruler is misaligned"
+    log_warning -a "${itempath}: slack-desc: handy-ruler is misaligned"
   fi
   # check line length
   [ $(grep "^${prgnam}:" $SLACKDESC | sed "s/^${prgnam}://" | wc -L) -gt 73 ] && \
-    log_warning -p "${itempath}: slack-desc: description lines too long"
+    log_warning -a "${itempath}: slack-desc: description lines too long"
   # did u get teh wrong appname dude
   grep -q -v -e '^#' -e "^${prgnam}:" -e '^$' -e '^ *|-.*-|$' $SLACKDESC && \
-    log_warning -p "${itempath}: slack-desc: unrecognised text (appname wrong?)"
+    log_warning -a "${itempath}: slack-desc: unrecognised text (appname wrong?)"
   # This one turns out to be far too picky:
   # [ "$(grep "^${prgnam}:" $SLACKDESC | head -n 1 | sed "s/^${prgnam}: ${prgnam} (.*)$//")" != '' ] && \
-  #   log_warning -p "${itempath}: slack-desc: first line of description is unconventional"
+  #   log_warning -a "${itempath}: slack-desc: first line of description is unconventional"
   # and this one: no trailing spaces kthxbye
   # grep -q "^${prgnam}:.* $"  $SLACKDESC && \
-  #   log_warning -p "${itempath}: slack-desc: description has trailing spaces"
+  #   log_warning -a "${itempath}: slack-desc: description has trailing spaces"
+
 
   #-----------------------------#
-  # (3) Check prgnam.info
-  [ -f $SR_SBREPO/$itempath/$prgnam.info ] || \
-    { log_error -p "${itempath}: $prgnam.info not found"; return 1; }
+  # (3) prgnam.info
+  #-----------------------------#
 
-  unset PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM REQUIRES MAINTAINER EMAIL
-  . $SR_SBREPO/$itempath/$prgnam.info
+  if [ -f $SR_SBREPO/$itempath/$prgnam.info ]; then
+    unset PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM REQUIRES MAINTAINER EMAIL
+    . $SR_SBREPO/$itempath/$prgnam.info
+    [ "$PRGNAM" = "$prgnam" ] || \
+      log_warning -a "${itempath}: PRGNAM in $prgnam.info is '$PRGNAM', not $prgnam"
+    [ -n "$VERSION" ] || \
+      log_warning -a "${itempath}: VERSION not set in $prgnam.info"
+    [ -v HOMEPAGE ] || \
+      log_warning -a "${itempath}: HOMEPAGE not set in $prgnam.info"
+    [ -v DOWNLOAD ] || \
+      log_warning -a "${itempath}: DOWNLOAD not set in $prgnam.info"
+    [ -v MD5SUM ] || \
+      log_warning -a "${itempath}: MD5SUM not set in $prgnam.info"
+    [ -v REQUIRES ] || \
+      log_warning -a "${itempath}: REQUIRES not set in $prgnam.info"
+    [ -v MAINTAINER ] || \
+      log_warning -a "${itempath}: MAINTAINER not set in $prgnam.info"
+    [ -v EMAIL ] || \
+      log_warning -a "${itempath}: EMAIL not set in $prgnam.info"
+    #### would be good to check HOMEPAGE URLs to see if they still exist
+  fi
 
-  [ "$PRGNAM" = "$prgnam" ] || \
-    log_warning -p "${itempath}: PRGNAM in $prgnam.info is '$PRGNAM', not $prgnam"
-  [ -n "$VERSION" ] || \
-    log_warning -p "${itempath}: VERSION not set in $prgnam.info"
-  [ -v HOMEPAGE ] || \
-    log_warning -p "${itempath}: HOMEPAGE not set in $prgnam.info"
-  [ -v DOWNLOAD ] || \
-    log_warning -p "${itempath}: DOWNLOAD not set in $prgnam.info"
-  [ -v MD5SUM ] || \
-    log_warning -p "${itempath}: MD5SUM not set in $prgnam.info"
-  [ -v REQUIRES ] || \
-    log_warning -p "${itempath}: REQUIRES not set in $prgnam.info"
-  [ -v MAINTAINER ] || \
-    log_warning -p "${itempath}: MAINTAINER not set in $prgnam.info"
-  [ -v EMAIL ] || \
-    log_warning -p "${itempath}: EMAIL not set in $prgnam.info"
-
-  #### would be good to check HOMEPAGE and DOWNLOAD URLs to see if they still exist
 
   #-----------------------------#
-  # (4) Check README
-  [ -f $SR_SBREPO/$itempath/README ] || \
-    { log_error -p "${itempath}: README not found"; return 1; }
-  [ "$(wc -L < $SR_SBREPO/$itempath/README)" -le 79 ] || \
-    log_warning -p "${itempath}: long lines in README"
+  # (4) README
+  #-----------------------------#
+
+  if [ -f $SR_SBREPO/$itempath/README ]; then
+    [ "$(wc -L < $SR_SBREPO/$itempath/README)" -le 79 ] || \
+      log_warning -a "${itempath}: long lines in README"
+  else
+    [ -f $SR_SBREPO/$itempath/$prgnam.info ] &&
+      { log_error -a "${itempath}: README not found"; return 1; }
+  fi
+
 
   return 0
 }
@@ -99,14 +112,14 @@ function test_slackbuild
 
 function test_download
 # Test whether URLs are 404
-# $1    = itempath
+# $1 = itempath
 # Return status: always 0
 {
   local itempath="$1"
   local prgnam=${itempath##*/}
   headertmp=$TMPDIR/sr_header.$$.tmp
 
-  log_normal -p "Testing download URLs ..."
+  log_normal -a "Testing download URLs ..."
   DOWNLIST="${INFODOWNLIST[$itempath]}"
   for url in $DOWNLIST; do
     case $url in
@@ -117,7 +130,7 @@ function test_download
       curl -q -s -k --connect-timeout 240 --retry 2 -J -L -o /dev/null $url >> $ITEMLOG 2>&1
       curlstat=$?
       if [ $curlstat != 0 ]; then
-        log_warning -p "${itempath}: $url failed (curl status $curlstat), but it could just be googlecode.com being stupid again"
+        log_warning -a "${itempath}: $url failed (curl status $curlstat), but it could just be googlecode.com being stupid again"
         cat $headertmp ######
       fi
       ;;
@@ -125,7 +138,7 @@ function test_download
       curl -q -s -k --connect-timeout 240 --retry 2 -J -L -I -o $headertmp $url >> $ITEMLOG 2>&1
       curlstat=$?
       if [ $curlstat != 0 ]; then
-        log_warning -p "${itempath}: $url failed (curl status $curlstat)"
+        log_warning -a "${itempath}: $url failed (curl status $curlstat)"
         cat $headertmp ######
       else
         : # check 'Content-Length:' against cached files. You can't be too careful ;-)
@@ -155,24 +168,24 @@ function test_package
     local pkgpath=$1
     local pkgnam=${pkgpath##*/}
     shift
-    log_normal -p "Testing $pkgnam..."
+    log_normal -a "Testing $pkgnam..."
     # Check the package name
     parse_package_name $pkgnam
     [ "$PN_PRGNAM" != "$prgnam" ] && \
-      log_warning -p "${itempath}: ${pkgnam}: PRGNAM is \"$PN_PRGNAM\" not \"$prgnam\""
+      log_warning -a "${itempath}: ${pkgnam}: PRGNAM is \"$PN_PRGNAM\" not \"$prgnam\""
     [ "$PN_VERSION" != "${INFOVERSION[$itempath]}" -a \
       "$PN_VERSION" != "${INFOVERSION[$itempath]}_$(uname -r)" ] && \
-      log_warning -p "${itempath}: ${pkgnam}: VERSION is \"$PN_VERSION\" not \"${INFOVERSION[$itempath]}\""
+      log_warning -a "${itempath}: ${pkgnam}: VERSION is \"$PN_VERSION\" not \"${INFOVERSION[$itempath]}\""
     [ "$PN_ARCH" != "$SR_ARCH" -a \
       "$PN_ARCH" != "noarch" -a \
       "$PN_ARCH" != "fw" ] && \
-      log_warning -p "${itempath}: ${pkgnam}: ARCH is $PN_ARCH not $SR_ARCH or noarch or fw"
+      log_warning -a "${itempath}: ${pkgnam}: ARCH is $PN_ARCH not $SR_ARCH or noarch or fw"
     [ "$PN_BUILD" != "$SR_BUILD" ] && \
-      log_warning -p "${itempath}: ${pkgnam}: BUILD is $PN_BUILD not $SR_BUILD"
+      log_warning -a "${itempath}: ${pkgnam}: BUILD is $PN_BUILD not $SR_BUILD"
     [ "$PN_TAG" != "$SR_TAG" ] && \
-      log_warning -p "${itempath}: ${pkgnam}: TAG is \"$PN_TAG\" not \"$SR_TAG\""
+      log_warning -a "${itempath}: ${pkgnam}: TAG is \"$PN_TAG\" not \"$SR_TAG\""
     [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && \
-      log_warning -p "${itempath}: ${pkgnam}: Package type is .$PN_PKGTYPE not .$SR_PKGTYPE"
+      log_warning -a "${itempath}: ${pkgnam}: Package type is .$PN_PKGTYPE not .$SR_PKGTYPE"
     # Check the package contents
 
     #### check the compression matches the suffix
@@ -184,16 +197,16 @@ function test_package
     temptarlist=$TMPDIR/sr_tarlist.$$.tmp
     tar tf $pkgpath > $temptarlist
     if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)' $temptarlist; then
-      log_warning -p "${itempath}: ${pkgnam}: files are installed in unusual locations"
+      log_warning -a "${itempath}: ${pkgnam}: files are installed in unusual locations"
     fi
     for verboten in usr/local usr/share/man; do
       if grep -q '^'$verboten $temptarlist; then
-        log_warning -p "${itempath}: ${pkgnam}: files are installed in $verboten"
+        log_warning -a "${itempath}: ${pkgnam}: files are installed in $verboten"
       fi
     done
     #### TODO: check all manpages compressed
     if ! grep -q 'install/slack-desc' $temptarlist; then
-      log_warning -p "${itempath}: ${pkgnam}: package does not contain slack-desc"
+      log_warning -a "${itempath}: ${pkgnam}: package does not contain slack-desc"
     fi
     #### TODO: check modes of package contents
     #### TODO: check whether a noarch package is really noarch

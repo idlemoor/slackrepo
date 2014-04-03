@@ -182,7 +182,7 @@ function build_with_deps
 
   # Install all my deps
   if [ -n "$mydeplist" ]; then
-    log_normal -p "Installing dependencies ..."
+    log_normal -a "Installing dependencies ..."
     allinstalled='y'
     for mydep in $mydeplist; do
       install_with_deps $mydep || allinstalled='n'
@@ -201,7 +201,7 @@ function build_with_deps
 
   # Even if build_package failed, uninstall all my deps
   if [ -n "$mydeplist" ]; then
-    log_normal -p "Uninstalling dependencies ..."
+    log_normal -a "Uninstalling dependencies ..."
     for mydep in $mydeplist; do
       uninstall_with_deps $mydep
     done

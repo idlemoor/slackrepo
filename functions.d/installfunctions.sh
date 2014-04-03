@@ -32,7 +32,7 @@ function install_package
   done
   ###### check the version (might need upgradepkg)
   # If already installed, return
-  [ -n "$pkgid" ] && { log_verbose -p "$pkgid is already installed"; return 0; }
+  [ -n "$pkgid" ] && { log_verbose -a "$pkgid is already installed"; return 0; }
 
   pkgpath=''
   # Look for the package.
@@ -47,7 +47,7 @@ function install_package
   [ -z "$pkgpath" ] && \
     pkgpath=$(ls $SR_PKGREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
   # should have it by now!
-  [ -n "$pkgpath" ] || { log_error -p "${itempath}: Can't find any packages in $SR_PKGREPO/$itempath/"; return 1; }
+  [ -n "$pkgpath" ] || { log_error -a "${itempath}: Can't find any packages in $SR_PKGREPO/$itempath/"; return 1; }
 
   if [ "$OPT_VERBOSE" = 'y' ]; then
     installpkg --terse $pkgpath | tee -a $ITEMLOG
@@ -57,7 +57,7 @@ function install_package
     stat=$?
   fi
   if [ $stat != 0 ]; then
-    log_error -p "${itempath}: installpkg $pkgpath failed (status $stat)"
+    log_error -a "${itempath}: installpkg $pkgpath failed (status $stat)"
     return 1
   fi
   dotprofilizer $pkgpath
@@ -93,7 +93,7 @@ function uninstall_package
   etcnewfiles=$(grep '^etc/.*\.new$' /var/log/packages/$pkgid)
   etcdirs=$(grep '^etc/.*/$' /var/log/packages/$pkgid)
 
-  log_verbose -p "Uninstalling $pkgid ..."
+  log_verbose -a "Uninstalling $pkgid ..."
   removepkg $pkgid >/dev/null 2>&1
 
   # Remove any surviving detritus
@@ -132,10 +132,10 @@ function dotprofilizer
   if grep -q -E 'etc/profile\.d/.*\.sh(\.new)?' $varlogpkg; then
     for script in $(grep 'etc/profile\.d/.*\.sh' $varlogpkg | sed 's/.new$//'); do
       if [ -f /$script ]; then
-        log_verbose -p "Running profile script /$script"
+        log_verbose -a "Running profile script /$script"
         . /$script
       elif [ -f /$script.new ]; then
-        log_verbose -p "Running profile script /$script.new"
+        log_verbose -a "Running profile script /$script.new"
         . /$script.new
       fi
     done

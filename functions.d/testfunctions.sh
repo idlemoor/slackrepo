@@ -78,6 +78,7 @@ function test_slackbuild
       log_warning -a "${itempath}: VERSION not set in $prgnam.info"
     [ -v HOMEPAGE ] || \
       log_warning -a "${itempath}: HOMEPAGE not set in $prgnam.info"
+      # Don't bother testing the URL - parked domains cause false negatives
     [ -v DOWNLOAD ] || \
       log_warning -a "${itempath}: DOWNLOAD not set in $prgnam.info"
     [ -v MD5SUM ] || \
@@ -88,7 +89,6 @@ function test_slackbuild
       log_warning -a "${itempath}: MAINTAINER not set in $prgnam.info"
     [ -v EMAIL ] || \
       log_warning -a "${itempath}: EMAIL not set in $prgnam.info"
-    #### would be good to check HOMEPAGE URLs to see if they still exist
   fi
 
 
@@ -111,7 +111,7 @@ function test_slackbuild
 #-------------------------------------------------------------------------------
 
 function test_download
-# Test whether URLs are 404
+# Test whether download URLs are 404, by trying to pull the header
 # $1 = itempath
 # Return status: always 0
 {
@@ -122,6 +122,7 @@ function test_download
   log_normal -a "Testing download URLs ..."
   DOWNLIST="${INFODOWNLIST[$itempath]}"
   for url in $DOWNLIST; do
+    >$headertmp
     case $url in
     *.googlecode.com/*)
       # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
@@ -130,8 +131,7 @@ function test_download
       curl -q -s -k --connect-timeout 240 --retry 2 -J -L -o /dev/null $url >> $ITEMLOG 2>&1
       curlstat=$?
       if [ $curlstat != 0 ]; then
-        log_warning -a "${itempath}: $url failed (curl status $curlstat), but it could just be googlecode.com being stupid again"
-        cat $headertmp ######
+        log_warning -a "${itempath}: $url failed (curl status $curlstat), but googlecode.com is rubbish anyway"
       fi
       ;;
     *)
@@ -139,13 +139,17 @@ function test_download
       curlstat=$?
       if [ $curlstat != 0 ]; then
         log_warning -a "${itempath}: $url failed (curl status $curlstat)"
-        cat $headertmp ######
+        if [ -s $headertmp ]; then
+          echo "The following headers may be informative:" >> $ITEMLOG
+          cat $headertmp >> $ITEMLOG
+        fi
       else
-        : # check 'Content-Length:' against cached files. You can't be too careful ;-)
+        : #### check 'Content-Length:' against cached files. You can't be too careful ;-)
       fi
       ;;
     esac
   done
+
   rm -f $headertmp
   return 0
 }
@@ -169,6 +173,7 @@ function test_package
     local pkgnam=${pkgpath##*/}
     shift
     log_normal -a "Testing $pkgnam..."
+
     # Check the package name
     parse_package_name $pkgnam
     [ "$PN_PRGNAM" != "$prgnam" ] && \
@@ -186,13 +191,9 @@ function test_package
       log_warning -a "${itempath}: ${pkgnam}: TAG is \"$PN_TAG\" not \"$SR_TAG\""
     [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && \
       log_warning -a "${itempath}: ${pkgnam}: Package type is .$PN_PKGTYPE not .$SR_PKGTYPE"
+
     # Check the package contents
-
-    #### check the compression matches the suffix
-    #### COMPEXE=$( pkgcomp $pkg )
-    #### if $COMPEXE -cd $pkg | tar tOf - install/slack-desc 1>/dev/null 2>&1 ; then
-    #### check that install/slack-desc exists
-
+    #### TODO: check the compression matches the suffix
     #### TODO: check it's tar-1.13 compatible
     temptarlist=$TMPDIR/sr_tarlist.$$.tmp
     tar tf $pkgpath > $temptarlist
@@ -209,7 +210,7 @@ function test_package
       log_warning -a "${itempath}: ${pkgnam}: package does not contain slack-desc"
     fi
     #### TODO: check modes of package contents
-    #### TODO: check whether a noarch package is really noarch
+    #### TODO: check whether noarch package is really noarch
     rm -f $temptarlist
 
     # If this is the top level item, install it to see what happens :D

@@ -197,7 +197,7 @@ function test_package
     #### TODO: check it's tar-1.13 compatible
     temptarlist=$TMPDIR/sr_tarlist.$$.tmp
     tar tf $pkgpath > $temptarlist
-    if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)|(./$)' $temptarlist; then
+    if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(srv)|(usr)|(var)|(install)|(./$)' $temptarlist; then
       log_warning -a "${itempath}: ${pkgnam}: files are installed in unusual locations"
     fi
     for verboten in usr/local usr/share/man; do

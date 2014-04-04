@@ -81,13 +81,15 @@ function download_src
   find $DOWNDIR -maxdepth 1 -type f -exec rm {} \;
   log_normal -a "Downloading source files ..."
   ( cd $DOWNDIR
-    downargs=""
-    for url in $DOWNLIST; do downargs="$downargs -O $url"; done
-    curl -q -f '-#' -k --connect-timeout 120 --retry 2 -J -L $downargs >> $ITEMLOG 2>&1
-    curlstat=$?
-    if [ $curlstat != 0 ]; then
-      log_error -a "Download failed (curl status $curlstat)"
-      return 1
+    if [ -n "$DOWNLIST" ]; then
+      downargs=""
+      for url in $DOWNLIST; do downargs="$downargs -O $url"; done
+      curl -q -f '-#' -k --connect-timeout 120 --retry 2 -J -L $downargs >> $ITEMLOG 2>&1
+      curlstat=$?
+      if [ $curlstat != 0 ]; then
+        log_error -a "Download failed (curl status $curlstat)"
+        return 1
+      fi
     fi
     echo "$VERSION" > .version
   )

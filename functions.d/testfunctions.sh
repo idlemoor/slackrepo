@@ -117,40 +117,42 @@ function test_download
 {
   local itempath="$1"
   local prgnam=${itempath##*/}
-  headertmp=$TMPDIR/sr_header.$$.tmp
 
-  log_normal -a "Testing download URLs ..."
   DOWNLIST="${INFODOWNLIST[$itempath]}"
-  for url in $DOWNLIST; do
-    >$headertmp
-    case $url in
-    *.googlecode.com/*)
-      # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
-      # https://code.google.com/p/support/issues/detail?id=660
-      # "Don't be evil, but totally lame is fine"
-      curl -q -s -k --connect-timeout 240 --retry 2 -J -L -o /dev/null $url >> $ITEMLOG 2>&1
-      curlstat=$?
-      if [ $curlstat != 0 ]; then
-        log_warning -a "${itempath}: $url failed (curl status $curlstat), but googlecode.com is rubbish anyway"
-      fi
-      ;;
-    *)
-      curl -q -s -k --connect-timeout 240 --retry 2 -J -L -I -o $headertmp $url >> $ITEMLOG 2>&1
-      curlstat=$?
-      if [ $curlstat != 0 ]; then
-        log_warning -a "${itempath}: $url failed (curl status $curlstat)"
-        if [ -s $headertmp ]; then
-          echo "The following headers may be informative:" >> $ITEMLOG
-          cat $headertmp >> $ITEMLOG
+  if [ -n "$DOWNLIST" ]; then
+    log_normal -a "Testing download URLs ..."
+    headertmp=$TMPDIR/sr_header.$$.tmp
+    for url in $DOWNLIST; do
+      >$headertmp
+      case $url in
+      *.googlecode.com/*)
+        # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
+        # https://code.google.com/p/support/issues/detail?id=660
+        # "Don't be evil, but totally lame is fine"
+        curl -q -s -k --connect-timeout 240 --retry 2 -J -L -o /dev/null $url >> $ITEMLOG 2>&1
+        curlstat=$?
+        if [ $curlstat != 0 ]; then
+          log_warning -a "${itempath}: $url failed (curl status $curlstat), but googlecode.com is rubbish anyway"
         fi
-      else
-        : #### check 'Content-Length:' against cached files. You can't be too careful ;-)
-      fi
-      ;;
-    esac
-  done
+        ;;
+      *)
+        curl -q -s -k --connect-timeout 240 --retry 2 -J -L -I -o $headertmp $url >> $ITEMLOG 2>&1
+        curlstat=$?
+        if [ $curlstat != 0 ]; then
+          log_warning -a "${itempath}: $url failed (curl status $curlstat)"
+          if [ -s $headertmp ]; then
+            echo "The following headers may be informative:" >> $ITEMLOG
+            cat $headertmp >> $ITEMLOG
+          fi
+        else
+          : #### check 'Content-Length:' against cached files. You can't be too careful ;-)
+        fi
+        ;;
+      esac
+    done
+    rm -f $headertmp
+  fi
 
-  rm -f $headertmp
   return 0
 }
 

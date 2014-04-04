@@ -76,29 +76,8 @@ function build_with_deps
   local subresult revstatus op reason
   local allinstalled
 
-  # This is the ideal place to load up .info and cache it
-  if [ "${INFOVERSION[$itempath]+yesitisset}" != 'yesitisset' ]; then
-    unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
-    . $SR_SBREPO/$itempath/$prgnam.info
-    INFOVERSION[$itempath]="$VERSION"
-    if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
-      SRCDIR[$itempath]=$SR_SRCREPO/$itempath/$SR_ARCH
-      INFODOWNLIST[$itempath]="$(eval echo \$DOWNLOAD_$SR_ARCH)"
-      INFOMD5LIST[$itempath]="$(eval echo \$MD5SUM_$SR_ARCH)"
-    else
-      SRCDIR[$itempath]=$SR_SRCREPO/$itempath
-      INFODOWNLIST[$itempath]="$DOWNLOAD"
-      INFOMD5LIST[$itempath]="$MD5SUM"
-    fi
-    INFOREQUIRES[$itempath]="$REQUIRES"
-    GITREV[$itempath]="$(cd $SR_SBREPO/$itempath; git log -n 1 --format=format:%H .)"
-    GITDIRTY[$itempath]="n"
-    if [ -n "$(cd $SR_SBREPO/$itempath; git status -s .)" ]; then
-      GITDIRTY[$itempath]="y"
-    fi
-  fi
-  # Same for hints
-  set_hints $itempath
+  # Load up any hints
+  parse_hints $itempath
 
   # Bail out if to be skipped, or unsupported/untested
   if [ "${HINT_skipme[$itempath]}" = 'y' ]; then
@@ -108,6 +87,9 @@ function build_with_deps
     SKIPPEDLIST="$SKIPPEDLIST $itempath"
     return 1
   fi
+
+  # Load up prgnam.info
+  parse_info $itempath
 
   # First, get all my deps built
   list_direct_deps $itempath

@@ -3,65 +3,9 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # hintfunctions.sh - functions for slackrepo hints:
-#   set_hints
 #   hint_skipme
 #   do_hint_uidgid
 #   do_hint_version
-#-------------------------------------------------------------------------------
-
-function set_hints
-{
-  local itempath="$1"
-  local prgnam=${itempath##*/}
-  gothints=''
-
-  FLAGHINTS="skipme md5ignore makej1 no_uninstall"
-  # These are Boolean hints.
-  # Query them like this: '[ "${HINT_xxx[$itempath]}" = 'y' ]'
-  for hint in $FLAGHINTS; do
-    if [ -f $SR_HINTS/$itempath.$hint ]; then
-      gothints="$gothints $hint"
-      eval HINT_$hint[$itempath]='y'
-    else
-      eval HINT_$hint[$itempath]=''
-    fi
-  done
-
-  FILEHINTS="cleanup uidgid answers"
-  # These are hints where the file contents will be executed or piped.
-  # Query them like this: '[ -n "${HINT_xxx[$itempath]}" ]'
-  for hint in $FILEHINTS; do
-    if [ -f $SR_HINTS/$itempath.$hint ]; then
-      gothints="$gothints $hint"
-      eval HINT_$hint[$itempath]="$SR_HINTS/$itempath.$hint"
-    else
-      eval HINT_$hint[$itempath]=''
-    fi
-  done
-
-  VARHINTS="options optdeps readmedeps version"
-  # These are hints where the file contents will be used by slackrepo itself.
-  # '%NONE%' indicates the file doesn't exist (vs. readmedeps exists and is empty).
-  # Query them like this: '[ "${HINT_xxx[$itempath]}" != '%NONE%' ]'
-  for hint in $VARHINTS; do
-    if [ -f $SR_HINTS/$itempath.$hint ]; then
-      gothints="$gothints $hint"
-      eval HINT_$hint[$itempath]=\"$(cat $SR_HINTS/$itempath.$hint)\"
-    else
-      eval HINT_$hint[$itempath]='%NONE%'
-    fi
-  done
-
-  # Log hints, unless skipme is set (in which case we are about to bail out noisily).
-  if [ "${HINT_skipme[$itempath]}" != 'y' -a -n "$gothints" ]; then
-    log_normal "Hints for ${itempath}:"
-    log_normal " $gothints"
-  fi
-
-  return 0
-
-}
-
 #-------------------------------------------------------------------------------
 
 function hint_skipme

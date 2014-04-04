@@ -5,6 +5,8 @@
 # parsefunctions.sh - parse functions for slackrepo
 #   parse_items
 #   parse_package_name
+#   parse_info
+#   parse_hints
 #-------------------------------------------------------------------------------
 
 function parse_items
@@ -132,4 +134,138 @@ function parse_package_name
   PN_TAG=$(echo $pkgnam | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
   PN_PKGTYPE=$(echo $pkgnam | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
   return
+}
+
+#-------------------------------------------------------------------------------
+
+function parse_info
+# Load up .info file into variables INFO*.  If no .info file, be creative :-)
+# Also populates SRCDIR, GITREV and GITDIRTY
+# $1 = itempath
+# Return status: always 0
+{
+  local itempath="$1"
+  local prgnam=${itempath##*/}
+
+  # It's not straightforward to tell an SBo style SlackBuild from a Slackware
+  # style SlackBuild.  Some Slackware SlackBuilds have partial or full .info,
+  # but also have source (often repackaged) that clashes with DOWNLOAD=. 
+  # Maybe it needs another kind of hint :-(
+
+  if [ "${INFOVERSION[$itempath]+yesitisset}" != 'yesitisset' ]; then
+
+    # These are the variables we need:
+    unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH} REQUIRES
+    # Preferably, get them from prgnam.info:
+    if [ -f $SR_SBREPO/$itempath/$prgnam.info ]; then
+      # is prgnam.info plausibly in SBo format?
+      if grep -q '^VERSION=' $SR_SBREPO/$itempath/$prgnam.info ; then
+        . $SR_SBREPO/$itempath/$prgnam.info
+      fi
+    fi
+    # Backfill anything still unset:
+    # VERSION
+    if [ -z "$VERSION" ]; then
+      # if this doesn't work, we can confidently assert that the SlackBuild is broken :P
+      versioncmd="$(grep '^VERSION=' $SR_SBREPO/$itempath/)"
+      cd $SR_SBREPO/$itempath/
+        eval $versioncmd
+      cd - >/dev/null
+      if [ -z "$VERSION" ]; then
+        log_error "Could not determine VERSION from $prgnam.info or $prgnam.SlackBuild"
+        return 1
+      fi
+    fi
+    INFOVERSION[$itempath]=$VERSION
+    # DOWNLOAD[_ARCH] and MD5SUM[_ARCH]
+    # Don't bother checking if they are improperly paired (it'll become apparent later).
+    # If they are unset, set empty strings in INFODOWNLIST / INFOMD5LIST.
+    # Also set SRCDIR (even if there is no source, SRCDIR is needed to hold .version)
+    if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
+      INFODOWNLIST[$itempath]="$(eval echo \$DOWNLOAD_$SR_ARCH)"
+      INFOMD5LIST[$itempath]="$(eval echo \$MD5SUM_$SR_ARCH)"
+      SRCDIR[$itempath]=$SR_SRCREPO/$itempath/$SR_ARCH
+    else
+      INFODOWNLIST[$itempath]="${DOWNLOAD:-}"
+      INFOMD5LIST[$itempath]="${MD5SUM:-}"
+      SRCDIR[$itempath]=$SR_SRCREPO/$itempath
+    fi
+    # REQUIRES
+    if [ "${REQUIRES+yesitisset}" != "yesitisset" ]; then
+      log_normal "Note: could not determine REQUIRES from $prgnam.info, dependencies will not be processed"
+    fi
+    INFOREQUIRES[$itempath]="${REQUIRES:-}"
+
+    # Not from prgnam.info -- GITREV and GITDIRTY
+    if [ "$GOTGIT" = 'y' ]; then
+      GITREV[$itempath]="$(cd $SR_SBREPO/$itempath; git log -n 1 --format=format:%H .)"
+      GITDIRTY[$itempath]="n"
+      if [ -n "$(cd $SR_SBREPO/$itempath; git status -s .)" ]; then
+        GITDIRTY[$itempath]="y"
+      fi
+    else
+      GITREV[$itempath]=''
+      GITDIRTY[$itempath]="n"
+    fi
+
+  fi
+
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function parse_hints
+# Load up hint files into variables HINT_*
+# $1 = itempath
+# Return status: always 0
+{
+  local itempath="$1"
+  local prgnam=${itempath##*/}
+  gothints=''
+
+  FLAGHINTS="skipme md5ignore makej1 no_uninstall"
+  # These are Boolean hints.
+  # Query them like this: '[ "${HINT_xxx[$itempath]}" = 'y' ]'
+  for hint in $FLAGHINTS; do
+    if [ -f $SR_HINTS/$itempath.$hint ]; then
+      gothints="$gothints $hint"
+      eval HINT_$hint[$itempath]='y'
+    else
+      eval HINT_$hint[$itempath]=''
+    fi
+  done
+
+  FILEHINTS="cleanup uidgid answers"
+  # These are hints where the file contents will be executed or piped.
+  # Query them like this: '[ -n "${HINT_xxx[$itempath]}" ]'
+  for hint in $FILEHINTS; do
+    if [ -f $SR_HINTS/$itempath.$hint ]; then
+      gothints="$gothints $hint"
+      eval HINT_$hint[$itempath]="$SR_HINTS/$itempath.$hint"
+    else
+      eval HINT_$hint[$itempath]=''
+    fi
+  done
+
+  VARHINTS="options optdeps readmedeps version"
+  # These are hints where the file contents will be used by slackrepo itself.
+  # '%NONE%' indicates the file doesn't exist (vs. readmedeps exists and is empty).
+  # Query them like this: '[ "${HINT_xxx[$itempath]}" != '%NONE%' ]'
+  for hint in $VARHINTS; do
+    if [ -f $SR_HINTS/$itempath.$hint ]; then
+      gothints="$gothints $hint"
+      eval HINT_$hint[$itempath]=\"$(cat $SR_HINTS/$itempath.$hint)\"
+    else
+      eval HINT_$hint[$itempath]='%NONE%'
+    fi
+  done
+
+  # Log hints, unless skipme is set (in which case we are about to bail out noisily).
+  if [ "${HINT_skipme[$itempath]}" != 'y' -a -n "$gothints" ]; then
+    log_normal "Hints for ${itempath}:"
+    log_normal " $gothints"
+  fi
+
+  return 0
 }

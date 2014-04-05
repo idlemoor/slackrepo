@@ -99,7 +99,7 @@ function print_current_revinfo
     fi
   else
     # Use newest file's seconds since epoch ;-)
-    rev="secs:$(cd $SBREPO/$itempath; ls -t | head -n 1 | xargs stat --format='%Y')"
+    rev="secs:$(cd $SR_SBREPO/$itempath; ls -t | head -n 1 | xargs stat --format='%Y')"
   fi
   md5sums="$(cd $SR_HINTS; md5sum $itempath.* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
   if [ -n "$md5sums" ]; then

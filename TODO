@@ -11,18 +11,40 @@ TODO
 
 [done] revise documentation & do github wiki
 
+github pages
+
 [done] document link to slackpkg+
 
-[done] finish doing comments at top of funcs
+test slackpkg+ with local directory
 
-sbopkg compatibility (env vars & filestore)
+[done] finish doing comments at top of funcs
 
 Additional QA tests for test mode
  - [done] check source isn't 404
  - [done] package contents
- - non-SBo SlackBuilds
+ - anything else?
 
 [done] Test --test
+
+don't test install if already installed
+
+[done] Non-Git SlackBuild repos
+
+[done] Slackware style SlackBuilds
+
+Multiple built packages from one SlackBuild
+
+NUMJOBS (is it working ok) no it isn't :-(
+
+Rework item finding & parsing
+
+Multilevel repos
+
+Report fails back to SBo
+
+speed up gen_repos, check that .genreprc works
+
+sbopkg compatibility (env vars & filestore)
 
 pidfile (or multiple streams)
 
@@ -30,25 +52,11 @@ progress bar/spinner
 
 Install accelerator
 
-Report fails back to SBo
-
-NUMJOBS (is it working ok) no it isn't :-(
-
 hints in SlackBuild dir
 
 Rebuilds to permit circular deps
 
-Multilevel repos
-
 github tarball detection
-
-speed up gen_repos, check that .genreprc works
-
-Slackware style SlackBuilds
-
-Non-Git SlackBuild repos
-
-Multiple built packages from one SlackBuild
 
 Per-ARCH package repos
 

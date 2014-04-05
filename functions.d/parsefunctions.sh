@@ -192,7 +192,7 @@ function parse_info
     fi
     # REQUIRES
     if [ "${REQUIRES+yesitisset}" != "yesitisset" ]; then
-      log_normal "Note: could not determine REQUIRES from $prgnam.info, dependencies will not be processed"
+      log_normal "Dependencies of $itempath could not be determined."
     fi
     INFOREQUIRES[$itempath]="${REQUIRES:-}"
 

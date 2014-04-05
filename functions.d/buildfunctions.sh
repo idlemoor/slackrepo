@@ -134,10 +134,32 @@ function build_package
   # Make sure we got *something* :-)
   pkglist=$(ls $SR_TMPOUT/*.t?z 2>/dev/null)
   if [ -z "$pkglist" ]; then
-    #### look in /tmp
-    log_error -a "${itempath}: No packages were created in $SR_TMPOUT"
-    build_failed $itempath
-    return 6
+    # let's get sneaky
+    logpkgs=$(grep "Slackware package .* created." $ITEMLOG | cut -f3 -d" ")
+    if [ -n "$logpkgs" ]; then
+      for pkgpath in $logpkgs; do
+        if [ -f $SR_TMPIN/README -a -f $SR_TMPIN/$prgnam.info ]; then
+          # it's probably an SBo SlackBuild, so complain and don't retag
+          log_warning -a "${itempath}: Package should have been in \$OUTPUT: $pkgpath"
+          mv $pkgpath $SR_TMPOUT
+        else
+          pkgnam=${pkgpath##*/}
+          currtag=$(echo $pkgnam | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
+          if [ "$currtag" != "$SR_TAG" ]; then
+            # retag it
+            pkgtype=$(echo $pkgnam | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
+            mv $pkgpath $SR_TMPOUT/$(echo $pkgnam | sed 's/'$currtag'\.'$pkgtype'$/'$SR_TAG'.'$pkgtype'/')
+          else
+            mv $pkgpath $SR_TMPOUT/
+          fi
+        fi
+      done
+      pkglist=$(ls $SR_TMPOUT/*.t?z 2>/dev/null)
+    else
+      log_error -a "${itempath}: No packages were created"
+      build_failed $itempath
+      return 6
+    fi
   fi
 
   if [ "$OPT_TEST" = 'y' ]; then

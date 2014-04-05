@@ -4,7 +4,6 @@
 #-------------------------------------------------------------------------------
 # buildfunctions.sh - build functions for slackrepo
 #   build_package
-#   check_arch_is_supported
 #   build_ok
 #   build_failed
 #-------------------------------------------------------------------------------
@@ -26,10 +25,7 @@ function build_package
   local itempath="$1"
   local prgnam=${itempath##*/}
 
-  if [ "${HINT_skipme[$itempath]}" = 'y' ]; then
-    SKIPPEDLIST="$SKIPPEDLIST $itempath"
-    return 5
-  fi
+  do_hint_skipme $itempath && return 5
 
   SR_TMPIN=$SR_TMP/sr_IN.$$
   rm -rf $SR_TMPIN
@@ -75,8 +71,10 @@ function build_package
        ;;
   esac
 
-  # Symlink the source into the temporary SlackBuild directory
-  ln -sf -t $SR_TMPIN/ ${SRCDIR[$itempath]}/*
+  # Symlink the source (if any) into the temporary SlackBuild directory
+  if [ -n "${INFODOWNLIST[$itempath]}" ]; then
+    ln -sf -t $SR_TMPIN/ ${SRCDIR[$itempath]}/*
+  fi
 
   # Work out BUILD
   # Get the value from the SlackBuild
@@ -101,7 +99,7 @@ function build_package
     fi
   fi
 
-  # Get other hints for the build (uidgid, options, makeflags, answers)
+  # Process other hints for the build (uidgid, options, makeflags, answers)
   do_hint_uidgid $itempath
   tempmakeflags=""
   [ "${HINT_makej1[$itempath]}" = 'y' ] && tempmakeflags="MAKEFLAGS='-j1'"
@@ -136,6 +134,7 @@ function build_package
   # Make sure we got *something* :-)
   pkglist=$(ls $SR_TMPOUT/*.t?z 2>/dev/null)
   if [ -z "$pkglist" ]; then
+    #### look in /tmp
     log_error -a "${itempath}: No packages were created in $SR_TMPOUT"
     build_failed $itempath
     return 6
@@ -146,26 +145,6 @@ function build_package
   fi
 
   build_ok $itempath  # \o/
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function check_arch_is_supported
-# Check whether the .info file says this item is unsupported on this arch
-# $1 = itempath
-# Return status:
-# 0 = supported
-# 1 = unsupported
-{
-  local itempath="$1"
-  local prgnam=${itempath##*/}
-
-  downlist="${INFODOWNLIST[$itempath]}"
-  if [ "$downlist" = "UNSUPPORTED" -o "$downlist" = "UNTESTED" ]; then
-    log_warning -n ":-/ $itempath is $downlist on $SR_ARCH /-:"
-    return 1
-  fi
   return 0
 }
 

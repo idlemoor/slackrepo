@@ -58,10 +58,7 @@ function process_remove
 
   # Don't remove if this is an update and it's marked to be skipped
   if [ "$PROCMODE" = 'update' ]; then
-    if hint_skipme $ITEMPATH; then
-      SKIPPEDLIST="$SKIPPEDLIST $ITEMPATH"
-      return 1
-    fi
+    do_hint_skipme $ITEMPATH && return 1
   fi
 
   if [ "$OPT_DRYRUN" = 'y' ]; then

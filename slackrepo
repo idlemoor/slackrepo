@@ -147,7 +147,7 @@ fi
 # Backfill the SR_ variables from config and unset the config variables
 for confvar in $varlist ; do
   myvar="SR_$confvar"
-  [ -z "${!myvar}" ] && eval $myvar="${!confvar}"
+  [ -z "${!myvar}" ] && eval $myvar=\"${!confvar}\"
   eval unset $confvar
 done
 
@@ -219,7 +219,7 @@ log_normal "Removing $SR_TMP/* ..."
 [ -n "$SR_TMP" ] && rm -rf "${SR_TMP:-dont-tase-me-bro}"/*
 mkdir -p $SR_TMP
 if [ "$OPT_DRYRUN" = 'y' ]; then
-  DRYREPO=$SR_TMP/dryrun_$SR_REPO
+  DRYREPO=$SR_TMP/sr_dryrun_$SR_REPO
   rm -rf $DRYREPO
   mkdir -p $DRYREPO
 fi
@@ -235,7 +235,7 @@ touch $CHANGELOG
 [ -f /etc/slackware-version ] || { log_error "$(basename $0): /etc/slackware-version not found"; exit 4; }
 SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
 
-# Git: this stuff is specially *hardcoded* for the SBo repo
+# git: SBo repo hardcoded specials: update regularly, clone on first run
 if [ "$SR_REPO" = 'SBo' ]; then
   if [ -d $SR_SBREPO/.git ]; then
     cd $SR_SBREPO
@@ -267,6 +267,8 @@ if [ "$SR_REPO" = 'SBo' ]; then
     log_normal "Finished cloning SBo git."
   fi
 fi
+
+# git: log a summary
 GOTGIT='n'
 if [ -d $SR_SBREPO/.git ]; then
   GOTGIT='y'
@@ -305,7 +307,6 @@ if [ $# = 0 ]; then
   fi
 fi
 
-log_normal "Preparing list of items..."
 BLAME="$(basename $0)"
 if [ "$PROCMODE" = 'build' -o "$PROCMODE" = 'rebuild' ]; then
   parse_items -s $*

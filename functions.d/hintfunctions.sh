@@ -3,26 +3,29 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # hintfunctions.sh - functions for slackrepo hints:
-#   hint_skipme
+#   do_hint_skipme
 #   do_hint_uidgid
 #   do_hint_version
+# If you're looking for parse_hints, it's in parsefunctions.sh ;-)
 #-------------------------------------------------------------------------------
 
-function hint_skipme
+function do_hint_skipme
 # Is there a skipme hint for this item?
 # $1 = itempath
 # Return status:
-# 0 = skip
-# 1 = do not skip
+# 0 = skipped
+# 1 = not skipped
 {
   local itempath="$1"
   local prgnam=${itempath##*/}
 
+  # called before parse_hints runs, so check the file directly:
   if [ ! -f $SR_HINTS/$itempath.skipme ]; then
     return 1
   fi
   log_warning -n "SKIPPED $itempath due to hint"
   cat $SR_HINTS/$itempath.skipme
+  SKIPPEDLIST="$SKIPPEDLIST $itempath"
   return 0
 }
 

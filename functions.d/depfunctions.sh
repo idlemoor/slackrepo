@@ -76,20 +76,19 @@ function build_with_deps
   local subresult revstatus op reason
   local allinstalled
 
-  # Load up any hints
   parse_hints $itempath
 
-  # Bail out if to be skipped, or unsupported/untested
-  if [ "${HINT_skipme[$itempath]}" = 'y' ]; then
-    SKIPPEDLIST="$SKIPPEDLIST $itempath"
-    return 1
-  elif ! check_arch_is_supported $itempath; then
+  # Bail out if to be skipped
+  do_hint_skipme $itempath && return 1
+
+  parse_info $itempath || return 1
+
+  # Bail out if unsupported/untested
+  if [ "${INFODOWNLIST[$itempath]}" = "UNSUPPORTED" -o "${INFODOWNLIST[$itempath]}" = "UNTESTED" ]; then
+    log_warning -n ":-/ $itempath is ${INFODOWNLIST[$itempath]} on $SR_ARCH /-:"
     SKIPPEDLIST="$SKIPPEDLIST $itempath"
     return 1
   fi
-
-  # Load up prgnam.info
-  parse_info $itempath
 
   # First, get all my deps built
   list_direct_deps $itempath

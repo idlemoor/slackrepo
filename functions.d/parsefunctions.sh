@@ -167,7 +167,7 @@ function parse_info
     # VERSION
     if [ -z "$VERSION" ]; then
       # if this doesn't work, we can confidently assert that the SlackBuild is broken :P
-      versioncmd="$(grep '^VERSION=' $SR_SBREPO/$itempath/)"
+      versioncmd="$(grep '^VERSION=' $SR_SBREPO/$itempath/$prgnam.SlackBuild)"
       cd $SR_SBREPO/$itempath/
         eval $versioncmd
       cd - >/dev/null
@@ -224,7 +224,7 @@ function parse_hints
   local prgnam=${itempath##*/}
   gothints=''
 
-  FLAGHINTS="skipme md5ignore makej1 no_uninstall"
+  FLAGHINTS="md5ignore makej1 no_uninstall"
   # These are Boolean hints.
   # Query them like this: '[ "${HINT_xxx[$itempath]}" = 'y' ]'
   for hint in $FLAGHINTS; do
@@ -236,8 +236,8 @@ function parse_hints
     fi
   done
 
-  FILEHINTS="cleanup uidgid answers"
-  # These are hints where the file contents will be executed or piped.
+  FILEHINTS="skipme cleanup uidgid answers"
+  # These are hints where the file contents will be used.
   # Query them like this: '[ -n "${HINT_xxx[$itempath]}" ]'
   for hint in $FILEHINTS; do
     if [ -f $SR_HINTS/$itempath.$hint ]; then
@@ -262,7 +262,7 @@ function parse_hints
   done
 
   # Log hints, unless skipme is set (in which case we are about to bail out noisily).
-  if [ "${HINT_skipme[$itempath]}" != 'y' -a -n "$gothints" ]; then
+  if [ -z "${HINT_skipme[$itempath]}" -a -n "$gothints" ]; then
     log_normal "Hints for ${itempath}:"
     log_normal " $gothints"
   fi

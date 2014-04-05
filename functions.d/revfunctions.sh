@@ -175,7 +175,7 @@ function get_rev_status
   currfile=$TMPDIR/sr_curr_rev.$$.tmp
   print_current_revinfo $itempath > $currfile
   # and extract some key stats into variables
-  currrev=$(head -q -n 1 "$currfile" | sed -r 's/^.* (git)|(secs)://' -e 's/ .*//')
+  currrev=$(head -q -n 1 "$currfile" | sed -r -e 's/^.* (git)|(secs)://' -e 's/ .*//')
   currhints=$(head -q -n 1 "$currfile" | sed -e 's/^.* hints://' -e 's/ .*//')
   currslack=$(head -q -n 1 "$currfile" | sed -e 's/^.* slack://' -e 's/ .*//')
 
@@ -185,7 +185,7 @@ function get_rev_status
     prevfile=$(echo $pkgfile | sed 's/\.t.z$/.rev/')
     [ ! -f "$prevfile" ] && { REVCACHE[$itempath]=1; return 1; }
     # has the revision changed?
-    prevrev=$(head -q -n 1 "$prevfile" | sed -r 's/^.* (git)|(secs)://' -e 's/ .*//')
+    prevrev=$(head -q -n 1 "$prevfile" | sed -r -e 's/^.* (git)|(secs)://' -e 's/ .*//')
     if [ "$currrev" != "$prevrev" ]; then
       prevver=$(echo $pkgfile | rev | cut -f3 -d- | rev)
       if [ "${INFOVERSION[$itempath]}" != "$prevver" ]; then

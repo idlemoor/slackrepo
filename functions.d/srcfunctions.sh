@@ -13,7 +13,7 @@ function verify_src
 # $1 = itempath
 # Also uses variables $VERSION and $NEWVERSION set by build_package
 # Return status:
-# 0 - all files passed, or check suppressed
+# 0 - all files passed, or check suppressed, or DOWNLIST is empty
 # 1 - one or more files had a bad md5sum
 # 2 - no. of files != no. of md5sums
 # 3 - directory not found => not cached, need to download
@@ -27,14 +27,17 @@ function verify_src
   MD5LIST="${INFOMD5LIST[$itempath]}"
   DOWNDIR="${SRCDIR[$itempath]}"
 
+  # return 0 if nothing to verify:
+  [ -z "$DOWNLIST" -o -z "$DOWNDIR" ] && return 0
+
   if [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ]; then
     log_warning -n "$itempath is $DOWNLIST on $SR_ARCH"
     return 5
-  elif [ ! -d $DOWNDIR ]; then
+  elif [ ! -d "$DOWNDIR" ]; then
     return 3
   fi
 
-  ( cd $DOWNDIR
+  ( cd "$DOWNDIR"
     log_normal -a "Verifying source files ..."
     if [ "$VERSION" != "$(cat .version 2>/dev/null)" ]; then
       log_verbose -a "Note: removing old source files"
@@ -67,7 +70,7 @@ function verify_src
 #-------------------------------------------------------------------------------
 
 function download_src
-# Download the sources for itempath into the cache, and stamp the cache with a .version file
+# Download the sources for itempath into the cache
 # $1 = itempath
 # Also uses variables $DOWNDIR and $DOWNLIST previously set by verify_src,
 # and $VERSION set by build_package
@@ -77,10 +80,17 @@ function download_src
   local itempath="$1"
   local prgnam=${itempath##*/}
 
-  mkdir -p $DOWNDIR
-  find $DOWNDIR -maxdepth 1 -type f -exec rm {} \;
+  if [ -n "$DOWNDIR" ]; then
+    # stamp the cache with a .version file, even if there are no sources
+    mkdir -p "$DOWNDIR"
+    echo "$VERSION" > .version
+  fi
+
+  [ -z "$DOWNLIST" -o -z "$DOWNDIR" ] && return 0
+
+  find "$DOWNDIR" -maxdepth 1 -type f -exec rm {} \;
   log_normal -a "Downloading source files ..."
-  ( cd $DOWNDIR
+  ( cd "$DOWNDIR"
     if [ -n "$DOWNLIST" ]; then
       downargs=""
       for url in $DOWNLIST; do downargs="$downargs -O $url"; done
@@ -91,7 +101,6 @@ function download_src
         return 1
       fi
     fi
-    echo "$VERSION" > .version
   )
   return 0
 }

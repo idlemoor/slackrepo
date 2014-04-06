@@ -127,7 +127,8 @@ SR_REPO="${SR_REPO:-$REPO}"
 # Set config variables from environment:
 varlist="SBREPO PKGREPO SRCREPO \
          HINTS LOGDIR TMP \
-         ARCH TAG PKGTYPE NUMJOBS USE_GENREPOS"
+         ARCH TAG PKGTYPE NUMJOBS USE_GENREPOS \
+         INIT_GITCLONE INIT_GITBRANCH"
 # We'll prefix all these with SR_ to stop SlackBuilds picking them up
 for envvar in $varlist ; do
   myvar="SR_$envvar"
@@ -156,7 +157,10 @@ mkdir -p $SR_LOGDIR
 MAINLOG=$SR_LOGDIR/slackrepo_$(date '+%F_%T').log
 > $MAINLOG
 
-# If arch not set, work it out
+# If NUMJOBS or ARCH not set, work them out and set them explicitly
+if [ -z "$NUMJOBS" ]; then
+  NUMJOBS="-j$(( $(nproc) + 1 ))"
+fi
 if [ -z "$SR_ARCH" ]; then
   case "$( uname -m )" in
     i?86) SR_ARCH=i486 ;;
@@ -164,6 +168,11 @@ if [ -z "$SR_ARCH" ]; then
        *) SR_ARCH=$( uname -m ) ;;
   esac
 fi
+
+# Find out the version of Slackware
+# (used by the git stuff below, but we also need this in revfunctions.sh)
+[ -f /etc/slackware-version ] || { log_error "$(basename $0): /etc/slackware-version not found"; exit 4; }
+SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
 
 # Log the config
 [ "$OPT_VERBOSE" = 'y' ] && echo ""
@@ -179,12 +188,6 @@ for var in $varlist; do
 done
 [ "$OPT_VERBOSE" = 'y' ] && echo ""
 
-[ -d "$SR_SBREPO" ]  || { log_normal "$(basename $0): Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"  ; }
-[ -d "$SR_SRCREPO" ] || { log_normal "$(basename $0): Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO" ; }
-[ -d "$SR_PKGREPO" ] || { log_normal "$(basename $0): Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO" ; }
-[ -d "$SR_LOGDIR" ]  || { log_normal "$(basename $0): Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"  ; }
-[ -d "$SR_HINTS" ]   || { log_normal "$(basename $0): Creating hints directory: $SR_HINTS"        ; mkdir -p "$SR_HINTS"   ; }
-
 #-------------------------------------------------------------------------------
 # Initialisation
 #-------------------------------------------------------------------------------
@@ -198,7 +201,64 @@ declare -A HINT_skipme HINT_md5ignore HINT_makej1 HINT_no_uninstall
 declare -A HINT_cleanup HINT_uidgid HINT_answers
 declare -A HINT_options HINT_optdeps HINT_readmedeps HINT_version
 
-# How clean is the system?
+# Create directories:
+[ -d "$SR_SBREPO" ]  || { log_normal "$(basename $0): Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"  ; }
+[ -d "$SR_SRCREPO" ] || { log_normal "$(basename $0): Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO" ; }
+[ -d "$SR_PKGREPO" ] || { log_normal "$(basename $0): Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO" ; }
+[ -d "$SR_LOGDIR" ]  || { log_normal "$(basename $0): Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"  ; }
+[ -d "$SR_HINTS" ]   || { log_normal "$(basename $0): Creating hints directory: $SR_HINTS"        ; mkdir -p "$SR_HINTS"   ; }
+
+# git stuff for the SlackBuilds repo:
+if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
+  if [ -n "${INIT_GITBRANCH}" ]; then
+    log_normal "Cloning SlackBuilds repository $SR_SBREPO from ${INIT_GITCLONE} ..."
+    git clone "${INIT_GITCLONE}" "$SR_SBREPO"
+    cd "$SR_SBREPO"
+    git fetch -a
+    git remote update
+    branch="${INIT_GITBRANCH:-$SLACKVER}"
+    git checkout -b "$branch" -t origin/"$branch"
+    log_normal "Finished cloning SlackBuilds repository."
+  fi
+elif [ -d $SR_SBREPO/.git ]; then
+  cd $SR_SBREPO
+  # Is git clean, and is the branch SBo's stable branch?
+  log_normal "Checking SlackBuilds repository's git status ..."
+  muck="$(git status -s .)"
+  branch=$(git rev-parse --abbrev-ref HEAD)
+  if [ -z "$muck" -a "$branch" = "$SLACKVER" ]; then
+    if [ -n "$(find $SR_SBREPO/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
+      log_normal "Updating git ..."
+      if [ "$OPT_QUIET" = 'y' ]; then
+        git fetch -a                       >> $MAINLOG 2>&1
+        git merge --ff-only origin/$branch >> $MAINLOG 2>&1
+      else
+        git fetch -a                       2>&1 | tee -a $MAINLOG
+        git merge --ff-only origin/$branch 2>&1 | tee -a $MAINLOG
+      fi
+      log_normal "Finished updating git."
+    fi
+  elif [ -n "$muck" ]; then
+    log_warning "SlackBuilds git repository $SR_SBREPO is dirty"
+  fi
+fi
+
+# git: log a summary
+GOTGIT='n'
+if [ -d $SR_SBREPO/.git ]; then
+  GOTGIT='y'
+  [ "$OPT_VERBOSE" = 'y' ] && echo ""
+  log_verbose "Git repo:   $SR_SBREPO"
+  log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"
+  log_verbose "  revision: $(git rev-parse HEAD)"
+  log_verbose "  title:    $(git log -n 1 --format=%s)"
+  if [ -n "$(cd $SR_SBREPO; git status -s .)" ]; then
+    log_warning "Git repository $SR_SBREPO is dirty"
+  fi
+  [ "$OPT_VERBOSE" = 'y' ] && echo ""
+fi
+
+# Warn about already installed packages (using package tag)
 if [ -n "$SR_TAG" ]; then
   installed=$(ls /var/log/packages/*$SR_TAG 2>/dev/null)
   if [ -n "$installed" ]; then
@@ -229,59 +289,6 @@ CHANGELOG=$TMPDIR/sr_changelog.tmp
 # Don't clear the changelog, it may contain changes from a previous interrupted
 # run, and gen_repos_files.sh can catch up with them at the end.
 touch $CHANGELOG
-
-# Find out the version of Slackware
-# (used by the git stuff below, but we also need this in revfunctions.sh)
-[ -f /etc/slackware-version ] || { log_error "$(basename $0): /etc/slackware-version not found"; exit 4; }
-SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
-
-# git: SBo repo hardcoded specials: update regularly, clone on first run
-if [ "$SR_REPO" = 'SBo' ]; then
-  if [ -d $SR_SBREPO/.git ]; then
-    cd $SR_SBREPO
-    # Is git clean, and is the branch SBo's stable branch?
-    log_normal "Checking SBo git status ..."
-    muck="$(git status -s .)"
-    branch=$(git rev-parse --abbrev-ref HEAD)
-    if [ -z "$muck" -a "$branch" = "$SLACKVER" ]; then
-      if [ -n "$(find $SR_SBREPO/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
-        log_normal "Updating SBo git ..."
-        if [ "$OPT_QUIET" = 'y' ]; then
-          git fetch -a                       >> $MAINLOG 2>&1
-          git merge --ff-only origin/$branch >> $MAINLOG 2>&1
-        else
-          git fetch -a                       2>&1 | tee -a $MAINLOG
-          git merge --ff-only origin/$branch 2>&1 | tee -a $MAINLOG
-        fi
-        log_normal "Finished updating SBo git."
-      fi
-    fi
-  else
-    log_normal "SBo git repository $SR_SBREPO does not exist; cloning it from SlackBuilds.org ..."
-    git clone "git://slackbuilds.org/slackbuilds" "$SR_SBREPO"
-    cd "$SR_SBREPO"
-    git fetch -a
-    git remote update
-    branch="$SLACKVER"
-    git checkout -b "$branch" -t origin/"$branch"
-    log_normal "Finished cloning SBo git."
-  fi
-fi
-
-# git: log a summary
-GOTGIT='n'
-if [ -d $SR_SBREPO/.git ]; then
-  GOTGIT='y'
-  [ "$OPT_VERBOSE" = 'y' ] && echo ""
-  log_verbose "Git repo:   $SR_SBREPO"
-  log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"
-  log_verbose "  revision: $(git rev-parse HEAD)"
-  log_verbose "  title:    $(git log -n 1 --format=%s)"
-  if [ -n "$(cd $SR_SBREPO; git status -s .)" ]; then
-    log_warning "Git repository $SR_SBREPO is dirty"
-  fi
-  [ "$OPT_VERBOSE" = 'y' ] && echo ""
-fi
 
 #-------------------------------------------------------------------------------
 # Main loop

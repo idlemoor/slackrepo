@@ -27,10 +27,10 @@
 function print_usage
 {
   echo 'Usage:'
-  echo '  slackrepo build   [--control_args] [item...]'
-  echo '  slackrepo rebuild [--control_args] [item...]'
-  echo '  slackrepo update  [--control_args] [item...]'
-  echo '  slackrepo remove  [--control_args] item...'
+  echo "  $(basename $0) build   [--control_args] [item...]"
+  echo "  $(basename $0) rebuild [--control_args] [item...]"
+  echo "  $(basename $0) update  [--control_args] [item...]"
+  echo "  $(basename $0) remove  [--control_args] item..."
   echo 'Control args:'
   echo '  --repo=ID'
   echo '  --test'
@@ -101,11 +101,31 @@ done
 # Startup
 #-------------------------------------------------------------------------------
 
+# This is for things that SR_TMP wouldn't be good for
+# (SR_TMP gets cleaned during execution)
+TMPDIR=${TMPDIR:-/tmp}
+
+# pidfile and changelog
+PIDFILE="/var/run/$(basename $0).pid"
+CHANGELOG="$TMPDIR/sr_changelog.tmp"
+oldpid=$(cat $PIDFILE 2>/dev/null)
+if [ -z "$oldpid" -o -z "$(pgrep -u root $(basename $0))" ]; then
+  echo $$ > $PIDFILE
+  if [ -n "$oldpid" -a -s "$CHANGELOG" ]; then
+    echo "$(basename $0): Adopting changelog from previous run."
+  else
+    > $CHANGELOG
+  fi
+else
+  echo "$(basename $0): Another instance is already running." >&2
+  exit 3
+fi
+
 # Ensure ctrl-c (etc) exits the whole thing, not just a random subshell
-trap "exit 1" SIGINT SIGQUIT SIGTERM
+trap "rm -f $PIDFILE; exit 1" SIGINT SIGQUIT SIGTERM
 
 # Get the support functions
-for f in /usr/libexec/slackrepo/functions.d/*functions.sh; do
+for f in /usr/libexec/$(basename $0)/functions.d/*functions.sh; do
   if [ -x $f ]; then
     . $f
   fi
@@ -114,10 +134,6 @@ done
 #-------------------------------------------------------------------------------
 # Configuration
 #-------------------------------------------------------------------------------
-
-# This is for things that SR_TMP wouldn't be good for
-# (SR_TMP gets cleaned during execution)
-TMPDIR=${TMPDIR:-/tmp}
 
 # Set the repo ID from control arg, or env...
 SR_REPO="${SR_REPO:-$REPO}"
@@ -154,7 +170,7 @@ done
 
 # Do this now so we can log the config:
 mkdir -p $SR_LOGDIR
-MAINLOG=$SR_LOGDIR/slackrepo_$(date '+%F_%T').log
+MAINLOG=$SR_LOGDIR/$(basename $0)_$(date '+%F_%T').log
 > $MAINLOG
 
 # If NUMJOBS or ARCH not set, work them out and set them explicitly
@@ -284,12 +300,6 @@ if [ "$OPT_DRYRUN" = 'y' ]; then
   mkdir -p $DRYREPO
 fi
 
-# Changelog
-CHANGELOG=$TMPDIR/sr_changelog.tmp
-# Don't clear the changelog, it may contain changes from a previous interrupted
-# run, and gen_repos_files.sh can catch up with them at the end.
-touch $CHANGELOG
-
 #-------------------------------------------------------------------------------
 # Main loop
 #-------------------------------------------------------------------------------
@@ -302,7 +312,7 @@ ABORTEDLIST=''
 if [ $# = 0 ]; then
   if [ "$PROCMODE" = 'remove' ]; then
     # remove mode with no args => do nothing
-    echo "Usage: slackrepo remove [--repo=ID] item..."
+    echo "Usage: $(basename $0) remove [--repo=ID] item..."
     echo "In remove mode, you *must* specify the items to be removed."
     exit 3
   elif [ "$PROCMODE" = 'update' ]; then
@@ -397,7 +407,7 @@ if [ "$OPT_DRYRUN" != 'y' -a -s $CHANGELOG ]; then
     RSS_DESCRIPTION="$RSS_DESCRIPTION" RSS_FEEDMAX="$RSS_FEEDMAX" RSS_UUID="$RSS_UUID" \
     GPGBIN="$GPGBIN" USE_GPGAGENT="$USE_GPGAGENT" FOR_SLAPTGET="$FOR_SLAPTGET" \
     FOLLOW_SYMLINKS="$FOLLOW_SYMLINKS" REPO_SUBDIRS="$REPO_SUBDIRS" \
-    sh /usr/libexec/slackrepo/gen_repos_files.sh -l $CHANGELOG | tee -a $MAINLOG
+    sh /usr/libexec/$(basename $0)/gen_repos_files.sh -l $CHANGELOG | tee -a $MAINLOG
     ###### extra control args to run faster?
     echo ""
     log_important "Finished gen_repos_files.sh at $(date +%T)"
@@ -406,7 +416,7 @@ fi
 
 #-------------------------------------------------------------------------------
 
-rm -f $CHANGELOG
+rm -f $CHANGELOG $PIDFILE
 
 echo ""
 exit 0

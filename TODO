@@ -26,7 +26,7 @@ Additional QA tests for test mode
 
 [done] Test --test
 
-don't test install if already installed
+[done] don't test install if already installed
 
 [done] Non-Git SlackBuild repos
 
@@ -34,7 +34,7 @@ don't test install if already installed
 
 Multiple built packages from one SlackBuild
 
-NUMJOBS (is it working ok) no it isn't :-(
+[done] NUMJOBS
 
 Rework item finding & parsing
 
@@ -46,7 +46,7 @@ speed up gen_repos, check that .genreprc works
 
 sbopkg compatibility (env vars & filestore)
 
-pidfile (or multiple streams)
+[done] pidfile
 
 progress bar/spinner
 

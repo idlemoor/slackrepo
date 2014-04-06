@@ -166,11 +166,12 @@ function parse_info
     # Backfill anything still unset:
     # VERSION
     if [ -z "$VERSION" ]; then
-      # if this doesn't work, we can confidently assert that the SlackBuild is broken :P
-      versioncmd="$(grep '^VERSION=' $SR_SBREPO/$itempath/$prgnam.SlackBuild)"
+      # The next bit is necessarily dependent on the empirical characteristics of Slackware's SlackBuilds :-/
+      versioncmds="$(grep -E '^(PKGNAM)|(SRCNAM)|(VERSION)=' $SR_SBREPO/$itempath/$prgnam.SlackBuild)"
       cd $SR_SBREPO/$itempath/
-        eval $versioncmd
+        eval $versioncmds
       cd - >/dev/null
+      unset PKGNAM SRCNAM
       if [ -z "$VERSION" ]; then
         log_error "Could not determine VERSION from $prgnam.info or $prgnam.SlackBuild"
         return 1

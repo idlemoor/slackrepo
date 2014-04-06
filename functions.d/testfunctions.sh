@@ -217,7 +217,7 @@ function test_package
 
     # If this is the top level item, and it's not already installed, install it to see what happens :D
     if [ "$itempath" = "$ITEMPATH" ]; then
-      if [ -z "$(ls /var/log/packages/$prgnam-* 2>/dev/null | rev | cut -f4- -d- | rev | grep "^${prgnam}\$")" ]; then
+      if [ -z "$(cd /var/log/packages/; ls $prgnam-* 2>/dev/null | rev | cut -f4- -d- | rev | grep -x "${prgnam}")" ]; then
         log_verbose "Installing $pkgnam ..."
         install_package $ITEMPATH || return 1
         uninstall_package $ITEMPATH

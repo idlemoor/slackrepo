@@ -173,9 +173,9 @@ mkdir -p $SR_LOGDIR
 MAINLOG=$SR_LOGDIR/$(basename $0)_$(date '+%F_%T').log
 > $MAINLOG
 
-# If NUMJOBS or ARCH not set, work them out and set them explicitly
-if [ -z "$NUMJOBS" ]; then
-  NUMJOBS="-j$(( $(nproc) + 1 ))"
+# If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly
+if [ -z "$SR_NUMJOBS" ]; then
+  SR_NUMJOBS="-j$(( $(nproc) + 1 ))"
 fi
 if [ -z "$SR_ARCH" ]; then
   case "$( uname -m )" in
@@ -216,6 +216,21 @@ declare -A SRCDIR GITREV GITDIRTY DEPCACHE REVCACHE
 declare -A HINT_skipme HINT_md5ignore HINT_makej1 HINT_no_uninstall
 declare -A HINT_cleanup HINT_uidgid HINT_answers
 declare -A HINT_options HINT_optdeps HINT_readmedeps HINT_version
+
+# Temporary directories and files
+SR_TMP=${SR_TMP:-/tmp/SBo}
+# really really don't want the next bit to go badly ;-)
+if [ -n "$SR_TMP" -a -d "$SR_TMP" ]; then
+  log_normal "Removing $SR_TMP/* ..."
+  rm -rf "${SR_TMP:-dont-tase-me-bro}"/*
+else
+  mkdir -p $SR_TMP
+fi
+if [ "$OPT_DRYRUN" = 'y' ]; then
+  DRYREPO=$SR_TMP/sr_dryrun_$SR_REPO
+  rm -rf $DRYREPO
+  mkdir -p $DRYREPO
+fi
 
 # Create directories:
 [ -d "$SR_SBREPO" ]  || { log_normal "$(basename $0): Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"  ; }
@@ -286,18 +301,6 @@ if [ -n "$SR_TAG" ]; then
       fi
     done
   fi
-fi
-
-# Temporary directories and files
-SR_TMP=${SR_TMP:-/tmp/SBo}
-log_normal "Removing $SR_TMP/* ..."
-# really really don't want the next line to go badly ;-)
-[ -n "$SR_TMP" ] && rm -rf "${SR_TMP:-dont-tase-me-bro}"/*
-mkdir -p $SR_TMP
-if [ "$OPT_DRYRUN" = 'y' ]; then
-  DRYREPO=$SR_TMP/sr_dryrun_$SR_REPO
-  rm -rf $DRYREPO
-  mkdir -p $DRYREPO
 fi
 
 #-------------------------------------------------------------------------------

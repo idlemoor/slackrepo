@@ -30,7 +30,7 @@
 <li><a href="manpages.html">man pages</a></li>
 <li><a href="structure.html">Repo structure</a></li>
 <li><a href="metadata.html">Package metadata</a></li>
-<li><a href="tests.html">--test</a></li>
+<li><a href="tests.html">Tests</a></li>
 <li><a href="genrepos.html">gen_repos_files.sh</a></li>
 <li><a href="slackpkgplus.html">slackpkg+</a></li>
 <li><a href="links.html">Links</a></li>
@@ -52,23 +52,22 @@ other hosts (e.g. with <a href="https://github.com/zuno/slackpkgplus">slackpkg+<
 
 <p>Some notable features are:</p>
 <ul>
-<li>automatic updating - revisions of the SlackBuild repository determine updates and rebuilds of
+<li>automatic updating - revisions of the SlackBuild repository determine <a href="updates.html">updates</a> and rebuilds of
 packages</li>
-<li>clean building - dependencies are built as a 'tree', not a 'queue', and dependers are rebuilt
-when dependencies are updated</li>
-<li>quality assurance testing - optional tests on the SlackBuild files and built packages</li>
+<li>clean building - dependencies are built as a 'tree', not a 'queue'</li>
+<li>quality assurance testing - optional <a href="tests.html">tests</a> on the SlackBuild files and built packages</li>
 </ul>
 
 <p>This is a tool for managing package repositories, not a tool for managing
 packages installed on a host.  Except for temporary installations during
 builds, slackrepo does not install, upgrade or remove packages on the host
 system. For that, you should continue to use pkgtool, installpkg, etc., or
-slackpkg+.  For package building, most users will find that the existing
-popular tools are much better for their needs: sbopkg, sqg, sbotools,
+slackpkg+.  For package building, most users will find that the <a href="links.html">existing
+popular tools</a> are much better for their needs: sbopkg, sqg, sbotools,
 slacktrack, slack, src2pkg, etc.</p>
 
 <p>Slackrepo is not affiliated with, or endorsed by, SlackBuilds.org or
-the Slackware Team.  The author thanks the awesome people behind those projects
+Slackware.  The author thanks the awesome people behind those projects
 for their continuing generosity to the community.</p>
 
 </div>

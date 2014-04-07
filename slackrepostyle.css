@@ -16,4 +16,5 @@ nav li      { margin-bottom: 10px; font-weight: bold; }
 footer      { clear:both; margin-top: 16px; }
 footer p    { font-size: x-small; font-style: italic; text-align: right; font-family: sans-serif; }
 
+pre         { font-weight:bold; }
 code        { font-weight:bold; }

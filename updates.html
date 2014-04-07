@@ -30,7 +30,7 @@
 <li><a href="manpages.html">man pages</a></li>
 <li><a href="structure.html">Repo structure</a></li>
 <li><a href="metadata.html">Package metadata</a></li>
-<li><a href="tests.html">--test</a></li>
+<li><a href="tests.html">Tests</a></li>
 <li><a href="genrepos.html">gen_repos_files.sh</a></li>
 <li><a href="slackpkgplus.html">slackpkg+</a></li>
 <li><a href="links.html">Links</a></li>
@@ -40,11 +40,12 @@
 
 <div id="main">
 
-<p>Updates don't just happen in update mode.  Update mode proactively looks for
-packages that are out-of-date, and also removes packages for which the SlackBuilds 
-no longer exist.  In build mode and in rebuild mode, packages are updated or rebuilt 
+<p>Updates don't just happen in update mode.
+In build mode and in rebuild mode, packages are updated or rebuilt 
 if required; for example, if a package is being built, its dependencies will be 
-updated and/or rebuilt if they are out-of-date.</p>
+updated and/or rebuilt if they are out-of-date. Update mode proactively looks for
+packages that are out-of-date, and also removes packages for which the SlackBuilds 
+no longer exist.</p>
 
 <p>A package is out-of-date if:</p>
 <ul>

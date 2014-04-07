@@ -12,7 +12,7 @@
 <body>
 
 <header>
-<h2>Messages and logging</h2>
+<h2>gen_repos_files.sh</h2>
 </header>
 
 <nav>
@@ -40,28 +40,12 @@
 
 <div id="main">
 
-<p>All messages from slackrepo are sent to a main log file.  Progress messages are
-displayed on the screen.  Control arguments '--verbose' ('-v') and
-'--quiet' ('-q') can be specified, to increase or decrease the details
-that are displayed on the screen.</p>
-
-<p>Detailed output from each build process is sent to an item-specific log
-file, but is not displayed on the screen.</p>
-
-<p>The log files are in a repository-specific directory.  A new main log file is created
-for each run of slackrepo, with a name of the form</p>
-
-<pre>
-/var/log/slackrepo/log_SBo/slackrepo_YYYY-MM-DD_hh:mm:ss.log
-</pre>
-
-<p>Each item-specific log file is in a subdirectory if the SlackBuilds directory
-has subdirectories.  For example, the log file for the SBo item 'graphics/shotwell'
-is</p>
-
-<pre>
-/var/log/slackrepo/log_SBo/graphics/shotwell.log
-</pre>
+<p>Optionally, Eric Hameleers' gen_repos_files.sh (which is included) can
+be used to maintain additional package metadata in the package repository,
+such as signing and a changelog.  Thanks, Eric!  To use it, you will
+need to set a few configuration values in the repository's configuration
+file /etc/slackrepo/slackrepo_SBo.conf (but, if you use gen_repos_files.sh
+already, your existing ~/.genreprc config file will be read).</p>
 
 </div>
 

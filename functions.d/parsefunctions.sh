@@ -17,100 +17,132 @@ function parse_items
 #    - any number of directories are supported
 #    - if <prgnam> is unambiguous, directories can be omitted
 # Also uses $BLAME which the caller can set for extra info in errors and warnings
-# Returns canonical [<directory>/]<prgnam> name (or names) in $ITEMLIST
-# and populates associative arrays with values from the .info file:
-# INFOVERSION INFODOWNLIST INFOMD5LIST INFOREQUIRES
+# Returns relative pathname (or names) in $ITEMLIST of the directory containing
+# the SlackBuild or package -- this is identical in the source and package repos
+# (unless the package hasn't been built yet, or the SlackBuild has been removed).
+#
+# Current restrictions:
+# (1) The SlackBuild has to have the same name as its containing directory, but
+# the package can have a different name.
+# (2) Will go horribly wrong if the SlackBuild or package is in the top level
+# directory :-(
+# 
 # Return status:
 # 0 = all ok
 # 1 = any item not found
 # 9 = existential crisis
 {
-  ITEMLIST=''
-  errstat=0
   local blamemsg=''
   [ -n "$BLAME" ] && blamemsg="${BLAME}: "
 
   if [ "$1" = '-s' ]; then
-    SEARCHFILE='.SlackBuild'
     TOPLEVEL="$SR_SBREPO"
+    SEARCHSUFFIX='.SlackBuild'
     shift
   elif [ "$1" = '-p' ]; then
-    SEARCHFILE='-*.t?z'
     TOPLEVEL="$SR_PKGREPO"
+    SEARCHSUFFIX='-*.t?z'
+    # Note that SEARCHSUFFIX might match multiple packages in a single directory!
     shift
   else
     log_error "parse_items: invalid argument '$1'"
     return 9
   fi
 
-  while [ $# != 0 ]; do
+  cd "$TOPLEVEL"
+  ITEMLIST=''
+  errstat=0
 
+  while [ $# != 0 ]; do
     local item="${1##/}"
-    a=$(echo "$item/" | cut -f1 -d/)
-    b=$(echo "$item/" | cut -f2 -d/)
     shift
 
-    # We can have zero, one, or two names in $a and $b.
-    if [ -z "$a" -a -n "$b" ]; then
-      # this can't happen due to '${1##/}' above, but if it *does* happen,
-      # put the only name we've got in $a and make $b empty:
-      a="$b"; b=''
-    fi
+    case $item in
 
-    if [ -z "$a" -a -z "$b" ]; then
-      # zero names supplied
-      log_warning "$(basename $0): ${blamemsg}Empty item specified"
+    '' )
+      # null item?  No thanks.
+      log_warning "${blamemsg}Empty item specified"
       errstat=1
-      continue
-    fi
+      ;;
 
-    if [ -z "$b" ]; then
-      # one name supplied
-      if [ -f $TOPLEVEL/$a/$a$SEARCHFILE ]; then
-        # one-level repo, exact match :-)
-        ITEMLIST="$ITEMLIST $a"
+    */*$SEARCHSUFFIX )
+      # relative path to a SlackBuild or package: it should be right here :-)
+      if [ ! -f "$item" ]; then
+        log_warning "${blamemsg}${TOPLEVEL}/${item} not found"
+        errstat=1
       else
-        # is it a prog in a two-level repo?
-        progcount=$(ls $TOPLEVEL/*/$a/$a$SEARCHFILE 2>/dev/null | wc -l)
-        if [ $progcount = 1 ]; then
-          # two-level repo, one matching prog :-)
-          ITEMLIST="$ITEMLIST $(cd $TOPLEVEL/*/$a/..; basename $(pwd))/$a"
-        elif [ $progcount != 0 ]; then
-          log_warning "${blamemsg}Multiple matches for $a in $TOPLEVEL, please specify the category"
-          errstat=1
-          continue
+        # check name of SlackBuild
+        ITEMLIST="$ITEMLIST $(dirname $item)"
+      fi
+      ;;
+
+    *$SEARCHSUFFIX )
+      # simple SlackBuild or package name
+      found=$(find . type f -name "$item" | sed 's:^\./::')
+      wc=$(echo $found | wc -w)
+      if [ "$wc" = 0 ]; then
+        log_warning "${blamemsg}${item} not found in ${TOPLEVEL}"
+        errstat=1
+      elif [ "$wc" != 1 ]; then
+        log_warning "${blamemsg}Multiple matches for ${item} within ${TOPLEVEL}, please specify a relative path"
+        errstat=1
+      else
+        ITEMLIST="$ITEMLIST $(dirname $found)"
+      fi
+      ;;
+
+    */* )
+      # relative path to a directory: it should be right here :-)
+      if [ ! -d "$item" ]; then
+        log_warning "${blamemsg}${TOPLEVEL}/${item} not found"
+        errstat=1
+      else
+        # does it contain packages or a slackbuild?
+        if [ -f "$(ls $item/$(basename $item)$SEARCHSUFFIX 2>/dev/null | head -n 1)" ]; then
+          # yes => return the containing directory
+          ITEMLIST="$ITEMLIST $item"
         else
-          # is it a category in a two-level repo?
-          if [ -d "$TOPLEVEL/$a" ]; then
-            # push the whole category onto $*
-            cd $TOPLEVEL
-            ITEMLIST="$ITEMLIST $(ls -d $a/*)"
-            cd - >/dev/null
-          else
-            log_warning "${blamemsg}${a} not found in $TOPLEVEL"
+          # no => it should contain subdirectories that we can expand later
+          subdirs=$(find . -mindepth 1 -maxdepth 1 -type d | sed 's:^\./::')
+          if [ -z "$subdirs" ]; then
+            log_warning "${blamemsg}${item} contains nothing useful"
             errstat=1
-            continue
+          else
+            ITEMLIST="$ITEMLIST $subdirs"
           fi
         fi
       fi
-    else
-      # two names supplied, so it should be a prog in a two-level repo:
-      if [ -f $TOPLEVEL/$a/$b/$b$SEARCHFILE ]; then
-        # two-level repo, exact match :-)
-        ITEMLIST="$ITEMLIST $a/$b"
-      else
-        # let's try to be user-friendly:
-        if [ -d "$TOPLEVEL/$a/$b" ]; then
-          log_warning "${blamemsg}$TOPLEVEL/$a/$b/$b$SEARCHFILE not found"
-        elif [ -d "$TOPLEVEL/$a" ]; then
-          log_warning "${blamemsg}${b} not found in $TOPLEVEL/$a"
-        else
-          log_warning "${blamemsg}${a}/${b} not found in $TOPLEVEL"
-        fi
+      ;;
+
+    * )
+      # simple name: somewhere under here there should be exactly one directory with that name
+      found=$(find . -type d -name "$item" -print | sed 's:^\./::')
+      wc=$(echo $found | wc -w)
+      if [ "$wc" = 0 ]; then
+        log_warning "${blamemsg}${item} not found in ${TOPLEVEL}"
         errstat=1
-        continue
+      elif [ "$wc" != 1 ]; then
+        log_warning "${blamemsg}Multiple matches for ${item} within ${TOPLEVEL}, please specify a relative path"
+        errstat=1
+      else
+        # does it contain packages or a slackbuild?
+        if [ -f "$(ls $found/${item}${SEARCHSUFFIX} 2>/dev/null | head -n 1)" ]; then
+          # yes => return the containing directory
+          ITEMLIST="$ITEMLIST $found"
+        else
+          # no => it should contain subdirectories that we can expand later
+          subdirs=$(find $found -mindepth 1 -maxdepth 1 -type d | sed 's:^\./::')
+          if [ -z "$subdirs" ]; then
+            log_warning "${blamemsg}${found} contains nothing useful"
+            errstat=1
+          else
+            ITEMLIST="$ITEMLIST $subdirs"
+          fi
+        fi
       fi
-    fi
+      ;;
+
+   esac
 
   done
 

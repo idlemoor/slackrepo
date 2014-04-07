@@ -1,0 +1,17 @@
+header h2   { font-family: sans-serif; margin-left: 20%; text-align: left; }
+header img  { float: left; padding-right: 10px; }
+
+nav         { float: left;  width: 20%; margin-top: 10px; font-family: sans-serif; }
+nav ul      { margin: 0; padding: 0; list-style: none; }
+nav li      { margin-bottom: 10px; font-weight: bold; }
+
+#main       { float: right; width: 80%; margin-top: 10px; font-family: serif; }
+#main h2    { font-family: sans-serif; margin-top: 0; }
+#main h4    { font-family: sans-serif; }
+#main li    { margin-bottom: 12px; }
+#main table { border-collapse: collapse; }
+#main th    { border: 1px solid black; padding: 4px; font-family: sans-serif; font-style: italic; }
+#main td    { border: 1px solid black; padding: 4px; }
+
+footer      { clear:both; margin-top: 16px; }
+footer p    { font-size: x-small; font-style: italic; text-align: right; font-family: sans-serif; }

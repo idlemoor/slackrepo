@@ -1,0 +1,340 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of SLACKREPO</TITLE>
+</HEAD><BODY>
+<H1>SLACKREPO</H1>
+Section: Maintenance Commands (8)<BR>Updated: 2014-04-01<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+slackrepo - automated SlackBuild package building and repository maintenance
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>slackrepo build</B>
+
+[<I>OPTIONS</I>]
+
+[<I>ITEM</I>...]
+
+<BR>
+
+<B>slackrepo rebuild</B>
+
+[<I>OPTIONS</I>]
+
+[<I>ITEM</I>...]
+
+<BR>
+
+<B>slackrepo remove</B>
+
+[<I>OPTIONS</I>]
+
+<I>ITEM</I>...
+
+<BR>
+
+<B>slackrepo update</B>
+
+[<I>OPTIONS</I>]
+
+[<I>ITEM</I>...]
+
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<DL COMPACT>
+<DT><B>slackrepo&nbsp;build</B>
+
+<DD>
+Builds packages from an input repository of SlackBuilds (for example,
+a git clone of SlackBuilds.org), and then stores them in a package repository.
+<DT><B>slackrepo&nbsp;rebuild</B>
+
+<DD>
+Rebuilds packages that are already in the package repository.
+<DT><B>slackrepo&nbsp;remove</B>
+
+<DD>
+Removes packages from the package repository.
+<DT><B>slackrepo&nbsp;update</B>
+
+<DD>
+Builds, rebuilds and removes packages in the package repository,
+according to changes in the SlackBuild repository.
+<DT><I>ITEM</I>
+
+<DD>
+An item specifies
+(in build and rebuild mode) a directory in the SlackBuild repository
+that contains a set of SlackBuild files,
+or (in remove and update mode) a directory in the package repository
+that contains one or more packages built from a SlackBuild.
+If no items are specified, all directories in the SlackBuild or package
+repository are processed (except in remove mode, where it is mandatory
+to specify the items to be removed).
+</DL>
+<A NAME="lbAE">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>--repo=ID</B>
+
+<DD>
+Use the SlackBuild and package repository identified by ID.
+The filestore locations of the SlackBuild and package repositories are defined in
+the configuration file
+<I>/etc/slackrepo/slackrepo_ID.conf</I>,
+
+where  ID is an identifier for the repositories.
+The default repository ID is SBo.
+For details, see
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+slackrepo.conf">slackrepo.conf</A>(5)</B>.
+
+<DT><B>--test</B>
+
+<DD>
+The SlackBuild files and the built packages will be subjected to additional
+quality assurance tests.
+<DT><B>--dry-run</B>
+
+<DD>
+Builds and rebuilds will be performed, and removals will be notified, but no
+changes will be made to the package repository.
+<DT><B>-v</B>, <B>--verbose</B>
+
+<DD>
+Increase the quantity of messages printed on the console during execution.
+<DT><B>-q</B>, <B>--quiet</B>
+
+<DD>
+Reduce the quantity of messages printed on the console during execution.
+</DL>
+<A NAME="lbAF">&nbsp;</A>
+<H2>EXIT STATUS</H2>
+
+<B>0</B>
+
+all operations succeeded or only warnings were issued
+<BR>
+
+<B>1</B>
+
+one or more operations failed
+<BR>
+
+<B>2</B>
+
+the configuration file was not found
+<BR>
+
+<B>3</B>
+
+invocation usage error
+<BR>
+
+<B>4</B>
+
+internal error, please report a bug
+<A NAME="lbAG">&nbsp;</A>
+<H2>ENVIRONMENT</H2>
+
+The behaviour of
+<B>slackrepo</B>
+
+is affected by the following environment variables:
+
+<B>REPO</B>, <B>SBREPO</B>, <B>PKGREPO</B>, <B>SRCREPO</B>,
+
+<B>HINTS</B>, <B>LOGDIR</B>, <B>TMP</B>,
+
+<B>ARCH</B>, <B>TAG</B>, <B>PKGTYPE</B>, <B>NUMJOBS</B>, <B>USE_GENREPOS</B>
+
+
+Each of these environment variables overrides the corresponding configuration
+variable in the file
+<I>/etc/slackrepo/slackrepo_ID.conf</I>
+
+or
+<I>~/.slackreporc</I>.
+
+For details, see
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+slackrepo.conf">slackrepo.conf</A></B>(5).
+
+<A NAME="lbAH">&nbsp;</A>
+<H2>FILES</H2>
+
+<DL COMPACT>
+<DT><I>/etc/slackrepo/slackrepo_SBo.conf</I>
+
+<DD>
+This file defines the configuration variables for the SBo repository; see
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+slackrepo.conf">slackrepo.conf</A></B>(5).
+
+<DT><I>~/.slackreporc</I>
+
+<DD>
+This file can optionally be created to define the default repository ID
+and override configuration variables set in
+<I>/etc/slackrepo/slackrepo_ID.conf</I>;
+
+see
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+slackrepo.conf">slackrepo.conf</A></B>(5).
+
+<DT><I>/etc/slackrepo/hints_SBo/</I>
+
+<DD>
+This directory contains the hint files for the SBo repository; see
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+slackrepo_hints">slackrepo_hints</A></B>(5).
+
+</DL>
+<A NAME="lbAI">&nbsp;</A>
+<H2>NOTES</H2>
+
+
+For best results,
+<B>slackrepo</B>
+
+is intended to be run on a &quot;clean&quot; standard Slackware
+environment (like a &quot;build box&quot; or a virtual machine), with a full installation
+of Slackware and no additional packages (or very few). You can then use the
+package repository to install the packages on other hosts (e.g. with
+<B>slackpkg+</B>).
+
+
+Packages are updated or rebuilt if required; for example, if a package is being
+built, its dependencies will be updated and/or rebuilt if they are out-of-date.
+A package is out-of-date if:
+<DL COMPACT><DT><DD>
+<DL COMPACT>
+<DT>*<DD>
+the git revision in the directory containing the SlackBuild has changed since the package was built
+<DT>*<DD>
+the directory containing the SlackBuilds has untracked/uncommited files (i.e., &quot;git is dirty&quot;) and they are newer than the package
+<DT>*<DD>
+any relevant hint has changed since the package was built
+<DT>*<DD>
+any of its direct dependencies has been updated since the package was built
+<DT>*<DD>
+the version of Slackware has changed since the package was built
+</DL>
+</DL>
+
+
+Changes in the SlackBuilds directory, and changes to the relevant hints, are
+classified as &quot;updates&quot;, which will cause directly depending items to be rebuilt.
+Other changes are classified as &quot;rebuilds&quot; and do not cause depending items to be rebuilt.
+For example, ffmpeg depends on x264, and transcode depends on ffmpeg.
+If x264 is updated, ffmpeg will be rebuilt, but transcode will not be rebuilt.
+If x264 is rebuilt, ffmpeg will not be rebuilt.
+If ffmpeg is updated, transcode will be rebuilt.
+
+When a package is rebuilt, and when a package is updated but its version
+is unchanged, the BUILD number in the package repository is always incremented
+(and the BUILD number in the SlackBuild file is ignored).
+
+<B>slackrepo</B>
+
+is not affiliated with, or endorsed by, the SlackBuilds.org Project or
+Slackware. The author thanks those projects for their continuing generosity
+to the community.  Slackware&#174; is a registered trademark of Patrick Volkerding.
+<A NAME="lbAJ">&nbsp;</A>
+<H2>EXAMPLES</H2>
+
+Build the whole SBo repository (you will need about four days
+and 61Gb of disk space):
+
+<DL COMPACT><DT><DD>
+
+# slackrepo build
+
+</DL>
+
+
+Build shotwell, with all its dependencies:
+
+<DL COMPACT><DT><DD>
+
+# slackrepo build shotwell
+
+</DL>
+
+
+Remove grass (note, its dependencies and dependers will not be removed):
+
+<DL COMPACT><DT><DD>
+
+# slackpkg remove grass
+
+</DL>
+
+
+Update all the academic/ packages in your package repository for SBo's latest changes:
+
+<DL COMPACT><DT><DD>
+
+# slackrepo update academic
+
+</DL>
+
+
+Do a &quot;dry run&quot; update of all your SBo packages, with verbose messages:
+
+<DL COMPACT><DT><DD>
+
+# slackrepo update --dry-run -v
+
+</DL>
+
+
+Test-build myprog in the newstuff repo, with verbose messages; do not store the built package:
+
+<DL COMPACT><DT><DD>
+
+# slackrepo build -v --repo=newstuff --test --dry-run myprog
+
+</DL>
+
+<A NAME="lbAK">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+slackrepo.conf">slackrepo.conf</A></B>(5),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+slackrepo_hints">slackrepo_hints</A></B>(5),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+installpkg">installpkg</A></B>(8),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+upgradepkg">upgradepkg</A></B>(8),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+removepkg">removepkg</A></B>(8),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+pkgtool">pkgtool</A></B>(8),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+slackpkg">slackpkg</A></B>(8).
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">OPTIONS</A><DD>
+<DT><A HREF="#lbAF">EXIT STATUS</A><DD>
+<DT><A HREF="#lbAG">ENVIRONMENT</A><DD>
+<DT><A HREF="#lbAH">FILES</A><DD>
+<DT><A HREF="#lbAI">NOTES</A><DD>
+<DT><A HREF="#lbAJ">EXAMPLES</A><DD>
+<DT><A HREF="#lbAK">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 12:43:15 GMT, April 07, 2014
+</BODY>
+</HTML>

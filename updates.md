@@ -1,0 +1,21 @@
+Updates don't just happen in update mode.  Update mode proactively looks for packages that are out-of-date, and also removes packages for which the SlackBuilds no longer exist.  In build mode and in rebuild mode, packages are updated or rebuilt if required; for example, if a package is being built, its dependencies will be updated and/or rebuilt if they are out-of-date.  
+
+A package is out-of-date if --
+
+* the git revision in the directory containing the SlackBuild has changed since the package was built
+* the directory containing the SlackBuilds has untracked/uncommited files (i.e. "git is dirty") and they are newer than the package
+* any relevant hint has changed since the package was built
+* any of its direct dependencies has been updated since the package was built
+* the version of Slackware has changed since the package was built
+
+Changes in the SlackBuilds directory, and changes to the relevant hints,
+are classified as 'updates', which will cause directly depending items to
+be rebuilt.  Other changes are classified as 'rebuilds' and do not cause
+depending items to be rebuilt.
+
+For example, ffmpeg depends on x264, and transcode depends on ffmpeg. If x264 is updated, ffmpeg will be rebuilt, but transcode will not be rebuilt.  If x264 is rebuilt, ffmpeg will not be rebuilt.  If ffmpeg is updated, transcode will be rebuilt.
+
+When a package is rebuilt, and when a package is updated but its
+version number is unchanged, the BUILD number in the package repository
+is always incremented (and the BUILD number in the SlackBuild file is
+ignored).

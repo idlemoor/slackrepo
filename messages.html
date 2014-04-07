@@ -1,18 +1,69 @@
-All messages from slackrepo are sent to a main log file.  Progress messages are
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<title>slackrepo</title>
+<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
+<link rel="shortcut icon" href="/slackrepo/favicon.ico">
+<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+</head>
+
+<body>
+
+<header>
+<h2>Messages and logging</h2>
+</header>
+
+<nav>
+<ul>
+<li><a href="index.html">About</a></li>
+<li><a href="configuration.md">Configuration</a></li>
+<li><a href="dependencies.md">Dependencies</a></li>
+<li><a href="examples.md">Examples</a></li>
+<li><a href="genrepos.md">gen_repos_files.sh</a></li>
+<li><a href="hints.html">Hints</a></li>
+<li><a href="installing.html">Installing</a></li>
+<li><a href="links.html">Links</a></li>
+<li><a href="LICENCE.md">Licence</a></li>
+<li><a href="manpages.html">man pages</a></li>
+<li><a href="messages.html">Messages and logging</a></li>
+<li><a href="metadata.html">Package metadata</a></li>
+<li><a href="running.html">Running</a></li>
+<li><a href="sbo_git.html">SlackBuilds.org git</a></li>
+<li><a href="slackpkgplus.md">slackpkg+</a></li>
+<li><a href="structure.html">Repo structure</a></li>
+<li><a href="tests.html">--test</a></li>
+<li><a href="updates.html">Updates</a></li>
+</ul>
+</nav>
+
+<div id="main">
+
+<p>All messages from slackrepo are sent to a main log file.  Progress messages are
 displayed on the screen.  Control arguments '--verbose' ('-v') and
 '--quiet' ('-q') can be specified, to increase or decrease the details
-that are displayed on the screen.
+that are displayed on the screen.</p>
 
-Detailed output from each build process is sent to an item-specific log
-file, but is not displayed on the screen.
+<p>Detailed output from each build process is sent to an item-specific log
+file, but is not displayed on the screen.</p>
 
-The log files are in a repository-specific directory.  A new main log file is created
-for each run of slackrepo, with a name of the form 
+<p>The log files are in a repository-specific directory.  A new main log file is created
+for each run of slackrepo, with a name of the form</p>
 
-  `/var/log/slackrepo/log_SBo/slackrepo_YYYY-MM-DD_hh:mm:ss.log`
+<pre>
+/var/log/slackrepo/log_SBo/slackrepo_YYYY-MM-DD_hh:mm:ss.log
+</pre>
 
-Each item-specific log file is in a subdirectory if the SlackBuilds directory
+<p>Each item-specific log file is in a subdirectory if the SlackBuilds directory
 has subdirectories.  For example, the log file for the SBo item 'graphics/shotwell'
-is
+is</p>
 
-  `/var/log/slackrepo/log_SBo/graphics/shotwell.log`
+<pre>
+/var/log/slackrepo/log_SBo/graphics/shotwell.log`
+</pre>
+
+</div>
+
+</body>
+</html>

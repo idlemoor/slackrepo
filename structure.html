@@ -1,13 +1,56 @@
-Multiple repositories are supported.  The Repository ID, e.g. 'SBo',
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<title>slackrepo</title>
+<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
+<link rel="shortcut icon" href="/slackrepo/favicon.ico">
+<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+</head>
+
+<body>
+
+<header>
+<h2>Repository filestore structure</h2>
+</header>
+
+<nav>
+<ul>
+<li><a href="index.html">About</a></li>
+<li><a href="configuration.md">Configuration</a></li>
+<li><a href="dependencies.md">Dependencies</a></li>
+<li><a href="examples.md">Examples</a></li>
+<li><a href="genrepos.md">gen_repos_files.sh</a></li>
+<li><a href="hints.html">Hints</a></li>
+<li><a href="installing.html">Installing</a></li>
+<li><a href="links.html">Links</a></li>
+<li><a href="LICENCE.md">Licence</a></li>
+<li><a href="manpages.html">man pages</a></li>
+<li><a href="messages.html">Messages and logging</a></li>
+<li><a href="metadata.html">Package metadata</a></li>
+<li><a href="running.html">Running</a></li>
+<li><a href="sbo_git.html">SlackBuilds.org git</a></li>
+<li><a href="slackpkgplus.md">slackpkg+</a></li>
+<li><a href="structure.html">Repo structure</a></li>
+<li><a href="tests.html">--test</a></li>
+<li><a href="updates.html">Updates</a></li>
+</ul>
+</nav>
+
+<div id="main">
+
+<p>Multiple repositories are supported.  The Repository ID, e.g. 'SBo',
 selects a configuration file, e.g. /etc/slackrepo/slackrepo_SBo.conf, and
 the configuration file sets the paths of the SlackBuild repository, the
 source repository, the package repository, the hints directory, and the
 log directory.  The Repository ID can be specified by the control argument
 '--repo=ID', or by the REPO environment variable, or by setting `REPO=ID`
-in the file ~/.slackreporc.  By default, the default default is 'SBo'.
+in the file ~/.slackreporc.  By default, the default default is 'SBo'.</p>
 
-Example showing repository trees for Repository ID 'SBo':
-    
+<p>Example showing repository trees for Repository ID 'SBo':</p>
+
+<pre>
     [REPO=SBo] /etc/slackrepo/slackrepo_SBo.conf
                 |
     [SBREPO]    |--/var/lib/slackrepo/git_SBo/category/item/item.SlackBuild (etc)
@@ -17,8 +60,14 @@ Example showing repository trees for Repository ID 'SBo':
     [HINTS]     |--/etc/slackrepo/hints_SBo/category/item.options
                 |
     [LOGDIR]    |--/var/log/slackrepo/log_SBo/category/item.log
+</pre>
 
-Under each of git_SBo, src_SBo and pkg_SBo is a directory for each SBo
+<p>Under each of git_SBo, src_SBo and pkg_SBo is a directory for each SBo
 category, and under each category directory is a subdirectory for each
 item.  Under hints_SBo and log_SBo there are directories for each category,
-but the hints and logs are not in subdirectories.
+but the hints and logs are not in subdirectories.</p>
+
+</div>
+
+</body>
+</html>

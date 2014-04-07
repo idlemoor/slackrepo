@@ -1,44 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<title>slackrepo</title>
+<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
+<link rel="shortcut icon" href="/slackrepo/favicon.ico">
+<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+</head>
+
+<body>
+
+<header>
+<h2>--test</h2>
+</header>
+
+<nav>
+<ul>
+<li><a href="index.html">About</a></li>
+<li><a href="configuration.md">Configuration</a></li>
+<li><a href="dependencies.md">Dependencies</a></li>
+<li><a href="examples.md">Examples</a></li>
+<li><a href="genrepos.md">gen_repos_files.sh</a></li>
+<li><a href="hints.html">Hints</a></li>
+<li><a href="installing.html">Installing</a></li>
+<li><a href="links.html">Links</a></li>
+<li><a href="LICENCE.md">Licence</a></li>
+<li><a href="manpages.html">man pages</a></li>
+<li><a href="messages.html">Messages and logging</a></li>
+<li><a href="metadata.html">Package metadata</a></li>
+<li><a href="running.html">Running</a></li>
+<li><a href="sbo_git.html">SlackBuilds.org git</a></li>
+<li><a href="slackpkgplus.md">slackpkg+</a></li>
+<li><a href="structure.html">Repo structure</a></li>
+<li><a href="tests.html">--test</a></li>
+<li><a href="updates.html">Updates</a></li>
+</ul>
+</nav>
+
+<div id="main">
+
 The following tests are performed if the --test control argument is specified:
 
-### prgnam.SlackBuild
-* Must exist
+<h4>prgnam.SlackBuild</h4>
+<li>Must exist</li>
 
-### slack-desc
-* Must exist
-* Must have exactly 11 lines that start with 'prgnam:'
-* If the handy-ruler exists, it must be aligned correctly and have the correct format
-* No trailing spaces on 'prgnam:' lines, i.e. no lines should match `^prgnam:<sp><sp>*$`
-* No 'prgnam:' lines should have more than 73 chars of description
-* All other lines must be prefixed by '#', or completely empty
+<h4>slack-desc</h4>
+<li>Must exist
+<li>Must have exactly 11 lines that start with 'prgnam:'</li>
+<li>If the handy-ruler exists, it must be aligned correctly and have the correct format</li>
+<li>No trailing spaces on 'prgnam:' lines, i.e. no lines should match `^prgnam:&lt;sp&gt;&lt;sp&gt;*$`</li>
+<li>No 'prgnam:' lines should have more than 73 chars of description</li>
+<li>All other lines must be prefixed by '#', or completely empty</li>
 
-### prgnam.info
-* Optional; its existence indicates an SBo-style SlackBuild
-* Should define PRGNAM, VERSION, HOMEPAGE, DOWNLOAD(_ARCH), MD5SUM(_ARCH), REQUIRES, MAINTAINER, EMAIL
-* Download URLs should not be 404
-* PRGNAM should be the same as the .info file's name and the .SlackBuild file's name
-* Each item defined in REQUIRES should exist in the repo
+<h4>prgnam.info</h4>
+<li>Optional; its existence indicates an SBo-style SlackBuild</li>
+<li>Should define PRGNAM, VERSION, HOMEPAGE, DOWNLOAD(_ARCH), MD5SUM(_ARCH), REQUIRES, MAINTAINER, EMAIL</li>
+<li>Download URLs should not be 404</li>
+<li>PRGNAM should be the same as the .info file's name and the .SlackBuild file's name</li>
+<li>Each item defined in REQUIRES should exist in the repo</li>
 
-### README
-* Optional; if prgnam.info exists, README must exist
-* Should not contain long lines >= 80 chars
+<h4>README</h4>
+<li>Optional; if prgnam.info exists, README must exist</li>
+<li>Should not contain long lines &gt;= 80 chars</li>
 
-### Package name
+<h4>Package name</h4>
 
-* Package name should be in form $PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE
-* If the slackbuild only produces one package, $PRGNAM should be the same as the slackbuild's name and should be the same as PRGNAM in the .info file
-* VERSION should be the same as VERSION in the .info file
-* ARCH should be i?86 or x86_64 (optionally suffixed with _$KNLVER), or noarch
-* BUILD should be numeric
-* TAG should be same as the repo's TAG
-* PKGTYPE should be tgz, txz, tbz or tlz (and should be as set by the caller)
+<li>Package name should be in form $PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE</li>
+<li>If the slackbuild only produces one package, $PRGNAM should be the same as the slackbuild's name and should be the same as PRGNAM in the .info file</li>
+<li>VERSION should be the same as VERSION in the .info file</li>
+<li>ARCH should be i?86 or x86_64 (optionally suffixed with _$KNLVER), or noarch</li>
+<li>BUILD should be numeric</li>
+<li>TAG should be same as the repo's TAG</li>
+<li>PKGTYPE should be tgz, txz, tbz or tlz (and should be as set by the caller)</li>
 
-### Package contents
+<h4>Package contents</h4>
 
-* Should be tar-1.13 compatible (path prefix should not start with './')
-* Compression type should correspond to package type suffix
-* Should only install to (bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)
-* should contain install/slack-desc
-* nothing installed to usr/local
-* nothing installed to usr/share/man
-* all manpages gz compressed
-* should install without error
+<li>Should be tar-1.13 compatible (path prefix should not start with './')</li>
+<li>Compression type should correspond to package type suffix</li>
+<li>Should only install to (bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(usr)|(var)|(install)</li>
+<li>should contain install/slack-desc</li>
+<li>nothing installed to usr/local</li>
+<li>nothing installed to usr/share/man</li>
+<li>all manpages gz compressed</li>
+<li>should install without error</li>
+
+</div>
+
+</body>
+</html>

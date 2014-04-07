@@ -1,70 +1,118 @@
-Slackrepo runs from the command line.  It is not interactive.  Like other
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<title>slackrepo</title>
+<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
+<link rel="shortcut icon" href="/slackrepo/favicon.ico">
+<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+</head>
+
+<body>
+
+<header>
+<h2>Running slackrepo</h2>
+</header>
+
+<nav>
+<ul>
+<li><a href="index.html">About</a></li>
+<li><a href="configuration.md">Configuration</a></li>
+<li><a href="dependencies.md">Dependencies</a></li>
+<li><a href="examples.md">Examples</a></li>
+<li><a href="genrepos.md">gen_repos_files.sh</a></li>
+<li><a href="hints.html">Hints</a></li>
+<li><a href="installing.html">Installing</a></li>
+<li><a href="links.html">Links</a></li>
+<li><a href="LICENCE.md">Licence</a></li>
+<li><a href="manpages.html">man pages</a></li>
+<li><a href="messages.html">Messages and logging</a></li>
+<li><a href="metadata.html">Package metadata</a></li>
+<li><a href="running.html">Running</a></li>
+<li><a href="sbo_git.html">SlackBuilds.org git</a></li>
+<li><a href="slackpkgplus.md">slackpkg+</a></li>
+<li><a href="structure.html">Repo structure</a></li>
+<li><a href="tests.html">--test</a></li>
+<li><a href="updates.html">Updates</a></li>
+</ul>
+</nav>
+
+<div id="main">
+
+<p>Slackrepo runs from the command line.  It is not interactive.  Like other
 Slackware package management tools, it should be run as the root user,
 for example with 'su -'.  Sources are downloaded on demand (unless already
 available in the local cache); a well-functioning network connection is
-assumed.
+assumed.</p>
 
-Slackrepo has four modes of operation: build, rebuild, remove, and update.
+<p>Slackrepo has four modes of operation: build, rebuild, remove, and update.</p>
 
-(1) Build mode:
+<h4>(1) Build mode</h4>
 
-  `slackrepo build [--options] [item...]`
+<pre>slackrepo build [--options] [item...]</pre>
 
-In build mode, each specified item in the SlackBuild repository is
+<p>In build mode, each specified item in the SlackBuild repository is
 built and stored into the package repository if there is no up-to-date
 package already stored.  Missing or out-of-date dependencies are also
 built and stored into the package repository.  If no items are specified,
-everything in the SlackBuild repository is built and stored.
+everything in the SlackBuild repository is built and stored.</p>
 
-Items can be specified as the name of an individual item (e.g. 'wxPython')
+<p>Items can be specified as the name of an individual item (e.g. 'wxPython')
 or as an individual item in a category (e.g. 'libraries/wxPython'), or as
 an entire category of items (e.g. 'libraries').  Obviously, very large
-amounts of storage will be needed if you build entire categories.
+amounts of storage will be needed if you build entire categories.</p>
 
-(2) Rebuild mode:
+<h4>(2) Rebuild mode</h4>
 
-  `slackrepo rebuild [--options] [item...]`
+<pre>slackrepo rebuild [--options] [item...]</pre>
 
-Rebuild mode is like build mode, except that packages already in the package
-repository will be rebuilt, even if they are up-to-date.
+<p>Rebuild mode is like build mode, except that packages already in the package
+repository will be rebuilt, even if they are up-to-date.</p>
 
-(3) Remove mode:
+<h4>(3) Remove mode</h4>
 
-  `slackrepo remove [--options] item...`
+<pre>slackrepo remove [--options] item...</pre>
 
-In remove mode, each specified item is removed from the package repository.  Also,
-any cached source files are removed.
+<p>In remove mode, each specified item is removed from the package repository.  Also,
+any cached source files are removed.</p>
 
-(4) Update mode:
+<h4>(4) Update mode</h4>
 
-  `slackrepo update [--options] [item...]`
+<pre>slackrepo update [--options] [item...]</pre>
 
-In update mode, each specified package (and its dependencies) in the
+<p>In update mode, each specified package (and its dependencies) in the
 package repository is compared to the SlackBuild repository, and built,
 rebuilt or removed, as appropriate.  If no items are specified,
-everything in the package repository is compared.
+everything in the package repository is compared.</p>
 
-### Options
+<h4>Options</h4>
 
---repo=ID
+<pre>--repo=ID</pre>
 
-Use the SlackBuild and package repository identified by ID.  The location of
+<p>Use the SlackBuild and package repository identified by ID.  The location of
 the SlackBuild and package repositories are determined by the configuration
-file /etc/slackrepo/repo_ID.conf.  The default repository ID is SBo.
+file /etc/slackrepo/repo_ID.conf.  The default repository ID is SBo.</p>
 
---test
+<pre>--test</pre>
 
-The SlackBuild files and the built packages will be subjected to additional
-quality assurance tests.
+<p>The SlackBuild files and the built packages will be subjected to additional
+quality assurance tests.</p>
 
---dry-run
+<pre>--dry-run</pre>
 
-Builds and rebuilds will be performed, and removals will be notified, but no changes will be made to the package repository. 
+<p>Builds and rebuilds will be performed, and removals will be notified,
+but no changes will be made to the package repository.</p>
 
--v, --verbose
+<pre>-v, --verbose</pre>
 
-Increase the quantity of messages printed on the console during execution.
+<p>Increase the quantity of messages printed on the console during execution.</p>
 
--q, --quiet
+<pre>-q, --quiet</pre>
 
-Reduce the quantity of messages printed on the console during execution.
+<p>Reduce the quantity of messages printed on the console during execution.</p>
+
+</div>
+
+</body>
+</html>

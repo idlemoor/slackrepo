@@ -48,23 +48,25 @@ including options and optional dependencies.</p>
 <p>A sample set of hints for SlackBuilds.org are supplied in the directory
 /etc/slackrepo/hints_SBo, but you are encouraged to review and modify them.</p>
 
-<p>In particular, *please* review the README files of the packages you are
-building, and then *please* modify the supplied option and dependency hints
+<p>In particular, <strong>please</strong> review the README files of the packages you are
+building, and then <strong>please</strong> modify the supplied option and dependency hints
 for your own requirements!</p>
 
 <p>The types of hints are as follows:</p>
 
-* prgnam.options      -- options to supply to the SlackBuild
-* prgnam.optdeps      -- optional dependencies, including deps for options
-* prgnam.readmedeps   -- dependencies to substitute for %README% in REQUIRES="..."
-* prgnam.uidgid       -- groupadd and useradd commands needed for prgnam
-* prgnam.md5ignore    -- don't check source md5sum
-* prgnam.makej1       -- set MAKEFLAGS='-j1' during build
-* prgnam.skipme       -- don't build prgnam
-* prgnam.answers      -- answers for prompts printed when the SlackBuild is run
-* prgnam.version      -- attempt to patch prgnam.info and prgnam.SlackBuild for a new version
-* prgnam.cleanup      -- script to run after prgnam is uninstalled
-* prgnam.no_uninstall -- do not uninstall (and do not cleanup)
+<ul>
+<li><b>prgnam.options</b>      -- options to supply to the SlackBuild</li>
+<li><b>prgnam.optdeps</b>      -- optional dependencies, including deps for options</li>
+<li><b>prgnam.readmedeps</b>   -- dependencies to substitute for %README% in REQUIRES="..."</li>
+<li><b>prgnam.uidgid</b>       -- groupadd and useradd commands needed for prgnam</li>
+<li><b>prgnam.md5ignore</b>    -- don't check source md5sum</li>
+<li><b>prgnam.makej1</b>       -- set MAKEFLAGS='-j1' during build</li>
+<li><b>prgnam.skipme</b>       -- don't build prgnam</li>
+<li><b>prgnam.answers</b>      -- answers for prompts printed when the SlackBuild is run</li>
+<li><b>prgnam.version</b>      -- attempt to patch prgnam.info and prgnam.SlackBuild for a new version</li>
+<li><b>prgnam.cleanup</b>      -- script to run after prgnam is uninstalled</li>
+<li><b>prgnam.no_uninstall</b> -- do not uninstall (and do not cleanup)</li>
+</ul>
 
 <h4>prgnam.options</h4>
 

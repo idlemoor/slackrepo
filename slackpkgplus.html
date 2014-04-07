@@ -69,10 +69,10 @@ MIRRORPLUS['SBo']=http://buildhost/pkg_SBo/
 <p>If you choose not to sign your packages with gen_repos_files.sh, you will
 need to tell slackpkg+ not to check GPG signatures.  There are two ways
 of doing this: (1) set <code>CHECKGPG=off</code> in /etc/slackpkg/slackpkg.conf, or
-(2) use the slackpkg control argument '-checkgpg=off'.</p>
+(2) use the slackpkg control argument <code>-checkgpg=off</code>.</p>
 
 <p>Note that slackpkg+ will not install newly added packages from your own
-package repository when you run 'slackpkg install-new'.  This command
+package repository when you run <code>slackpkg install-new</code>.  This command
 searches for new packages ONLY in the official Slackware repository.  To
 install specific packages in your own repository you can use</p>
 

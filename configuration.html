@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<title>slackrepo</title>
+<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
+<link rel="shortcut icon" href="/slackrepo/favicon.ico">
+<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+</head>
+
+<body>
+
+<header>
+<h2>Configuration</h2>
+</header>
+
+<nav>
+<ul>
+<li><a href="index.html">About</a></li>
+<li><a href="installing.html">Installing</a></li>
+<li><a href="running.html">Running</a></li>
+<li><a href="dependencies.html">Dependencies</a></li>
+<li><a href="updates.html">Updates</a></li>
+<li><a href="sbo_git.html">SlackBuilds.org git</a></li>
+<li><a href="messages.html">Messages and logging</a></li>
+<li><a href="examples.html">Examples</a></li>
+<li><a href="configuration.html">Configuration</a></li>
+<li><a href="hints.html">Hints</a></li>
+<li><a href="manpages.html">man pages</a></li>
+<li><a href="structure.html">Repo structure</a></li>
+<li><a href="metadata.html">Package metadata</a></li>
+<li><a href="tests.html">--test</a></li>
+<li><a href="genrepos.html">gen_repos_files.sh</a></li>
+<li><a href="slackpkgplus.html">slackpkg+</a></li>
+<li><a href="links.html">Links</a></li>
+<li><a href="licence.html">Licence</a></li>
+</ul>
+</nav>
+
+<div id="main">
+
+<p>These configuration options are set in /etc/slackrepo/slackrepo_SBo.conf or ~/.slackreporc.</p>
+
+<h4>Default repo ID</h4>
+
+<ul>
+<li><code>REPO=SBo</code> -- the default repo  ID.  This  determines  the  configuration  file  
+/etc/slackrepo/slackrepo_ID.conf from which other configuration variables will be read. 
+This can be set only in ~/.slackreporc, but can be overridden by an environment 
+variable or by the command line option '--repo=ID'.</li>
+</ul>
+
+<h4>Repository filestore locations</h4>
+
+<ul>
+<li><code>SBREPO=/var/lib/slackrepo/git_SBo</code> -- location of SlackBuilds repository</li>
+<li><code>PKGREPO=/var/lib/slackrepo/pkg_SBo</code> -- location of package repository</li>
+<li><code>SRCREPO=/var/lib/slackrepo/src_SBo</code> -- location of downloaded source repository</li>
+<li><code>HINTS=/etc/slackrepo/hints_SBo</code> -- location of 'hints' (see 'Hints' page)</li>
+<li><code>LOGDIR=/var/log/slackrepo/log_SBo</code> -- location of log files</li>
+<li><code>TMP=/tmp/SBo</code> - temporary directory</li>
+</ul>
+
+<h4>Building packages</h4>
+
+<ul>
+<li><code>ARCH=''</code> -- arch for built packages (normally determined from the build host)</li>
+<li><code>TAG=_SBo</code> -- tag for built packages (PLEASE CHANGE THIS if your packages will be publicly available)</li>
+<li><code>PKGTYPE=tgz</code> -- package compression type. Valid values are: tgz, txz, tbz, tlz</li>
+<li><code>NUMJOBS=''</code> -- number of make jobs to set in MAKEFLAGS (e.g., '-j2'). Leave blank to have this automatically determined as one more than the number of processors on the build host.</li>
+</ul>
+
+
+<h4>Calling gen_repos_files.sh</h4>
+
+<ul>
+<li><code>USE_GENREPOS='0'</code> -- whether to use gen_repos_files.sh (to enable it, change 0 to 1)</li>
+</ul>
+
+<p>If you enable gen_repos_files.sh, you *must<li>set correct values for its
+configuration options in /etc/slackrepo/slackrepo_ID.conf.  However, if
+you already use gen_repos_files.sh, it will still read your existing
+~/.genreprc file.  For details, see the man page 'slackrepo.conf(5)'.</p>
+
+</div>
+
+</body>
+</html>

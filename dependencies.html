@@ -39,13 +39,21 @@
 </nav>
 
 <div id="main">
+<p> </p>
 
-<p>Dependencies are built and installed automatically, according to the
-contents of .info files (<code>REQUIRES="..."</code>) and <a href="hints.html">hints</a>.  
-This is done as a 'tree' of
-dependencies, not a 'queue', so in some cases dependencies may be
+<p>Dependencies are built, installed and removed automatically, according to the
+contents of .info files (<code>REQUIRES="..."</code>) and <a href="hints.html">hints</a>.
+If a SlackBuild does not have a corresponding .info file, dependencies cannot
+be processed.</p>
+
+<p>Building, installing and removing is done as a 'tree' of
+dependencies, not a linear 'queue', so in some cases dependencies may be
 installed and removed multiple times.  Although time consuming, this
 is necessary in some cases to produce clean packages for redistribution.</p>
+
+<p>In update mode, when a package is found that is older than its dependencies,
+it will be rebuilt. To cause a rebuild, the dependency must have been updated
+significantly, not merely rebuilt: see <a href="updates.html">updates</a> for details.</p>
 
 <p>Remember that dependencies on standard Slackware packages are not (and
 should not be) listed in .info files and hints, and are not tracked by

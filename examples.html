@@ -40,35 +40,23 @@
 
 <div id="main">
 
-<p>Build the whole SBo repository: (You will need about four days and 61Gb of disk space.)</p>
-<pre>
-slackrepo build
-</pre>
+<p>Build the whole SBo repository (you will need about four days and 61Gb of disk space):</p>
+<pre>slackrepo build</pre>
 
 <p>Build graphics/shotwell, with all its dependencies:</p>
-<pre>
-slackrepo build graphics/shotwell or just slackrepo build shotwell
-</pre>
+<p><code>slackrepo build graphics/shotwell</code> or just <code>slackrepo build shotwell</code></p>
 
 <p>Update all the academic/ packages in your package repository for SBo's latest changes:</p>
-<pre>
-slackrepo update academic
-</pre>
+<pre>slackrepo update academic</pre>
 
 <p>Do a "dry run" update of all your SBo packages:</p>
-<pre>
-slackrepo update --dry-run
-</pre>
+<pre>slackrepo update --dry-run</pre>
 
 <p>Remove the package academic/grass (note, its dependencies and dependers will not be removed):</p>
-<pre>
-slackpkg remove academic/grass or just slackpkg remove grass
-</pre>
+<p><code>slackpkg remove academic/grass</code> or just <code>slackpkg remove grass</code></p>
 
 <p>Test-build myprog in the newstuff repo, without storing the built package:</p>
-<pre>
-slackrepo build -v --repo=newstuff --test --dry-run myprog
-</pre>
+<pre>slackrepo build -v --repo=newstuff --test --dry-run myprog</pre>
 
 </div>
 

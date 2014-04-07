@@ -86,12 +86,12 @@ and/or newlines, for example</p>
 a52dec faac libdv libmpeg2 mjpegtools libquicktime x264 xvidcore
 </pre>
 
-<p>The 'prgnam.optdeps' hint files can be used for optional dependencies listed 
-in the SlackBuild's README file.  The 'prgnam.readmedeps' hint files should be 
-used where the REQUIRES="..." list in the prgnam.info contains %README%; the 
+<p>The <b>prgnam.optdeps</b> hint files can be used for optional dependencies listed 
+in the SlackBuild's README file.  The <b>prgnam.readmedeps</b> hint files should be 
+used where the <code>REQUIRES="..."</code> list in the prgnam.info contains %README% -- the 
 contents will be substituted for %README%, but if you don't need any dependencies 
-to be substituted for %README%, you should create an empty prgnam.readmedeps file.  
-(A warning will be printed if %README% is found without a prgnam.readmedeps file.)</p>
+to be substituted for %README%, you should create an empty <b>prgnam.readmedeps</b> file.  
+(A warning will be printed if %README% is found without a <b>prgnam.readmedeps</b> file.)</p>
 
 <h4>prgnam.uidgid</h4>
 
@@ -186,7 +186,7 @@ own tools would normally leave in place.
 is already installed and in active use</strong>
 (for example, if you use slackrepo to test slackrepo, or if you rebuild 
 nvidia-driver on a system that uses nvidia-driver).  You can avoid this by 
-creating a prgnam.no_uninstall hint file, and then the package will not be 
+creating a <b>prgnam.no_uninstall</b> hint file, and then the package will not be 
 uninstalled.  Just create an empty file; its contents are not read.</p>
 
 </div>

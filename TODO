@@ -9,13 +9,11 @@ TODO
 
 [done] manpages
 
-[done] revise documentation & do github wiki
+[done] revise documentation
 
-github pages
+[done] github pages
 
 [done] document link to slackpkg+
-
-test slackpkg+ with local directory
 
 [done] finish doing comments at top of funcs
 
@@ -32,15 +30,19 @@ Additional QA tests for test mode
 
 [done] Slackware style SlackBuilds
 
-Multiple built packages from one SlackBuild
-
 [done] NUMJOBS
 
 Rework item finding & parsing
 
 Multilevel repos
 
+Multiple built packages from one SlackBuild
+
+test slackpkg+ with local directory
+
 Report fails back to SBo
+
+slackrepo-testpkg-good and slackrepo-testpkg-bad
 
 speed up gen_repos, check that .genreprc works
 

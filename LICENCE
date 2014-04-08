@@ -1,4 +1,4 @@
-slackrepo
+slackrepo   http://idlemoor.github.io/slackrepo/index.html
 
 Copyright 2013 David Spencer, Baildon, West Yorkshire, U.K.
 All rights reserved.
@@ -22,9 +22,10 @@ permitted provided that the following conditions are met:
 
 --------------------------------------------------------------------------------
 
-gen_repos_files.sh
+gen_repos_files.sh   http://www.slackware.com/~alien/tools/gen_repos_files.sh
+checkpkg             http://www.slackware.com/~alien/tools/checkpkg
 
-Copyright (c) 2006-2013  Eric Hameleers, Eindhoven, The Netherlands
+Copyright (c) 2006-2014  Eric Hameleers, Eindhoven, The Netherlands
 All rights reserved.
 
    Permission to use, copy, modify, and distribute this software for

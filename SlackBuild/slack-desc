@@ -11,9 +11,9 @@ slackrepo:
 slackrepo: This is an experimental SlackBuild package builder.
 slackrepo:
 slackrepo: Features:
+slackrepo:  - Package updates detected by tracking upstream revisions
 slackrepo:  - Clean repeatable building, including dependencies
 slackrepo:  - Suitable for bulk testing (no interaction required)
-slackrepo:  - Package updates detected by tracking upstream git revisions
 slackrepo:  - Output repository suitable for use with slackpkg+
 slackrepo:
 slackrepo: BEWARE! This is experimental software! Use with caution!

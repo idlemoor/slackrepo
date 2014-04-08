@@ -66,7 +66,8 @@ function process_remove
   else
     log_important "Removing $ITEMPATH"
     rm -rf $SR_PKGREPO/$ITEMPATH/
-    rm -rf $SR_SRCREPO/$ITEMPATH/ $SR_SRCREPO/${ITEMPATH}_BAD/
+    ##### and remove empty directories above $SR_PKGREPO/$ITEMPATH/
+    ##### and remove source directories too
     echo "$ITEMPATH: Removed. NEWLINE" >>$CHANGELOG
   fi
   return

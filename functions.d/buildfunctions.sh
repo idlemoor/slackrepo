@@ -205,7 +205,7 @@ function build_ok
 
   msg="$OP OK"
   [ "$OPT_DRYRUN" = 'y' ] && msg="$OP --dry-run OK"
-  log_success -a ":-) $itempath $msg (-:"
+  log_success ":-) $itempath $msg (-:"
   OKLIST="$OKLIST $itempath"
   return 0
 }
@@ -224,9 +224,9 @@ function build_failed
   # but don't remove files from $SR_TMP, they can help to diagnose why it failed
 
   msg="$OP FAILED"
-  log_error -n -a ":-( $itempath $msg )-:"
-  log_error -n "See $ITEMLOG"
+  log_error -n ":-( $itempath $msg )-:"
   errorscan_itemlog | tee -a $MAINLOG
+  log_error -n "See $ITEMLOG"
   FAILEDLIST="$FAILEDLIST $itempath"
   return 0
 }

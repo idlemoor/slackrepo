@@ -200,8 +200,8 @@ function errorscan_itemlog
 # Return status: always 0
 {
   # This is Alien Bob being awesome, as usual :D
-  grep -E -nT \
-    "FAIL| hunk ignored|[^A-Z]Error |[^A-Z]ERROR |Error:|error:|errors occurred|ved symbol|ndefined reference to|ost recent call first|ot found|annot find -l|make: \*\*\* No |kipping patch|t seem to find a patch|^Usage: |option requires |SlackBuild: line" \
+  grep -E \
+    "FAIL| hunk ignored|[^A-Z]Error |[^A-Z]ERROR |Error:|error:|errors occurred|ved symbol|ndefined reference to|ost recent call first|ot found|cannot operate on dangling|ot supported|annot find -l|make: \*\*\* No |kipping patch|t seem to find a patch|^Usage: |option requires |o such file or dir|SlackBuild: line" \
     $ITEMLOG
   return 0
 }

@@ -32,6 +32,7 @@ function create_metadata
     print_current_revinfo $itempath $* > $MYREPO/$itempath/${pkgbase}.rev
 
     # .dep file (no deps => no file)
+    ##### ought to list *all* deps here
     if [ $# != 0 ]; then
       > $MYREPO/$itempath/${pkgbase}.dep
       while [ $# != 0 ]; do
@@ -68,12 +69,40 @@ function create_metadata
     fi
 
     # Although gen_repos_files.sh can create the following files, it's quicker to
-    # create the .txt file here (we don't have to extract the slack-desc from the package)
+    # create them here (we don't have to extract the slack-desc from the package,
+    # and we can use the package list for checking the package)
+
     # .txt file
     cat $SR_SBREPO/$itempath/slack-desc | sed -n '/^#/d;/:/p' > $MYREPO/$itempath/${pkgbase}.txt
+
     # .md5 file
     ( cd $MYREPO/$itempath/; md5sum $pkg > ${pkg##*/}.md5 )
-    # .meta and .lst files are a bit more complex
+
+    # .lst file
+    cat << EOF > $MYREPO/$itempath/${pkgbase}.lst
+++========================================
+||
+||   Package:  ./$itempath/${pkg##*/}
+||
+++========================================
+EOF
+    tar -tvvf $pkg >> $MYREPO/$itempath/${pkgbase}.lst
+    echo "" >> $MYREPO/$itempath/${pkgbase}.lst
+    echo "" >> $MYREPO/$itempath/${pkgbase}.lst
+
+    # .meta file
+    # SIZE=$(du -s $pkg | cut -f 1)
+    # USIZE=$( expr $(gunzip -l $PKG |tail -1|awk '{print $2}') / 1024 )
+    # echo "PACKAGE NAME:  $NAME" > $MYREPO/$itempath/${pkgbase}.meta
+    # if [ -n "$DL_URL" ]; then
+    #   echo "PACKAGE MIRROR:  $DL_URL" >> $MYREPO/$itempath/${pkgbase}.meta
+    # fi
+    # echo "PACKAGE LOCATION:  $LOCATION" >> $MYREPO/$itempath/${pkgbase}.meta
+    # echo "PACKAGE SIZE (compressed):  $SIZE K" >> $MYREPO/$itempath/${pkgbase}.meta
+    # echo "PACKAGE SIZE (uncompressed):  $USIZE K" >> $MYREPO/$itempath/${pkgbase}.meta
+    # echo "PACKAGE DESCRIPTION:" >> $MYREPO/$itempath/${pkgbase}.meta
+    # cat ${pkgbase}.txt >> $MYREPO/$itempath/${pkgbase}.meta
+    # echo "" >> $MYREPO/$itempath/${pkgbase}.meta
 
   done
   return 0

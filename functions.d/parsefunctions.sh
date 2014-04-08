@@ -54,7 +54,8 @@ function parse_items
   errstat=0
 
   while [ $# != 0 ]; do
-    local item="${1##/}"
+    # trim all leading and trailing slashes
+    local item="$(echo $1 | sed -e 's:^/*::' -e 's:/*$::')"
     shift
 
     case $item in
@@ -66,7 +67,7 @@ function parse_items
       ;;
 
     */*$SEARCHSUFFIX )
-      # relative path to a SlackBuild or package: it should be right here
+      # relative path to a single SlackBuild or package: it should be right here
       if [ ! -f "$item" ]; then
         log_warning "${blamemsg}${TOPLEVEL}/${item} not found"
         errstat=1
@@ -103,7 +104,7 @@ function parse_items
           ITEMLIST="$ITEMLIST $item"
         else
           # no => it should contain subdirectories that we can expand later
-          subdirs=$(find . -mindepth 1 -maxdepth 1 -type d | sed 's:^\./::')
+          subdirs=$(find $item -mindepth 1 -maxdepth 1 -type d | sort)
           if [ -z "$subdirs" ]; then
             log_warning "${blamemsg}${item} contains nothing useful"
             errstat=1
@@ -115,34 +116,55 @@ function parse_items
       ;;
 
     * )
-      # simple name: somewhere under here there should be exactly one directory with that name
-      found=$(find . -type d -name "$item" -print | sed 's:^\./::')
-      wc=$(echo $found | wc -w)
-      if [ "$wc" = 0 ]; then
-        log_warning "${blamemsg}${item} not found in ${TOPLEVEL}"
-        errstat=1
-      elif [ "$wc" != 1 ]; then
-        log_warning "${blamemsg}Multiple matches for ${item} within ${TOPLEVEL}, please specify a relative path"
-        errstat=1
-      else
+      # simple name: somewhere under here there should be a directory with that name,
+      # but pragmatically we check the top level first -- in particular, there is an
+      # SBo top level category named 'desktop' but several SlackBuilds have their own
+      # subdirectory also named 'desktop' :-(
+      if [ -d "$item" ]; then
         # does it contain packages or a slackbuild?
-        if [ -f "$(ls $found/${item}${SEARCHSUFFIX} 2>/dev/null | head -n 1)" ]; then
+        if [ -f "$(ls $item/$(basename $item)$SEARCHSUFFIX 2>/dev/null | head -n 1)" ]; then
           # yes => return the containing directory
-          ITEMLIST="$ITEMLIST $found"
+          ITEMLIST="$ITEMLIST $item"
         else
           # no => it should contain subdirectories that we can expand later
-          subdirs=$(find $found -mindepth 1 -maxdepth 1 -type d | sed 's:^\./::')
+          subdirs=$(find $item -mindepth 1 -maxdepth 1 -type d | sed 's:^\./::' | sort)
           if [ -z "$subdirs" ]; then
-            log_warning "${blamemsg}${found} contains nothing useful"
+            log_warning "${blamemsg}${item} contains nothing useful"
             errstat=1
           else
             ITEMLIST="$ITEMLIST $subdirs"
           fi
         fi
+      else
+        # ok, whatevs, we'll go through the whole sodding tree
+        found=$(find * -type d -name "$item" -print)
+        wc=$(echo $found | wc -w)
+        if [ "$wc" = 0 ]; then
+          log_warning "${blamemsg}${item} not found in ${TOPLEVEL}"
+          errstat=1
+        elif [ "$wc" != 1 ]; then
+          log_warning "${blamemsg}Multiple matches for ${item} within ${TOPLEVEL}, please specify a relative path"
+          errstat=1
+        else
+          # does it contain packages or a slackbuild?
+          if [ -f "$(ls $found/${item}${SEARCHSUFFIX} 2>/dev/null | head -n 1)" ]; then
+            # yes => return the containing directory
+            ITEMLIST="$ITEMLIST $found"
+          else
+            # no => it should contain subdirectories that we can expand later
+            subdirs=$(find $found -mindepth 1 -maxdepth 1 -type d | sed 's:^\./::' | sort)
+            if [ -z "$subdirs" ]; then
+              log_warning "${blamemsg}${found} contains nothing useful"
+              errstat=1
+            else
+              ITEMLIST="$ITEMLIST $subdirs"
+            fi
+          fi
+        fi
       fi
       ;;
 
-   esac
+    esac
 
   done
 

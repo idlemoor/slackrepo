@@ -368,38 +368,39 @@ echo "Processed:  $PROCTOTAL"
 if [ "$OPT_DRYRUN" = 'y' ]; then
   OKLIST="$(echo -n $OKLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
   echo "Dry run OK: $(echo -n $OKLIST | wc -w)"
-  [ "$OPT_VERBOSE" = 'y' -a -n "$OKLIST" ] && echo "$OKLIST"
+  [ "$OPT_QUIET" != 'y' -a -n "$OKLIST" ] && echo "$OKLIST"
 else
   echo "Added:      $(grep ': Added'   $CHANGELOG | wc -l)"
-  [ "$OPT_VERBOSE" = 'y' ] && \
+  [ "$OPT_QUIET" != 'y' ] && \
     grep ': Added'   $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
   echo "Updated:    $(grep ': Updated' $CHANGELOG | wc -l)"
-  [ "$OPT_VERBOSE" = 'y' ] && \
+  [ "$OPT_QUIET" != 'y' ] && \
     grep ': Updated' $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
   echo "Rebuilt:    $(grep ': Rebuilt' $CHANGELOG | wc -l)"
-  [ "$OPT_VERBOSE" = 'y' ] && \
+  [ "$OPT_QUIET" != 'y' ] && \
     grep ': Rebuilt' $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
   echo "Removed:    $(grep ': Removed' $CHANGELOG | wc -l)"
-  [ "$OPT_VERBOSE" = 'y' ] && \
+  [ "$OPT_QUIET" != 'y' ] && \
     grep ': Removed' $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
 fi
 SKIPPEDLIST="$(echo -n $SKIPPEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
 echo "Skipped:    $(echo -n $SKIPPEDLIST | wc -w)"
-[ "$OPT_VERBOSE" = 'y' -a -n "$SKIPPEDLIST" ] && echo "$SKIPPEDLIST"
+[ "$OPT_QUIET" != 'y' -a -n "$SKIPPEDLIST" ] && echo "$SKIPPEDLIST"
 FAILEDLIST="$(echo -n $FAILEDLIST   | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
 echo "Failed:     $(echo -n $FAILEDLIST | wc -w)"
-[ "$OPT_VERBOSE" = 'y' -a -n "$FAILEDLIST" ]  && echo "$FAILEDLIST"
+[ "$OPT_QUIET" != 'y' -a -n "$FAILEDLIST" ]  && echo "$FAILEDLIST"
 ABORTEDLIST="$(echo -n $ABORTEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
 echo "Aborted:    $(echo -n $ABORTEDLIST | wc -w)"
-[ "$OPT_VERBOSE" = 'y' -a -n "$ABORTEDLIST" ] && echo "$ABORTEDLIST"
+[ "$OPT_QUIET" != 'y' -a -n "$ABORTEDLIST" ] && echo "$ABORTEDLIST"
 WARNCOUNT=$(grep '^WARNING: ' $MAINLOG | wc -l)
 echo "Warnings:   $WARNCOUNT"
-[ "$OPT_VERBOSE" = 'y' ] && grep '^WARNING: ' $MAINLOG | sed 's/^WARNING: /  /'
+[ "$OPT_QUIET" != 'y' ] && grep '^WARNING: ' $MAINLOG | sed 's/^WARNING: /  /'
 
 #-------------------------------------------------------------------------------
 # Package repository maintenance: gen_repos_files.sh
 #-------------------------------------------------------------------------------
 
+genrepstat=0
 if [ "$OPT_DRYRUN" != 'y' -a -s $CHANGELOG ]; then
   rcfile=~/.genreprc
   [ -f $rcfile ] && { set -e; . $rcfile; set +e; }
@@ -420,18 +421,16 @@ if [ "$OPT_DRYRUN" != 'y' -a -s $CHANGELOG ]; then
     GPGBIN="$GPGBIN" USE_GPGAGENT="$USE_GPGAGENT" FOR_SLAPTGET="$FOR_SLAPTGET" \
     FOLLOW_SYMLINKS="$FOLLOW_SYMLINKS" REPO_SUBDIRS="$REPO_SUBDIRS" \
     sh /usr/libexec/$(basename $0)/gen_repos_files.sh -l $CHANGELOG | tee -a $MAINLOG
-    ###### extra control args to run faster?
+    genrepstat=$?
+    [ $genrepstat != 0 ] && log_error "gen_repos_files.sh failed -- changelog retained"
     echo ""
     log_important "Finished gen_repos_files.sh at $(date +%T)"
   fi
 fi
-
-rm -f $CHANGELOG
+[ $genrepstat = 0 ] && rm -f $CHANGELOG
 
 #-------------------------------------------------------------------------------
 
 echo ""
-
 exit_cleanup
-
 exit 0

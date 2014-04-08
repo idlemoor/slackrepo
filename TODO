@@ -32,9 +32,13 @@ Additional QA tests for test mode
 
 [done] NUMJOBS
 
-Rework item finding & parsing
+[done] pidfile
 
-Multilevel repos
+[done] Rework item finding & parsing
+
+[done] Multilevel repos
+
+slackrepo-testpkg-good and slackrepo-testpkg-bad
 
 Multiple built packages from one SlackBuild
 
@@ -42,13 +46,9 @@ test slackpkg+ with local directory
 
 Report fails back to SBo
 
-slackrepo-testpkg-good and slackrepo-testpkg-bad
-
 speed up gen_repos, check that .genreprc works
 
 sbopkg compatibility (env vars & filestore)
-
-[done] pidfile
 
 progress bar/spinner
 

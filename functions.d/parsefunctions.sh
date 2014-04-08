@@ -66,7 +66,7 @@ function parse_items
       ;;
 
     */*$SEARCHSUFFIX )
-      # relative path to a SlackBuild or package: it should be right here :-)
+      # relative path to a SlackBuild or package: it should be right here
       if [ ! -f "$item" ]; then
         log_warning "${blamemsg}${TOPLEVEL}/${item} not found"
         errstat=1
@@ -77,7 +77,7 @@ function parse_items
       ;;
 
     *$SEARCHSUFFIX )
-      # simple SlackBuild or package name
+      # simple SlackBuild or package name: it could be anywhere under here
       found=$(find . type f -name "$item" | sed 's:^\./::')
       wc=$(echo $found | wc -w)
       if [ "$wc" = 0 ]; then
@@ -92,7 +92,7 @@ function parse_items
       ;;
 
     */* )
-      # relative path to a directory: it should be right here :-)
+      # relative path to a directory: it should be right here
       if [ ! -d "$item" ]; then
         log_warning "${blamemsg}${TOPLEVEL}/${item} not found"
         errstat=1

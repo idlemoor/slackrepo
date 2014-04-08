@@ -226,6 +226,7 @@ function build_failed
   msg="$OP FAILED"
   log_error -n -a ":-( $itempath $msg )-:"
   log_error -n "See $ITEMLOG"
+  errorscan_itemlog | tee -a $MAINLOG
   FAILEDLIST="$FAILEDLIST $itempath"
   return 0
 }

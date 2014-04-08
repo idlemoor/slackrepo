@@ -1,8 +1,11 @@
 #!/bin/bash
 # Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.  For licence details, see the file 'LICENCE'.
+# Contains code from 'checkpkg' v1.15 http://www.slackware.com/~alien/tools/checkpkg
+# Copyright 2014 Eric Hameleers, Eindhoven, The Netherlands
+# All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
-# logfunctions.sh - logging and web page functions for slackrepo
+# logfunctions.sh - logging functions for slackrepo
 #   log_start
 #   log_itemstart
 #   log_verbose
@@ -11,6 +14,7 @@
 #   log_success
 #   log_warning
 #   log_error
+#   errorscan_itemlog
 #-------------------------------------------------------------------------------
 
 function log_start
@@ -185,5 +189,19 @@ function log_error
   echo "${E}$@" >>$MAINLOG
   [ "$A" = 'y' ] && \
   echo "${E}$@" >>$ITEMLOG
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function errorscan_itemlog
+# Print apparent errors in $ITEMLOG to standard output
+# No parameters
+# Return status: always 0
+{
+  # This is Alien Bob being awesome, as usual :D
+  grep -E -nT \
+    "FAIL| hunk ignored|[^A-Z]Error |[^A-Z]ERROR |Error:|error:|errors occurred|ved symbol|ndefined reference to|ost recent call first|ot found|annot find -l|make: \*\*\* No |kipping patch|t seem to find a patch|^Usage: |option requires |SlackBuild: line" \
+    $ITEMLOG
   return 0
 }

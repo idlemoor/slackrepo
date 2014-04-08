@@ -43,14 +43,14 @@ function create_metadata
 
     # changelog entry: needlessly elaborate :-)
     if [ "$OPT_DRYRUN" != 'y' ]; then
-      OPERATION="$(echo $opmsg | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/')"
+      OPERATION="$(echo $opmsg | sed -e 's/^build/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/')"
       extrastuff=''
       case "$opmsg" in
-      add*)
-          extrastuff="LINEFEED $(grep "^$prgnam: " $SR_SBREPO/$itempath/slack-desc | head -n 1 | sed -e 's/.*(/(/' -e 's/).*/)/')"
+      build*)
+          extrastuff="$(grep "^$prgnam: " $SR_SBREPO/$itempath/slack-desc | head -n 1 | sed -e 's/.*(/(/' -e 's/).*/)/')"
           ;;
       'update for git'*)
-          extrastuff="LINEFEED $(cd $SR_SBREPO/$itempath; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //')"
+          extrastuff="$(cd $SR_SBREPO/$itempath; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //')"
           ;;
       *)  :
           ;;
@@ -59,7 +59,11 @@ function create_metadata
       # (it may contain info from a previous run that was interrupted)
       newchangelog=${CHANGELOG}.new
       grep -v "^${itempath}: " $CHANGELOG > $newchangelog
-      echo "$itempath: ${OPERATION}. $extrastuff NEWLINE" >> $newchangelog
+      if [ -z "$extrastuff" ]; then
+        echo "$itempath: ${OPERATION}. NEWLINE" >> $newchangelog
+      else
+        echo "$itempath: ${OPERATION}. LINEFEED $extrastuff NEWLINE" >> $newchangelog
+      fi
       mv $newchangelog $CHANGELOG
     fi
 

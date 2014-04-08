@@ -39,7 +39,16 @@ function print_usage
   return
 }
 
-[ $# = 0 ] && { print_usage; exit 0; }
+#-------------------------------------------------------------------------------
+
+function exit_cleanup
+{
+  rm -f $PIDFILE
+}
+
+#-------------------------------------------------------------------------------
+
+[ $# = 0 ] && { print_usage; exit_cleanup; exit 0; }
 
 starttime=$(date +%s)
 
@@ -57,19 +66,19 @@ while [ $# != 0 ]; do
   case "$1" in
     # we'll accept build/rebuild/update/remove with or without '--'
     build | --build )
-      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
+      [ -n "$PROCMODE" ] && { print_usage; exit_cleanup; exit 3; }
       PROCMODE='build'
       shift; continue ;;
     rebuild | --rebuild )
-      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
+      [ -n "$PROCMODE" ] && { print_usage; exit_cleanup; exit 3; }
       PROCMODE='rebuild'
       shift; continue ;;
     update | --update )
-      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
+      [ -n "$PROCMODE" ] && { print_usage; exit_cleanup; exit 3; }
       PROCMODE='update'
       shift; continue ;;
     remove | --remove )
-      [ -n "$PROCMODE" ] && { print_usage; exit 3; }
+      [ -n "$PROCMODE" ] && { print_usage; exit_cleanup; exit 3; }
       PROCMODE='remove'
       shift; continue ;;
     --repo=* )
@@ -88,14 +97,14 @@ while [ $# != 0 ]; do
       OPT_DRYRUN='y'
       shift; continue ;;
     --* )
-      print_usage; exit 3 ;;
+      print_usage; exit_cleanup; exit 3 ;;
     * )
       break ;;
   esac
 done
 
 [ -z "$PROCMODE" ] && \
-  { print_usage; exit 3; }
+  { print_usage; exit_cleanup; exit 3; }
 
 #-------------------------------------------------------------------------------
 # Startup
@@ -105,24 +114,18 @@ done
 # (SR_TMP gets cleaned during execution)
 TMPDIR=${TMPDIR:-/tmp}
 
-# pidfile and changelog
 PIDFILE="/var/run/$(basename $0).pid"
-CHANGELOG="$TMPDIR/sr_changelog.tmp"
 oldpid=$(cat $PIDFILE 2>/dev/null)
-if [ -z "$oldpid" -o -z "$(pgrep -u root $(basename $0))" ]; then
+if [ -z "$oldpid" -o -z "$(pgrep -u root $(basename $0) | grep -v $$)" ]; then
   echo $$ > $PIDFILE
-  if [ -n "$oldpid" -a -s "$CHANGELOG" ]; then
-    echo "$(basename $0): Adopting changelog from previous run."
-  else
-    > $CHANGELOG
-  fi
 else
   echo "$(basename $0): Another instance is already running." >&2
+  exit_cleanup
   exit 3
 fi
 
 # Ensure ctrl-c (etc) exits the whole thing, not just a random subshell
-trap "rm -f $PIDFILE; exit 1" SIGINT SIGQUIT SIGTERM
+trap "exit_cleanup; exit 1" SIGINT SIGQUIT SIGTERM
 
 # Get the support functions
 for f in /usr/libexec/$(basename $0)/functions.d/*functions.sh; do
@@ -155,7 +158,7 @@ repoconf="/etc/slackrepo/slackrepo_${SR_REPO}.conf"
 if [ -f "$repoconf" ]; then
   . "$repoconf"
 else
-  echo "Error: repo configuration file not found: $repoconf"; exit 2
+  echo "Error: repo configuration file not found: $repoconf"; exit_cleanup; exit 2
 fi
 userconf="~/.slackreporc"
 if [ -f "$userconf" ]; then
@@ -187,7 +190,7 @@ fi
 
 # Find out the version of Slackware
 # (used by the git stuff below, but we also need this in revfunctions.sh)
-[ -f /etc/slackware-version ] || { log_error "$(basename $0): /etc/slackware-version not found"; exit 4; }
+[ -f /etc/slackware-version ] || { log_error "/etc/slackware-version not found"; exit_cleanup; exit 4; }
 SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
 
 # Log the config
@@ -217,6 +220,13 @@ declare -A HINT_skipme HINT_md5ignore HINT_makej1 HINT_no_uninstall
 declare -A HINT_cleanup HINT_uidgid HINT_answers
 declare -A HINT_options HINT_optdeps HINT_readmedeps HINT_version
 
+CHANGELOG="$TMPDIR/sr_changelog_${SR_REPO}.tmp"
+if [ -s "$CHANGELOG" ]; then
+  log_normal "Adopting changelog $CHANGELOG from previous run."
+else
+  > $CHANGELOG
+fi
+
 # Temporary directories and files
 SR_TMP=${SR_TMP:-/tmp/SBo}
 # really really don't want the next bit to go badly ;-)
@@ -233,21 +243,21 @@ if [ "$OPT_DRYRUN" = 'y' ]; then
 fi
 
 # Create directories:
-[ -d "$SR_SBREPO" ]  || { log_normal "$(basename $0): Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"  ; }
-[ -d "$SR_SRCREPO" ] || { log_normal "$(basename $0): Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO" ; }
-[ -d "$SR_PKGREPO" ] || { log_normal "$(basename $0): Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO" ; }
-[ -d "$SR_LOGDIR" ]  || { log_normal "$(basename $0): Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"  ; }
-[ -d "$SR_HINTS" ]   || { log_normal "$(basename $0): Creating hints directory: $SR_HINTS"        ; mkdir -p "$SR_HINTS"   ; }
+[ -d "$SR_SBREPO" ]  || { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"  ; }
+[ -d "$SR_SRCREPO" ] || { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO" ; }
+[ -d "$SR_PKGREPO" ] || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO" ; }
+[ -d "$SR_LOGDIR" ]  || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"  ; }
+[ -d "$SR_HINTS" ]   || { log_normal "Creating hints directory: $SR_HINTS"        ; mkdir -p "$SR_HINTS"   ; }
 
 # git stuff for the SlackBuilds repo:
 if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
-  if [ -n "${INIT_GITBRANCH}" ]; then
-    log_normal "Cloning SlackBuilds repository $SR_SBREPO from ${INIT_GITCLONE} ..."
-    git clone "${INIT_GITCLONE}" "$SR_SBREPO"
+  if [ -n "${SR_INIT_GITCLONE}" ]; then
+    log_normal "Cloning SlackBuilds repository $SR_SBREPO from ${SR_INIT_GITCLONE} ..."
+    git clone "${SR_INIT_GITCLONE}" "$SR_SBREPO"
     cd "$SR_SBREPO"
     git fetch -a
     git remote update
-    branch="${INIT_GITBRANCH:-$SLACKVER}"
+    branch="${SR_INIT_GITBRANCH:-$SLACKVER}"
     git checkout -b "$branch" -t origin/"$branch"
     log_normal "Finished cloning SlackBuilds repository."
   fi
@@ -269,8 +279,6 @@ elif [ -d $SR_SBREPO/.git ]; then
       fi
       log_normal "Finished updating git."
     fi
-  elif [ -n "$muck" ]; then
-    log_warning "SlackBuilds git repository $SR_SBREPO is dirty"
   fi
 fi
 
@@ -317,6 +325,7 @@ if [ $# = 0 ]; then
     # remove mode with no args => do nothing
     echo "Usage: $(basename $0) remove [--repo=ID] item..."
     echo "In remove mode, you *must* specify the items to be removed."
+    exit_cleanup
     exit 3
   elif [ "$PROCMODE" = 'update' ]; then
     # update mode with no args => process everything in the package repo
@@ -417,9 +426,12 @@ if [ "$OPT_DRYRUN" != 'y' -a -s $CHANGELOG ]; then
   fi
 fi
 
+rm -f $CHANGELOG
+
 #-------------------------------------------------------------------------------
 
-rm -f $CHANGELOG $PIDFILE
-
 echo ""
+
+exit_cleanup
+
 exit 0

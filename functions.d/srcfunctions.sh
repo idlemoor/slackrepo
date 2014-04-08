@@ -5,7 +5,6 @@
 # srcfunctions.sh - source functions for slackrepo
 #   verify_src
 #   download_src
-#   save_bad_src
 #-------------------------------------------------------------------------------
 
 function verify_src
@@ -62,7 +61,6 @@ function verify_src
       fi
     done
     [ "$allok" = 'y' ] || { return 1; }
-    ##### Would it be nice to remove _BAD if all files passed?
   )
   return $?  # status comes directly from subshell
 }
@@ -81,14 +79,14 @@ function download_src
   local prgnam=${itempath##*/}
 
   if [ -n "$DOWNDIR" ]; then
-    # stamp the cache with a .version file, even if there are no sources
     mkdir -p "$DOWNDIR"
-    echo "$VERSION" > .version
+    find "$DOWNDIR" -maxdepth 1 -type f -exec rm {} \;
+    # stamp the cache with a .version file, even if there are no sources
+    echo "$VERSION" > "$DOWNDIR"/.version
   fi
 
   [ -z "$DOWNLIST" -o -z "$DOWNDIR" ] && return 0
 
-  find "$DOWNDIR" -maxdepth 1 -type f -exec rm {} \;
   log_normal -a "Downloading source files ..."
   ( cd "$DOWNDIR"
     if [ -n "$DOWNLIST" ]; then
@@ -102,36 +100,5 @@ function download_src
       fi
     fi
   )
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function save_bad_src
-# Move $SR_SRCREPO/<itempath>/[<arch>/] to $SR_SRCREPO/<itempath>_BAD/[<arch>/],
-# in case it's useful for diagnostic purposes or can be resurrected.
-# $1 = itempath
-# Return status: always 0
-{
-  local itempath="$1"
-  local prgnam=${itempath##*/}
-
-  baddir=$SR_SRCREPO/${itempath}_BAD
-  # remove any previous bad sources
-  rm -rf $baddir
-  # remove empty directories
-  find $SR_SRCREPO/${itempath} -depth -type d -exec rmdir --ignore-fail-on-non-empty {} \;
-  # save whatever survives
-  if [ -d $SR_SRCREPO/${itempath}/$SR_ARCH ]; then
-    mkdir -p $baddir
-    mv $SR_SRCREPO/${itempath}/$SR_ARCH $baddir/
-    log_normal -a "Note: bad sources saved in $baddir/$SR_ARCH"
-    # if there's stuff from other arches, leave it
-    rmdir --ignore-fail-on-non-empty $SR_SRCREPO/${itempath}
-  elif [ -d $SR_SRCREPO/${itempath} ]; then
-    # this isn't perfect, but it'll do ###### need arch code
-    mv $SR_SRCREPO/${itempath} $baddir
-    log_normal -a "Note: bad sources saved in $baddir"
-  fi
   return 0
 }

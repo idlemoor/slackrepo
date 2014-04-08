@@ -55,15 +55,15 @@ function build_package
   1|2) # already got source, but it's bad => get it
        log_verbose -a "Note: cached source is bad"
        download_src $itempath
-       verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
+       verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; build_failed $itempath; return 3; }
        ;;
     3) # not got source => get it
        download_src $itempath
-       verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
+       verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; build_failed $itempath; return 3; }
        ;;
     4) # wrong version => get it
        download_src $itempath
-       verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; save_bad_src $itempath; build_failed $itempath; return 3; }
+       verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; build_failed $itempath; return 3; }
        ;;
     5) # unsupported/untested
        SKIPPEDLIST="$SKIPPEDLIST $itempath"
@@ -101,12 +101,17 @@ function build_package
 
   # Process other hints for the build (uidgid, options, makeflags, answers)
   do_hint_uidgid $itempath
-  tempmakeflags=""
-  [ "${HINT_makej1[$itempath]}" = 'y' ] && tempmakeflags="MAKEFLAGS='-j1'"
+  if [ "${HINT_makej1[$itempath]}" = 'y' ]; then
+    tempmakeflags="MAKEFLAGS='-j1'"
+    USE_NUMJOBS=" -j1 "
+  else
+    tempmakeflags="MAKEFLAGS='$SR_NUMJOBS'"
+    USE_NUMJOBS=" $SR_NUMJOBS "
+  fi
   options=""
   [ "${HINT_options[$itempath]}" != '%NONE%' ] && options="${HINT_options[$itempath]}"
   SLACKBUILDCMD="sh ./$prgnam.SlackBuild"
-  [ -n "$tempmakeflags" -o -n "$options" ] && SLKBUILDCMD="env $tempmakeflags $options $SLACKBUILDCMD"
+  [ -n "$tempmakeflags" -o -n "$options" ] && SLACKBUILDCMD="env $tempmakeflags $options $SLACKBUILDCMD"
   [ -n "${HINT_answers[$itempath]}" ] && SLACKBUILDCMD="cat ${HINT_answers[$itempath]} | $SLACKBUILDCMD"
 
   # Build it
@@ -120,7 +125,7 @@ function build_package
     TMP=$SR_TMP \
     OUTPUT=$SR_TMPOUT \
     PKGTYPE=$SR_PKGTYPE \
-    NUMJOBS=$SR_NUMJOBS
+    NUMJOBS=$USE_NUMJOBS
   log_normal -a "Running SlackBuild: $SLACKBUILDCMD ..."
   ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$ITEMLOG 2>&1
   stat=$?

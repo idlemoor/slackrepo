@@ -132,14 +132,14 @@ function test_download
         curl -q -s -k --connect-timeout 240 --retry 2 -J -L -o /dev/null $url >> $ITEMLOG 2>&1
         curlstat=$?
         if [ $curlstat != 0 ]; then
-          log_warning -a "${itempath}: $url failed (curl status $curlstat), but googlecode.com is rubbish anyway"
+          log_warning -a "${itempath}: curl $url failed (status $curlstat), but googlecode.com is rubbish anyway"
         fi
         ;;
       *)
         curl -q -s -k --connect-timeout 240 --retry 2 -J -L -I -o $headertmp $url >> $ITEMLOG 2>&1
         curlstat=$?
         if [ $curlstat != 0 ]; then
-          log_warning -a "${itempath}: $url failed (curl status $curlstat)"
+          log_warning -a "${itempath}: curl $url failed (status $curlstat)"
           if [ -s $headertmp ]; then
             echo "The following headers may be informative:" >> $ITEMLOG
             cat $headertmp >> $ITEMLOG

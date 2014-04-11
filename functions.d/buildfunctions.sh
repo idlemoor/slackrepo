@@ -54,15 +54,15 @@ function build_package
        ;;
   1|2) # already got source, but it's bad => get it
        log_verbose -a "Note: cached source is bad"
-       download_src $itempath
+       download_src $itempath || { build_failed $itempath; return 2; }
        verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; build_failed $itempath; return 3; }
        ;;
     3) # not got source => get it
-       download_src $itempath
+       download_src $itempath || { build_failed $itempath; return 2; }
        verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; build_failed $itempath; return 3; }
        ;;
     4) # wrong version => get it
-       download_src $itempath
+       download_src $itempath || { build_failed $itempath; return 2; }
        verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; build_failed $itempath; return 3; }
        ;;
     5) # unsupported/untested

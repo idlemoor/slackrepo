@@ -12,7 +12,7 @@ function verify_src
 # $1 = itempath
 # Also uses variables $VERSION and $NEWVERSION set by build_package
 # Return status:
-# 0 - all files passed, or check suppressed, or DOWNLIST is empty
+# 0 - all files passed, or md5sum check suppressed, or DOWNLIST is empty
 # 1 - one or more files had a bad md5sum
 # 2 - no. of files != no. of md5sums
 # 3 - directory not found => not cached, need to download
@@ -26,32 +26,36 @@ function verify_src
   MD5LIST="${INFOMD5LIST[$itempath]}"
   DOWNDIR="${SRCDIR[$itempath]}"
 
-  # return 0 if nothing to verify:
+  # Quick checks:
+  # if the item doesn't need source, return 0
   [ -z "$DOWNLIST" -o -z "$DOWNDIR" ] && return 0
+  # if unsupported/untested, return 5
+  [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ] && \
+    { log_warning -n "$itempath is $DOWNLIST on $SR_ARCH"; return 5; }
+  # if no directory, return 3
+  [ ! -d "$DOWNDIR" ] && return 3
 
-  if [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ]; then
-    log_warning -n "$itempath is $DOWNLIST on $SR_ARCH"
-    return 5
-  elif [ ! -d "$DOWNDIR" ]; then
-    return 3
-  fi
-
+  # More complex checks:
   ( cd "$DOWNDIR"
-    log_normal -a "Verifying source files ..."
+    # if wrong version, return 4
     if [ "$VERSION" != "$(cat .version 2>/dev/null)" ]; then
-      log_verbose -a "Note: removing old source files"
+      log_verbose -a "Removing old source files"
       find . -maxdepth 1 -type f -exec rm -f {} \;
       return 4
     fi
+    log_normal -a "Verifying source files ..."
+    # if we have not got the right number of sources, return 2
     numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$' | wc -l)
     numwant=$(echo $MD5LIST | wc -w)
     [ $numgot = $numwant ] || { log_verbose -a "Note: need $numwant source files, but have $numgot"; return 2; }
+    # if we're ignoring the md5sums, we've finished => return 0
     [ "${HINT_md5ignore[$itempath]}" = 'y' ] && return 0
-    # also ignore md5sum if we upversioned
+    # also ignore md5sum if we upversioned => return 0
     [ -n "$NEWVERSION" ] && { log_verbose -a "Note: not checking md5sums due to version hint"; return 0; }
+    # run the md5 check on all the files (don't give up at the first error)
     allok='y'
     for f in *; do
-      # check that it's a file (arch-specific subdirectories may exist)
+      # check files only (arch-specific subdirectories may exist, ignore them)
       if [ -f "$f" ]; then
         mf=$(md5sum "$f" | sed 's/ .*//')
         ok='n'
@@ -81,11 +85,15 @@ function download_src
   if [ -n "$DOWNDIR" ]; then
     mkdir -p "$DOWNDIR"
     find "$DOWNDIR" -maxdepth 1 -type f -exec rm {} \;
-    # stamp the cache with a .version file, even if there are no sources
-    echo "$VERSION" > "$DOWNDIR"/.version
+  else
+    return 0
   fi
 
-  [ -z "$DOWNLIST" -o -z "$DOWNDIR" ] && return 0
+  if [ -z "$DOWNLIST" ]; then
+    # stamp the cache with a .version file even though there are no sources
+    echo "$VERSION" > "$DOWNDIR"/.version
+    return 0
+  fi
 
   log_normal -a "Downloading source files ..."
   ( cd "$DOWNDIR"
@@ -96,7 +104,7 @@ function download_src
       curlstat=$?
       # it's a pity curl doesn't do the next bit itself...
       case $curlstat in
-        0)   return 0 ;;
+        0)   echo "$VERSION" > "$DOWNDIR"/.version ; return 0 ;;
         1)   curlmsg="Unsupported protocol." ;;
         2)   curlmsg="Failed to initialize." ;;
         3)   curlmsg="URL malformed." ;;

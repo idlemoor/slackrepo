@@ -22,7 +22,7 @@ function test_slackbuild
   local DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
   local REQUIRES MAINTAINER EMAIL
 
-  log_normal -a "Testing SlackBuild files..."
+  log_normal -a "Testing SlackBuild files ..."
 
 
   #-----------------------------#
@@ -181,7 +181,7 @@ function test_package
     [ "$PN_PRGNAM" != "$prgnam" ] && \
       log_warning -a "${itempath}: ${pkgnam}: PRGNAM is \"$PN_PRGNAM\" not \"$prgnam\""
     [ "$PN_VERSION" != "${INFOVERSION[$itempath]}" -a \
-      "$PN_VERSION" != "${INFOVERSION[$itempath]}_$(uname -r)" ] && \
+      "$PN_VERSION" != "${INFOVERSION[$itempath]}_$(uname -r | tr - _)" ] && \
       log_warning -a "${itempath}: ${pkgnam}: VERSION is \"$PN_VERSION\" not \"${INFOVERSION[$itempath]}\""
     [ "$PN_ARCH" != "$SR_ARCH" -a \
       "$PN_ARCH" != "noarch" -a \

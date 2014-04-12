@@ -99,19 +99,23 @@ function build_package
     fi
   fi
 
-  # Process other hints for the build (uidgid, options, makeflags, answers)
+  # Process other hints for the build:
+  # uidgid ...
   do_hint_uidgid $itempath
+  # ... makej1 (with MAKEFLAGS and NUMJOBS env vars) ...
   if [ "${HINT_makej1[$itempath]}" = 'y' ]; then
-    tempmakeflags="MAKEFLAGS='-j1'"
+    tempmakeflags="MAKEFLAGS='-j1' $MAKEFLAGS"
     USE_NUMJOBS=" -j1 "
   else
-    tempmakeflags="MAKEFLAGS='$SR_NUMJOBS'"
+    tempmakeflags="MAKEFLAGS='$SR_NUMJOBS' $MAKEFLAGS"
     USE_NUMJOBS=" $SR_NUMJOBS "
   fi
+  # ... options ...
   options=""
   [ "${HINT_options[$itempath]}" != '%NONE%' ] && options="${HINT_options[$itempath]}"
   SLACKBUILDCMD="sh ./$prgnam.SlackBuild"
   [ -n "$tempmakeflags" -o -n "$options" ] && SLACKBUILDCMD="env $tempmakeflags $options $SLACKBUILDCMD"
+  # ... and answers.
   [ -n "${HINT_answers[$itempath]}" ] && SLACKBUILDCMD="cat ${HINT_answers[$itempath]} | $SLACKBUILDCMD"
 
   # Build it

@@ -222,7 +222,7 @@ declare -A HINT_options HINT_optdeps HINT_readmedeps HINT_version
 
 CHANGELOG="$TMPDIR/sr_changelog_${SR_REPO}.tmp"
 if [ -s "$CHANGELOG" ]; then
-  log_normal "Adopting changelog $CHANGELOG from previous run."
+  log_normal "Continuing changelog $CHANGELOG from previous run."
 else
   > $CHANGELOG
 fi

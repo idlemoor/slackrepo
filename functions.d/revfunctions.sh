@@ -168,6 +168,8 @@ function get_rev_status
 # 4 = hints changed
 # 5 = deps changed
 # 6 = Slackware changed
+# 9 = has been updated (special case of 0, for friendlier messages)
+#     (set by build_with_deps, not here)
 # and the same status code is stored in $REVCACHE[$itempath]
 # => DO NOT FORGET to set $REVCACHE[$itempath] before each return!
 {

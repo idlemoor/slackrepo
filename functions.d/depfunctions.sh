@@ -150,6 +150,9 @@ function build_with_deps
   6)  OP='rebuild'
       opmsg="rebuild for Slackware upgrade"
       ;;
+  9)  log_normal "$itempath has been updated."
+      return 0
+      ;;
   *)  log_error "${itempath}: Unrecognised revstatus=$revstatus"
       return 1
       ;;
@@ -194,7 +197,7 @@ function build_with_deps
   # If build_package succeeded, do some housekeeping:
   create_metadata "$opmsg" $itempath $mydeplist
   # update the cached revision status
-  REVCACHE[$itempath]=0
+  REVCACHE[$itempath]=9
 
   return 0
 }

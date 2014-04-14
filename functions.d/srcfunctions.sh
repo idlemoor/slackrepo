@@ -102,7 +102,7 @@ function download_src
     if [ -n "$DOWNLIST" ]; then
       downargs=""
       for url in $DOWNLIST; do downargs="$downargs -O $url"; done
-      curl -q -f '-#' -k --connect-timeout 120 --retry 2 -J -L $downargs >> $ITEMLOG 2>&1
+      curl -q -f '-#' -k --connect-timeout 120 --retry 2 -J -L -A SlackZilla $downargs >> $ITEMLOG 2>&1
       curlstat=$?
       # it's a pity curl doesn't do the next bit itself...
       case $curlstat in

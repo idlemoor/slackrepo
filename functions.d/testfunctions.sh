@@ -129,14 +129,14 @@ function test_download
         # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
         # https://code.google.com/p/support/issues/detail?id=660
         # "Don't be evil, but totally lame is fine"
-        curl -q -s -k --connect-timeout 240 --retry 2 -J -L -o /dev/null $url >> $ITEMLOG 2>&1
+        curl -q -s -k --connect-timeout 240 --retry 2 -J -L -A SlackZilla -o /dev/null $url >> $ITEMLOG 2>&1
         curlstat=$?
         if [ $curlstat != 0 ]; then
           log_warning -a "${itempath}: curl $url failed (status $curlstat), but googlecode.com is rubbish anyway"
         fi
         ;;
       *)
-        curl -q -s -k --connect-timeout 240 --retry 2 -J -L -I -o $headertmp $url >> $ITEMLOG 2>&1
+        curl -q -s -k --connect-timeout 240 --retry 2 -J -L -A SlackZilla -I -o $headertmp $url >> $ITEMLOG 2>&1
         curlstat=$?
         if [ $curlstat != 0 ]; then
           log_warning -a "${itempath}: curl $url failed (status $curlstat)"

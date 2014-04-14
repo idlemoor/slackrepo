@@ -104,9 +104,16 @@ function download_src
       for url in $DOWNLIST; do downargs="$downargs -O $url"; done
       curl -q -f '-#' -k --connect-timeout 120 --retry 2 -J -L -A SlackZilla $downargs >> $ITEMLOG 2>&1
       curlstat=$?
-      # it's a pity curl doesn't do the next bit itself...
       case $curlstat in
-        0)   echo "$VERSION" > "$DOWNDIR"/.version ; return 0 ;;
+        0)   echo "$VERSION" > "$DOWNDIR"/.version
+             # curl content-disposition can't undo %-encoding.
+             # %20 -> space seems to be the most common problem:
+             for spacetrouble in $(ls *%20* 2>/dev/null); do
+               mv "$spacetrouble" "$(echo "$spacetrouble" | sed 's/\%20/ /g')"
+             done
+             return 0
+             ;;
+             # it's a pity curl doesn't do the next bit itself...
         1)   curlmsg="Unsupported protocol" ;;
         2)   curlmsg="Failed to initialize" ;;
         3)   curlmsg="URL malformed" ;;

@@ -243,11 +243,6 @@ if [ -n "$SR_TMP" -a -d "$SR_TMP" -a "$OPT_KEEPTMP" != 'y' ]; then
 else
   mkdir -p $SR_TMP
 fi
-if [ "$OPT_DRYRUN" = 'y' ]; then
-  DRYREPO=$SR_TMP/sr_dryrun_$SR_REPO
-  [ "$OPT_KEEPTMP" != 'y' ] && rm -rf $DRYREPO
-  mkdir -p $DRYREPO
-fi
 
 # Create directories:
 [ -d "$SR_SBREPO" ]  || { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"  ; }
@@ -352,11 +347,19 @@ fi
 # ignore status - we'll just process the items that were ok
 unset BLAME
 
+if [ "$OPT_DRYRUN" = 'y' ]; then
+  DRYREPO=$SR_TMP/sr_DRY.$$
+  rm -rf $DRYREPO
+  mkdir -p $DRYREPO
+fi
+
 PROCTOTAL=0
 for ITEMPATH in $ITEMLIST; do
   PROCTOTAL=$(( $PROCTOTAL + 1 ))
   process_item $ITEMPATH
 done
+
+[ "$OPT_KEEPTMP" != 'y' ] && rm -rf $DRYREPO
 
 #-------------------------------------------------------------------------------
 # Print a summary of what happened

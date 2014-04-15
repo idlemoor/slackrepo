@@ -132,7 +132,8 @@ function build_package
     OUTPUT=$SR_TMPOUT \
     PKGTYPE=$SR_PKGTYPE \
     NUMJOBS=$USE_NUMJOBS
-  log_normal -a "Running SlackBuild: $SLACKBUILDCMD ..."
+  log_normal -a "Running SlackBuild ..."
+  log_verbose -a "$SLACKBUILDCMD"
   ( cd $SR_TMPIN; eval $SLACKBUILDCMD ) >>$ITEMLOG 2>&1
   stat=$?
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS

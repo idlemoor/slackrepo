@@ -82,16 +82,16 @@ function do_hint_version
   NEWVERSION=''
   if [ -n "${HINT_version[$itempath]}" -a "${HINT_version[$itempath]}" != '%NONE%' ]; then
     NEWVERSION=${HINT_version[$itempath]}
-    if [ -f $SR_PKGREPO/$itempath/$prgnam-*.t?z ]; then
+    if [ -f $SR_PKGREPO/$itempath/$prgnam-*.t?z ]; then   ####### needs to work for multiple pkgs
       OLDVERSION=$(echo $SR_PKGREPO/$itempath/$prgnam-*.t?z | rev | cut -f3 -d- | rev)
     else
       OLDVERSION="${INFOVERSION[$itempath]}"
     fi
     if [ "$NEWVERSION" = "$OLDVERSION" ]; then
-      log_verbose "Hint: $prgnam.version: current version is already $OLDVERSION"
+      log_verbose "Note: version of $(basename $SR_PKGREPO/$itempath/$prgnam-*.t?z) is already $OLDVERSION"
       NEWVERSION=''
     else
-      log_verbose "Hint: $prgnam: setting VERSION=$NEWVERSION (was $OLDVERSION)"
+      log_verbose "Note: $prgnam: setting VERSION=$NEWVERSION (was $OLDVERSION)"
     fi
   fi
   return 0

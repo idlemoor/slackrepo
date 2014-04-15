@@ -50,10 +50,10 @@ function install_package
   [ -n "$pkgpath" ] || { log_error -a "${itempath}: Can't find any packages in $SR_PKGREPO/$itempath/"; return 1; }
 
   if [ "$OPT_VERBOSE" = 'y' ]; then
-    installpkg --terse $pkgpath | tee -a $ITEMLOG
+    installpkg --terse $pkgpath 2>&1 | tee -a $ITEMLOG
     stat=$?
   else
-    installpkg --terse $pkgpath >>$ITEMLOG
+    installpkg --terse $pkgpath >>$ITEMLOG 2>&1
     stat=$?
   fi
   if [ $stat != 0 ]; then
@@ -94,7 +94,7 @@ function uninstall_package
   etcdirs=$(grep '^etc/.*/$' /var/log/packages/$pkgid)
 
   log_verbose -a "Uninstalling $pkgid ..."
-  removepkg $pkgid >/dev/null 2>&1
+  removepkg $pkgid >> $ITEMLOG 2>&1
 
   # Remove any surviving detritus
   for f in $etcnewfiles; do

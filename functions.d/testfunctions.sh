@@ -129,14 +129,14 @@ function test_download
         # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
         # https://code.google.com/p/support/issues/detail?id=660
         # "Don't be evil, but totally lame is fine"
-        curl -q -f -s -k --connect-timeout 240 --retry 2 -J -L -A SlackZilla -o /dev/null $url >> $ITEMLOG 2>&1
+        curl -q -f -s -k --connect-timeout 240 --retry 5 -J -L -A SlackZilla -o /dev/null $url >> $ITEMLOG 2>&1
         curlstat=$?
         if [ $curlstat != 0 ]; then
           log_warning -a "${itempath}: curl $url failed (status $curlstat), but googlecode.com is rubbish anyway"
         fi
         ;;
       *)
-        curl -q -f -s -k --connect-timeout 240 --retry 2 -J -L -A SlackZilla -I -o $headertmp $url >> $ITEMLOG 2>&1
+        curl -q -f -s -k --connect-timeout 240 --retry 5 -J -L -A SlackZilla -I -o $headertmp $url >> $ITEMLOG 2>&1
         curlstat=$?
         if [ $curlstat != 0 ]; then
           log_warning -a "${itempath}: curl $url failed (status $curlstat)"
@@ -150,7 +150,7 @@ function test_download
         ;;
       esac
     done
-    rm -f $headertmp
+    [ "$OPT_KEEPTMP" != 'y' ] && rm -f $headertmp
   fi
 
   return 0
@@ -197,23 +197,23 @@ function test_package
     # Check the package contents
     #### TODO: check the compression matches the suffix
     #### TODO: check it's tar-1.13 compatible
-    temptarlist=$TMPDIR/sr_tarlist.$$.tmp
-    tar tf $pkgpath > $temptarlist
-    if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(srv)|(usr)|(var)|(install)|(./$)' $temptarlist; then
+    tmptarlist=$TMPDIR/sr_tarlist.$$.tmp
+    tar tf $pkgpath > $tmptarlist
+    if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(srv)|(usr)|(var)|(install)|(./$)' $tmptarlist; then
       log_warning -a "${itempath}: ${pkgnam}: files are installed in unusual locations"
     fi
     for verboten in usr/local usr/share/man; do
-      if grep -q '^'$verboten $temptarlist; then
+      if grep -q '^'$verboten $tmptarlist; then
         log_warning -a "${itempath}: ${pkgnam}: files are installed in $verboten"
       fi
     done
     #### TODO: check all manpages compressed
-    if ! grep -q 'install/slack-desc' $temptarlist; then
+    if ! grep -q 'install/slack-desc' $tmptarlist; then
       log_warning -a "${itempath}: ${pkgnam}: package does not contain slack-desc"
     fi
     #### TODO: check modes of package contents
     #### TODO: check whether noarch package is really noarch
-    rm -f $temptarlist
+    [ "$OPT_KEEPTMP" != 'y' ] && rm -f $tmptarlist
 
     # If this is the top level item, and it's not already installed, install it to see what happens :D
     if [ "$itempath" = "$ITEMPATH" ]; then

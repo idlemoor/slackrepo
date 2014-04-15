@@ -5,6 +5,7 @@
 # srcfunctions.sh - source functions for slackrepo
 #   verify_src
 #   download_src
+#   print_curl_status
 #-------------------------------------------------------------------------------
 
 function verify_src
@@ -99,101 +100,109 @@ function download_src
 
   log_normal -a "Downloading source files ..."
   ( cd "$DOWNDIR"
-    if [ -n "$DOWNLIST" ]; then
-      downargs=""
-      for url in $DOWNLIST; do downargs="$downargs -O $url"; done
-      curl -q -f '-#' -k --connect-timeout 120 --retry 2 -J -L -A SlackZilla $downargs >> $ITEMLOG 2>&1
+    for url in $DOWNLIST; do
+      curl -q -f '-#' -k --connect-timeout 120 --retry 10 -J -L -A SlackZilla -O $url >> $ITEMLOG 2>&1
       curlstat=$?
-      case $curlstat in
-        0)   echo "$VERSION" > "$DOWNDIR"/.version
-             # curl content-disposition can't undo %-encoding.
-             # %20 -> space seems to be the most common problem:
-             for spacetrouble in $(ls *%20* 2>/dev/null); do
-               mv "$spacetrouble" "$(echo "$spacetrouble" | sed 's/\%20/ /g')"
-             done
-             return 0
-             ;;
-             # it's a pity curl doesn't do the next bit itself...
-        1)   curlmsg="Unsupported protocol" ;;
-        2)   curlmsg="Failed to initialize" ;;
-        3)   curlmsg="URL malformed" ;;
-        4)   curlmsg="A feature or option that was needed to perform the desired request was not enabled or was explicitly disabled at build-time" ;;
-        5)   curlmsg="Couldn't resolve proxy" ;;
-        6)   curlmsg="Couldn't resolve host" ;;
-        7)   curlmsg="Failed to connect to host" ;;
-        8)   curlmsg="FTP weird server reply" ;;
-        9)   curlmsg="FTP access denied" ;;
-        11)  curlmsg="FTP weird PASS reply" ;;
-        13)  curlmsg="FTP weird PASV reply, Curl couldn't parse the reply sent to the PASV request" ;;
-        14)  curlmsg="FTP weird 227 format" ;;
-        15)  curlmsg="FTP can't get host" ;;
-        17)  curlmsg="FTP couldn't set binary" ;;
-        18)  curlmsg="Partial file" ;;
-        19)  curlmsg="FTP couldn't download/access the given file, the RETR (or similar) command failed" ;;
-        21)  curlmsg="FTP quote error" ;;
-        22)  curlmsg="HTTP page not retrieved" ;;
-        23)  curlmsg="Write error" ;;
-        25)  curlmsg="FTP couldn't STOR file" ;;
-        26)  curlmsg="Read error" ;;
-        27)  curlmsg="Out of memory" ;;
-        28)  curlmsg="Operation timeout" ;;
-        30)  curlmsg="FTP PORT failed" ;;
-        31)  curlmsg="FTP couldn't use REST" ;;
-        33)  curlmsg="HTTP range error" ;;
-        34)  curlmsg="HTTP post error" ;;
-        35)  curlmsg="SSL connect error" ;;
-        36)  curlmsg="FTP bad download resume" ;;
-        37)  curlmsg="FILE couldn't read file" ;;
-        38)  curlmsg="LDAP cannot bind" ;;
-        39)  curlmsg="LDAP search failed" ;;
-        41)  curlmsg="Function not found" ;;
-        42)  curlmsg="Aborted by callback" ;;
-        43)  curlmsg="Internal error" ;;
-        45)  curlmsg="Interface error" ;;
-        47)  curlmsg="Too many redirects" ;;
-        48)  curlmsg="Unknown option specified to libcurl" ;;
-        49)  curlmsg="Malformed telnet option" ;;
-        51)  curlmsg="The peer's SSL certificate or SSH MD5 fingerprint was not OK" ;;
-        52)  curlmsg="The server didn't reply anything, which here is considered an error" ;;
-        53)  curlmsg="SSL crypto engine not found" ;;
-        54)  curlmsg="Cannot set SSL crypto engine as default" ;;
-        55)  curlmsg="Failed sending network data" ;;
-        56)  curlmsg="Failure in receiving network data" ;;
-        58)  curlmsg="Problem with the local certificate" ;;
-        59)  curlmsg="Couldn't use specified SSL cipher" ;;
-        60)  curlmsg="Peer certificate cannot be authenticated with known CA certificates" ;;
-        61)  curlmsg="Unrecognized transfer encoding" ;;
-        62)  curlmsg="Invalid LDAP URL" ;;
-        63)  curlmsg="Maximum file size exceeded" ;;
-        64)  curlmsg="Requested FTP SSL level failed" ;;
-        65)  curlmsg="Sending the data requires a rewind that failed" ;;
-        66)  curlmsg="Failed to initialise SSL Engine" ;;
-        67)  curlmsg="The user name, password, or similar was not accepted and curl failed to log in" ;;
-        68)  curlmsg="File not found on TFTP server" ;;
-        69)  curlmsg="Permission problem on TFTP server" ;;
-        70)  curlmsg="Out of disk space on TFTP server" ;;
-        71)  curlmsg="Illegal TFTP operation" ;;
-        72)  curlmsg="Unknown TFTP transfer ID" ;;
-        73)  curlmsg="File already exists (TFTP)" ;;
-        74)  curlmsg="No such user (TFTP)" ;;
-        75)  curlmsg="Character conversion failed" ;;
-        76)  curlmsg="Character conversion functions required" ;;
-        77)  curlmsg="Problem with reading the SSL CA cert (path? access rights?)" ;;
-        78)  curlmsg="The resource referenced in the URL does not exist" ;;
-        79)  curlmsg="An unspecified error occurred during the SSH session" ;;
-        80)  curlmsg="Failed to shut down the SSL connection" ;;
-        82)  curlmsg="Could not load CRL file, missing or wrong format (added in 7" ;;
-        83)  curlmsg="Issuer check failed (added in 7" ;;
-        84)  curlmsg="The FTP PRET command failed" ;;
-        85)  curlmsg="RTSP: mismatch of CSeq numbers" ;;
-        86)  curlmsg="RTSP: mismatch of Session Identifiers" ;;
-        87)  curlmsg="unable to parse FTP file list" ;;
-        88)  curlmsg="FTP chunk callback reported error" ;;
-        89)  curlmsg="No connection available, the session will be queued " ;;
-        *)   log_error -a "Download failed with curl status $curlstat"; return 1 ;;
-      esac
-      log_error -a "Download failed with curl status $curlstat ($curlmsg)"
-      return 1
-    fi
+      if [ $curlstat != 0 ]; then
+        log_error -a "Download failed: $(print_curl_status $curlstat) $url"
+        return 1
+      fi
+    done
+    echo "$VERSION" > "$DOWNDIR"/.version
+    # curl content-disposition can't undo %-encoding.
+    # %20 -> space seems to be the most common problem:
+    for spacetrouble in $(ls *%20* 2>/dev/null); do
+      mv "$spacetrouble" "$(echo "$spacetrouble" | sed 's/\%20/ /g')"
+    done
   )
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function print_curl_status
+# Print a friendly error message for curl status code on standard output
+# $1 = curl status code
+# Return status: always 0
+{
+  case $1 in
+  1)   echo "Unsupported protocol" ;;
+  2)   echo "Failed to initialize" ;;
+  3)   echo "URL malformed" ;;
+  4)   echo "A feature or option that was needed to perform the desired request was not enabled or was explicitly disabled at build-time" ;;
+  5)   echo "Couldn't resolve proxy" ;;
+  6)   echo "Couldn't resolve host" ;;
+  7)   echo "Failed to connect to host" ;;
+  8)   echo "FTP weird server reply" ;;
+  9)   echo "FTP access denied" ;;
+  11)  echo "FTP weird PASS reply" ;;
+  13)  echo "FTP weird PASV reply, Curl couldn't parse the reply sent to the PASV request" ;;
+  14)  echo "FTP weird 227 format" ;;
+  15)  echo "FTP can't get host" ;;
+  17)  echo "FTP couldn't set binary" ;;
+  18)  echo "Partial file" ;;
+  19)  echo "FTP couldn't download/access the given file, the RETR (or similar) command failed" ;;
+  21)  echo "FTP quote error" ;;
+  22)  echo "HTTP page not retrieved" ;;
+  23)  echo "Write error" ;;
+  25)  echo "FTP couldn't STOR file" ;;
+  26)  echo "Read error" ;;
+  27)  echo "Out of memory" ;;
+  28)  echo "Operation timeout" ;;
+  30)  echo "FTP PORT failed" ;;
+  31)  echo "FTP couldn't use REST" ;;
+  33)  echo "HTTP range error" ;;
+  34)  echo "HTTP post error" ;;
+  35)  echo "SSL connect error" ;;
+  36)  echo "FTP bad download resume" ;;
+  37)  echo "FILE couldn't read file" ;;
+  38)  echo "LDAP cannot bind" ;;
+  39)  echo "LDAP search failed" ;;
+  41)  echo "Function not found" ;;
+  42)  echo "Aborted by callback" ;;
+  43)  echo "Internal error" ;;
+  45)  echo "Interface error" ;;
+  47)  echo "Too many redirects" ;;
+  48)  echo "Unknown option specified to libcurl" ;;
+  49)  echo "Malformed telnet option" ;;
+  51)  echo "The peer's SSL certificate or SSH MD5 fingerprint was not OK" ;;
+  52)  echo "The server didn't reply anything, which here is considered an error" ;;
+  53)  echo "SSL crypto engine not found" ;;
+  54)  echo "Cannot set SSL crypto engine as default" ;;
+  55)  echo "Failed sending network data" ;;
+  56)  echo "Failure in receiving network data" ;;
+  58)  echo "Problem with the local certificate" ;;
+  59)  echo "Couldn't use specified SSL cipher" ;;
+  60)  echo "Peer certificate cannot be authenticated with known CA certificates" ;;
+  61)  echo "Unrecognized transfer encoding" ;;
+  62)  echo "Invalid LDAP URL" ;;
+  63)  echo "Maximum file size exceeded" ;;
+  64)  echo "Requested FTP SSL level failed" ;;
+  65)  echo "Sending the data requires a rewind that failed" ;;
+  66)  echo "Failed to initialise SSL Engine" ;;
+  67)  echo "The user name, password, or similar was not accepted and curl failed to log in" ;;
+  68)  echo "File not found on TFTP server" ;;
+  69)  echo "Permission problem on TFTP server" ;;
+  70)  echo "Out of disk space on TFTP server" ;;
+  71)  echo "Illegal TFTP operation" ;;
+  72)  echo "Unknown TFTP transfer ID" ;;
+  73)  echo "File already exists (TFTP)" ;;
+  74)  echo "No such user (TFTP)" ;;
+  75)  echo "Character conversion failed" ;;
+  76)  echo "Character conversion functions required" ;;
+  77)  echo "Problem with reading the SSL CA cert (path? access rights?)" ;;
+  78)  echo "The resource referenced in the URL does not exist" ;;
+  79)  echo "An unspecified error occurred during the SSH session" ;;
+  80)  echo "Failed to shut down the SSL connection" ;;
+  82)  echo "Could not load CRL file, missing or wrong format (added in 7" ;;
+  83)  echo "Issuer check failed (added in 7" ;;
+  84)  echo "The FTP PRET command failed" ;;
+  85)  echo "RTSP: mismatch of CSeq numbers" ;;
+  86)  echo "RTSP: mismatch of Session Identifiers" ;;
+  87)  echo "unable to parse FTP file list" ;;
+  88)  echo "FTP chunk callback reported error" ;;
+  89)  echo "No connection available, the session will be queued " ;;
+  *)   echo "curl status $curlstat" ;;
+  esac
+  return 0
 }

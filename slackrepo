@@ -32,10 +32,11 @@ function print_usage
   echo "  $(basename $0) update  [--control_args] [item...]"
   echo "  $(basename $0) remove  [--control_args] item..."
   echo 'Control args:'
+  echo '  --verbose | --quiet'
   echo '  --repo=ID'
   echo '  --test'
   echo '  --dry-run'
-  echo '  --verbose | --quiet'
+  echo '  --keep-tmp'
   return
 }
 
@@ -61,6 +62,7 @@ OPT_TEST='n'
 OPT_DRYRUN='n'
 OPT_VERBOSE='n'
 OPT_QUIET='n'
+OPT_KEEPTMP='n'
 
 while [ $# != 0 ]; do
   case "$1" in
@@ -96,6 +98,9 @@ while [ $# != 0 ]; do
     --dry-run )
       OPT_DRYRUN='y'
       shift; continue ;;
+    --keep-tmp )
+      OPT_KEEPTMP='y'
+      shift; continue ;;
     --* )
       print_usage; exit_cleanup; exit 3 ;;
     * )
@@ -110,7 +115,7 @@ done
 # Startup
 #-------------------------------------------------------------------------------
 
-# This is for things that SR_TMP wouldn't be good for
+# Use the standard Unix TMPDIR for things that SR_TMP wouldn't be good for
 # (SR_TMP gets cleaned during execution)
 TMPDIR=${TMPDIR:-/tmp}
 
@@ -180,6 +185,7 @@ MAINLOG=$SR_LOGDIR/$(basename $0)_$(date '+%F_%T').log
 if [ -z "$SR_NUMJOBS" ]; then
   SR_NUMJOBS="-j$(( $(nproc) + 1 ))"
 fi
+# setting ARCH breaks lots of SlackBuilds, which is why we do it ;-)
 if [ -z "$SR_ARCH" ]; then
   case "$( uname -m )" in
     i?86) SR_ARCH=i486 ;;
@@ -201,6 +207,7 @@ log_verbose "Configuration:"
 log_verbose "  --repo=$SR_REPO"
 log_verbose "  --$PROCMODE"
 [ "$OPT_DRYRUN" = 'y'  ] && log_verbose "  --dry-run"
+[ "$OPT_KEEPTMP" = 'y' ] && log_verbose "  --keep-tmp"
 for var in $varlist; do
   myvar="SR_$var"
   log_verbose "  $var='${!myvar}'"
@@ -230,7 +237,7 @@ fi
 # Temporary directories and files
 SR_TMP=${SR_TMP:-/tmp/SBo}
 # really really don't want the next bit to go badly ;-)
-if [ -n "$SR_TMP" -a -d "$SR_TMP" ]; then
+if [ -n "$SR_TMP" -a -d "$SR_TMP" -a "$OPT_KEEPTMP" != 'y' ]; then
   log_normal "Removing $SR_TMP/* ..."
   rm -rf "${SR_TMP:-dont-tase-me-bro}"/*
 else
@@ -238,7 +245,7 @@ else
 fi
 if [ "$OPT_DRYRUN" = 'y' ]; then
   DRYREPO=$SR_TMP/sr_dryrun_$SR_REPO
-  rm -rf $DRYREPO
+  [ "$OPT_KEEPTMP" != 'y' ] && rm -rf $DRYREPO
   mkdir -p $DRYREPO
 fi
 
@@ -427,7 +434,7 @@ if [ "$OPT_DRYRUN" != 'y' -a -s $CHANGELOG ]; then
     log_important "Finished gen_repos_files.sh at $(date +%T)"
   fi
 fi
-[ $genrepstat = 0 ] && rm -f $CHANGELOG
+[ $genrepstat = 0 -a "$OPT_KEEPTMP" != 'y' ] && rm -f $CHANGELOG
 
 #-------------------------------------------------------------------------------
 

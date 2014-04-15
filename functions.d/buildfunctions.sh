@@ -28,6 +28,7 @@ function build_package
   do_hint_skipme $itempath && return 5
 
   SR_TMPIN=$SR_TMP/sr_IN.$$
+  # initial wipe of $SR_TMPIN, even if $OPT_KEEPTMP is set
   rm -rf $SR_TMPIN
   cp -a $SR_SBREPO/$itempath $SR_TMPIN
 
@@ -120,6 +121,7 @@ function build_package
 
   # Build it
   SR_TMPOUT=$SR_TMP/sr_OUT.$$
+  # initial wipe of $SR_TMPOUT, even if $OPT_KEEPTMP is set
   rm -rf $SR_TMPOUT
   mkdir -p $SR_TMPOUT
   export \
@@ -189,7 +191,7 @@ function build_ok
   local itempath="$1"
   local prgnam=${itempath##*/}
 
-  rm -rf $SR_TMPIN
+  [ "$OPT_KEEPTMP" != 'y' ] && rm -rf $SR_TMPIN
 
   if [ "$OPT_DRYRUN" = 'y' ]; then
     # put the package into the special dryrun repo
@@ -202,10 +204,10 @@ function build_ok
     rm -rf $SR_PKGREPO/$itempath/*
     mv $SR_TMPOUT/* $SR_PKGREPO/$itempath/
   fi
-  rm -rf $SR_TMPOUT
+  [ "$OPT_KEEPTMP" != 'y' ] && rm -rf $SR_TMPOUT
 
   # This won't always kill everything, but it's good enough for saving space
-  rm -rf $SR_TMP/${prgnam}* $SR_TMP/package-${prgnam}
+  [ "$OPT_KEEPTMP" != 'y' ] && rm -rf $SR_TMP/${prgnam}* $SR_TMP/package-${prgnam}
 
   msg="$OP OK"
   [ "$OPT_DRYRUN" = 'y' ] && msg="$OP --dry-run OK"
@@ -224,8 +226,10 @@ function build_failed
   local itempath="$1"
   local prgnam=${itempath##*/}
 
-  rm -rf $SR_TMPIN $SR_TMPOUT
-  # but don't remove files from $SR_TMP, they can help to diagnose why it failed
+  if [ "$OPT_KEEPTMP" != 'y' ]; then
+    rm -rf $SR_TMPIN $SR_TMPOUT
+    rm -rf $SR_TMP/${prgnam}* $SR_TMP/package-${prgnam}
+  fi
 
   msg="$OP FAILED"
   log_error -n ":-( $itempath $msg )-:"

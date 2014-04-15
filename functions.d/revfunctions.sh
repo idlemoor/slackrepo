@@ -239,7 +239,7 @@ function get_rev_status
     # (note, by now we know that the first line must be the same)
     cmp -s "$currfile" "$prevfile" || { REVCACHE[$itempath]=5; return 5; }
   done
-  rm -f $currfile
+  [ "$OPT_KEEPTMP" != 'y' ] && rm -f $currfile
 
   REVCACHE[$itempath]=0
   return 0

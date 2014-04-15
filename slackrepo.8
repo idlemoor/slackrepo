@@ -96,6 +96,10 @@ Increase the quantity of messages printed on the console during execution.
 .BR \-q ", " \-\-quiet
 Reduce the quantity of messages printed on the console during execution.
 .
+.TP
+.B \-\-keep\-tmp
+Keep all temporary files in $TMP and $TMPDIR, for debugging purposes.
+.
 .
 .
 .SH EXIT STATUS
@@ -134,6 +138,19 @@ or
 .IR ~/.slackreporc .
 For details, see
 .BR slackrepo.conf (5).
+.P
+.B MAKEFLAGS
+.P
+.B The MAKEFLAGS variable is passed to each invoked SlackBuild.  (Its value will
+be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLAGS.)
+.P
+.B TMPDIR
+.P
+.B slackrepo
+uses the directory specified by TMPDIR (default
+.IR /tmp )
+for its own temporary files.
+(Each invoked SlackBuild uses the directory specified by TMP, not TMPDIR.)
 .
 .
 .

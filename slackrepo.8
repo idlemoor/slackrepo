@@ -141,8 +141,8 @@ For details, see
 .P
 .B MAKEFLAGS
 .P
-.B The MAKEFLAGS variable is passed to each invoked SlackBuild.  (Its value will
-be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLAGS.)
+The MAKEFLAGS variable is passed to each invoked SlackBuild.  Its value will
+be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLAGS.
 .P
 .B TMPDIR
 .P
@@ -150,7 +150,7 @@ be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLA
 uses the directory specified by TMPDIR (default
 .IR /tmp )
 for its own temporary files.
-(Each invoked SlackBuild uses the directory specified by TMP, not TMPDIR.)
+(However, each invoked SlackBuild uses the directory specified by TMP, not TMPDIR.)
 .
 .
 .

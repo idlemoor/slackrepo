@@ -227,11 +227,11 @@ declare -A HINT_skipme HINT_md5ignore HINT_makej1 HINT_no_uninstall
 declare -A HINT_cleanup HINT_uidgid HINT_answers
 declare -A HINT_options HINT_optdeps HINT_readmedeps HINT_version
 
-CHANGELOG="$TMPDIR/sr_changelog_${SR_REPO}.tmp"
-if [ -s "$CHANGELOG" ]; then
-  log_normal "Continuing changelog $CHANGELOG from previous run."
+TMP_CHANGELOG="$TMPDIR/sr_changelog_${SR_REPO}.tmp"
+if [ -s "$TMP_CHANGELOG" ]; then
+  log_normal "Continuing changelog $TMP_CHANGELOG from previous run."
 else
-  > $CHANGELOG
+  > $TMP_CHANGELOG
 fi
 
 # Temporary directories and files
@@ -380,18 +380,18 @@ if [ "$OPT_DRYRUN" = 'y' ]; then
   echo "Dry run OK: $(echo -n $OKLIST | wc -w)"
   [ "$OPT_QUIET" != 'y' -a -n "$OKLIST" ] && echo "$OKLIST"
 else
-  echo "Added:      $(grep ': Added'   $CHANGELOG | wc -l)"
+  echo "Added:      $(grep ': Added'   $TMP_CHANGELOG | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Added'   $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Updated:    $(grep ': Updated' $CHANGELOG | wc -l)"
+    grep ': Added'   $TMP_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+  echo "Updated:    $(grep ': Updated' $TMP_CHANGELOG | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Updated' $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Rebuilt:    $(grep ': Rebuilt' $CHANGELOG | wc -l)"
+    grep ': Updated' $TMP_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+  echo "Rebuilt:    $(grep ': Rebuilt' $TMP_CHANGELOG | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Rebuilt' $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Removed:    $(grep ': Removed' $CHANGELOG | wc -l)"
+    grep ': Rebuilt' $TMP_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+  echo "Removed:    $(grep ': Removed' $TMP_CHANGELOG | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Removed' $CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
+    grep ': Removed' $TMP_CHANGELOG | sed -e 's/^/  /' -e 's/:.*//' | sort
 fi
 SKIPPEDLIST="$(echo -n $SKIPPEDLIST | sed -e "s/ /\n  /g" -e 's/^ */  /' | sort -u)"
 echo "Skipped:    $(echo -n $SKIPPEDLIST | wc -w)"
@@ -411,14 +411,14 @@ echo "Warnings:   $WARNCOUNT"
 #-------------------------------------------------------------------------------
 
 genrepstat=0
-if [ "$OPT_DRYRUN" != 'y' -a -s $CHANGELOG ]; then
+if [ "$OPT_DRYRUN" != 'y' -a -s $TMP_CHANGELOG ]; then
   rcfile=~/.genreprc
   [ -f $rcfile ] && { set -e; . $rcfile; set +e; }
   if [ "$SR_USE_GENREPOS" = 1 ]; then
     echo ""
     log_start "gen_repos_files.sh"
     # 'man sort' says an in-place sort is ok, so let's be lazy :-)
-    sort -o $CHANGELOG $CHANGELOG
+    sort -o $TMP_CHANGELOG $TMP_CHANGELOG
     if [ "$RSS_UUID" = '' ]; then
       setrssuuid="RSS_UUID=\"$(uuidgen -t)\""
       log_normal "Note: setting $setrssuuid in $rcfile"
@@ -430,14 +430,14 @@ if [ "$OPT_DRYRUN" != 'y' -a -s $CHANGELOG ]; then
     RSS_DESCRIPTION="$RSS_DESCRIPTION" RSS_FEEDMAX="$RSS_FEEDMAX" RSS_UUID="$RSS_UUID" \
     GPGBIN="$GPGBIN" USE_GPGAGENT="$USE_GPGAGENT" FOR_SLAPTGET="$FOR_SLAPTGET" \
     FOLLOW_SYMLINKS="$FOLLOW_SYMLINKS" REPO_SUBDIRS="$REPO_SUBDIRS" \
-    sh /usr/libexec/$(basename $0)/gen_repos_files.sh -l $CHANGELOG | tee -a $MAINLOG
+    sh /usr/libexec/$(basename $0)/gen_repos_files.sh -l $TMP_CHANGELOG | tee -a $MAINLOG
     genrepstat=$?
     [ $genrepstat != 0 ] && log_error "gen_repos_files.sh failed -- changelog retained"
     echo ""
     log_important "Finished gen_repos_files.sh at $(date +%T)"
   fi
 fi
-[ $genrepstat = 0 -a "$OPT_KEEPTMP" != 'y' ] && rm -f $CHANGELOG
+[ $genrepstat = 0 -a "$OPT_KEEPTMP" != 'y' ] && rm -f $TMP_CHANGELOG
 
 #-------------------------------------------------------------------------------
 

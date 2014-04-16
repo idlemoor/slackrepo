@@ -58,14 +58,14 @@ function create_metadata
       esac
       # Filter previous entries for this item from the changelog
       # (it may contain info from a previous run that was interrupted)
-      newchangelog=${CHANGELOG}.new
-      grep -v "^${itempath}: " $CHANGELOG > $newchangelog
+      newchangelog=${TMP_CHANGELOG}.new
+      grep -v "^${itempath}: " $TMP_CHANGELOG > $newchangelog
       if [ -z "$extrastuff" ]; then
         echo "$itempath: ${OPERATION}. NEWLINE" >> $newchangelog
       else
         echo "$itempath: ${OPERATION}. LINEFEED $extrastuff NEWLINE" >> $newchangelog
       fi
-      mv $newchangelog $CHANGELOG
+      mv $newchangelog $TMP_CHANGELOG
     fi
 
     # Although gen_repos_files.sh can create the following files, it's quicker to
@@ -207,12 +207,12 @@ function get_rev_status
   fi
 
   # capture current rev into a temp file
-  currfile=$TMPDIR/sr_curr_rev.$$.tmp
-  print_current_revinfo $itempath > $currfile
+  TMP_CURREV=$TMPDIR/sr_curr_rev.$$.tmp
+  print_current_revinfo $itempath > $TMP_CURREV
   # and extract some key stats into variables
-  currrev=$(head -q -n 1 "$currfile" | sed -r -e 's/^.* (git)|(secs)://' -e 's/ .*//')
-  currhints=$(head -q -n 1 "$currfile" | sed -e 's/^.* hints://' -e 's/ .*//')
-  currslack=$(head -q -n 1 "$currfile" | sed -e 's/^.* slack://' -e 's/ .*//')
+  currrev=$(head -q -n 1 "$TMP_CURREV" | sed -r -e 's/^.* (git)|(secs)://' -e 's/ .*//')
+  currhints=$(head -q -n 1 "$TMP_CURREV" | sed -e 's/^.* hints://' -e 's/ .*//')
+  currslack=$(head -q -n 1 "$TMP_CURREV" | sed -e 's/^.* slack://' -e 's/ .*//')
 
   # compare the current rev to each old package's rev file
   for pkgfile in $pkglist; do
@@ -237,9 +237,9 @@ function get_rev_status
     [ "$currslack" != "$prevslack" ] && { REVCACHE[$itempath]=6; return 6; }
     # Have the deps changed?  Check them by comparing the entire files
     # (note, by now we know that the first line must be the same)
-    cmp -s "$currfile" "$prevfile" || { REVCACHE[$itempath]=5; return 5; }
+    cmp -s "$TMP_CURREV" "$prevfile" || { REVCACHE[$itempath]=5; return 5; }
   done
-  [ "$OPT_KEEPTMP" != 'y' ] && rm -f $currfile
+  [ "$OPT_KEEPTMP" != 'y' ] && rm -f $TMP_CURREV
 
   REVCACHE[$itempath]=0
   return 0

@@ -121,9 +121,9 @@ function test_download
   DOWNLIST="${INFODOWNLIST[$itempath]}"
   if [ -n "$DOWNLIST" ]; then
     log_normal -a "Testing download URLs ..."
-    headertmp=$TMPDIR/sr_header.$$.tmp
+    TMP_HEADER=$TMPDIR/sr_header.$$.tmp
     for url in $DOWNLIST; do
-      >$headertmp
+      >$TMP_HEADER
       case $url in
       *.googlecode.com/*)
         # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
@@ -136,13 +136,13 @@ function test_download
         fi
         ;;
       *)
-        curl -q -f -s -k --connect-timeout 240 --retry 5 -J -L -A SlackZilla -I -o $headertmp $url >> $ITEMLOG 2>&1
+        curl -q -f -s -k --connect-timeout 240 --retry 5 -J -L -A SlackZilla -I -o $TMP_HEADER $url >> $ITEMLOG 2>&1
         curlstat=$?
         if [ $curlstat != 0 ]; then
           log_warning -a "${itempath}: curl $url failed (status $curlstat)"
-          if [ -s $headertmp ]; then
+          if [ -s $TMP_HEADER ]; then
             echo "The following headers may be informative:" >> $ITEMLOG
-            cat $headertmp >> $ITEMLOG
+            cat $TMP_HEADER >> $ITEMLOG
           fi
         else
           : #### check 'Content-Length:' against cached files. You can't be too careful ;-)
@@ -150,7 +150,7 @@ function test_download
         ;;
       esac
     done
-    [ "$OPT_KEEPTMP" != 'y' ] && rm -f $headertmp
+    [ "$OPT_KEEPTMP" != 'y' ] && rm -f $TMP_HEADER
   fi
 
   return 0
@@ -176,7 +176,7 @@ function test_package
     shift
     log_normal -a "Testing $pkgnam..."
 
-    # Check the package name
+    # check the package name
     parse_package_name $pkgnam
     [ "$PN_PRGNAM" != "$prgnam" ] && \
       log_warning -a "${itempath}: ${pkgnam}: PRGNAM is \"$PN_PRGNAM\" not \"$prgnam\""
@@ -186,7 +186,7 @@ function test_package
     [ "$PN_ARCH" != "$SR_ARCH" -a \
       "$PN_ARCH" != "noarch" -a \
       "$PN_ARCH" != "fw" ] && \
-      log_warning -a "${itempath}: ${pkgnam}: ARCH is $PN_ARCH not $SR_ARCH or noarch or fw"
+      log_warning -a "${itempath}: ${pkgnam}: ARCH is $PN_ARCH not $SR_ARCH"
     [ "$PN_BUILD" != "$SR_BUILD" ] && \
       log_warning -a "${itempath}: ${pkgnam}: BUILD is $PN_BUILD not $SR_BUILD"
     [ "$PN_TAG" != "$SR_TAG" ] && \
@@ -194,26 +194,59 @@ function test_package
     [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && \
       log_warning -a "${itempath}: ${pkgnam}: Package type is .$PN_PKGTYPE not .$SR_PKGTYPE"
 
-    # Check the package contents
-    #### TODO: check the compression matches the suffix
-    #### TODO: check it's tar-1.13 compatible
-    tmptarlist=$TMPDIR/sr_tarlist.$$.tmp
-    tar tf $pkgpath > $tmptarlist
-    if grep -q -v -E '^(bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(srv)|(usr)|(var)|(install)|(./$)' $tmptarlist; then
+    # check that the compression type matches the suffix
+    filetype=$(file -b $pkgpath)
+    case "$filetype" in
+      'gzip compressed data'*)  [ "$PKGTYPE" = 'tgz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .tgz" ;;
+      'XZ compressed data'*)    [ "$PKGTYPE" = 'txz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .txz" ;;
+      'bzip2 compressed data'*) [ "$PKGTYPE" = 'tbz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .tbz" ;;
+      'LZMA compressed data'*)  [ "$PKGTYPE" = 'tlz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .tlz" ;;
+      *) log_error "${itempath}: ${pkgnam} is \"$filetype\", not a package" ; return 1 ;;
+    esac
+
+    # list what's in the package (and check if it's really a tarball)
+    TMP_TARLIST=$TMPDIR/sr_tarlist_${pkgnam}.$$.tmp
+    tar tvf $pkgpath > $TMP_TARLIST || { log_error "${itempath}: ${pkgnam} does not contain a tar archive"; return 1; }
+
+    # we'll reuse this file several times to analyse the contents:
+    TMP_PKGJUNK=$TMPDIR/sr_pkgjunk_${pkgnam}.$$.tmp
+
+    # check where the files will be installed
+    awk '$6!="^(bin/)|(boot/)|(dev/)|(etc/)|(lib/)|(opt/)|(sbin/)|(srv/)|(usr/)|(var/)|(install/)|(\./$)"' $TMP_TARLIST > $TMP_PKGJUNK
+    if [ -s $TMP_PKGJUNK ]; then
       log_warning -a "${itempath}: ${pkgnam}: files are installed in unusual locations"
+      cat $TMP_PKGJUNK >> $ITEMLOG
     fi
-    for verboten in usr/local usr/share/man; do
-      if grep -q '^'$verboten $tmptarlist; then
-        log_warning -a "${itempath}: ${pkgnam}: files are installed in $verboten"
+    baddirlist="usr/local/ usr/share/man/"
+    [ "$PN_ARCH" = 'x86_64' ] && baddirlist="$verboten usr/lib/"
+    for baddir in $baddirlist; do
+      awk '$6="^'$baddir'"' $TMP_TARLIST > $TMP_PKGJUNK
+      if [ -s $TMP_PKGJUNK ]; then
+        log_warning -a "${itempath}: ${pkgnam}: files are installed in $baddir"
       fi
     done
-    #### TODO: check all manpages compressed
-    if ! grep -q 'install/slack-desc' $tmptarlist; then
+
+    # check if it contains a slack-desc
+    if ! grep -q ' install/slack-desc$' $TMP_TARLIST; then
       log_warning -a "${itempath}: ${pkgnam}: package does not contain slack-desc"
     fi
-    #### TODO: check modes of package contents
+
     #### TODO: check whether noarch package is really noarch
-    [ "$OPT_KEEPTMP" != 'y' ] && rm -f $tmptarlist
+
+    #### TODO: check ownership and permissions of package contents
+    # PKGTOP="$(tar tvf $PKG | head -1 | grep -v "^drwxr-xr-x root/root")"
+    # [ -z "$PKGTOP" ] || echo -e "++ Top directory is wrong:\n$PKGTOP"
+    # PKGNONROOT="$(tar tvf $PKG | grep -v root/root)"
+    # [ -z "$PKGNONROOT" ] || echo -e "++ Files not owned by root:\n$PKGNONROOT"
+    # PKGBADPERM="$(tar tvf $PKG | grep -- ---)"
+    # [ -z "$PKGBADPERM" ] || echo -e "++ Files with strange perms:\n$PKGBADPERM"
+
+    #### TODO: check all manpages compressed
+    # PKGMANGZ="$(tar tvf $PKG | grep -E '^-.* usr/man' | grep -Ev '.gz$')"
+    # [ -z "$PKGMANGZ" ] || echo -e "++ Uncompressed man pages found."
+
+    [ "$OPT_KEEPTMP" != 'y' ] && rm -f $TMP_PKGJUNK
+    # Note! Don't remove TMP_TARLIST yet, create_metadata will use it.
 
     # If this is the top level item, and it's not already installed, install it to see what happens :D
     if [ "$itempath" = "$ITEMPATH" ]; then

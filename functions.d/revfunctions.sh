@@ -24,25 +24,14 @@ function create_metadata
   MYREPO="$SR_PKGREPO"
   [ "$OPT_DRYRUN" = 'y' ] && MYREPO="$DRYREPO"
 
-  pkglist=$(ls $MYREPO/$itempath/$prgnam-*.t?z 2>/dev/null)
-  for pkg in $pkglist; do
-    pkgbase=$(basename $pkg | sed 's/\.t.z$//')
+  pkglist=$(ls $MYREPO/$itempath/*.t?z 2>/dev/null)
+  for pkgpath in $pkglist; do
 
-    # .rev file
-    print_current_revinfo $itempath $* > $MYREPO/$itempath/${pkgbase}.rev
+    pkgbase=$(basename $pkgpath)
 
-    # .dep file (no deps => no file)
-    ##### ought to list *all* deps here
-    if [ $# != 0 ]; then
-      > $MYREPO/$itempath/${pkgbase}.dep
-      while [ $# != 0 ]; do
-        echo "${1##*/}" \
-          >> $MYREPO/$itempath/${pkgbase}.dep
-        shift
-      done
-    fi
-
+    #-----------------------------#
     # changelog entry: needlessly elaborate :-)
+    #-----------------------------#
     if [ "$OPT_DRYRUN" != 'y' ]; then
       OPERATION="$(echo $opmsg | sed -e 's/^build/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/')"
       extrastuff=''
@@ -61,48 +50,94 @@ function create_metadata
       newchangelog=${TMP_CHANGELOG}.new
       grep -v "^${itempath}: " $TMP_CHANGELOG > $newchangelog
       if [ -z "$extrastuff" ]; then
-        echo "$itempath: ${OPERATION}. NEWLINE" >> $newchangelog
+        echo "${itempath}: ${OPERATION}. NEWLINE" >> $newchangelog
       else
-        echo "$itempath: ${OPERATION}. LINEFEED $extrastuff NEWLINE" >> $newchangelog
+        echo "${itempath}: ${OPERATION}. LINEFEED $extrastuff NEWLINE" >> $newchangelog
       fi
       mv $newchangelog $TMP_CHANGELOG
     fi
 
-    # Although gen_repos_files.sh can create the following files, it's quicker to
-    # create them here (we don't have to extract the slack-desc from the package,
-    # and we can use the package list for checking the package)
+    # Although gen_repos_files.sh can create most of the following files, it's
+    # quicker to create them here (we don't have to extract the slack-desc from
+    # the package, and if OPT_TEST is set, we can reuse the tar list from test_package)
 
+    METABASE=$MYREPO/$itempath/$(echo $pkgbase | sed 's/\.t.z$//')
+
+    #-----------------------------#
+    # .rev file
+    #-----------------------------#
+    print_current_revinfo $itempath $* > ${METABASE}.rev
+
+    # .dep file (no deps => no file)
+    ##### ought to list *all* deps here
+    if [ $# != 0 ]; then
+      > ${METABASE}.dep
+      while [ $# != 0 ]; do
+        echo "${1##*/}" \
+          >> ${METABASE}.dep
+        shift
+      done
+    fi
+
+    #-----------------------------#
     # .txt file
-    cat $SR_SBREPO/$itempath/slack-desc | sed -n '/^#/d;/:/p' > $MYREPO/$itempath/${pkgbase}.txt
+    #-----------------------------#
+    if [ -f $SR_SBREPO/$itempath/slack-desc ]; then
+      cat $SR_SBREPO/$itempath/slack-desc | sed -n '/^#/d;/:/p' > ${METABASE}.txt
+    else
+      echo "${prgnam}: ERROR: No slack-desc" > ${METABASE}.txt
+    fi
 
+    #-----------------------------#
     # .md5 file
-    ( cd $MYREPO/$itempath/; md5sum $pkg > ${pkg##*/}.md5 )
+    #-----------------------------#
+    ( cd $MYREPO/$itempath/; md5sum ${pkgbase} > ${pkgbase}.md5  )
 
+    #-----------------------------#
     # .lst file
-    cat << EOF > $MYREPO/$itempath/${pkgbase}.lst
+    #-----------------------------#
+    cat << EOF > ${METABASE}.lst
 ++========================================
 ||
-||   Package:  ./$itempath/${pkg##*/}
+||   Package:  ./$itempath/$pkgbase
 ||
 ++========================================
 EOF
-    tar -tvvf $pkg >> $MYREPO/$itempath/${pkgbase}.lst
-    echo "" >> $MYREPO/$itempath/${pkgbase}.lst
-    echo "" >> $MYREPO/$itempath/${pkgbase}.lst
+    TMP_TARLIST=$TMPDIR/sr_tarlist_${pkgbase}.$$.tmp
+    if [ ! -f "$TMP_TARLIST" ]; then
+      tar tvf $pkgpath > $TMP_TARLIST
+    fi
+    cat ${TMP_TARLIST} >> ${METABASE}.lst
+    echo "" >> ${METABASE}.lst
+    echo "" >> ${METABASE}.lst
 
+    #-----------------------------#
     # .meta file
-    # SIZE=$(du -s $pkg | cut -f 1)
-    # USIZE=$( expr $(gunzip -l $PKG |tail -1|awk '{print $2}') / 1024 )
-    # echo "PACKAGE NAME:  $NAME" > $MYREPO/$itempath/${pkgbase}.meta
-    # if [ -n "$DL_URL" ]; then
-    #   echo "PACKAGE MIRROR:  $DL_URL" >> $MYREPO/$itempath/${pkgbase}.meta
-    # fi
-    # echo "PACKAGE LOCATION:  $LOCATION" >> $MYREPO/$itempath/${pkgbase}.meta
-    # echo "PACKAGE SIZE (compressed):  $SIZE K" >> $MYREPO/$itempath/${pkgbase}.meta
-    # echo "PACKAGE SIZE (uncompressed):  $USIZE K" >> $MYREPO/$itempath/${pkgbase}.meta
-    # echo "PACKAGE DESCRIPTION:" >> $MYREPO/$itempath/${pkgbase}.meta
-    # cat ${pkgbase}.txt >> $MYREPO/$itempath/${pkgbase}.meta
-    # echo "" >> $MYREPO/$itempath/${pkgbase}.meta
+    #-----------------------------#
+    pkgsize=$(du -s $pkgpath | cut -f1)
+    # this uncompressed size is approx, but hopefully good enough ;-)
+    uncsize=$(awk '{t+=int($3/1024)+1} END {print t}' ${TMP_TARLIST})
+    echo "PACKAGE NAME:  $pkgbase" > ${METABASE}.meta
+    if [ -n "$DL_URL" ]; then
+      echo "PACKAGE MIRROR:  $DL_URL" >> ${METABASE}.meta
+    fi
+    echo "PACKAGE LOCATION:  ./$itempath" >> ${METABASE}.meta
+    echo "PACKAGE SIZE (compressed):  ${pkgsize} K" >> ${METABASE}.meta
+    echo "PACKAGE SIZE (uncompressed):  ${uncsize} K" >> ${METABASE}.meta
+    if [ $FOR_SLAPTGET -eq 1 ]; then
+      # Fish them out of the packaging directory. If they're not there, sod 'em.
+      REQUIRED=$(cat $TMP/package-$prgnam/install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+      echo "PACKAGE REQUIRED:  $REQUIRED" >> ${METABASE}.meta
+      CONFLICTS=$(cat $TMP/package-$prgnam/install/slack-conflicts 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+      echo "PACKAGE CONFLICTS:  $CONFLICTS" >> ${METABASE}.meta
+      SUGGESTS=$(cat $TMP/package-$prgnam/install/slack-suggests 2>/dev/null | xargs -r)
+      echo "PACKAGE SUGGESTS:  $SUGGESTS" >> ${METABASE}.meta
+    fi
+    echo "PACKAGE DESCRIPTION:" >> ${METABASE}.meta
+    cat ${METABASE}.txt >> ${METABASE}.meta
+    echo "" >> ${METABASE}.meta
+
+    [ "$OPT_KEEPTMP" != 'y' ] && rm -f $TMP_TARLIST
 
   done
   return 0

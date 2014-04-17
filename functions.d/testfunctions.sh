@@ -212,38 +212,42 @@ function test_package
     TMP_PKGJUNK=$TMPDIR/sr_pkgjunk_${pkgnam}.$$.tmp
 
     # check where the files will be installed
-    awk '$6!="^(bin/)|(boot/)|(dev/)|(etc/)|(lib/)|(opt/)|(sbin/)|(srv/)|(usr/)|(var/)|(install/)|(\./$)"' $TMP_TARLIST > $TMP_PKGJUNK
+    awk '$6!="^(bin/)|(boot/)|(dev/)|(etc/)|(lib/)|(lib64/)|(opt/)|(sbin/)|(srv/)|(usr/)|(var/)|(install/)|(\./$)"' $TMP_TARLIST > $TMP_PKGJUNK
     if [ -s $TMP_PKGJUNK ]; then
-      log_warning -a "${itempath}: ${pkgnam}: files are installed in unusual locations"
+      log_warning -a "${itempath}: ${pkgnam} installs to unusual locations"
       cat $TMP_PKGJUNK >> $ITEMLOG
     fi
     baddirlist="usr/local/ usr/share/man/"
-    [ "$PN_ARCH" = 'x86_64' ] && baddirlist="$verboten usr/lib/"
+    [ "$PN_ARCH"  = 'x86_64' ] && baddirlist="$baddirlist usr/lib/" # but not /lib (e.g. modules)
+    [ "$PN_ARCH" != 'x86_64' ] && baddirlist="$baddirlist lib64/ usr/lib64/"
     for baddir in $baddirlist; do
       awk '$6="^'$baddir'"' $TMP_TARLIST > $TMP_PKGJUNK
       if [ -s $TMP_PKGJUNK ]; then
-        log_warning -a "${itempath}: ${pkgnam}: files are installed in $baddir"
+        log_warning -a "${itempath}: ${pkgnam} uses $baddir"
       fi
     done
 
     # check if it contains a slack-desc
     if ! grep -q ' install/slack-desc$' $TMP_TARLIST; then
-      log_warning -a "${itempath}: ${pkgnam}: package does not contain slack-desc"
+      log_warning -a "${itempath}: ${pkgnam} has no slack-desc"
     fi
 
-    #### TODO: check whether noarch package is really noarch
+    # check top level
+    if ! head -n 1 $TMP_TARLIST | grep -q '^drwxr-xr-x root/root .* \./$' ; then
+      log_warning "${itempath}: ${pkgnam} has wrong top level directory (not tar-1.13?)"
+    fi
 
-    #### TODO: check ownership and permissions of package contents
-    # PKGTOP="$(tar tvf $PKG | head -1 | grep -v "^drwxr-xr-x root/root")"
-    # [ -z "$PKGTOP" ] || echo -e "++ Top directory is wrong:\n$PKGTOP"
-    # PKGNONROOT="$(tar tvf $PKG | grep -v root/root)"
-    # [ -z "$PKGNONROOT" ] || echo -e "++ Files not owned by root:\n$PKGNONROOT"
-    # PKGBADPERM="$(tar tvf $PKG | grep -- ---)"
-    # [ -z "$PKGBADPERM" ] || echo -e "++ Files with strange perms:\n$PKGBADPERM"
+    # check for non root/root ownership
+    if awk '$6!="^(bin/)|(lib/)|(lib64/)|(sbin/)|(usr/)|(\./$)' | grep -q -v ' root/root ' ; then
+      log_warning -a "${itempath}: ${pkgnam} has files or dirs with owner not root/root"
+    fi
 
-    #### TODO: check all manpages compressed
-    # PKGMANGZ="$(tar tvf $PKG | grep -E '^-.* usr/man' | grep -Ev '.gz$')"
-    # [ -z "$PKGMANGZ" ] || echo -e "++ Uncompressed man pages found."
+    #### TODO: check permissions
+
+    # check for uncompressed man pages (usr/share/man warning is handled above)
+    if grep -E '^-.* usr/(share/)?man/' | grep -q -v '\.gz$' $TMP_TARLIST; then
+      log_warning -a "${itempath}: ${pkgnam} has uncompressed man pages"
+    fi
 
     [ "$OPT_KEEPTMP" != 'y' ] && rm -f $TMP_PKGJUNK
     # Note! Don't remove TMP_TARLIST yet, create_metadata will use it.

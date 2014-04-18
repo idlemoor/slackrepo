@@ -78,7 +78,7 @@ function test_slackbuild
       log_warning -a "${itempath}: VERSION not set in $prgnam.info"
     [ -v HOMEPAGE ] || \
       log_warning -a "${itempath}: HOMEPAGE not set in $prgnam.info"
-      # Don't bother testing the URL - parked domains cause false negatives
+      # Don't bother testing the homepage URL - parked domains give false negatives
     [ -v DOWNLOAD ] || \
       log_warning -a "${itempath}: DOWNLOAD not set in $prgnam.info"
     [ -v MD5SUM ] || \
@@ -197,10 +197,10 @@ function test_package
     # check that the compression type matches the suffix
     filetype=$(file -b $pkgpath)
     case "$filetype" in
-      'gzip compressed data'*)  [ "$PKGTYPE" = 'tgz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .tgz" ;;
-      'XZ compressed data'*)    [ "$PKGTYPE" = 'txz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .txz" ;;
-      'bzip2 compressed data'*) [ "$PKGTYPE" = 'tbz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .tbz" ;;
-      'LZMA compressed data'*)  [ "$PKGTYPE" = 'tlz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .tlz" ;;
+      'gzip compressed data'*)  [ "$PN_PKGTYPE" = 'tgz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .tgz" ;;
+      'XZ compressed data'*)    [ "$PN_PKGTYPE" = 'txz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .txz" ;;
+      'bzip2 compressed data'*) [ "$PN_PKGTYPE" = 'tbz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .tbz" ;;
+      'LZMA compressed data'*)  [ "$PN_PKGTYPE" = 'tlz' ] || log_warning "${itempath}: ${pkgnam} has wrong suffix, should be .tlz" ;;
       *) log_error "${itempath}: ${pkgnam} is \"$filetype\", not a package" ; return 1 ;;
     esac
 
@@ -212,16 +212,16 @@ function test_package
     TMP_PKGJUNK=$TMPDIR/sr_pkgjunk_${pkgnam}.$$.tmp
 
     # check where the files will be installed
-    awk '$6!="^(bin/)|(boot/)|(dev/)|(etc/)|(lib/)|(lib64/)|(opt/)|(sbin/)|(srv/)|(usr/)|(var/)|(install/)|(\./$)"' $TMP_TARLIST > $TMP_PKGJUNK
+    awk '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/' $TMP_TARLIST > $TMP_PKGJUNK
     if [ -s $TMP_PKGJUNK ]; then
       log_warning -a "${itempath}: ${pkgnam} installs to unusual locations"
       cat $TMP_PKGJUNK >> $ITEMLOG
     fi
-    baddirlist="usr/local/ usr/share/man/"
-    [ "$PN_ARCH"  = 'x86_64' ] && baddirlist="$baddirlist usr/lib/" # but not /lib (e.g. modules)
-    [ "$PN_ARCH" != 'x86_64' ] && baddirlist="$baddirlist lib64/ usr/lib64/"
+    baddirlist='usr/local/ usr/share/man/'
+    [ "$PN_ARCH"  = 'x86_64' ] && baddirlist+=' usr/lib/' # but not /lib (e.g. modules)
+    [ "$PN_ARCH" != 'x86_64' ] && baddirlist+=' lib64/ usr/lib64/'
     for baddir in $baddirlist; do
-      awk '$6="^'$baddir'"' $TMP_TARLIST > $TMP_PKGJUNK
+      awk '$6~/^'$(echo $baddir | sed s:/:'\\'/:g)'/' $TMP_TARLIST > $TMP_PKGJUNK
       if [ -s $TMP_PKGJUNK ]; then
         log_warning -a "${itempath}: ${pkgnam} uses $baddir"
       fi
@@ -238,14 +238,14 @@ function test_package
     fi
 
     # check for non root/root ownership
-    if awk '$6!="^(bin/)|(lib/)|(lib64/)|(sbin/)|(usr/)|(\./$)' | grep -q -v ' root/root ' ; then
+    if awk '$6!~/^(bin\/|lib\/|lib64\/|sbin\/|usr\/|\.\/$)/' $TMP_TARLIST | grep -q -v ' root/root ' ; then
       log_warning -a "${itempath}: ${pkgnam} has files or dirs with owner not root/root"
     fi
 
     #### TODO: check permissions
 
     # check for uncompressed man pages (usr/share/man warning is handled above)
-    if grep -E '^-.* usr/(share/)?man/' | grep -q -v '\.gz$' $TMP_TARLIST; then
+    if grep -E '^-.* usr/(share/)?man/' $TMP_TARLIST | grep -q -v '\.gz$'; then
       log_warning -a "${itempath}: ${pkgnam} has uncompressed man pages"
     fi
 

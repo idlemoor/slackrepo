@@ -221,7 +221,7 @@ function parse_info
     # VERSION
     if [ -z "$VERSION" ]; then
       # The next bit is necessarily dependent on the empirical characteristics of Slackware's SlackBuilds :-/
-      versioncmds="$(grep -E '^(PKGNAM)|(SRCNAM)|(VERSION)=' $SR_SBREPO/$itempath/$prgnam.SlackBuild)"
+      versioncmds="$(grep -E '^(PKGNAM|SRCNAM|VERSION)=' $SR_SBREPO/$itempath/$prgnam.SlackBuild)"
       cd $SR_SBREPO/$itempath/
         eval $versioncmds
       cd - >/dev/null
@@ -281,6 +281,7 @@ function parse_hints
 
   FLAGHINTS="md5ignore makej1 no_uninstall"
   # These are Boolean hints.
+  # HINT_xxx contains 'y' or '' ;-)
   # Query them like this: '[ "${HINT_xxx[$itempath]}" = 'y' ]'
   for hint in $FLAGHINTS; do
     if [ -f $SR_HINTS/$itempath.$hint ]; then
@@ -293,6 +294,7 @@ function parse_hints
 
   FILEHINTS="skipme cleanup uidgid answers"
   # These are hints where the file contents will be used.
+  # HINT_xxx contains the filename, or ''.
   # Query them like this: '[ -n "${HINT_xxx[$itempath]}" ]'
   for hint in $FILEHINTS; do
     if [ -f $SR_HINTS/$itempath.$hint ]; then
@@ -303,11 +305,25 @@ function parse_hints
     fi
   done
 
-  VARHINTS="options optdeps readmedeps version"
+  VARHINTS="options version"
   # These are hints where the file contents will be used by slackrepo itself.
-  # '%NONE%' indicates the file doesn't exist (vs. readmedeps exists and is empty).
-  # Query them like this: '[ "${HINT_xxx[$itempath]}" != '%NONE%' ]'
+  # HINT_xxx contains the contents of the file, or ''.
+  # Query them like this: '[ -n "${HINT_xxx[$itempath]}" ]'
   for hint in $VARHINTS; do
+    if [ -f $SR_HINTS/$itempath.$hint ]; then
+      gothints="$gothints $hint"
+      eval HINT_$hint[$itempath]=\"$(cat $SR_HINTS/$itempath.$hint)\"
+    else
+      eval HINT_$hint[$itempath]=''
+    fi
+  done
+
+  DEPHINTS="optdeps readmedeps"
+  # These are hints where the file contents will be used by slackrepo itself.
+  # HINT_xxx contains the contents of the file,
+  # or '%NONE%' => the file doesn't exist, or '' => the file exists and is empty.
+  # Query them like this: '[ "${HINT_xxx[$itempath]}" != '%NONE%' ]'
+  for hint in $DEPHINTS; do
     if [ -f $SR_HINTS/$itempath.$hint ]; then
       gothints="$gothints $hint"
       eval HINT_$hint[$itempath]=\"$(cat $SR_HINTS/$itempath.$hint)\"
@@ -316,7 +332,7 @@ function parse_hints
     fi
   done
 
-  # Log hints, unless skipme is set (in which case we are about to bail out noisily).
+  # Log a list of hints, unless skipme is set (in which case we are about to bail out noisily).
   if [ -z "${HINT_skipme[$itempath]}" -a -n "$gothints" ]; then
     log_normal "Hints for ${itempath}:"
     log_normal " $gothints"

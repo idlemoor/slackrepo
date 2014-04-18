@@ -36,15 +36,16 @@ function build_package
     test_slackbuild $itempath || return 7
   fi
 
-  # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
-  VERSION="${INFOVERSION[$itempath]}"
-  do_hint_version $itempath
-  if [ -n "$NEWVERSION" ]; then
+  # Apply version hint
+  NEWVERSION="${HINT_version[$itempath]}"
+  if [ -n "$NEWVERSION" -a "${INFOVERSION[$itempath]}" != "$NEWVERSION" ]; then
+    # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
+    log_verbose "Note: $prgnam: setting VERSION=$NEWVERSION (was ${INFOVERSION[$itempath]}) and ignoring md5sums"
     sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$SR_TMPIN/$prgnam.SlackBuild"
     verpat="$(echo ${INFOVERSION[$itempath]} | sed 's/\./\\\./g')"
     INFODOWNLIST[$itempath]="$(echo "${INFODOWNLIST[$itempath]}" | sed "s/$verpat/$NEWVERSION/g")"
-    VERSION="$NEWVERSION"
-    # (but also leave $NEWVERSION set, to inform verify_src that we upversioned)
+    HINT_md5ignore[$itempath]='y'
+    INFOVERSION[$itempath]="$NEWVERSION"
   fi
 
   # Get the source (including check for unsupported/untested)
@@ -58,11 +59,7 @@ function build_package
        download_src $itempath || { build_failed $itempath; return 2; }
        verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; build_failed $itempath; return 3; }
        ;;
-    3) # not got source => get it
-       download_src $itempath || { build_failed $itempath; return 2; }
-       verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; build_failed $itempath; return 3; }
-       ;;
-    4) # wrong version => get it
+  3|4) # not got source, or wrong version => get it
        download_src $itempath || { build_failed $itempath; return 2; }
        verify_src $itempath || { log_error -a "${itempath}: Downloaded source is bad"; build_failed $itempath; return 3; }
        ;;
@@ -86,8 +83,8 @@ function build_package
     log_warning -a "${itempath}: \"BUILD=\" not found in SlackBuild; using 1"
   fi
   eval $buildassign
-  if [ "$OP" = 'build' -o "$OPT_DRYRUN" = 'y' ]; then
-    # just use the SlackBuild's BUILD
+  if [ "$OPT_DRYRUN" = 'y' -o "${REVCACHE[$itempath]}" = 1 -o "${REVCACHE[$itempath]}" = 2 ]; then
+    # dry run, or new build, or upversion => just use the SlackBuild's BUILD
     SR_BUILD="$BUILD"
   else
     # increment the existing BUILD or use the SlackBuild's (whichever is greater)
@@ -112,8 +109,7 @@ function build_package
     USE_NUMJOBS=" $SR_NUMJOBS "
   fi
   # ... options ...
-  options=""
-  [ "${HINT_options[$itempath]}" != '%NONE%' ] && options="${HINT_options[$itempath]}"
+  options="${HINT_options[$itempath]}"
   SLACKBUILDCMD="sh ./$prgnam.SlackBuild"
   [ -n "$tempmakeflags" -o -n "$options" ] && SLACKBUILDCMD="env $tempmakeflags $options $SLACKBUILDCMD"
   # ... and answers.

@@ -5,7 +5,6 @@
 # hintfunctions.sh - functions for slackrepo hints:
 #   do_hint_skipme
 #   do_hint_uidgid
-#   do_hint_version
 # If you're looking for parse_hints, it's in parsefunctions.sh ;-)
 #-------------------------------------------------------------------------------
 
@@ -63,36 +62,6 @@ function do_hint_uidgid
       -s ${UIDGIDSHELL:-/bin/false} \
       -g $UIDGIDNAME \
       $UIDGIDNAME
-  fi
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function do_hint_version
-# Is there a version hint for this item?
-# $1 = itempath
-# Returns these global variables:
-# $NEWVERSION (empty if no hint or no actual version change: see below)
-# Return status: always 0
-{
-  local itempath="$1"
-  local prgnam=${itempath##*/}
-
-  NEWVERSION=''
-  if [ -n "${HINT_version[$itempath]}" -a "${HINT_version[$itempath]}" != '%NONE%' ]; then
-    NEWVERSION=${HINT_version[$itempath]}
-    if [ -f $SR_PKGREPO/$itempath/$prgnam-*.t?z ]; then   ####### needs to work for multiple pkgs
-      OLDVERSION=$(echo $SR_PKGREPO/$itempath/$prgnam-*.t?z | rev | cut -f3 -d- | rev)
-    else
-      OLDVERSION="${INFOVERSION[$itempath]}"
-    fi
-    if [ "$NEWVERSION" = "$OLDVERSION" ]; then
-      log_verbose "Note: version of $(basename $SR_PKGREPO/$itempath/$prgnam-*.t?z) is already $OLDVERSION"
-      NEWVERSION=''
-    else
-      log_verbose "Note: $prgnam: setting VERSION=$NEWVERSION (was $OLDVERSION)"
-    fi
   fi
   return 0
 }

@@ -131,15 +131,19 @@ function build_with_deps
       fi
       ;;
   1)  OP='build'
-      opmsg="build version ${NEWVERSION:-${INFOVERSION[$itempath]}}"
+      opmsg="build version ${HINT_version[$itempath]:-${INFOVERSION[$itempath]}}"
       ;;
   2)  OP='update'
-      shortrev="${GITREV[$itempath]:0:7}"
-      [ "${GITDIRTY[$itempath]}" = 'y' ] && shortrev="$shortrev+dirty"
-      opmsg="update for git $shortrev"
+      opmsg="update for version ${HINT_version[$itempath]:-${INFOVERSION[$itempath]}}"
       ;;
   3)  OP='update'
-      opmsg="update for version ${NEWVERSION:-${INFOVERSION[$itempath]}}"
+      if [ "$GOTGIT" = 'y' ]; then
+        shortrev="${GITREV[$itempath]:0:7}"
+        [ "${GITDIRTY[$itempath]}" = 'y' ] && shortrev="$shortrev+dirty"
+        opmsg="update for git $shortrev"
+      else
+        opmsg="update for modified SlackBuild files"
+      fi
       ;;
   4)  OP='rebuild'
       opmsg="rebuild for changed hints"

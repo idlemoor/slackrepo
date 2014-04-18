@@ -11,7 +11,6 @@
 function verify_src
 # Verify item's source files in the source cache
 # $1 = itempath
-# Also uses variables $VERSION and $NEWVERSION set by build_package
 # Return status:
 # 0 - all files passed, or md5sum check suppressed, or DOWNLIST is empty
 # 1 - one or more files had a bad md5sum
@@ -23,6 +22,7 @@ function verify_src
   local itempath="$1"
   local prgnam=${itempath##*/}
 
+  VERSION="${INFOVERSION[$itempath]}"
   DOWNLIST="${INFODOWNLIST[$itempath]}"
   MD5LIST="${INFOMD5LIST[$itempath]}"
   DOWNDIR="${SRCDIR[$itempath]}"
@@ -53,8 +53,6 @@ function verify_src
     [ $numgot != $numwant ] && { log_verbose -a "Note: need $numwant source files, but have $numgot"; return 2; }
     # if we're ignoring the md5sums, we've finished => return 0
     [ "${HINT_md5ignore[$itempath]}" = 'y' ] && return 0
-    # also ignore md5sum if we upversioned => return 0
-    [ -n "$NEWVERSION" ] && { log_verbose -a "Note: not checking md5sums due to version hint"; return 0; }
     # run the md5 check on all the files (don't give up at the first error)
     allok='y'
     for f in *; do
@@ -77,8 +75,7 @@ function verify_src
 function download_src
 # Download the sources for itempath into the cache
 # $1 = itempath
-# Also uses variables $DOWNDIR and $DOWNLIST previously set by verify_src,
-# and $VERSION set by build_package
+# Also uses variables $DOWNDIR, $DOWNLIST and $VERSION previously set by verify_src
 # Return status:
 # 1 - curl failed
 {

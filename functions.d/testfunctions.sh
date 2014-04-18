@@ -129,14 +129,14 @@ function test_download
         # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
         # https://code.google.com/p/support/issues/detail?id=660
         # "Don't be evil, but totally lame is fine"
-        curl -q -f -s -k --connect-timeout 240 --retry 5 -J -L -A SlackZilla -o /dev/null $url >> $ITEMLOG 2>&1
+        curl -q -f -s -k --connect-timeout 60 --retry 5 -J -L -A SlackZilla -o /dev/null $url >> $ITEMLOG 2>&1
         curlstat=$?
         if [ $curlstat != 0 ]; then
           log_warning -a "${itempath}: curl $url failed (status $curlstat), but googlecode.com is rubbish anyway"
         fi
         ;;
       *)
-        curl -q -f -s -k --connect-timeout 240 --retry 5 -J -L -A SlackZilla -I -o $TMP_HEADER $url >> $ITEMLOG 2>&1
+        curl -q -f -s -k --connect-timeout 60 --retry 5 -J -L -A SlackZilla -I -o $TMP_HEADER $url >> $ITEMLOG 2>&1
         curlstat=$?
         if [ $curlstat != 0 ]; then
           log_warning -a "${itempath}: curl $url failed (status $curlstat)"
@@ -238,7 +238,7 @@ function test_package
     fi
 
     # check for non root/root ownership
-    if awk '$6!~/^(bin\/|lib\/|lib64\/|sbin\/|usr\/|\.\/$)/' $TMP_TARLIST | grep -q -v ' root/root ' ; then
+    if awk '$6~/^(bin\/|lib\/|lib64\/|sbin\/|usr\/|\.\/$)/' $TMP_TARLIST | grep -q -v ' root/root ' ; then
       log_warning -a "${itempath}: ${pkgnam} has files or dirs with owner not root/root"
     fi
 

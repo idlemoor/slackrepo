@@ -98,7 +98,7 @@ function download_src
   log_normal -a "Downloading source files ..."
   ( cd "$DOWNDIR"
     for url in $DOWNLIST; do
-      curl -q -f '-#' -k --connect-timeout 120 --retry 10 -J -L -A SlackZilla -O $url >> $ITEMLOG 2>&1
+      curl -q -f '-#' -k --connect-timeout 60 --retry 5 -J -L -A SlackZilla -O $url >> $ITEMLOG 2>&1
       curlstat=$?
       if [ $curlstat != 0 ]; then
         log_error -a "Download failed: $(print_curl_status $curlstat) $url"

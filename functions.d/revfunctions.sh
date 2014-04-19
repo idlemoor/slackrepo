@@ -160,7 +160,7 @@ function print_current_revinfo
   local itempath="$1"
   local prgnam=${itempath##*/}
 
-  ver="v:${INFOVERSION[$itempath]}"
+  ver="v:${HINT_version[$itempath]:-${INFOVERSION[$itempath]}}"
 
   if [ "$GOTGIT" = 'y' ]; then
     rev="git:${GITREV[$itempath]}"

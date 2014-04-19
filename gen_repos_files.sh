@@ -28,16 +28,15 @@
 # ---------------------------------------------------------------------------
 cat <<"EOT"
 # -------------------------------------------------------------------#
-# $Id: gen_repos_files.sh,v 1.88 2013/11/20 14:45:20 root Exp root $ #
+# $Id: gen_repos_files.sh,v 1.90 2014/01/17 23:11:25 root Exp root $ #
 # -------------------------------------------------------------------#
 EOT
-# Modified to add -l arg by David Spencer <baildon.research@googlemail.com>
 
 # The script's basename will be displayed in the RSS feed:
 BASENAME=$( basename $0 )
 
 # The script'""s revision number will be displayed in the RSS feed:
-REV=$( echo "$Revision: 1.88 $" | cut -d' '  -f2 )
+REV=$( echo "$Revision: 1.90 $" | cut -d' '  -f2 )
 
 # The repository owner's defaults file;
 # you can override any of the default values in this file:
@@ -106,6 +105,11 @@ FOLLOW_SYMLINKS=${FOLLOW_SYMLINKS:-1}
 # Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them:
 REPO_SUBDIRS=${REPO_SUBDIRS:-""}
 
+# If you want to exclude certain directories or files from being included
+# in the repository metadata, define them here (space-separated).
+# Example: REPO_EXCLUDES="RCS logs .genreprc"
+REPO_EXCLUDES=${REPO_EXCLUDES:-""}
+
 # ---------------------------------------------------------------------------
 
 # By default, no debug messages
@@ -148,14 +152,22 @@ PIDFILE=/var/tmp/$(basename $0 .sh).pid
 # Make sure the PID file is removed when we kill the process
 trap 'rm -f $PIDFILE; exit 1' TERM INT
 
+# Determine the prune parameters for the 'find' commands:
+PRUNES=""
+if [ -n "$REPO_EXCLUDES" ]; then
+  echo "--- Excluding: $REPO_EXCLUDES"
+  for substr in $REPO_EXCLUDES ; do
+    PRUNES="${PRUNES} -o -name ${substr} -prune "
+  done
+fi
+
 # Command line parameter processing:
-while getopts ":ahl:mn:prstv" Option
+while getopts ":ahmn:prstv" Option
 do
   case $Option in
     h ) echo "Parameters are:"
         echo "  -h        : This help text"
         echo "  -a        : Force generation of .asc gpg signature files"
-        echo "  -l <log>  : Use file <log> as input for ChangeLog"
         echo "  -m        : Force generation of .md5 files"
         echo "  -n <days> : Only look for packages not older than <days> days"
         echo "  -p        : Force generation of package .meta files"
@@ -166,8 +178,6 @@ do
         exit
         ;;
     a ) FORCEASC="yes"
-        ;;
-    l ) LOGINPUT=${OPTARG}
         ;;
     m ) FORCEMD5="yes"
         ;;
@@ -449,9 +459,9 @@ refresh the mirror.
 
 EOT
     if [ $FOLLOW_SYMLINKS -eq 1 ]; then
-      find -L . | sort | xargs ls -nld >> ${LISTFILE}
+      find -L . -print $PRUNES | sort | xargs ls -nld --time-style=long-iso >> ${LISTFILE}
     else
-      find . | sort | xargs ls -nld >> ${LISTFILE}
+      find . -print $PRUNES | sort | xargs ls -nld --time-style=long-iso >> ${LISTFILE}
     fi
   )
 } # end of function 'gen_filelist'
@@ -480,12 +490,8 @@ function upd_changelog {
   local LOGTEXT=""
   local i=0
 
-  if [ "$LOGINPUT" == "" ]; then
-    # Ask for a new ChangeLog entry
-    read -er -p "Enter ChangeLog.txt description: "
-  else
-    REPLY=$(cat $LOGINPUT 2>/dev/null)
-  fi
+  # Ask for a new ChangeLog entry
+  read -er -p "Enter ChangeLog.txt description: "
 
   if [ "$REPLY" == "" ]; then
     echo "No input, so I won't update your $CHANGELOG"
@@ -679,9 +685,9 @@ run_repo() {
 
   # This tries to look for filenames with the Slackware package name format:
   if [ $FOLLOW_SYMLINKS -eq 1 ]; then
-    PKGS=$( find -L . -type f -name '*-*-*-*.t[blxg]z' -print | sort )
+    PKGS=$( find -L . -type f -name '*-*-*-*.t[blxg]z' -print $PRUNES | sort )
   else
-    PKGS=$( find . -type f -name '*-*-*-*.t[blxg]z' -print | sort )
+    PKGS=$( find . -type f -name '*-*-*-*.t[blxg]z' -print $PRUNES | sort )
   fi
   for pkg in $PKGS; do
     # Found a filename with matching format, is it really a slackpack?
@@ -768,9 +774,9 @@ tail +13 CHECKSUMS.md5 | md5sum --check | less
 MD5 message digest                Filename
 EOF
   if [ $FOLLOW_SYMLINKS -eq 1 ]; then
-    find -L . -type f -print | grep -v CHECKSUMS | sort | xargs md5sum $1 2>/dev/null >> .CHECKSUMS.md5
+    find -L . -type f -print $PRUNES | grep -v CHECKSUMS | sort | xargs md5sum $1 2>/dev/null >> .CHECKSUMS.md5
   else
-    find . -type f -print | grep -v CHECKSUMS | sort | xargs md5sum $1 2>/dev/null >> .CHECKSUMS.md5
+    find . -type f -print $PRUNES | grep -v CHECKSUMS | sort | xargs md5sum $1 2>/dev/null >> .CHECKSUMS.md5
   fi
   cat .CHECKSUMS.md5 > CHECKSUMS.md5
   gzip -9cf CHECKSUMS.md5 > CHECKSUMS.md5.gz

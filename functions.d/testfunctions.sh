@@ -252,8 +252,8 @@ function test_package
     [ "$OPT_KEEPTMP" != 'y' ] && rm -f $TMP_PKGJUNK
     # Note! Don't remove TMP_TARLIST yet, create_metadata will use it.
 
-    # If this is the top level item, install it to see what happens :D
-    if [ "$itempath" = "$ITEMPATH" ]; then
+    # If this is the top level item, install it to see what happens (but not if --dry-run :D
+    if [ "$itempath" = "$ITEMPATH" -a "$OPT_DRYRUN" != 'y' ]; then
       install_packages $ITEMPATH || return 1
       uninstall_packages $ITEMPATH
     fi

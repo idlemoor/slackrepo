@@ -207,6 +207,7 @@ log_verbose "Configuration:"
 log_verbose "  --repo=$SR_REPO"
 log_verbose "  --$PROCMODE"
 [ "$OPT_DRYRUN" = 'y'  ] && log_verbose "  --dry-run"
+[ "$OPT_TEST" = 'y'    ] && log_verbose "  --test"
 [ "$OPT_KEEPTMP" = 'y' ] && log_verbose "  --keep-tmp"
 for var in $varlist; do
   myvar="SR_$var"

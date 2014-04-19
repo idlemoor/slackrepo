@@ -225,7 +225,7 @@ function install_with_deps
   for mydep in $mydeplist; do
     install_with_deps $mydep || errstat=1 # but keep going
   done
-  install_package $itempath || errstat=1
+  install_packages $itempath || errstat=1
   return $errstat
 }
 
@@ -241,7 +241,7 @@ function uninstall_with_deps
   local prgnam=${itempath##*/}
   local mydeplist mydep
 
-  uninstall_package $itempath
+  uninstall_packages $itempath
   list_direct_deps $itempath
   mydeplist="$DEPLIST"
   for mydep in $mydeplist; do

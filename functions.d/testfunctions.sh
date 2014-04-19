@@ -252,13 +252,10 @@ function test_package
     [ "$OPT_KEEPTMP" != 'y' ] && rm -f $TMP_PKGJUNK
     # Note! Don't remove TMP_TARLIST yet, create_metadata will use it.
 
-    # If this is the top level item, and it's not already installed, install it to see what happens :D
+    # If this is the top level item, install it to see what happens :D
     if [ "$itempath" = "$ITEMPATH" ]; then
-      if [ -z "$(cd /var/log/packages/; ls $prgnam-* 2>/dev/null | rev | cut -f4- -d- | rev | grep -x "${prgnam}")" ]; then
-        log_verbose "Installing $pkgnam ..."
-        install_package $ITEMPATH || return 1
-        uninstall_package $ITEMPATH
-      fi
+      install_packages $ITEMPATH || return 1
+      uninstall_packages $ITEMPATH
     fi
 
   done

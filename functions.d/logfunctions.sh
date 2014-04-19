@@ -1,9 +1,12 @@
 #!/bin/bash
 # Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
-# All rights reserved.  For licence details, see the file 'LICENCE'.
-# Contains code from 'checkpkg' v1.15 http://www.slackware.com/~alien/tools/checkpkg
-# Copyright 2014 Eric Hameleers, Eindhoven, The Netherlands
-# All rights reserved.  For licence details, see the file 'LICENCE'.
+#   All rights reserved.  For licence details, see the file 'LICENCE'.
+#
+# Contains code and concepts from 'checkpkg' v1.15
+#   Copyright 2014 Eric Hameleers, Eindhoven, The Netherlands
+#   All rights reserved.  For licence details, see the file 'LICENCE'.
+#   http://www.slackware.com/~alien/tools/checkpkg
+#
 #-------------------------------------------------------------------------------
 # logfunctions.sh - logging functions for slackrepo
 #   log_start

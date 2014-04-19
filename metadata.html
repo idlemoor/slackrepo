@@ -20,11 +20,11 @@
 <li><a href="index.html">About</a></li>
 <li><a href="installing.html">Installation</a></li>
 <li><a href="running.html">Running</a></li>
+<li><a href="examples.html">Examples</a></li>
 <li><a href="dependencies.html">Dependencies</a></li>
 <li><a href="updates.html">Updates</a></li>
 <li><a href="sbo_git.html">SlackBuilds.org git</a></li>
 <li><a href="messages.html">Messages and logging</a></li>
-<li><a href="examples.html">Examples</a></li>
 <li><a href="configuration.html">Configuration</a></li>
 <li><a href="hints.html">Hints</a></li>
 <li><a href="manpages.html">man pages</a></li>
@@ -49,9 +49,10 @@
 <li><code>package.dep</code> - a plaintext list of all dependencies of the package (including indirect dependencies, but excluding any dependencies in Slackware itself)</li>
 <li><code>package.lst</code> - a listing of the contents of the package</li>
 <li><code>package.meta</code> - package management information, for generating PACKAGES.TXT</li>
-<li><code>package.rev</code> - slackrepo's revision information about the package</li>
 <li><code>package.txt</code> - text description of the package (based on the slack-desc)</li>
 </ul>
+
+<p>In addition, each package directory contains a file <code>.revision</code> that contains revision information about the SlackBuild and dependencies from which the packages were built.</p>
 
 </div>
 

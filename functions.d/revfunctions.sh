@@ -24,6 +24,11 @@ function create_metadata
   MYREPO="$SR_PKGREPO"
   [ "$OPT_DRYRUN" = 'y' ] && MYREPO="$DRYREPO"
 
+  #-----------------------------#
+  # .revision file
+  #-----------------------------#
+  print_current_revinfo $itempath $* > $MYREPO/$itempath/.revision
+
   pkglist=$(ls $MYREPO/$itempath/*.t?z 2>/dev/null)
   for pkgpath in $pkglist; do
 
@@ -62,11 +67,6 @@ function create_metadata
     # the package, and if OPT_TEST is set, we can reuse the tar list from test_package)
 
     METABASE=$MYREPO/$itempath/$(echo $pkgbase | sed 's/\.t.z$//')
-
-    #-----------------------------#
-    # .rev file
-    #-----------------------------#
-    print_current_revinfo $itempath $* > ${METABASE}.rev
 
     # .dep file (no deps => no file)
     ##### ought to list *all* deps here
@@ -148,8 +148,8 @@ EOF
 function print_current_revinfo
 # Prints a revision info summary on standard output, format as follows:
 #
-# <prgnam> git:<gitrevision> slack:<slackversion> [hints:<hintname1>:<md5sum1>:[<hintname2>:<md5sum2>:[...]]]
-# [<depnam> git:<gitrevision> slack:<slackversion> [hints:<hintname1>:<md5sum1>:[<hintname2>:<md5sum2>:[...]]]]
+# <prgnam> v:<version> git:<gitrevision> slack:<slackversion> [hints:<hintname1>:<md5sum1>:[<hintname2>:<md5sum2>:[...]]]
+# [<depnam> v:<version> git:<gitrevision> slack:<slackversion> [hints:<hintname1>:<md5sum1>:[<hintname2>:<md5sum2>:[...]]]]
 # [...]
 #
 # (for a non-git repo, git:<gitrevision> is replaced by secs:<since-epoch>)
@@ -160,6 +160,8 @@ function print_current_revinfo
   local itempath="$1"
   local prgnam=${itempath##*/}
 
+  ver="v:${INFOVERSION[$itempath]}"
+
   if [ "$GOTGIT" = 'y' ]; then
     rev="git:${GITREV[$itempath]}"
     if [ "${GITDIRTY[$itempath]}" = 'y' ]; then
@@ -169,19 +171,19 @@ function print_current_revinfo
     # Use newest file's seconds since epoch ;-)
     rev="secs:$(cd $SR_SBREPO/$itempath; ls -t | head -n 1 | xargs stat --format='%Y')"
   fi
-  md5sums="$(cd $SR_HINTS; md5sum $itempath.* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
-  if [ -n "$md5sums" ]; then
-    echo "$prgnam $rev slack:$SLACKVER hints:$md5sums"
+  hintmd5sums="$(cd $SR_HINTS; md5sum $itempath.* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
+  if [ -n "$hintmd5sums" ]; then
+    echo "$prgnam $ver $rev slack:$SLACKVER hints:$hintmd5sums"
   else
-    echo "$prgnam $rev slack:$SLACKVER"
+    echo "$prgnam $ver $rev slack:$SLACKVER"
   fi
 
-  # capture revision of each dep from its .rev file
+  # capture revision of each dep from its .revision file
   for dep in ${DEPCACHE[$itempath]}; do
-    if [ "$OPT_DRYRUN" = 'y' -a -f $DRYREPO/$dep/*.rev ]; then
-      head -q -n 1 $DRYREPO/$dep/*.rev
+    if [ "$OPT_DRYRUN" = 'y' -a -f $DRYREPO/$dep/.revision ]; then
+      head -q -n 1 $DRYREPO/$dep/.revision
     else
-      head -q -n 1 $SR_PKGREPO/$dep/*.rev
+      head -q -n 1 $SR_PKGREPO/$dep/.revision
     fi
   done
 
@@ -192,10 +194,10 @@ function print_current_revinfo
 
 function get_rev_status
 # Works out a status value summarising whether the package needs to be built.
-# $1    = item name
+# $1 = itempath
 # Return status:
 # 0 = up to date
-# 1 = package not found, or has no .rev metadata file
+# 1 = package not found, or has no .revision file
 # 2 = version has changed
 # 3 = git revision changed, or git is dirty and files seem to have changed,
 #     or nongit repo and files seem to have changed
@@ -215,7 +217,7 @@ function get_rev_status
     return "${REVCACHE[$itempath]}"
   fi
 
-  # Is there an old package?
+  # Is there an existing package?
   if [ "$OPT_DRYRUN" = 'y' ]; then
     pkglist=$(ls $DRYREPO/$itempath/*.t?z 2>/dev/null)
     [ -z "$pkglist" ] && \
@@ -224,52 +226,54 @@ function get_rev_status
     pkglist=$(ls $SR_PKGREPO/$itempath/*.t?z 2>/dev/null)
   fi
   [ -z "$pkglist" ] && { REVCACHE[$itempath]=1; return 1; }
-  revfile=$(echo $pkglist | head -n 1 | sed 's/\.t.z$/.rev/')
-  # Is the rev file missing?
-  [ ! -f "$revfile" ] && { REVCACHE[$itempath]=1; return 1; }
 
-  # Are we upversioning?
-  oldver=$(echo $revfile | rev | cut -f3 -d- | rev)
-  newver="${HINT_version[$itempath]:-${INFOVERSION[$itempath]}}"
-  [ "$oldver" != "$newver" ] && { REVCACHE[$itempath]=2; return 2; }
-
-  # If this isn't a git repo, or if git is dirty,
-  # have any of the files been modified since the package was built?
-  if [ "$GOTGIT" = 'n' -o "${GITDIRTY[$itempath]}" = 'y' ]; then
-    [ "${GITDIRTY[$itempath]}" = 'y' ] && log_warning "${itempath}: git is dirty"
-    # Is anything in the SlackBuild dir newer than the rev file?
-    if [ -n "$(find $SR_SBREPO/$itempath -newer $revfile 2>/dev/null)" ]; then
-      REVCACHE[$itempath]=3; return 3
-    fi
-  fi
+  REVFILE=$(dirname $(echo $pkglist | head -n 1))/.revision
+  # Is the .revision file missing?
+  [ ! -f "$REVFILE" ] && { REVCACHE[$itempath]=1; return 1; }
 
   # capture current rev into a temp file
   TMP_CURREV=$TMPDIR/sr_curr_rev.$$.tmp
   print_current_revinfo $itempath > $TMP_CURREV
   # and extract some key stats into variables
-  currrev=$(  head -q -n 1 "$TMP_CURREV" | cut -f2 -d" ")
-  prevrev=$(  head -q -n 1 "$revfile"    | cut -f2 -d" ")
-  currslack=$(head -q -n 1 "$TMP_CURREV" | cut -f3 -d" ")
-  prevslack=$(head -q -n 1 "$revfile"    | cut -f3 -d" ")
-  currhints=$(head -q -n 1 "$TMP_CURREV" | cut -f4 -d" ")
-  prevhints=$(head -q -n 1 "$revfile"    | cut -f4 -d" ")
+  currinfo=$(head -q -n 1 "$TMP_CURREV")
+  previnfo=$(head -q -n 1 "$REVFILE")
+  currver=$(echo $currinfo | cut -f2 -d" ")
+  prevver=$(echo $previnfo | cut -f2 -d" ")
+  currrev=$(echo $currinfo | cut -f3 -d" ")
+  prevrev=$(echo $previnfo | cut -f3 -d" ")
+  currslk=$(echo $currinfo | cut -f4 -d" ")
+  prevslk=$(echo $previnfo | cut -f4 -d" ")
+  currhnt=$(echo $currinfo | cut -f5 -d" ")
+  prevhnt=$(echo $previnfo | cut -f5 -d" ")
+
+  # Are we upversioning?
+  if [ "$currver" != "$prevver" ]; then
+    REVCACHE[$itempath]=2
+  # If this isn't a git repo, have any of the files been modified since the package was built?
+  elif [ "$GOTGIT" = 'n' -a -n "$(find $SR_SBREPO/$itempath -newer $revfile 2>/dev/null)" ]; then
+    REVCACHE[$itempath]=3
+  # If git is dirty, have any of the files been modified since the package was built?
+  elif [ "${GITDIRTY[$itempath]}" = 'y' -a -n "$(find $SR_SBREPO/$itempath -newer $revfile 2>/dev/null)" ]; then
+    REVCACHE[$itempath]=3
   # has the revision changed?
-  if [ "$currrev" != "$prevrev" ]; then
+  elif [ "$currrev" != "$prevrev" ]; then
     REVCACHE[$itempath]=3
   # has a hint changed?
-  elif [ "$currhints" != "$prevhints" ]; then
+  elif [ "$currhnt" != "$prevhnt" ]; then
     REVCACHE[$itempath]=4
   # has Slackware changed?
-  elif [ "$currslack" != "$prevslack" ]; then
+  elif [ "$currslk" != "$prevslk" ]; then
     REVCACHE[$itempath]=6
   # have the deps changed?  Check them by comparing the entire files
   # (note, by now we know that the first line must be the same)
-  elif ! cmp -s "$TMP_CURREV" "$revfile"; then
+  elif ! cmp -s "$TMP_CURREV" "$REVFILE"; then
     REVCACHE[$itempath]=5
   # nothing has changed => it's up-to-date
   else
     REVCACHE[$itempath]=0
+    #### but is it newer than the item that depends on it? if so, return 9
   fi
+
   [ "$OPT_KEEPTMP" != 'y' ] && rm -f $TMP_CURREV
   return ${REVCACHE[$itempath]}
 

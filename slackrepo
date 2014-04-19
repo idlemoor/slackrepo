@@ -266,7 +266,7 @@ if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
 elif [ -d $SR_SBREPO/.git ]; then
   cd $SR_SBREPO
   # Is git clean, and is the branch SBo's stable branch?
-  log_normal "Checking SlackBuilds repository's git status ..."
+  log_normal "Checking git ..."
   muck="$(git status -s .)"
   branch=$(git rev-parse --abbrev-ref HEAD)
   if [ -z "$muck" -a "$branch" = "$SLACKVER" ]; then

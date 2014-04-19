@@ -257,6 +257,7 @@ function parse_info
       GITDIRTY[$itempath]="n"
       if [ -n "$(cd $SR_SBREPO/$itempath; git status -s .)" ]; then
         GITDIRTY[$itempath]="y"
+        log_warning "${itempath}: git is dirty"
       fi
     else
       GITREV[$itempath]=''

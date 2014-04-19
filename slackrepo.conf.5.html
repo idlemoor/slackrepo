@@ -446,7 +446,21 @@ Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them.
 <BR>
 
 Example:
-<B>REPO_SUBDIRS=${REPO_SUBDIRS:-}</B>
+<B>REPO_SUBDIRS=${REPO_SUBDIRS:-""}</B>
+
+<DT><B>REPO_EXCLUDES</B>
+
+<DD>
+If you want to exclude certain directories or files from being included
+in the repository metadata, define them here (space-separated).
+<BR>
+
+Example 1:
+<B>REPO_EXCLUDES=${REPO_EXCLUDES:-""}</B>
+<BR>
+
+Example 2:
+<B>REPO_EXCLUDES="RCS logs .genreprc"</B>
 
 </DL>
 <A NAME="lbAI">&nbsp;</A>

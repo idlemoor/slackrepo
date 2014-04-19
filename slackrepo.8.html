@@ -162,6 +162,24 @@ or
 For details, see
 <B><A HREF="slackrepo.conf.5.html">slackrepo.conf</A></B>(5).
 
+
+<B>MAKEFLAGS</B>
+
+
+The MAKEFLAGS variable is passed to each invoked SlackBuild.  Its value will
+be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLAGS.
+
+
+<B>TMPDIR</B>
+
+
+<B>slackrepo</B>
+uses the directory specified by TMPDIR (default
+<I>/tmp</I>)
+for its own temporary files.
+(However, each invoked SlackBuild uses the directory specified by TMP, not TMPDIR.)
+
+
 <A NAME="lbAH">&nbsp;</A>
 <H2>FILES</H2>
 

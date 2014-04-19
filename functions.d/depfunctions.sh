@@ -145,14 +145,14 @@ function build_with_deps
         opmsg="update for modified SlackBuild files"
       fi
       ;;
-  4)  OP='rebuild'
-      opmsg="rebuild for changed hints"
+  4)  OP='update'
+      opmsg="update for changed hints"
       ;;
   5)  OP='rebuild'
       opmsg="rebuild for updated deps"
       ;;
   6)  OP='rebuild'
-      opmsg="rebuild for Slackware upgrade"
+      opmsg="rebuild for upgraded Slackware"
       ;;
   9)  log_normal "$itempath has been updated."
       return 0

@@ -1,10 +1,10 @@
-header h2   { font-family: sans-serif; text-align: left; }
+header h2   { float: right; width: 80%; margin-top: 10px; font-family: sans-serif; text-align: left; }
 
-nav         { float: left;  width: 20%; margin-top: 10px; font-family: sans-serif; }
+nav         { float: left;  width: 20%; margin-top: 10px; font-family: sans-serif; text-align: left; }
 nav ul      { margin: 0; padding: 0; list-style: none; }
 nav li      { margin-bottom: 10px; font-weight: bold; }
 
-#main       { float: right; width: 80%; margin-top: 10px; font-family: serif; }
+#main       { float: right; width: 80%; margin-top: 10px; font-family: serif; text-align: left; }
 #main h2    { font-family: sans-serif; margin-top: 0; }
 #main h4    { font-family: sans-serif; }
 #main li    { margin-bottom: 12px; }

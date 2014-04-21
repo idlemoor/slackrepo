@@ -1,10 +1,12 @@
-header h2   { float: right; width: 80%; margin-top: 10px; font-family: sans-serif; text-align: left; }
+header      { float: right; width: 80%; margin-top: 10px; text-align: left; }
+header h2   { font-family: sans-serif; }
 
-nav         { float: left;  width: 20%; margin-top: 10px; font-family: sans-serif; text-align: left; }
+nav         { float: left;  width: 20%; margin-top: 10px; text-align: left; }
+nav h2      { font-family: sans-serif; font-style: italic; }
 nav ul      { margin: 0; padding: 0; list-style: none; }
-nav li      { margin-bottom: 10px; font-weight: bold; }
+nav li      { margin-bottom: 10px;  font-family: sans-serif; font-weight: bold; }
 
-#main       { float: right; width: 80%; margin-top: 10px; font-family: serif; text-align: left; }
+#main       { float: right; width: 80%; margin-top: 10px; text-align: left; font-family: serif; }
 #main h2    { font-family: sans-serif; margin-top: 0; }
 #main h4    { font-family: sans-serif; }
 #main li    { margin-bottom: 12px; }
@@ -12,8 +14,8 @@ nav li      { margin-bottom: 10px; font-weight: bold; }
 #main th    { border: 1px solid black; padding: 4px; font-family: sans-serif; font-style: italic; }
 #main td    { border: 1px solid black; padding: 4px; }
 
-footer      { clear:both; margin-top: 16px; }
-footer p    { font-size: x-small; font-style: italic; text-align: right; font-family: sans-serif; }
+footer      { clear:both; margin-top: 16px; text-align: right; }
+footer p    { font-size: x-small; font-style: italic; font-family: sans-serif; }
 
 pre         { font-weight:bold; }
 code        { font-weight:bold; }

@@ -1,11 +1,11 @@
-header      { float: right; width: 80%; margin: 10px; text-align: left; font-family: sans-serif; background-color: #E0FFE0; }
+header      { float: right; width: 75%; margin: 10px; text-align: left; font-family: sans-serif; background-color: #E0FFE0; }
 
 nav         { float: left;  width: 20%; margin: 10px; text-align: left; font-family: sans-serif; font-weight: bold; background-color: #E0E0E0; }
 nav h2      { margin-bottom: 20px; font-weight: bold; font-style: italic; color: #955f20 }
 nav ul      { margin: 0; list-style: none; }
 nav li      { margin-bottom: 10px; }
 
-#main       { float: right; width: 80%; margin: 10px; text-align: left; font-family: serif; background-color: #E0E0FF; }
+#main       { float: right; width: 75%; margin: 10px; text-align: left; font-family: serif; background-color: #E0E0FF; }
 #main h2    { font-family: sans-serif; }
 #main h4    { font-family: sans-serif; }
 #main ul    { margin: 0; }

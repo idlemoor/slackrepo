@@ -1,5 +1,5 @@
 header h2   { font-family: sans-serif; margin-left: 20%; text-align: left; }
-header img  { float: left; width: 20%; }
+header img  { float: left; }
 
 nav         { float: left;  width: 20%; margin-top: 10px; font-family: sans-serif; }
 nav ul      { margin: 0; padding: 0; list-style: none; }

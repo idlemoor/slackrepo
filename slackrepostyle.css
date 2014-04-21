@@ -5,9 +5,10 @@ nav h2      { margin-bottom: 20px; font-weight: bold; font-style: italic; color:
 nav ul      { margin: 0; padding: 0; list-style: none; }
 nav li      { margin-bottom: 10px; }
 
-#main       { float: right; width: 75%; margin: 0; text-align: left; font-family: serif; }
+#main       { float: right; width: 75%; margin: 0 0 0 0; text-align: left; font-family: serif; }
 #main h2    { font-family: sans-serif; }
 #main h4    { font-family: sans-serif; }
+#main p     { font-family: serif; }
 #main ul    { margin: 0; }
 #main li    { margin-bottom: 10px; }
 #main table { border-collapse: collapse; }

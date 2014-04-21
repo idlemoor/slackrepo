@@ -2,7 +2,7 @@ header      { float: right; width: 80%; margin-top: 10px; text-align: left; }
 header h2   { font-family: sans-serif; }
 
 nav         { float: left;  width: 15%; padding: 10px; text-align: left; background-color: #E0E0E0; }
-nav h2      { margin-bottom: 10px;  font-family: sans-serif; font-weight: bold; font-style: italic; color: #955f20 }
+nav h2      { margin-bottom: 10px;  font-family: sans-serif; text-align: center; font-weight: bold; font-style: italic; color: #955f20 }
 nav ul      { margin: 0; padding: 0; list-style: none; }
 nav li      { margin-bottom: 10px;  font-family: sans-serif; font-weight: bold; }
 

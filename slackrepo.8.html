@@ -1,71 +1,118 @@
-<HTML><HEAD><TITLE>Manpage of SLACKREPO</TITLE>
-</HEAD><BODY>
-<H1>SLACKREPO</H1>
-Section: Maintenance Commands (8)<BR>Updated: 2014-04-01<BR><A HREF="#index">Index</A>
-<A HREF="manpages.html">Return to Main Contents</A><HR>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+<title>Manual Page - slackrepo(8)</title>
+</head>
+<body>
+<a name="top"></a>
+<!-- .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K. -->
+<!-- .\" All rights reserved.  For licence details, see the file 'LICENCE'. -->
+<!-- . -->
+<!-- .TH SLACKREPO 8 "2014-04-01" slackrepo-0.1.0 -->
+<center>
+<h1><hr><i>Manual Reference Pages &nbsp;-&nbsp;</i><nobr>SLACKREPO (8)</nobr><hr></h1>
+</center>
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH NAME -->
+<a name="0">
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+     <h3>NAME</h3>
 
+</a>
+<blockquote>
 slackrepo - automated SlackBuild package building and repository maintenance
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH SYNOPSIS -->
+</blockquote>
+<a name="contents"></a><h3>CONTENTS</h3>
+<blockquote>
+<a href="#1">Synopsis</a><br>
+<a href="#2">Description</a><br>
+<a href="#3">Options</a><br>
+<a href="#4">Exit Status</a><br>
+<a href="#5">Environment</a><br>
+<a href="#6">Files</a><br>
+<a href="#7">Notes</a><br>
+<a href="#8">Examples</a><br>
+<a href="#9">See Also</a><br>
+</blockquote>
+<a name="10">
 
-<B>slackrepo build</B>
+     <h3>SYNOPSIS</h3>
 
-[<I>OPTIONS</I>]
+</a>
+<blockquote>
+<!-- .B slackrepo build -->
+<b>slackrepo build</b> <!-- .RI [ OPTIONS ] -->
+[<i>OPTIONS</i>] <!-- .RI [ ITEM ...] -->
+[<i>ITEM</i>...] <!-- . -->
+<!-- .br -->
+<!-- .B slackrepo rebuild -->
+<!-- Need break --><br>
+<b>slackrepo rebuild</b> <!-- .RI [ OPTIONS ] -->
+[<i>OPTIONS</i>] <!-- .RI [ ITEM ...] -->
+[<i>ITEM</i>...] <!-- . -->
+<!-- .br -->
+<!-- .B slackrepo remove -->
+<!-- Need break --><br>
+<b>slackrepo remove</b> <!-- .RI [ OPTIONS ] -->
+[<i>OPTIONS</i>] <!-- .IR ITEM ... -->
+<i>ITEM</i>... <!-- . -->
+<!-- .br -->
+<!-- .B slackrepo update -->
+<!-- Need break --><br>
+<b>slackrepo update</b> <!-- .RI [ OPTIONS ] -->
+[<i>OPTIONS</i>] <!-- .RI [ ITEM ...] -->
+[<i>ITEM</i>...] <!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH DESCRIPTION -->
+</blockquote>
+<a name="2">
 
-[<I>ITEM</I>...]
+     <h3>DESCRIPTION</h3>
 
-<BR>
-
-<B>slackrepo rebuild</B>
-
-[<I>OPTIONS</I>]
-
-[<I>ITEM</I>...]
-
-<BR>
-
-<B>slackrepo remove</B>
-
-[<I>OPTIONS</I>]
-
-<I>ITEM</I>...
-
-<BR>
-
-<B>slackrepo update</B>
-
-[<I>OPTIONS</I>]
-
-[<I>ITEM</I>...]
-
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
-
-<DL COMPACT>
-<DT><B>slackrepo&nbsp;build</B>
-
-<DD>
+</a>
+<blockquote>
+<!-- . -->
+<!-- .TP -->
+<table cellpadding="3">
+<tbody><tr valign="top"><td colspan="2">
+<!-- .B slackrepo\ build -->
+<b>slackrepo build</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Builds packages from an input repository of SlackBuilds (for example,
 a git clone of SlackBuilds.org), and then stores them in a package repository.
-<DT><B>slackrepo&nbsp;rebuild</B>
-
-<DD>
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td colspan="2">
+<!-- .B slackrepo\ rebuild -->
+<b>slackrepo rebuild</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Rebuilds packages that are already in the package repository.
-<DT><B>slackrepo&nbsp;remove</B>
-
-<DD>
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td colspan="2">
+<!-- .B slackrepo\ remove -->
+<b>slackrepo remove</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Removes packages from the package repository.
-<DT><B>slackrepo&nbsp;update</B>
-
-<DD>
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td colspan="2">
+<!-- .B slackrepo\ update -->
+<b>slackrepo update</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Builds, rebuilds and removes packages in the package repository,
 according to changes in the SlackBuild repository.
-<DT><I>ITEM</I>
-
-<DD>
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td nowrap="nowrap" width="6%">
+<!-- .I ITEM -->
+<i>ITEM</i> </td><td valign="bottom">
 An item specifies
 (in build and rebuild mode) a directory in the SlackBuild repository
 that contains a set of SlackBuild files,
@@ -74,281 +121,400 @@ that contains one or more packages built from a SlackBuild.
 If no items are specified, all directories in the SlackBuild or package
 repository are processed (except in remove mode, where it is mandatory
 to specify the items to be removed).
-</DL>
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH OPTIONS -->
+</td></tr>
+<tr></tr></tbody></table></blockquote>
+<a name="3">
 
-<DL COMPACT>
-<DT><B>--repo=ID</B>
+     <h3>OPTIONS</h3>
 
-<DD>
+</a>
+<blockquote>
+<!-- . -->
+<!-- .TP -->
+<table cellpadding="3">
+<tbody><tr valign="top"><td colspan="2">
+<!-- .B \-\-repo=ID -->
+<b>--repo=ID</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Use the SlackBuild and package repository identified by ID.
 The filestore locations of the SlackBuild and package repositories are defined in
 the configuration file
-<I>/etc/slackrepo/slackrepo_ID.conf</I>,
-
-where  ID is an identifier for the repositories.
+<!-- .IR /etc/slackrepo/slackrepo_ID.conf , -->
+<i>/etc/slackrepo/slackrepo_ID.conf</i>, where  ID is an identifier for the repositories.
 The default repository ID is SBo.
 For details, see
-<B><A HREF="slackrepo.conf.5.html">slackrepo.conf</A>(5)</B>.
-
-<DT><B>--test</B>
-
-<DD>
+<!-- .BR slackrepo.conf(5) . -->
+<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a> .
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td nowrap="nowrap" width="6%">
+<!-- .B \-\-test -->
+<b>--test</b> </td><td valign="bottom">
 The SlackBuild files and the built packages will be subjected to additional
 quality assurance tests.
-<DT><B>--dry-run</B>
-
-<DD>
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td nowrap="nowrap" width="6%">
+<!-- .B \-\-dry\-run -->
+<b>--dry-run</b> </td><td valign="bottom">
 Builds and rebuilds will be performed, and removals will be notified, but no
 changes will be made to the package repository.
-<DT><B>-v</B>, <B>--verbose</B>
-
-<DD>
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td colspan="2">
+<!-- .BR \-v ", " \-\-verbose -->
+<b>-v</b>, <b>--verbose</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Increase the quantity of messages printed on the console during execution.
-<DT><B>-q</B>, <B>--quiet</B>
-
-<DD>
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td colspan="2">
+<!-- .BR \-q ", " \-\-quiet -->
+<b>-q</b>, <b>--quiet</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Reduce the quantity of messages printed on the console during execution.
-</DL>
-<A NAME="lbAF">&nbsp;</A>
-<H2>EXIT STATUS</H2>
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td colspan="2">
+<!-- .B \-\-keep\-tmp -->
+<b>--keep-tmp</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
+Keep all temporary files in $TMP and $TMPDIR, for debugging purposes.
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH EXIT STATUS -->
+</td></tr>
+<tr></tr></tbody></table></blockquote>
+<a name="4">
 
-<B>0</B>
+     <h3>EXIT STATUS</h3>
 
-all operations succeeded or only warnings were issued
-<BR>
+</a>
+<blockquote>
+<!-- . -->
+<!-- .B 0 -->
+<b>0</b> all operations succeeded or only warnings were issued
+<!-- .br -->
+<!-- .B 1 -->
+<!-- Need break --><br>
+<b>1</b> one or more operations failed
+<!-- .br -->
+<!-- .B 2 -->
+<!-- Need break --><br>
+<b>2</b> the configuration file was not found
+<!-- .br -->
+<!-- .B 3 -->
+<!-- Need break --><br>
+<b>3</b> invocation usage error
+<!-- .br -->
+<!-- .B 4 -->
+<!-- Need break --><br>
+<b>4</b> internal error, please report a bug
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH ENVIRONMENT -->
+</blockquote>
+<a name="5">
 
-<B>1</B>
+     <h3>ENVIRONMENT</h3>
 
-one or more operations failed
-<BR>
-
-<B>2</B>
-
-the configuration file was not found
-<BR>
-
-<B>3</B>
-
-invocation usage error
-<BR>
-
-<B>4</B>
-
-internal error, please report a bug
-<A NAME="lbAG">&nbsp;</A>
-<H2>ENVIRONMENT</H2>
-
+</a>
+<blockquote>
+<!-- . -->
 The behaviour of
-<B>slackrepo</B>
-
-is affected by the following environment variables:
-
-<B>REPO</B>, <B>SBREPO</B>, <B>PKGREPO</B>, <B>SRCREPO</B>,
-
-<B>HINTS</B>, <B>LOGDIR</B>, <B>TMP</B>,
-
-<B>ARCH</B>, <B>TAG</B>, <B>PKGTYPE</B>, <B>NUMJOBS</B>, <B>USE_GENREPOS</B>
-
-
+<!-- .B slackrepo -->
+<b>slackrepo</b> is affected by the following environment variables:
+<!-- .P -->
+<p>
+<!-- .BR REPO ", " SBREPO ", " PKGREPO ", " SRCREPO , -->
+<b>REPO</b>, <b>SBREPO</b>, <b>PKGREPO</b>, <b>SRCREPO</b>, <!-- .BR HINTS ", " LOGDIR ", " TMP , -->
+<b>HINTS</b>, <b>LOGDIR</b>, <b>TMP</b>, <!-- .BR ARCH ", " TAG ", " PKGTYPE ", " NUMJOBS ", " USE_GENREPOS -->
+<b>ARCH</b>, <b>TAG</b>, <b>PKGTYPE</b>, <b>NUMJOBS</b>, <b>USE_GENREPOS</b> <!-- .P -->
+</p><p>
 Each of these environment variables overrides the corresponding configuration
 variable in the file
-<I>/etc/slackrepo/slackrepo_ID.conf</I>
-
-or
-<I>~/.slackreporc</I>.
-
-For details, see
-<B><A HREF="slackrepo.conf.5.html">slackrepo.conf</A></B>(5).
-
-
-<B>MAKEFLAGS</B>
-
-
+<!-- .I /etc/slackrepo/slackrepo_ID.conf -->
+<i>/etc/slackrepo/slackrepo_ID.conf</i> or
+<!-- .IR ~/.slackreporc . -->
+<i>~/.slackreporc</i>. For details, see
+<!-- .BR slackrepo.conf (5). -->
+<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>.
+<!-- .P -->
+</p><p>
+<!-- .B MAKEFLAGS -->
+<b>MAKEFLAGS</b> <!-- .P -->
+</p><p>
 The MAKEFLAGS variable is passed to each invoked SlackBuild.  Its value will
 be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLAGS.
-
-
-<B>TMPDIR</B>
-
-
-<B>slackrepo</B>
-uses the directory specified by TMPDIR (default
-<I>/tmp</I>)
-for its own temporary files.
+<!-- .P -->
+</p><p>
+<!-- .B TMPDIR -->
+<b>TMPDIR</b> <!-- .P -->
+</p><p>
+<!-- .B slackrepo -->
+<b>slackrepo</b> uses the directory specified by TMPDIR (default
+<!-- .IR /tmp ) -->
+<i>/tmp</i>) for its own temporary files.
 (However, each invoked SlackBuild uses the directory specified by TMP, not TMPDIR.)
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH FILES -->
+</p></blockquote>
+<a name="6">
 
+     <h3>FILES</h3>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>FILES</H2>
-
-<DL COMPACT>
-<DT><I>/etc/slackrepo/slackrepo_SBo.conf</I>
-
-<DD>
+</a>
+<blockquote>
+<!-- . -->
+<!-- .TP 5 -->
+<table cellpadding="3">
+<tbody><tr valign="top"><td colspan="2">
+<!-- .I /etc/slackrepo/slackrepo_SBo.conf -->
+<i>/etc/slackrepo/slackrepo_SBo.conf</i> </td></tr><tr valign="top"><td width="5%">&nbsp;</td><td>
 This file defines the configuration variables for the SBo repository; see
-<B><A HREF="slackrepo.conf.5.html">slackrepo.conf</A></B>(5).
-
-<DT><I>~/.slackreporc</I>
-
-<DD>
+<!-- .BR slackrepo.conf (5). -->
+<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>.
+<!-- .TP 5 -->
+</td></tr>
+<tr valign="top"><td colspan="2">
+<!-- .I ~/.slackreporc -->
+<i>~/.slackreporc</i> </td></tr><tr valign="top"><td width="5%">&nbsp;</td><td>
 This file can optionally be created to define the default repository ID
 and override configuration variables set in
-<I>/etc/slackrepo/slackrepo_ID.conf</I>;
-
-see
-<B><A HREF="slackrepo.conf.5.html">slackrepo.conf</A></B>(5).
-
-<DT><I>/etc/slackrepo/hints_SBo/</I>
-
-<DD>
+<!-- .IR /etc/slackrepo/slackrepo_ID.conf ; -->
+<i>/etc/slackrepo/slackrepo_ID.conf</i>; see
+<!-- .BR slackrepo.conf (5). -->
+<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>.
+<!-- .TP 5 -->
+</td></tr>
+<tr valign="top"><td colspan="2">
+<!-- .I /etc/slackrepo/hints_SBo/ -->
+<i>/etc/slackrepo/hints_SBo/</i> </td></tr><tr valign="top"><td width="5%">&nbsp;</td><td>
 This directory contains the hint files for the SBo repository; see
-<B><A HREF="slackrepo_hints.5.html">slackrepo_hints</A></B>(5).
+<!-- .BR slackrepo_hints (5). -->
+<a href="slackrepo_hints.5.html">slackrepo_hints(5)</a>.
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH NOTES -->
+</td></tr>
+<tr></tr></tbody></table></blockquote>
+<a name="7">
 
-</DL>
-<A NAME="lbAI">&nbsp;</A>
-<H2>NOTES</H2>
+     <h3>NOTES</h3>
 
-
+</a>
+<blockquote>
+<!-- . -->
+<!-- .P -->
+<p>
 For best results,
-<B>slackrepo</B>
-
-is intended to be run on a &quot;clean&quot; standard Slackware
-environment (like a &quot;build box&quot; or a virtual machine), with a full installation
+<!-- .B slackrepo -->
+<b>slackrepo</b> is intended to be run on a "clean" standard Slackware
+environment (like a "build box" or a virtual machine), with a full installation
 of Slackware and no additional packages (or very few). You can then use the
 package repository to install the packages on other hosts (e.g. with
-<B>slackpkg+</B>).
-
-
+<!-- .BR slackpkg+ ). -->
+<b>slackpkg+</b>). <!-- . -->
+<!-- .P -->
+</p><p>
 Packages are updated or rebuilt if required; for example, if a package is being
 built, its dependencies will be updated and/or rebuilt if they are out-of-date.
 A package is out-of-date if:
-<DL COMPACT><DT><DD>
-<DL COMPACT>
-<DT>*<DD>
+<!-- .RS -->
+</p><blockquote>
+<!-- .IP \(bu 4 -->
+<table cellpadding="3"><!-- tsb: Packages are updated or rebuilt if required; for example, if a package is being
+ -->
+<tbody><tr></tr><tr></tr>
+<tr valign="top"><td width="4%">
+o
+</td><td>
 the git revision in the directory containing the SlackBuild has changed since the package was built
-<DT>*<DD>
-the directory containing the SlackBuilds has untracked/uncommited files (i.e., &quot;git is dirty&quot;) and they are newer than the package
-<DT>*<DD>
+<!-- .IP \(bu 4 -->
+</td></tr>
+<tr valign="top"><td width="4%">
+o
+</td><td>
+the directory containing the SlackBuilds has untracked/uncommited files 
+(i.e., "git is dirty") and they are newer than the package
+<!-- .IP \(bu 4 -->
+</td></tr>
+<tr valign="top"><td width="4%">
+o
+</td><td>
 any relevant hint has changed since the package was built
-<DT>*<DD>
+<!-- .IP \(bu 4 -->
+</td></tr>
+<tr valign="top"><td width="4%">
+o
+</td><td>
 any of its direct dependencies has been updated since the package was built
-<DT>*<DD>
+<!-- .IP \(bu 4 -->
+</td></tr>
+<tr valign="top"><td width="4%">
+o
+</td><td>
 the version of Slackware has changed since the package was built
-</DL>
-</DL>
-
-
+<!-- .RE -->
+</td></tr>
+<tr></tr></tbody></table></blockquote>
+<!-- .P -->
+<p>
 Changes in the SlackBuilds directory, and changes to the relevant hints, are
-classified as &quot;updates&quot;, which will cause directly depending items to be rebuilt.
-Other changes are classified as &quot;rebuilds&quot; and do not cause depending items to be rebuilt.
+classified as "updates", which will cause directly depending items to be rebuilt.
+Other changes are classified as "rebuilds" and do not cause depending items to be rebuilt.
 For example, ffmpeg depends on x264, and transcode depends on ffmpeg.
 If x264 is updated, ffmpeg will be rebuilt, but transcode will not be rebuilt.
 If x264 is rebuilt, ffmpeg will not be rebuilt.
 If ffmpeg is updated, transcode will be rebuilt.
-
+<!-- . -->
+<!-- .P -->
+</p><p>
 When a package is rebuilt, and when a package is updated but its version
 is unchanged, the BUILD number in the package repository is always incremented
 (and the BUILD number in the SlackBuild file is ignored).
-
-<B>slackrepo</B>
-
-is not affiliated with, or endorsed by, the SlackBuilds.org Project or
+<!-- . -->
+<!-- .P -->
+</p><p>
+<!-- .B slackrepo -->
+<b>slackrepo</b> is not affiliated with, or endorsed by, the SlackBuilds.org Project or
 Slackware. The author thanks those projects for their continuing generosity
-to the community.  Slackware&#174; is a registered trademark of Patrick Volkerding.
-<A NAME="lbAJ">&nbsp;</A>
-<H2>EXAMPLES</H2>
+to the community.  Slackware® is a registered trademark of Patrick Volkerding.
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH EXAMPLES -->
+</p></blockquote>
+<a name="8">
 
+     <h3>EXAMPLES</h3>
+
+</a>
+<blockquote>
+<!-- . -->
 Build the whole SBo repository (you will need about four days
 and 61Gb of disk space):
-
-<DL COMPACT><DT><DD>
-
-# slackrepo build
-
-</DL>
-
-
+<!-- .P -->
+<p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre># slackrepo build</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- .P -->
+<p>
 Build shotwell, with all its dependencies:
-
-<DL COMPACT><DT><DD>
-
-# slackrepo build shotwell
-
-</DL>
-
-
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre># slackrepo build shotwell</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- .P -->
+<p>
 Remove grass (note, its dependencies and dependers will not be removed):
-
-<DL COMPACT><DT><DD>
-
-# slackpkg remove grass
-
-</DL>
-
-
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre># slackpkg remove grass</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- .P -->
+<p>
 Update all the academic/ packages in your package repository for SBo's latest changes:
-
-<DL COMPACT><DT><DD>
-
-# slackrepo update academic
-
-</DL>
-
-
-Do a &quot;dry run&quot; update of all your SBo packages, with verbose messages:
-
-<DL COMPACT><DT><DD>
-
-# slackrepo update --dry-run -v
-
-</DL>
-
-
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre># slackrepo update academic</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- .P -->
+<p>
+Do a "dry run" update of all your SBo packages, with verbose messages:
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre># slackrepo update --dry-run -v</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- .P -->
+<p>
 Test-build myprog in the newstuff repo, with verbose messages; do not store the built package:
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre># slackrepo build -v --repo=newstuff --test --dry-run myprog</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH SEE ALSO -->
+</blockquote>
+<a name="9">
 
-<DL COMPACT><DT><DD>
+     <h3>SEE ALSO</h3>
 
-# slackrepo build -v --repo=newstuff --test --dry-run myprog
+</a>
+<blockquote>
+<!-- . -->
+<!-- .BR slackrepo.conf (5), -->
+<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>,
+<!-- .BR slackrepo_hints (5), -->
+<a href="slackrepo_hints.5.html">slackrepo_hints(5)</a>,
+<!-- .BR installpkg (8), -->
+installpkg(8),
+<!-- .BR upgradepkg (8), -->
+upgradepkg(8),
+<!-- .BR removepkg (8), -->
+removepkg(8),
+<!-- .BR pkgtool (8), -->
+pkgtool(8),
+<!-- .BR slackpkg (8). -->
+slackpkg(8).
+<!-- . -->
+<!-- . -->
+</blockquote>
+<p></p><hr>
+<table width="100%"><tbody><tr> <td width="33%"><i>slackrepo-0.1.0</i></td> <td align="center" width="33%">SLACKREPO (8)</td> <td align="right" width="33%"><i>2014-04-01</i></td> </tr></tbody></table>
 
-</DL>
-
-<A NAME="lbAK">&nbsp;</A>
-<H2>SEE ALSO</H2>
-
-<B><A HREF="slackrepo.conf.5.html">slackrepo.conf</A></B>(5),
-
-<B><A HREF="slackrepo_hints.5.html">slackrepo_hints</A></B>(5),
-
-<B>installpkg</B>(8),
-
-<B>upgradepkg</B>(8),
-
-<B>removepkg</B>(8),
-
-<B>pkgtool</B>(8),
-
-<B>slackpkg</B>(8).
-
-<P>
-
-<HR>
-<A NAME="index">&nbsp;</A><H2>Index</H2>
-<DL>
-<DT><A HREF="#lbAB">NAME</A><DD>
-<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
-<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
-<DT><A HREF="#lbAE">OPTIONS</A><DD>
-<DT><A HREF="#lbAF">EXIT STATUS</A><DD>
-<DT><A HREF="#lbAG">ENVIRONMENT</A><DD>
-<DT><A HREF="#lbAH">FILES</A><DD>
-<DT><A HREF="#lbAI">NOTES</A><DD>
-<DT><A HREF="#lbAJ">EXAMPLES</A><DD>
-<DT><A HREF="#lbAK">SEE ALSO</A><DD>
-</DL>
-<HR>
-This document was created by man2html.<BR>
-Time: 12:43:15 GMT, April 07, 2014
-</BODY>
-</HTML>
+</body></html>

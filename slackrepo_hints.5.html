@@ -1,325 +1,431 @@
-<HTML><HEAD><TITLE>Manpage of SLACKREPO_HINTS</TITLE>
-</HEAD><BODY>
-<H1>SLACKREPO_HINTS</H1>
-Section: File Formats (5)<BR>Updated: 2014-04-01<BR><A HREF="#index">Index</A>
-<A HREF="manpages.html">Return to Main Contents</A><HR>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+<title>Manual Page - slackrepo_hints(5)</title>
+</head>
+<body>
+<a name="top"></a>
+<!-- .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K. -->
+<!-- .\" All rights reserved.  For licence details, see the file 'LICENCE'. -->
+<!-- . -->
+<!-- .TH SLACKREPO_HINTS 5 "2014-04-01" slackrepo-0.1.0 -->
+<center>
+<h1><hr><i>Manual Reference Pages &nbsp;-&nbsp;</i><nobr>SLACKREPO_HINTS (5)</nobr><hr></h1>
+</center>
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH NAME -->
+<a name="0">
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+     <h3>NAME</h3>
 
+</a>
+<blockquote>
 slackrepo_hints - hint files for slackrepo
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH SYNOPSIS -->
+</blockquote>
+<a name="contents"></a><h3>CONTENTS</h3>
+<blockquote>
+<a href="#1">Synopsis</a><br>
+<a href="#2">Description</a><br>
+<a href="#3">See Also</a><br>
+</blockquote>
+<a name="4">
 
-<B>/etc/slackrepo/hints_</B><I>ID</I><B>/.../</B><I>prgnam</I><B>.options</B>
+     <h3>SYNOPSIS</h3>
 
-<BR>
-
-<B>/etc/slackrepo/hints_</B><I>ID</I><B>/.../</B><I>prgnam</I><B>.optdeps</B>
-
-<BR>
-
-<B>/etc/slackrepo/hints_</B><I>ID</I><B>/.../</B><I>prgnam</I><B>.readmedeps</B>
-
-<BR>
-
-<B>/etc/slackrepo/hints_</B><I>ID</I><B>/.../</B><I>prgnam</I><B>.uidgid</B>
-
-<BR>
-
-<B>/etc/slackrepo/hints_</B><I>ID</I><B>/.../</B><I>prgnam</I><B>.md5ignore</B>
-
-<BR>
-
-<B>/etc/slackrepo/hints_</B><I>ID</I><B>/.../</B><I>prgnam</I><B>.makej1</B>
-
-<BR>
-
-<B>/etc/slackrepo/hints_</B><I>ID</I><B>/.../</B><I>prgnam</I><B>.skipme</B>
-
-<BR>
-
-<B>/etc/slackrepo/hints_</B><I>ID</I><B>/.../</B><I>prgnam</I><B>.answers</B>
-
-<BR>
-
-<B>/etc/slackrepo/hints_</B><I>ID</I><B>/.../</B><I>prgnam</I><B>.version</B>
-
-<BR>
-
-<B>/etc/slackrepo/hints_</B><I>ID</I><B>/.../</B><I>prgnam</I><B>.cleanup</B>
-
-<BR>
-
-<B>/etc/slackrepo/hints_</B><I>ID</I><B>/.../</B><I>prgnam</I><B>.no_uninstall</B>
-
-<BR>
-
+</a>
+<blockquote>
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .options -->
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.options</b> <!-- .br -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .optdeps -->
+<!-- Need break --><br>
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.optdeps</b> <!-- .br -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .readmedeps -->
+<!-- Need break --><br>
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.readmedeps</b> <!-- .br -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .uidgid -->
+<!-- Need break --><br>
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.uidgid</b> <!-- .br -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .md5ignore -->
+<!-- Need break --><br>
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.md5ignore</b> <!-- .br -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .makej1 -->
+<!-- Need break --><br>
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.makej1</b> <!-- .br -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .skipme -->
+<!-- Need break --><br>
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.skipme</b> <!-- .br -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .answers -->
+<!-- Need break --><br>
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.answers</b> <!-- .br -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .version -->
+<!-- Need break --><br>
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.version</b> <!-- .br -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .cleanup -->
+<!-- Need break --><br>
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.cleanup</b> <!-- .br -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .no_uninstall -->
+<!-- Need break --><br>
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.no_uninstall</b> <!-- .br -->
+<!-- Need break --><br>
 where
-<I>ID</I>
+<!-- .I ID -->
+<i>ID</i> is 'SBo' by default.
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH DESCRIPTION -->
+</blockquote>
+<a name="2">
 
-is 'SBo' by default.
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+     <h3>DESCRIPTION</h3>
 
-&quot;Hints&quot; are small configuration files that determine the way that
-<B>slackrepo</B>
-
-processes each item, including options and optional dependencies.
-
+</a>
+<blockquote>
+<!-- . -->
+"Hints" are small configuration files that determine the way that
+<!-- .B slackrepo -->
+<b>slackrepo</b> processes each item, including options and optional dependencies.
+<!-- .P -->
+<p>
 Each repository ID should have its own hint directory, as configured in
 the configuration file (see
-<B><A HREF="slackrepo.conf.5.html">slackrepo.conf</A></B>(5)).
-
+<!-- .BR slackrepo.conf (5)). -->
+<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>).
 By default this will be
-<I>/etc/slackrepo/hints_ID/</I>.
-
-
+<!-- .IR /etc/slackrepo/hints_ID/ . -->
+<i>/etc/slackrepo/hints_ID/</i>. <!-- .P -->
+</p><p>
 The hints directory should contain a structure of subdirectories that is the
 same as the subdirectories in the SlackBuilds repository, but with the last
 level omitted. For example, if the SBo repository's SlackBuild file for wxPython is
-<I>libraries/wxPython/wxPython.SlackBuild</I>,
-
-then its options hint file will be
-<I>/etc/slackrepo/hints_SBo/libraries/wxPython.options</I>.
-
-
+<!-- .IR libraries/wxPython/wxPython.SlackBuild , -->
+<i>libraries/wxPython/wxPython.SlackBuild</i>, then its options hint file will be
+<!-- .IR /etc/slackrepo/hints_SBo/libraries/wxPython.options . -->
+<i>/etc/slackrepo/hints_SBo/libraries/wxPython.options</i>. <!-- .P -->
+</p><p>
 A sample set of hints for SlackBuilds.org are supplied in the directory
-<I>/etc/slackrepo/hints_SBo</I>,
-
-but the sample hints are ignored until you rename them without the
-<I>.sample</I>
-
-suffix. You are encouraged to review and modify the sample hints and to create
+<!-- .IR /etc/slackrepo/hints_SBo , -->
+<i>/etc/slackrepo/hints_SBo</i>, but the sample hints are ignored until you rename them without the
+<!-- .I .sample -->
+<i>.sample</i> suffix. You are encouraged to review and modify the sample hints and to create
 more hints. In particular, you should always read the README files of the
 packages you are building for your own requirements.
-<A NAME="lbAE">&nbsp;</A>
-<H3>prgnam.options</H3>
+<!-- . -->
+<!-- . -->
+<!-- .SS prgnam.options -->
+</p></blockquote>
+<a name="">
 
-
+    <h4>&nbsp; &nbsp; prgnam.options</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
 This file should contain options described in the SlackBuild's
 README file, for example
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre>GUI=yes</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- . -->
+<!-- . -->
+<!-- .SS prgnam.optdeps and prgnam.readmedeps -->
+</blockquote>
+<a name="">
 
-<DL COMPACT><DT><DD>
-
-GUI=yes
-
-</DL>
-
-<A NAME="lbAF">&nbsp;</A>
-<H3>prgnam.optdeps and prgnam.readmedeps</H3>
-
-
+    <h4>&nbsp; &nbsp; prgnam.optdeps and prgnam.readmedeps</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
 These files should contain a list of dependencies separated by spaces
 and/or newlines, for example
-
-<DL COMPACT><DT><DD>
-
-a52dec faac libdv libmpeg2 mjpegtools libquicktime x264 xvidcore
-
-</DL>
-
-
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre>a52dec faac libdv libmpeg2 mjpegtools libquicktime x264 xvidcore</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- .P -->
+<p>
 The
-<I>prgnam</I><B>.optdeps</B>
-
-file should be used for optional dependencies
+<!-- .IB prgnam .optdeps -->
+<i>prgnam</i><b>.optdeps</b> file should be used for optional dependencies
 listed in the SlackBuild's README file.
-
+<!-- .P -->
+</p><p>
 The
-<I>prgnam</I><B>.readmedeps</B>
-
-file should be used where the REQUIRES=&quot;...&quot; list in
-<I>prgnam</I><B>.info</B>
-
-contains %README%; the contents will be substituted for %README%, but if you don't
+<!-- .IB prgnam .readmedeps -->
+<i>prgnam</i><b>.readmedeps</b> file should be used where the REQUIRES="..." list in
+<!-- .IB prgnam .info -->
+<i>prgnam</i><b>.info</b> contains %README%; the contents will be substituted for %README%, but if you don't
 need any dependencies to be substituted for %README%, you should create
 an empty
-<I>prgnam</I><B>.readmedeps</B>
+<!-- .IB prgnam .readmedeps -->
+<i>prgnam</i><b>.readmedeps</b> file. (A warning will be printed if %README% is found without a
+<!-- .IB prgnam .readmedeps -->
+<i>prgnam</i><b>.readmedeps</b> file.)
+<!-- . -->
+<!-- . -->
+<!-- .SS prgnam.uidgid -->
+</p></blockquote>
+<a name="">
 
-file. (A warning will be printed if %README% is found without a
-<I>prgnam</I><B>.readmedeps</B>
-
-file.)
-<A NAME="lbAG">&nbsp;</A>
-<H3>prgnam.uidgid</H3>
-
-
+    <h4>&nbsp; &nbsp; prgnam.uidgid</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
 This file contains instructions for creating groups and usernames.
 In many cases you will want a username and group with the same number
 and name, in which case the file can contain a set of variable assignments
 like this example:
-
-<DL COMPACT><DT><DD>
-
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre>
 UIDGIDNUMBER=216
 UIDGIDNAME=pulse
 UIDGIDCOMMENT=
 UIDGIDDIR=/var/lib/pulse
 UIDGIDSHELL=
-
-</DL>
-
-
+</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- .P -->
+<p>
 but if necessary for more complicated setup,
 the file can contain a small shell script, like this:
-
-<DL COMPACT><DT><DD>
-
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre>
 if ! getent group etherpad | grep -q ^etherpad: 2&gt;/dev/null ; then
-<BR>&nbsp;&nbsp;groupadd&nbsp;-g&nbsp;264&nbsp;etherpad
+  groupadd -g 264 etherpad
 fi
 if ! getent passwd etherpad | grep -q ^etherpad: 2&gt;/dev/null ; then
-<BR>&nbsp;&nbsp;useradd&nbsp;-u&nbsp;264&nbsp;-g&nbsp;etherpad&nbsp;-c&nbsp;&quot;Etherpad&nbsp;lite&quot;&nbsp;-m&nbsp;etherpad
+  useradd -u 264 -g etherpad -c "Etherpad lite" -m etherpad
 fi
+</pre>
+<!-- .fi -->
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- . -->
+<!-- . -->
+<!-- .SS prgnam.md5ignore -->
+</blockquote>
+<a name="">
 
-
-</DL>
-
-<A NAME="lbAH">&nbsp;</A>
-<H3>prgnam.md5ignore</H3>
-
-
+    <h4>&nbsp; &nbsp; prgnam.md5ignore</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
 This file can be created if the source archive is known to change
 sometimes without the version number being changed, so that the source
 archive's md5sum will not be checked. Just create an empty file; its
 contents are not read.
-<A NAME="lbAI">&nbsp;</A>
-<H3>prgnam.makej1</H3>
+<!-- . -->
+<!-- . -->
+<!-- .SS prgnam.makej1 -->
+</p></blockquote>
+<a name="">
 
-
+    <h4>&nbsp; &nbsp; prgnam.makej1</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
 This file can be created if the build process fails when multiple 'make'
 jobs are used. The build process will then be executed with MAKEFLAGS='-j1'.
 Just create an empty file; its contents are not read.
-<A NAME="lbAJ">&nbsp;</A>
-<H3>prgnam.skipme</H3>
+<!-- . -->
+<!-- . -->
+<!-- .SS prgnam.skipme -->
+</p></blockquote>
+<a name="">
 
-
+    <h4>&nbsp; &nbsp; prgnam.skipme</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
 This file can be created if you want to skip the package when it would
 otherwise be added, rebuilt, tested or updated. If the file isn't empty,
 its contents will be displayed when the build is skipped, so you can put some
 helpful reminder text into it.
-<A NAME="lbAK">&nbsp;</A>
-<H3>prgnam.answers</H3>
+<!-- . -->
+<!-- . -->
+<!-- .SS prgnam.answers -->
+</p></blockquote>
+<a name="">
 
-
+    <h4>&nbsp; &nbsp; prgnam.answers</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
 This file can be created if the build process wants to read answers
 to its questions during the build process, for example about licence agreements.
 The file is piped into the SlackBuild's standard input, so it should
 contain whatever will make the build process happy.
-<A NAME="lbAL">&nbsp;</A>
-<H3>prgnam.version</H3>
+<!-- . -->
+<!-- . -->
+<!-- .SS prgnam.version -->
+</p></blockquote>
+<a name="">
 
-
+    <h4>&nbsp; &nbsp; prgnam.version</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
 This file can be created to attempt an automatic patch of the version
 number in both the SlackBuild and info files. The file should contain
 just the new version number, for example
-
-<DL COMPACT><DT><DD>
-
-2.8.2
-
-</DL>
-
-
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre>2.8.2</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- .P -->
+<p>
 The automatic patch is done by a simple text substitution. It often won't
 work (particularly if the old version number is something like '1', or if
 the download URL cannot be guessed correctly) but sometimes it's worth a try.
 The md5sum of the source archive will not be checked. The patched SlackBuild
 and info files are not kept.
-<A NAME="lbAM">&nbsp;</A>
-<H3>prgnam.cleanup</H3>
+<!-- . -->
+<!-- . -->
+<!-- .SS prgnam.cleanup -->
+</p></blockquote>
+<a name="">
 
-
+    <h4>&nbsp; &nbsp; prgnam.cleanup</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
 This file can be created if the package needs extra cleanup when it
 is uninstalled, for example packages that replace standard Slackware packages,
 or install kernel modules. The file should contain appropriate shell
 commands. For example, to reinstall Slackware packages:
-
-<DL COMPACT><DT><DD>
-
-echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex-doc
-
-</DL>
-
-
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre>echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex-doc</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- .P -->
+<p>
 or to clean up after a kernel module is uninstalled:
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre>depmod -a</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- . -->
+<!-- . -->
+<!-- .SS prgnam.no_uninstall -->
+</blockquote>
+<a name="">
 
-<DL COMPACT><DT><DD>
-
-depmod -a
-
-</DL>
-
-<A NAME="lbAN">&nbsp;</A>
-<H3>prgnam.no_uninstall</H3>
-
-
+    <h4>&nbsp; &nbsp; prgnam.no_uninstall</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
 After slackrepo builds or tests a package, it uninstalls the package and
 all its dependencies, and it aggressively removes files from
-<I>/etc</I>
-
-that
+<!-- .I /etc -->
+<i>/etc</i> that
 Slackware's own tools would normally leave in place. This will cause
 serious damage if you attempt to rebuild a package that is already
 installed and in active use (for example, if you use
-<B>slackrepo</B>
-
-to rebuild
-<B>slackrepo</B>,
-
-or if you rebuild
-<B>nvidia-driver</B>
-
-on a system that uses
-<B>nvidia-driver</B>).
-
-You can avoid this by creating a
-<I>prgnam</I><B>.no_uninstall</B>
-
-file, and then the package will not be uninstalled. Just create an
+<!-- .B slackrepo -->
+<b>slackrepo</b> to rebuild
+<!-- .BR slackrepo , -->
+<b>slackrepo</b>, or if you rebuild
+<!-- .B nvidia-driver -->
+<b>nvidia-driver</b> on a system that uses
+<!-- .BR nvidia-driver ). -->
+<b>nvidia-driver</b>). You can avoid this by creating a
+<!-- .IB prgnam .no_uninstall -->
+<i>prgnam</i><b>.no_uninstall</b> file, and then the package will not be uninstalled. Just create an
 empty file; its contents are not read.
-<A NAME="lbAO">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH SEE ALSO -->
+</p></blockquote>
+<a name="3">
 
-<B><A HREF="slackrepo.8.html">slackrepo</A></B>(8),
+     <h3>SEE ALSO</h3>
 
-<B><A HREF="slackrepo.conf.5.html">slackrepo.conf</A></B>(5),
-
-<B>installpkg</B>(8),
-
-<B>upgradepkg</B>(8),
-
-<B>removepkg</B>(8),
-
-<B>pkgtool</B>(8),
-
-<B>slackpkg</B>(8).
-
-<P>
-
-<HR>
-<A NAME="index">&nbsp;</A><H2>Index</H2>
-<DL>
-<DT><A HREF="#lbAB">NAME</A><DD>
-<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
-<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
-<DL>
-<DT><A HREF="#lbAE">prgnam.options</A><DD>
-<DT><A HREF="#lbAF">prgnam.optdeps and prgnam.readmedeps</A><DD>
-<DT><A HREF="#lbAG">prgnam.uidgid</A><DD>
-<DT><A HREF="#lbAH">prgnam.md5ignore</A><DD>
-<DT><A HREF="#lbAI">prgnam.makej1</A><DD>
-<DT><A HREF="#lbAJ">prgnam.skipme</A><DD>
-<DT><A HREF="#lbAK">prgnam.answers</A><DD>
-<DT><A HREF="#lbAL">prgnam.version</A><DD>
-<DT><A HREF="#lbAM">prgnam.cleanup</A><DD>
-<DT><A HREF="#lbAN">prgnam.no_uninstall</A><DD>
-</DL>
-<DT><A HREF="#lbAO">SEE ALSO</A><DD>
-</DL>
-<HR>
-This document was created by man2html.<BR>
-Time: 12:43:58 GMT, April 07, 2014
-</BODY>
-</HTML>
+</a>
+<blockquote>
+<!-- . -->
+<!-- .BR slackrepo (8), -->
+<a href="slackrepo.8.html">slackrepo(8)</a>,
+<!-- .BR slackrepo.conf (5), -->
+<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>,
+<!-- .BR installpkg (8), -->
+installpkg(8),
+<!-- .BR upgradepkg (8), -->
+upgradepkg(8),
+<!-- .BR removepkg (8), -->
+removepkg(8),
+<!-- .BR pkgtool (8), -->
+pkgtool(8),
+<!-- .BR slackpkg (8). -->
+slackpkg(8).
+<!-- . -->
+<!-- . -->
+</blockquote>
+<p></p><hr>
+<table width="100%"><tbody><tr> <td width="33%"><i>slackrepo-0.1.0</i></td> <td align="center" width="33%">SLACKREPO_HINTS (5)</td> <td align="right" width="33%"><i>2014-04-01</i></td> </tr></tbody></table>
+</body></html>

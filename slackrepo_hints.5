@@ -41,7 +41,7 @@ is 'SBo' by default.
 .
 .SH DESCRIPTION
 .
-"Hints" are small configuration files that determine the way that
+\(dqHints\(dq are small configuration files that determine the way that
 .B slackrepo
 processes each item, including options and optional dependencies.
 .P
@@ -97,7 +97,7 @@ listed in the SlackBuild's README file.
 .P
 The
 .IB prgnam .readmedeps
-file should be used where the REQUIRES="..." list in
+file should be used where the REQUIRES=\(dq...\(dq list in
 .IB prgnam .info
 contains %README%; the contents will be substituted for %README%, but if you don't
 need any dependencies to be substituted for %README%, you should create
@@ -134,7 +134,7 @@ if ! getent group etherpad | grep -q ^etherpad: 2>/dev/null ; then
   groupadd -g 264 etherpad
 fi
 if ! getent passwd etherpad | grep -q ^etherpad: 2>/dev/null ; then
-  useradd -u 264 -g etherpad -c "Etherpad lite" -m etherpad
+  useradd -u 264 -g etherpad -c \(dqEtherpad lite\(dq -m etherpad
 fi
 .fi
 .EE

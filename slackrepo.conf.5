@@ -11,16 +11,17 @@ slackrepo.conf \- repository configuration files for slackrepo
 .
 .
 .SH SYNOPSIS
-.TP
-.B ~/.slackreporc
-.TQ
-.B ~/.genreprc
-.TQ
 .BI /etc/slackrepo/slackrepo_ ID .conf
 (where
 .I ID
 is a repository ID, for example,
 .BR SBo )
+.
+.br
+.B ~/.genreprc
+.
+.br
+.B ~/.slackreporc
 .
 .
 .
@@ -238,7 +239,7 @@ for all these variables - the default values will not be sufficient.
 Repository maintainer.
 .br
 Example:
-.B REPOSOWNER=${REPOSOWNER:-"Local administrator <root@localhost>"}
+.B REPOSOWNER=${REPOSOWNER:-\(dqLocal administrator <root@localhost>\(dq}
 .
 .TP
 .B REPOSOWNERGPG
@@ -247,49 +248,49 @@ the value of $REPOSOWNER . If you leave $REPOSOWNERGPG empty, the script will
 use the value you've set for $REPOSOWNER instead to search the GPG keyfile.
 .br
 Example
-.B REPOSOWNERGPG=${REPOSOWNERGPG:-""}
+.B REPOSOWNERGPG=${REPOSOWNERGPG:-\(dq\(dq}
 .
 .TP
 .B DL_URL
 Under what URL is the repository accessible.
 .br
 Example:
-.B DL_URL=${DL_URL:-""}
+.B DL_URL=${DL_URL:-\(dq\(dq}
 .
 .TP
 .B RSS_TITLE
 The title of the generated RSS feed.
 .br
 Example:
-.B RSS_TITLE=${RSS_TITLE:-"Local SlackBuild Packages"}
+.B RSS_TITLE=${RSS_TITLE:-\(dqLocal SlackBuild Packages\(dq}
 .
 .TP
 .B RSS_ICON
 The logo picture used for the RSS feed.
 .br
 Example:
-.B RSS_ICON=${RSS_ICON:-"http://www.slackware.com/~alien/graphics/blueorb.png"}
+.B RSS_ICON=${RSS_ICON:-\(dqhttp://www.slackware.com/~alien/graphics/blueorb.png\(dq}
 .
 .TP
 .B RSS_LINK
 The URL linked to when clicking on the logo.
 .br
 Example:
-.B RSS_LINK=${RSS_LINK:-"file://$REPOSROOT/ChangeLog.txt"}
+.B RSS_LINK=${RSS_LINK:-\(dqfile://$REPOSROOT/ChangeLog.txt\(dq}
 .
 .TP
 .B RSS_CLURL
 URL to the full ChangeLog.txt.
 .br
 Example:
-.B RSS_CLURL=${RSS_CLURL:-"file://$REPOSROOT/ChangeLog.txt"}
+.B RSS_CLURL=${RSS_CLURL:-\(dqfile://$REPOSROOT/ChangeLog.txt\(dq}
 .
 .TP
 .B RSS_DESCRIPTION
 The descriptive text for the RSS feed.
 .br
 Example:
-.B RSS_DESCRIPTION=${RSS_DESCRIPTION:-"Local SlackBuild Packages"}
+.B RSS_DESCRIPTION=${RSS_DESCRIPTION:-\(dqLocal SlackBuild Packages\(dq}
 .
 .TP
 .B RSS_FEEDMAX
@@ -301,17 +302,17 @@ Example:
 .TP
 .B RSS_UUID
 The RSS generator must use a unique feed identifier.
-Generate one for your feed by using the string returned by "uuidgen -t".
+Generate one for your feed by using the string returned by \(dquuidgen -t\(dq.
 .br
 Example:
-.B RSS_UUID=${RSS_UUID:-""}
+.B RSS_UUID=${RSS_UUID:-\(dq\(dq}
 .
 .TP
 .B GPGBIN
 Either use gpg or gpg2.
 .br
 Example:
-.B GPGBIN=${GPGBIN:-"/usr/bin/gpg"}
+.B GPGBIN=${GPGBIN:-\(dq/usr/bin/gpg\(dq}
 .
 .TP
 .B USE_GPGAGENT
@@ -326,7 +327,7 @@ Example:
 .TP
 .B FOR_SLAPTGET
 Generate slack-requires, slack-suggests, and slack-conflicts lines in the
-metadata files by setting FOR_SLAPTGET to "1" -- these are used by slapt-get.
+metadata files by setting FOR_SLAPTGET to \(dq1\(dq -- these are used by slapt-get.
 .br
 Example:
 .B FOR_SLAPTGET=${FOR_SLAPTGET:-0}
@@ -348,7 +349,18 @@ Slackware releases or architectures) then define them here.
 Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them.
 .br
 Example:
-.B REPO_SUBDIRS=${REPO_SUBDIRS:-""}
+.B REPO_SUBDIRS=${REPO_SUBDIRS:-\(dq\(dq}
+.
+.TP
+.B REPO_EXCLUDES
+If you want to exclude certain directories or files from being included
+in the repository metadata, define them here (space-separated).
+.br
+Example 1:
+.B REPO_EXCLUDES=${REPO_EXCLUDES:-\(dq\(dq}
+.br
+Example 2:
+.B REPO_EXCLUDES=\(dqRCS logs .genreprc\(dq
 .
 .
 .SS Initial setup

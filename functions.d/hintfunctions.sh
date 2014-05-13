@@ -10,21 +10,23 @@
 
 function do_hint_skipme
 # Is there a skipme hint for this item?
-# $1 = itempath
+# $1 = itemid
 # Return status:
 # 0 = skipped
 # 1 = not skipped
 {
-  local itempath="$1"
-  local prgnam=${itempath##*/}
+  local itemid="$1"
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
+  local itemdir="${ITEMDIR[$itemid]}"
 
   # called before parse_hints runs, so check the file directly:
-  if [ ! -f $SR_HINTS/$itempath.skipme ]; then
+  SKIPFILE="$SR_HINTS"/"$itemdir"/"$itemprgnam".skipme
+  if [ ! -f "$SKIPFILE" ]; then
     return 1
   fi
-  log_warning -n "SKIPPED $itempath due to hint"
-  cat $SR_HINTS/$itempath.skipme
-  SKIPPEDLIST="$SKIPPEDLIST $itempath"
+  log_warning -n "SKIPPED $itemid due to hint"
+  cat "$SKIPFILE"
+  SKIPPEDLIST+=( "$itemid" )
   return 0
 }
 
@@ -36,32 +38,32 @@ function do_hint_uidgid
 # *either* an assignment of UIDGIDNUMBER and (optionally) UIDGIDNAME,
 #          UIDGIDCOMMENT, UIDGIDDIR, UIDGIDSHELL
 # *or* a script to make the UID and/or the GID, if it's not straightforward.
-# $1 = itempath
+# $1 = itemid
 # Return status:
 # 0 = There is a uidgid hint, and an attempt was made to process it
 # 1 = There is no uidgid hint
 {
-  local itempath="$1"
-  local prgnam=${itempath##*/}
+  local itemid="$1"
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
 
-  [ -n "${HINT_uidgid[$itempath]}" ] || return 1
+  [ -n "${HINT_uidgid[$itemid]}" ] || return 1
 
   unset UIDGIDNUMBER
-  log_verbose "Hint: $prgnam: setup uid/gid"
-  . ${HINT_uidgid[$itempath]}
+  log_verbose "Hint: $itemprgnam: setup uid/gid"
+  . "${HINT_uidgid[$itemid]}"
   [ -n "$UIDGIDNUMBER" ] || return 0
-  UIDGIDNAME=${UIDGIDNAME:-$prgnam}
-  if ! getent group $UIDGIDNAME | grep -q ^$UIDGIDNAME: 2>/dev/null ; then
-    groupadd -g $UIDGIDNUMBER $UIDGIDNAME
+  UIDGIDNAME="${UIDGIDNAME:-$itemprgnam}"
+  if ! getent group "$UIDGIDNAME" | grep -q "^${UIDGIDNAME}:" 2>/dev/null ; then
+    groupadd -g "$UIDGIDNUMBER" "$UIDGIDNAME"
   fi
-  if ! getent passwd $UIDGIDNAME | grep -q ^$UIDGIDNAME: 2>/dev/null ; then
+  if ! getent passwd "$UIDGIDNAME" | grep -q "^${UIDGIDNAME}:" 2>/dev/null ; then
     useradd \
-      -u $UIDGIDNUMBER \
+      -u "$UIDGIDNUMBER" \
       -c "${UIDGIDCOMMENT:-$UIDGIDNAME}" \
-      -d ${UIDGIDDIR:-/dev/null} \
-      -s ${UIDGIDSHELL:-/bin/false} \
-      -g $UIDGIDNAME \
-      $UIDGIDNAME
+      -d "${UIDGIDDIR:-/dev/null}" \
+      -s "${UIDGIDSHELL:-/bin/false}" \
+      -g "$UIDGIDNAME" \
+      "$UIDGIDNAME"
   fi
   return 0
 }

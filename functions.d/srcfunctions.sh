@@ -10,29 +10,29 @@
 
 function verify_src
 # Verify item's source files in the source cache
-# $1 = itempath
+# $1 = itemid
 # Return status:
 # 0 - all files passed, or md5sum check suppressed, or DOWNLIST is empty
 # 1 - one or more files had a bad md5sum
 # 2 - no. of files != no. of md5sums
-# 3 - directory not found or empty => not cached, need to download
+# 3 - directory not found or empty => not in source cache, need to download
 # 4 - version mismatch, need to download new version
 # 5 - .info says item is unsupported/untested on this arch
 {
-  local itempath="$1"
-  local prgnam=${itempath##*/}
+  local itemid="$1"
+  local -a srcfilelist
 
-  VERSION="${INFOVERSION[$itempath]}"
-  DOWNLIST="${INFODOWNLIST[$itempath]}"
-  MD5LIST="${INFOMD5LIST[$itempath]}"
-  DOWNDIR="${SRCDIR[$itempath]}"
+  VERSION="${INFOVERSION[$itemid]}"
+  DOWNLIST="${INFODOWNLIST[$itemid]}"
+  MD5LIST="${INFOMD5LIST[$itemid]}"
+  DOWNDIR="${SRCDIR[$itemid]}"
 
   # Quick checks:
   # if the item doesn't need source, return 0
   [ -z "$DOWNLIST" -o -z "$DOWNDIR" ] && return 0
   # if unsupported/untested, return 5
   [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ] && \
-    { log_warning -n "$itempath is $DOWNLIST on $SR_ARCH"; return 5; }
+    { log_warning -n "$itemid is $DOWNLIST on $SR_ARCH"; return 5; }
   # if no directory, return 3
   [ ! -d "$DOWNDIR" ] && return 3
 
@@ -45,25 +45,24 @@ function verify_src
       return 4
     fi
     log_normal -a "Verifying source files ..."
-    numgot=$(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$' | wc -l)
+    # check files in this dir only (arch-specific subdirectories may exist, ignore them)
+    srcfilelist=( $(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$') )
+    numgot=${#srcfilelist[@]}
     numwant=$(echo $MD5LIST | wc -w)
     # no files, empty directory => return 3 (same as no directory)
     [ $numgot = 0 ] && return 3
     # or if we have not got the right number of sources, return 2
     [ $numgot != $numwant ] && { log_verbose -a "Note: need $numwant source files, but have $numgot"; return 2; }
     # if we're ignoring the md5sums, we've finished => return 0
-    [ "${HINT_md5ignore[$itempath]}" = 'y' ] && return 0
+    [ "${HINT_md5ignore[$itemid]}" = 'y' ] && return 0
     # run the md5 check on all the files (don't give up at the first error)
     allok='y'
-    for f in *; do
-      # check files only (arch-specific subdirectories may exist, ignore them)
-      if [ -f "$f" ]; then
-        mf=$(md5sum "$f" | sed 's/ .*//')
-        ok='n'
-        # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
-        for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
-        [ "$ok" = 'y' ] || { log_verbose -a "Note: failed md5sum: $f"; allok='n'; }
-      fi
+    for f in "${srcfilelist[@]}"; do
+      mf=$(md5sum "$f" | sed 's/ .*//')
+      ok='n'
+      # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
+      for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
+      [ "$ok" = 'y' ] || { log_verbose -a "Note: failed md5sum: $f"; allok='n'; }
     done
     [ "$allok" = 'y' ] || { return 1; }
   )
@@ -73,14 +72,11 @@ function verify_src
 #-------------------------------------------------------------------------------
 
 function download_src
-# Download the sources for itempath into the cache
-# $1 = itempath
-# Also uses variables $DOWNDIR, $DOWNLIST and $VERSION previously set by verify_src
+# Download sources into the source cache
+# No arguments -- uses $DOWNDIR, $DOWNLIST and $VERSION previously set by verify_src
 # Return status:
 # 1 - curl failed
 {
-  local itempath="$1"
-  local prgnam=${itempath##*/}
 
   if [ -n "$DOWNDIR" ]; then
     mkdir -p "$DOWNDIR"
@@ -90,7 +86,7 @@ function download_src
   fi
 
   if [ -z "$DOWNLIST" ]; then
-    # stamp the cache with a .version file even though there are no sources
+    # stamp the source cache directory with a .version file even though there are no sources
     echo "$VERSION" > "$DOWNDIR"/.version
     return 0
   fi
@@ -98,10 +94,10 @@ function download_src
   log_normal -a "Downloading source files ..."
   ( cd "$DOWNDIR"
     for url in $DOWNLIST; do
-      curl -q -f '-#' -k --connect-timeout 60 --retry 5 -J -L -A SlackZilla -O $url >> $ITEMLOG 2>&1
+      curl -q -f '-#' -k --connect-timeout 60 --retry 5 -J -L -A SlackZilla -O $url >> "$ITEMLOG" 2>&1
       curlstat=$?
       if [ $curlstat != 0 ]; then
-        log_error -a "Download failed: $(print_curl_status $curlstat) $url"
+        log_error -a "Download failed: $(print_curl_status $curlstat). $url"
         return 1
       fi
     done

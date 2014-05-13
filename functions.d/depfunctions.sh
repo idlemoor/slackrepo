@@ -3,59 +3,98 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # depfunctions.sh - dependency functions for slackrepo
-#   list_direct_deps
+#   calculate_deps
 #   build_with_deps
-#   install_with_deps
-#   uninstall_with_deps
+#   install_deps
+#   uninstall_deps
 #-------------------------------------------------------------------------------
 
-function list_direct_deps
-# Returns list of deps of a named item in global variable $DEPLIST
-# $1 = itempath
-# Return status: always 0
-{
-  local itempath="$1"
-  local prgnam=${itempath##*/}
-  local dep deps deplist
+declare -A DIRECTDEPS FULLDEPS
 
-  # If $DEPCACHE already has an entry for $itempath, just return that ;-)
-  if [ "${DEPCACHE[$itempath]+yesitisset}" = 'yesitisset' ]; then
-    DEPLIST="${DEPCACHE[$itempath]}"
+function calculate_deps
+# Stores a space-separated list of deps of an item in ${DIRECTDEPS[$itemname]}
+# and ${FULLDEPS[$itemname]}
+# $1 = itemid
+# Return status:
+# 0 = ok
+# 1 = any error
+{
+  local itemid="$1"
+
+  # If $FULLDEPS already has an entry for $itemid, do nothing
+  # (note that *null* means "we have already calculated that the item has no deps",
+  # whereas *unset* means "we have not yet calculated the deps of this item")
+  if [ "${FULLDEPS[$itemid]+yesitisset}" = 'yesitisset' ]; then
     return 0
   fi
 
-  deps="${INFOREQUIRES[$itempath]}"
-  deplist=''
-  for dep in $deps; do
+  parse_hints_and_info "$itemid" || return 1
+
+  local dep
+  local -a deplist
+
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
+  local itemdir="${ITEMDIR[$itemid]}"
+  local itemfile="${ITEMFILE[$itemid]}"
+
+  for dep in ${INFOREQUIRES[$itemid]}; do
     if [ $dep = '%README%' ]; then
-      if [ "${HINT_readmedeps[$itempath]}" != '%NONE%' ]; then
-        BLAME="$prgnam.readmedeps"
-        parse_items -s ${HINT_readmedeps[$itempath]}
+      if [ "${HINT_readmedeps[$itemid]}" != '%NONE%' ]; then
+        BLAME="$itemprgnam.readmedeps"
+        parse_items -s ${HINT_readmedeps[$itemid]}
+        [ $? != 0 ] && log_warning "${itemid}: Some dependencies were not found"
         unset BLAME
-        deplist="$deplist $ITEMLIST"
+        deplist+=( "${ITEMLIST[@]}" )
       else
-        log_warning "${itempath}: Unhandled %README% in $prgnam.info - please create $SR_HINTS/$itempath.readmedeps"
+        log_warning "${itemid}: Unhandled %README% in $itemprgnam.info - please create $SR_HINTS/$itemdir/$itemprgnam.readmedeps"
       fi
     else
-      BLAME="$prgnam.info"
-      parse_items -s $dep
+      BLAME="$itemprgnam.info"
+      parse_items -s "$dep"
+      [ $? != 0 ] && log_warning "${itemid}: Some dependencies were not found"
       unset BLAME
-      deplist="$deplist $ITEMLIST"
+      deplist+=( "${ITEMLIST[@]}" )
     fi
   done
 
-  if [ "${HINT_optdeps[$itempath]}" != '%NONE%' ]; then
-    BLAME="$prgnam.optdeps"
-    parse_items -s ${HINT_optdeps[$itempath]}
+  if [ "${HINT_optdeps[$itemid]}" != '%NONE%' ]; then
+    BLAME="$itemprgnam.optdeps"
+    parse_items -s ${HINT_optdeps[$itemid]}
+    [ $? != 0 ] && log_warning "${itemid}: Some dependencies were not found"
     unset BLAME
-    deplist="$deplist $ITEMLIST"
+    deplist+=( "${ITEMLIST[@]}" )
   fi
 
-  # don't look at this, it's a horrible deduplicate and whitespace tidy,
-  # plus an undocumented feature allowing commas as separators:
-  DEPLIST="$(echo $deplist | sed 's/,/ /g' | tr -s '[:space:]' '\n' | sort -u | tr -s '[:space:]' ' ' | sed 's/ *$//')"
-  # Remember it for later:
-  DEPCACHE[$itempath]="$DEPLIST"
+  deplist=( $(printf '%s\n' "${deplist[@]}" | sort -u) )
+  DIRECTDEPS["$itemid"]="${deplist[@]}"
+
+  # If there are no direct deps, then there are no recursive deps ;-)
+  if [ -z "${DIRECTDEPS[$itemid]}" ]; then
+    FULLDEPS["$itemid"]=''
+    return 0
+  fi
+
+  local -a myfulldeps
+  for dep in "${deplist[@]}"; do
+    calculate_deps "$dep" || return 1
+    for newdep in ${FULLDEPS[$dep]} "$dep"; do
+      gotnewdep='n'
+      for olddep in "${myfulldeps[@]}"; do
+        if [ "$newdep" = "$olddep" ]; then
+          gotnewdep='y'
+          break
+        elif [ "$newdep" = "$itemid" ]; then
+          log_error "${itemid}: Circular dependency via $dep"
+          return 1
+        fi
+      done
+      if [ "$gotnewdep" = 'n' ]; then
+        myfulldeps+=( "$newdep" )
+      fi
+    done
+  done
+  FULLDEPS["$itemid"]="${myfulldeps[@]}"
+
   return 0
 }
 
@@ -63,189 +102,101 @@ function list_direct_deps
 
 function build_with_deps
 # Recursively build all dependencies, and then build the named item
-# $1 = itempath
-# $2 = list of parents (for circular dep detection)
+# $1 = itemid
 # Return status:
 # 0 = build ok, or already up-to-date so not built, or dry run
 # 1 = build failed, or sub-build failed => abort parent, or any other error
 {
-  local itempath="$1"
-  local prgnam=${itempath##*/}
-  local parents="$2 $itempath"
+  local itemid="$1"
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
+  local itemdir="${ITEMDIR[$itemid]}"
+  local itemfile="${ITEMFILE[$itemid]}"
+
   local mydeplist mydep
   local subresult revstatus op reason
   local allinstalled
 
-  parse_hints $itempath
+  calculate_deps "$itemid" || return 1
 
-  # Bail out if to be skipped
-  do_hint_skipme $itempath && return 1
-
-  parse_info $itempath || return 1
-
-  # Bail out if unsupported/untested
-  if [ "${INFODOWNLIST[$itempath]}" = "UNSUPPORTED" -o "${INFODOWNLIST[$itempath]}" = "UNTESTED" ]; then
-    log_warning -n ":-/ $itempath is ${INFODOWNLIST[$itempath]} on $SR_ARCH /-:"
-    SKIPPEDLIST="$SKIPPEDLIST $itempath"
-    return 1
-  fi
-
-  # First, get all my deps built
-  list_direct_deps $itempath
-  mydeplist="$DEPLIST"
-  if [ -n "$mydeplist" ]; then
-    log_normal "Dependencies of $itempath:"
-    log_normal "$(echo $mydeplist | sed -e "s/ /\n  /g" -e 's/^ */  /')"
-    for mydep in $mydeplist; do
-      for p in $parents; do
-        if [ "$mydep" = "$p" ]; then
-          log_error "${itempath}: Circular dependency on $p found in $mydep"
-          return 1
-        fi
-      done
-      build_with_deps $mydep "$parents"
+  mydeplist=( ${DIRECTDEPS["$itemid"]} )
+  if [ "${#mydeplist[@]}" != 0 ]; then
+    log_normal "Dependencies of $itemid:"
+    log_normal "$(printf '  %s\n' "${mydeplist[@]}")"
+    for mydep in "${mydeplist[@]}"; do
+      build_with_deps $mydep
       subresult=$?
       if [ $subresult != 0 ]; then
-        if [ "$itempath" = "$ITEMPATH" ]; then
-          log_error -n "$ITEMPATH ABORTED"
-          ABORTEDLIST="$ABORTEDLIST $ITEMPATH"
+        if [ "$itemid" = "$ITEMID" ]; then
+          log_error -n "$ITEMID ABORTED"
+          ABORTEDLIST+=( "$ITEMID" )
         fi
         return 1
       fi
     done
   fi
 
-  # Next, work out whether I need to be built, updated or rebuilt
-  get_rev_status $itempath
-  revstatus=$?
-  case $revstatus in
-  0)  if [ "$itempath" = "$ITEMPATH" -a "$PROCMODE" = 'rebuild' ]; then
-        OP='rebuild'; opmsg='rebuild'
-      else
-        if [ "$itempath" = "$ITEMPATH" ]; then
-          log_important "$itempath is up-to-date."
-        else
-          log_normal "$itempath is up-to-date."
-        fi
-        return 0
-      fi
-      ;;
-  1)  OP='build'
-      opmsg="build version ${HINT_version[$itempath]:-${INFOVERSION[$itempath]}}"
-      ;;
-  2)  OP='update'
-      opmsg="update for version ${HINT_version[$itempath]:-${INFOVERSION[$itempath]}}"
-      ;;
-  3)  OP='update'
-      if [ "$GOTGIT" = 'y' ]; then
-        shortrev="${GITREV[$itempath]:0:7}"
-        [ "${GITDIRTY[$itempath]}" = 'y' ] && shortrev="$shortrev+dirty"
-        opmsg="update for git $shortrev"
-      else
-        opmsg="update for modified SlackBuild files"
-      fi
-      ;;
-  4)  OP='update'
-      opmsg="update for changed hints"
-      ;;
-  5)  OP='rebuild'
-      opmsg="rebuild for updated deps"
-      ;;
-  6)  OP='rebuild'
-      opmsg="rebuild for upgraded Slackware"
-      ;;
-  9)  log_normal "$itempath has been updated."
-      return 0
-      ;;
-  *)  log_error "${itempath}: Unrecognised revstatus=$revstatus"
-      return 1
-      ;;
-  esac
+  needs_build "$itemid" || return 0
 
-  # Tweak the message for dryrun
-  [ "$OPT_DRYRUN" = 'y' ] && opmsg="$opmsg --dry-run"
+  log_itemstart "Starting $itemid ($BUILDINFO)"
 
-  # Now the real work starts :-)
-  log_itemstart "Starting $itempath ($opmsg)"
+  install_deps "$itemid" || return 1
 
-  # Install all my deps
-  if [ -n "$mydeplist" ]; then
+  build_item "$itemid"
+  myresult=$?
+
+  # Even if build_item failed, uninstall all my deps
+  uninstall_deps "$itemid"
+
+  # Now we can return
+  [ $myresult != 0 ] && return 1
+  return 0
+
+}
+
+#-------------------------------------------------------------------------------
+
+function install_deps
+# Install dependencies of $itemid (but NOT $itemid itself)
+# $1 = itemid
+# Return status:
+# 0 = all installs succeeded
+# 1 = any install failed
+{
+  local itemid="$1"
+  local mydep
+  local allinstalled='y'
+
+  if [ -n "${FULLDEPS[$itemid]}" ]; then
     log_normal -a "Installing dependencies ..."
-    allinstalled='y'
-    for mydep in $mydeplist; do
-      install_with_deps $mydep || allinstalled='n'
+    for mydep in ${FULLDEPS[$itemid]}; do
+      install_packages "$mydep" || allinstalled='n'
     done
+    # If any installs failed, uninstall them all and return an error:
     if [ "$allinstalled" = 'n' ]; then
-      for mydep in $mydeplist; do
-        uninstall_with_deps $mydep
+      for mydep in ${FULLDEPS[$itemid]}; do
+        uninstall_packages "$mydep"
       done
       return 1
     fi
   fi
-
-  # Build me
-  build_package $itempath
-  myresult=$?
-
-  # Even if build_package failed, uninstall all my deps
-  if [ -n "$mydeplist" ]; then
-    log_normal -a "Uninstalling dependencies ..."
-    for mydep in $mydeplist; do
-      uninstall_with_deps $mydep
-    done
-  fi
-
-  # Now return if build_package failed
-  [ $myresult != 0 ] && return 1
-
-  # If build_package succeeded, do some housekeeping:
-  create_metadata "$opmsg" $itempath $mydeplist
-  # update the cached revision status
-  REVCACHE[$itempath]=9
-
   return 0
 }
 
 #-------------------------------------------------------------------------------
 
-function install_with_deps
-# Recursive package install, bottom up for neatness :-)
-# $1 = itempath
-# Return status:
-# 0 = all installs succeeded
-# 1 = any install failed
-{
-  local itempath="$1"
-  local prgnam=${itempath##*/}
-  local mydeplist mydep
-
-  list_direct_deps $itempath
-  mydeplist="$DEPLIST"
-  errstat=0
-  for mydep in $mydeplist; do
-    install_with_deps $mydep || errstat=1 # but keep going
-  done
-  install_packages $itempath || errstat=1
-  return $errstat
-}
-
-#-------------------------------------------------------------------------------
-
-function uninstall_with_deps
-# Recursive package uninstall
-# We'll be particularly O.C.D. by uninstalling from the top down :-)
-# $1 = itempath
+function uninstall_deps
+# Uninstall dependencies of $itemid
+# $1 = itemid
 # Return status always 0
 {
-  local itempath="$1"
-  local prgnam=${itempath##*/}
-  local mydeplist mydep
+  local itemid="$1"
+  local mydep
 
-  uninstall_packages $itempath
-  list_direct_deps $itempath
-  mydeplist="$DEPLIST"
-  for mydep in $mydeplist; do
-    uninstall_with_deps $mydep
-  done
-  return
+  if [ -n "${FULLDEPS[$itemid]}" ]; then
+    log_normal -a "Uninstalling dependencies ..."
+    for mydep in ${FULLDEPS[$itemid]}; do
+      uninstall_packages "$mydep"
+    done
+  fi
+  return 0
 }

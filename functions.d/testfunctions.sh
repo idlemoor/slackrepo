@@ -149,7 +149,7 @@ function test_download
             cat "$TMP_HEADER" >> "$ITEMLOG"
           fi
         else
-          remotelength=$(grep 'Content-Length: ' "$TMP_HEADER" | sed 's/^.* //')
+          remotelength=$(grep 'Content-Length: ' "$TMP_HEADER" | tail -n 1 | sed 's/^.* //')
           # Proceed only if we seem to have extracted a valid content-length.
           if [ -n "$remotelength" ]; then
             # Filenames that have %nn encodings won't get checked.

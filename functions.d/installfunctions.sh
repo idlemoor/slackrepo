@@ -40,12 +40,22 @@ function install_packages
     # Is it already installed? Find it in /var/log/packages
     if [ -f /var/log/packages/"$pkgbase" ]; then
       log_verbose -a "$pkgbase is already installed"
-    elif [ -f /var/log/packages/"$pkgid"-*-*-* ]; then
-      log_verbose -a "A previous instance of $pkgid is already installed; upgrading ..."
-      upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
-      stat=$?
-      [ "$stat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $stat)"; return 1; }
-      dotprofilizer "$pkgpath"
+    elif ls /var/log/packages/"$pkgid"-* 1>/dev/null 2>/dev/null; then
+      for instpkg in /var/log/packages/"$pkgid"-*; do
+        if [ "$(basename "$instpkg" | rev | cut -f4- -d- | rev)" = "$pkgid" ]; then
+          log_verbose -a "A previous instance of $pkgid is already installed; upgrading ..."
+          if [ "$OPT_VERBOSE" = 'y' ]; then
+            upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
+            stat=$?
+          else
+            upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
+            stat=$?
+          fi
+          [ "$stat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $stat)"; return 1; }
+          dotprofilizer "$pkgpath"
+          break
+        fi
+      done
     else
       if [ "$OPT_VERBOSE" = 'y' ]; then
         installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
@@ -92,7 +102,7 @@ function uninstall_packages
   for pkgpath in "${pkglist[@]}"; do
     pkgbase=$(basename "$pkgpath" | sed 's/\.t.z$//')
     pkgid=$(echo "$pkgbase" | rev | cut -f4- -d- | rev )
-    # Is it installed? Find it in /var/log/packages
+    # Is it installed?
     if [ -f /var/log/packages/"$pkgbase" ]; then
 
       # Save a list of potential detritus in /etc

@@ -149,7 +149,20 @@ function test_download
             cat "$TMP_HEADER" >> "$ITEMLOG"
           fi
         else
-          : #### check 'Content-Length:' against files in the source cache. You can't be too careful ;-)
+          remotelength=$(grep 'Content-Length: ' "$TMP_HEADER" | sed 's/^.* //')
+          # Proceed only if we seem to have extracted a valid content-length.
+          if [ -n "$remotelength" ]; then
+            # Filenames that have %nn encodings won't get checked.
+            filename=$(grep 'Content-Disposition: ' "$TMP_HEADER" | sed -e 's/^.*filename="//' -e 's/".*//')
+            # If no Content-Disposition, we'll have to guess:
+            [ -z "$filename" ] && filename="$(basename "$url")"
+            if [ -f "${SRCDIR[$itemid]}"/"$filename" ]; then
+              cachedlength=$(stat -c '%s' "${SRCDIR[$itemid]}"/"$filename")
+              if [ "$remotelength" != "$cachedlength" ]; then
+                log_warning -a "${itemid}: $filename has been modified upstream"
+              fi
+            fi
+          fi
         fi
         ;;
       esac
@@ -243,7 +256,7 @@ function test_package
       log_warning "${itemid}: ${pkgnam} has wrong top level directory (not tar-1.13?)"
     fi
 
-    # check for non root/root ownership
+    # check for non root/root ownership (this may be a bit oversensitive)
     if awk '$6~/^(bin\/|lib\/|lib64\/|sbin\/|usr\/|\.\/$)/' "$TMP_PKGCONTENTS" | grep -q -v ' root/root ' ; then
       log_warning -a "${itemid}: ${pkgnam} has files or dirs with owner not root/root"
     fi
@@ -251,6 +264,7 @@ function test_package
     #### TODO: check permissions
 
     # check for uncompressed man pages (usr/share/man warning is handled above)
+    #### maybe check for misplaced pages
     if grep -E '^-.* usr/(share/)?man/' "$TMP_PKGCONTENTS" | grep -q -v '\.gz$'; then
       log_warning -a "${itemid}: ${pkgnam} has uncompressed man pages"
     fi

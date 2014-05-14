@@ -1,4 +1,2 @@
-This is AMD's implementation of OpenCL on top of Radeon hardware. You'll
-need a compatible card and recent Catalyst drivers.
-NOTE: the download is not wget-friendly as it points to a page where you
+The download is not wget-friendly as it points to a page where you
 have to accept a license agreement.

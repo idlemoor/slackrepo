@@ -11,6 +11,3 @@ config() {
   # Otherwise, we leave the .new copy for the admin to consider...
 }
 
-for h in etc/slackrepo/slackrepo*.conf.new etc/slackrepo/hints*/*/*.new; do
-  config $h
-done

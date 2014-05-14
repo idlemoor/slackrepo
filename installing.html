@@ -47,11 +47,15 @@ SlackBuild to create a package that you can install:</p>
 <pre>
 git clone git@github.com:idlemoor/slackrepo.git
 cd slackrepo
-git archive --format=tar --prefix=slackrepo-0.0.1/ HEAD | gzip > SlackBuild/slackrepo-0.0.1.tar.gz
+git archive --format=tar --prefix=slackrepo-0.2.0/ HEAD | gzip > SlackBuild/slackrepo-0.2.0.tar.gz
 cd SlackBuild
-VERSION=0.0.1 TAG=_github OUTPUT=$(pwd) sh ./slackrepo.SlackBuild
-installpkg ./slackrepo-0.0.1-noarch-1_github.tgz
+VERSION=0.2.0 TAG=_github OUTPUT=$(pwd) sh ./slackrepo.SlackBuild
+installpkg ./slackrepo-0.2.0-noarch-1_github.tgz
 </pre>
+
+<p><strong>Important!</strong> Before you use slackrepo to build packages,
+you should read and understand the page about <a href="hints.html">Hints</a>,
+and check the README of each SlackBuild you intend to run.</p>
 
 </div>
 

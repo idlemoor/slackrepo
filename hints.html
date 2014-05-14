@@ -49,11 +49,21 @@ configuration files that determine the processing of each item,
 including options and optional dependencies.</p>
 
 <p>A sample set of hints for SlackBuilds.org are supplied in the directory
-/etc/slackrepo/hints_SBo, but you are encouraged to review and modify them.</p>
+<code>/etc/slackrepo/hints_SBo</code>, but you are encouraged to review and modify them.
+<strong>The sample hints are always ignored. 
+You must edit and save them (or rename them) without the .sample suffix.</strong></p>
 
 <p>In particular, <strong>please</strong> review the README files of the packages you are
-building, and then <strong>please</strong> modify the supplied option and dependency hints
+building, and then <strong>please</strong> edit the sample option and dependency hints
 for your own requirements!</p>
+
+<p>The hints directory contains a structure of subdirectories that is the
+same as the subdirectories in the SlackBuilds repository.
+For example, if the SBo repository's SlackBuild file for wxPython is
+<code>libraries/wxPython/wxPython.SlackBuild</code>,
+then its options hint file will be
+<code>/etc/slackrepo/hints_SBo/libraries/wxPython/wxPython.options</code>.
+</p>
 
 <p>The types of hints are as follows:</p>
 

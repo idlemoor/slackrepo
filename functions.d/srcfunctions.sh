@@ -46,7 +46,7 @@ function verify_src
     fi
     log_normal -a "Verifying source files ..."
     # check files in this dir only (arch-specific subdirectories may exist, ignore them)
-    srcfilelist=( $(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$') )
+    IFS=$'\n'; srcfilelist=( $(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$' | sed 's:^\./::') ); unset IFS
     numgot=${#srcfilelist[@]}
     numwant=$(echo $MD5LIST | wc -w)
     # no files, empty directory => return 3 (same as no directory)

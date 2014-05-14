@@ -48,7 +48,11 @@ Report fails back to SBo
 
 speed up gen_repos, check that .genreprc works
 
-sbopkg compatibility (env vars & filestore)
+sbopkg compatibility
+ - (env vars & filestore?)
+ - custom .SlackBuild, .info
+ - options
+ - queuefiles
 
 progress bar/spinner
 
@@ -65,3 +69,5 @@ Per-ARCH package repos
 ARM support
 
 logrotate
+
+sqlite database?

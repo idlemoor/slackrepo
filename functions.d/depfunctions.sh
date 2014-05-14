@@ -113,10 +113,17 @@ function build_with_deps
   local itemfile="${ITEMFILE[$itemid]}"
 
   local mydeplist mydep
-  local subresult revstatus op reason
+  local revstatus op reason
   local allinstalled
 
-  calculate_deps "$itemid" || return 1
+  calculate_deps "$itemid"
+  if [ $? != 0 ]; then
+    if [ "$itemid" = "$ITEMID" ]; then
+      log_error -n "$ITEMID ABORTED"
+      ABORTEDLIST+=( "$ITEMID" )
+    fi
+    return 1
+  fi
 
   mydeplist=( ${DIRECTDEPS["$itemid"]} )
   if [ "${#mydeplist[@]}" != 0 ]; then
@@ -124,8 +131,7 @@ function build_with_deps
     log_normal "$(printf '  %s\n' "${mydeplist[@]}")"
     for mydep in "${mydeplist[@]}"; do
       build_with_deps $mydep
-      subresult=$?
-      if [ $subresult != 0 ]; then
+      if [ $? != 0 ]; then
         if [ "$itemid" = "$ITEMID" ]; then
           log_error -n "$ITEMID ABORTED"
           ABORTEDLIST+=( "$ITEMID" )

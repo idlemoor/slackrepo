@@ -420,9 +420,9 @@ ABORTEDLIST=( $(printf '%s\n' "${ABORTEDLIST[@]}" | sort -u) )
 abortedcount="${#ABORTEDLIST[@]}"
 echo "Aborted:    $abortedcount"
 [ "$OPT_QUIET" != 'y' -a "$abortedcount" != 0 ] && printf '  %s\n' "${ABORTEDLIST[@]}"
-warncount=$(grep '^WARNING: ' "$MAINLOG" | wc -l)
-echo "Warnings:   $warncount"
-[ "$OPT_QUIET" != 'y' ] && grep '^WARNING: ' "$MAINLOG" | sed 's/^WARNING: /  /'
+warningcount=$(grep '^WARNING: ' "$MAINLOG" | sort -u | wc -l)
+echo "Warnings:   $warningcount"
+[ "$OPT_QUIET" != 'y' ] && grep '^WARNING: ' "$MAINLOG" | sort -u | sed 's/^WARNING: /  /'
 
 #-------------------------------------------------------------------------------
 # Package repository maintenance: gen_repos_files.sh

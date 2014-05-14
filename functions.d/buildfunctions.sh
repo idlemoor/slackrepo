@@ -75,6 +75,9 @@ function build_item
     ln -sf -t "$SR_TMPIN/" "${SRCDIR[$itemid]}"/*
   fi
 
+  # Get all dependencies installed
+  install_deps "$itemid" || { uninstall_deps "$itemid"; return 1; }
+
   # Work out BUILD
   # Get the value from the SlackBuild
   unset BUILD
@@ -194,6 +197,8 @@ function build_ok
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
+  uninstall_deps "$itemid"
+
   [ "$OPT_KEEPTMP" != 'y' ] && rm -rf "$SR_TMPIN"
 
   if [ "$OPT_DRYRUN" = 'y' ]; then
@@ -219,6 +224,7 @@ function build_ok
   [ "$OPT_DRYRUN" = 'y' ] && msg="$buildtype --dry-run OK"
   log_success ":-) $itemid $msg (-:"
   OKLIST+=( "$itemid" )
+
   return 0
 }
 
@@ -245,6 +251,9 @@ function build_failed
   errorscan_itemlog | tee -a "$MAINLOG"
   log_error -n "See $ITEMLOG"
   FAILEDLIST+=( "$itemid" )
+
+  uninstall_deps "$itemid"
+
   return 0
 }
 

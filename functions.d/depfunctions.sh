@@ -139,13 +139,8 @@ function build_with_deps
 
   log_itemstart "Starting $itemid ($BUILDINFO)"
 
-  install_deps "$itemid" || return 1
-
   build_item "$itemid"
   myresult=$?
-
-  # Even if build_item failed, uninstall all my deps
-  uninstall_deps "$itemid"
 
   # Now we can return
   [ $myresult != 0 ] && return 1

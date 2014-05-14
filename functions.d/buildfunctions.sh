@@ -266,11 +266,6 @@ function create_pkg_metadata
   [ "$OPT_DRYRUN" = 'y' ] && MYREPO="$DRYREPO"
 
   #-----------------------------#
-  # .revision file
-  #-----------------------------#
-  print_current_revinfo "$itemid" > "$MYREPO"/"$itemdir"/.revision
-
-  #-----------------------------#
   # changelog entry: needlessly elaborate :-)
   #-----------------------------#
   if [ "$OPT_DRYRUN" != 'y' ]; then
@@ -290,15 +285,20 @@ function create_pkg_metadata
     esac
     # Filter previous entries for this item from the changelog
     # (it may contain info from a previous run that was interrupted)
-    newchangelog="$TMP_CHANGELOG".new
-    grep -v "^${itemid}: " "$TMP_CHANGELOG" > "$newchangelog"
+    newchangelog="$CHANGELOG".new
+    grep -v "^${itemid}: " "$CHANGELOG" > "$newchangelog"
     if [ -z "$extrastuff" ]; then
       echo "${itemid}: ${OPERATION}. NEWLINE" >> "$newchangelog"
     else
       echo "${itemid}: ${OPERATION}. LINEFEED $extrastuff NEWLINE" >> "$newchangelog"
     fi
-    mv "$newchangelog" "$TMP_CHANGELOG"
+    mv "$newchangelog" "$CHANGELOG"
   fi
+
+  #-----------------------------#
+  # .revision file
+  #-----------------------------#
+  print_current_revinfo "$itemid" > "$MYREPO"/"$itemdir"/.revision
 
 
   pkglist=( $(ls "$MYREPO"/"$itemdir"/*.t?z 2>/dev/null) )
@@ -400,21 +400,24 @@ function remove_item
 # 0 = item removed
 # 1 = item was skipped
 {
-  local ITEMID="$1"
+  local itemid="$1"
 
   # Don't remove if this is an update and it's marked to be skipped
   if [ "$PROCMODE" = 'update' ]; then
-    do_hint_skipme "$ITEMID" && return 1
+    do_hint_skipme "$itemid" && return 1
   fi
 
   if [ "$OPT_DRYRUN" = 'y' ]; then
-    log_important "$ITEMID would be removed (--dry-run)"
+    log_important "$itemid would be removed (--dry-run)"
   else
-    log_important "Removing $ITEMID"
-    rm -rf "$SR_PKGREPO"/"$ITEMID"/
-    #### and remove empty directories above $SR_PKGREPO/$ITEMID/
-    #### and remove source directories too
-    echo "$ITEMID: Removed. NEWLINE" >> "$TMP_CHANGELOG"
+    log_important "Removing $itemid"
+    for repodir in "$SR_PKGREPO" "$SR_SRCREPO"; do
+      ( cd $repodir
+        find * -depth -print0 | xargs -0 rm -f --
+        rmdir --parents --ignore-fail-on-non-empty "$itemid"
+      )
+    done
+    echo "$itemid: Removed. NEWLINE" >> "$CHANGELOG"
   fi
   return
 }

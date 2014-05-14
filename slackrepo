@@ -232,14 +232,6 @@ fi
 # (SR_TMP gets cleaned during execution)
 TMPDIR=${TMPDIR:-/tmp}
 
-# Changelog:
-TMP_CHANGELOG="$TMPDIR"/sr_changelog_"$SR_REPO".tmp
-if [ -s "$TMP_CHANGELOG" ]; then
-  log_normal "Continuing changelog $TMP_CHANGELOG from previous run."
-else
-  > "$TMP_CHANGELOG"
-fi
-
 # Disposable package repository for dry run:
 if [ "$OPT_DRYRUN" = 'y' ]; then
   DRYREPO="$SR_TMP"/sr_DRY.$$
@@ -253,6 +245,14 @@ fi
 [ -d "$SR_PKGREPO" ] || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO" ; }
 [ -d "$SR_LOGDIR" ]  || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"  ; }
 [ -d "$SR_HINTS" ]   || { log_normal "Creating hints directory: $SR_HINTS"        ; mkdir -p "$SR_HINTS"   ; }
+
+# Changelog:
+CHANGELOG="$SR_PKGREPO"/.changelog
+if [ -s "$CHANGELOG" ]; then
+  log_normal "Continuing changelog from previous run."
+else
+  > "$CHANGELOG"
+fi
 
 # git stuff for the SlackBuilds repo:
 if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
@@ -395,18 +395,18 @@ if [ "$OPT_DRYRUN" = 'y' ]; then
   echo "Dry run OK: $okcount"
   [ "$OPT_QUIET" != 'y' -a "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}"
 else
-  echo "Added:      $(grep ': Added'   "$TMP_CHANGELOG" | wc -l)"
+  echo "Added:      $(grep ': Added'   "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Added'   "$TMP_CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Updated:    $(grep ': Updated' "$TMP_CHANGELOG" | wc -l)"
+    grep ': Added'   "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+  echo "Updated:    $(grep ': Updated' "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Updated' "$TMP_CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Rebuilt:    $(grep ': Rebuilt' "$TMP_CHANGELOG" | wc -l)"
+    grep ': Updated' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+  echo "Rebuilt:    $(grep ': Rebuilt' "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Rebuilt' "$TMP_CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Removed:    $(grep ': Removed' "$TMP_CHANGELOG" | wc -l)"
+    grep ': Rebuilt' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+  echo "Removed:    $(grep ': Removed' "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Removed' "$TMP_CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    grep ': Removed' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
 fi
 SKIPPEDLIST=( $(printf '%s\n' "${SKIPPEDLIST[@]}" | sort -u) )
 skippedcount="${#SKIPPEDLIST[@]}"
@@ -429,14 +429,14 @@ echo "Warnings:   $warncount"
 #-------------------------------------------------------------------------------
 
 genrepstat=0
-if [ "$OPT_DRYRUN" != 'y' -a -s "$TMP_CHANGELOG" ]; then
+if [ "$OPT_DRYRUN" != 'y' -a -s "$CHANGELOG" ]; then
   rcfile=~/.genreprc
   [ -f "$rcfile" ] && { set -e; . "$rcfile"; set +e; }
   if [ "$SR_USE_GENREPOS" = 1 ]; then
     echo ""
     log_start "gen_repos_files.sh"
     # 'man sort' says an in-place sort is ok, so let's be lazy :-)
-    sort -o "$TMP_CHANGELOG" "$TMP_CHANGELOG"
+    sort -o "$CHANGELOG" "$CHANGELOG"
     if [ "$RSS_UUID" = '' ]; then
       setrssuuid="RSS_UUID=\"$(uuidgen -t)\""
       log_normal "Note: setting $setrssuuid in $rcfile"
@@ -448,7 +448,7 @@ if [ "$OPT_DRYRUN" != 'y' -a -s "$TMP_CHANGELOG" ]; then
     RSS_DESCRIPTION="$RSS_DESCRIPTION" RSS_FEEDMAX="$RSS_FEEDMAX" RSS_UUID="$RSS_UUID" \
     GPGBIN="$GPGBIN" USE_GPGAGENT="$USE_GPGAGENT" FOR_SLAPTGET="$FOR_SLAPTGET" \
     FOLLOW_SYMLINKS="$FOLLOW_SYMLINKS" REPO_SUBDIRS="$REPO_SUBDIRS" \
-    sh /usr/libexec/$(basename $0)/gen_repos_files.sh -l "$TMP_CHANGELOG" | tee -a "$MAINLOG"
+    sh /usr/libexec/$(basename $0)/gen_repos_files.sh -l "$CHANGELOG" | tee -a "$MAINLOG"
     genrepstat=$?
     [ "$genrepstat" != 0 ] && log_error "gen_repos_files.sh failed -- changelog retained"
     echo ""
@@ -460,7 +460,7 @@ fi
 
 echo ""
 
-[ "$genrepstat" = 0 -a "$OPT_KEEPTMP" != 'y' ] && rm -f "$TMP_CHANGELOG"
+[ "$genrepstat" = 0 -a "$OPT_KEEPTMP" != 'y' ] && rm -f "$CHANGELOG"
 [ "$OPT_KEEPTMP" != 'y' ] && rm -rf "$DRYREPO"
 exit_cleanup
 

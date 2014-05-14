@@ -224,28 +224,94 @@ declare -A \
 #-------------------------------------------------------------------------------
 
 function parse_hints_and_info
-{
-  local itemid="$1"
-  parse_hints "$itemid" || return 1
-  parse_info "$itemid"  || return 1
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function parse_info
-# Load up .info file into variables INFO*.  If no .info file, be creative :-)
+# Load up hint files into variables HINT_*, and .info file into variables INFO*
 # Also populates SRCDIR, GITREV and GITDIRTY
 # $1 = itemid
-# Return status: always 0
+# Return status:
+# 0 = normal
+# 1 = skipme hint, or unsupported/untested in .info, or cannot determine VERSION
 {
+
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
+  # HINT DEPARTMENT
+  # ===============
+
+  local -a hintlist
+
+  if [ "${HINT_SUMMARY[$itemid]+yesitisset}" != 'yesitisset' ]; then
+
+    FLAGHINTS="md5ignore makej1 no_uninstall"
+    # These are Boolean hints.
+    # HINT_xxx contains 'y' or '' ;-)
+    # Query them like this: '[ "${HINT_xxx[$itemid]}" = 'y' ]'
+    for hint in $FLAGHINTS; do
+      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
+        eval HINT_$hint[$itemid]='y'
+        hintlist+=( "$hint" )
+      else
+        eval HINT_$hint[$itemid]=''
+      fi
+    done
+
+    FILEHINTS="skipme cleanup uidgid answers"
+    # These are hints where the file contents will be used.
+    # HINT_xxx contains the filename, or ''.
+    # Query them like this: '[ -n "${HINT_xxx[$itemid]}" ]'
+    for hint in $FILEHINTS; do
+      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
+        eval HINT_$hint[$itemid]="$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint"
+        hintlist+=( "$hint" )
+      else
+        eval HINT_$hint[$itemid]=''
+      fi
+    done
+
+    VARHINTS="options version"
+    # These are hints where the file contents will be used by slackrepo itself.
+    # HINT_xxx contains the contents of the file, or ''.
+    # Query them like this: '[ -n "${HINT_xxx[$itemid]}" ]'
+    for hint in $VARHINTS; do
+      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
+        eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint")\"
+        eval hintlist+=( "$hint=\${HINT_$hint[$itemid]}" )
+      else
+        eval HINT_$hint[$itemid]=''
+      fi
+    done
+
+    DEPHINTS="optdeps readmedeps"
+    # These are hints where the file contents will be used by slackrepo itself.
+    # HINT_xxx contains the contents of the file,
+    # or '%NONE%' => the file doesn't exist, or '' => the file exists and is empty.
+    # Query them like this: '[ "${HINT_xxx[$itemid]}" != '%NONE%' ]'
+    for hint in $DEPHINTS; do
+      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
+        eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint")\"
+        eval hintlist+=( "$hint=\"\${HINT_$hint[$itemid]}\"" )
+      else
+        eval HINT_$hint[$itemid]='%NONE%'
+      fi
+    done
+
+    [ ${#hintlist[@]} != 0 ] && HINT_SUMMARY["$itemid"]="$(printf '  %s\n' "${hintlist[@]}")"
+
+  fi
+
+  do_hint_skipme "$itemid" && return 1
+
+  if [ -n "${HINT_SUMMARY[$itemid]}" ]; then
+    log_normal "Hints for ${itemid}:"
+    log_normal "${HINT_SUMMARY[$itemid]}"
+  fi
+
+  # INFO DEPARTMENT
+  # ===============
   # It's not straightforward to tell an SBo style SlackBuild from a Slackware
-  # style SlackBuild.  Some Slackware SlackBuilds have partial or full .info,
+  # style SlackBuild.  Some Slackware SlackBuilds have a partial or full .info,
   # but also have source (often repackaged) that clashes with DOWNLOAD=. 
   # Maybe it needs another kind of hint :-(
 
@@ -316,86 +382,5 @@ function parse_info
   fi
 
   return 0
-}
 
-#-------------------------------------------------------------------------------
-
-function parse_hints
-# Load up hint files into variables HINT_*
-# $1 = itemid
-# Return status: always 0
-{
-  local itemid="$1"
-  local itemprgnam="${ITEMPRGNAM[$itemid]}"
-  local itemdir="${ITEMDIR[$itemid]}"
-  local itemfile="${ITEMFILE[$itemid]}"
-  local -a hintlist
-
-  if [ "${HINT_SUMMARY[$itemid]+yesitisset}" != 'yesitisset' ]; then
-
-    FLAGHINTS="md5ignore makej1 no_uninstall"
-    # These are Boolean hints.
-    # HINT_xxx contains 'y' or '' ;-)
-    # Query them like this: '[ "${HINT_xxx[$itemid]}" = 'y' ]'
-    for hint in $FLAGHINTS; do
-      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
-        eval HINT_$hint[$itemid]='y'
-        hintlist+=( "$hint" )
-      else
-        eval HINT_$hint[$itemid]=''
-      fi
-    done
-
-    FILEHINTS="skipme cleanup uidgid answers"
-    # These are hints where the file contents will be used.
-    # HINT_xxx contains the filename, or ''.
-    # Query them like this: '[ -n "${HINT_xxx[$itemid]}" ]'
-    for hint in $FILEHINTS; do
-      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
-        eval HINT_$hint[$itemid]="$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint"
-        hintlist+=( "$hint" )
-      else
-        eval HINT_$hint[$itemid]=''
-      fi
-    done
-
-    VARHINTS="options version"
-    # These are hints where the file contents will be used by slackrepo itself.
-    # HINT_xxx contains the contents of the file, or ''.
-    # Query them like this: '[ -n "${HINT_xxx[$itemid]}" ]'
-    for hint in $VARHINTS; do
-      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
-        eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint")\"
-        eval hintlist+=( "$hint=\${HINT_$hint[$itemid]}" )
-      else
-        eval HINT_$hint[$itemid]=''
-      fi
-    done
-
-    DEPHINTS="optdeps readmedeps"
-    # These are hints where the file contents will be used by slackrepo itself.
-    # HINT_xxx contains the contents of the file,
-    # or '%NONE%' => the file doesn't exist, or '' => the file exists and is empty.
-    # Query them like this: '[ "${HINT_xxx[$itemid]}" != '%NONE%' ]'
-    for hint in $DEPHINTS; do
-      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
-        eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint")\"
-        eval hintlist+=( "$hint=\"\${HINT_$hint[$itemid]}\"" )
-      else
-        eval HINT_$hint[$itemid]='%NONE%'
-      fi
-    done
-
-    [ ${#hintlist[@]} != 0 ] && HINT_SUMMARY["$itemid"]="$(printf '  %s\n' "${hintlist[@]}")"
-
-  fi
-
-  do_hint_skipme "$itemid" && return 1
-
-  if [ -n "${HINT_SUMMARY[$itemid]}" ]; then
-    log_normal "Hints for ${itemid}:"
-    log_normal "${HINT_SUMMARY[$itemid]}"
-  fi
-
-  return 0
 }

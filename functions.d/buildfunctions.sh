@@ -195,8 +195,6 @@ function build_ok
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
-  uninstall_deps "$itemid"
-
   [ "$OPT_KEEPTMP" != 'y' ] && rm -rf "$SR_TMPIN"
 
   if [ "$OPT_DRYRUN" = 'y' ]; then
@@ -210,7 +208,10 @@ function build_ok
     rm -rf "$SR_PKGREPO"/"$itemdir"/*
     mv "$SR_TMPOUT"/* "$SR_PKGREPO"/"$itemdir"/
   fi
-  [ "$OPT_KEEPTMP" != 'y' ] && rm -rf "$SR_TMPOUT"
+  # SR_TMPOUT is empty now, so remove it even if OPT_KEEPTMP is set
+  rm -rf "$SR_TMPOUT"
+
+  uninstall_deps "$itemid"
 
   create_pkg_metadata "$itemid"
 
@@ -408,6 +409,7 @@ function remove_item
 # 1 = item was skipped
 {
   local itemid="$1"
+  local itemdir="${ITEMDIR[$itemid]}"
 
   # Don't remove if this is an update and it's marked to be skipped
   if [ "$PROCMODE" = 'update' ]; then
@@ -416,13 +418,14 @@ function remove_item
 
   if [ "$OPT_DRYRUN" = 'y' ]; then
     log_important "$itemid would be removed (--dry-run)"
+    #### log a list of packages
   else
     log_important "Removing $itemid"
     for repodir in "$SR_PKGREPO" "$SR_SRCREPO"; do
-      ( cd $repodir
-        find * -depth -print0 | xargs -0 rm -f --
-        rmdir --parents --ignore-fail-on-non-empty "$itemid"
+      ( cd "$repodir"/"$itemdir"
+        find * -depth -print0 | xargs --null rm -f --
       )
+      rmdir --parents --ignore-fail-on-non-empty "$repodir"/"$itemdir"
     done
     echo "$itemid: Removed. NEWLINE" >> "$CHANGELOG"
   fi

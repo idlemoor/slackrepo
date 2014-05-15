@@ -301,7 +301,14 @@ function parse_hints_and_info
 
   fi
 
-  do_hint_skipme "$itemid" && return 1
+  do_hint_skipme "$itemid"
+  if [ $? = 0 ]; then
+    if [ "$itemid" != "$ITEMID" ]; then
+      log_error -n "$ITEMID ABORTED"
+      ABORTEDLIST+=( "$ITEMID" )
+    fi
+    return 1
+  fi
 
   if [ -n "${HINT_SUMMARY[$itemid]}" ]; then
     log_normal "Hints for ${itemid}:"
@@ -337,6 +344,10 @@ function parse_hints_and_info
       unset PKGNAM SRCNAM
       if [ -z "$VERSION" ]; then
         log_error "Could not determine VERSION from $itemprgnam.info or $itemfile"
+        if [ "$itemid" = "$ITEMID" ]; then
+          log_error -n "$ITEMID ABORTED"
+          ABORTEDLIST+=( "$ITEMID" )
+        fi
         return 1
       fi
     fi
@@ -378,6 +389,10 @@ function parse_hints_and_info
   if [ "${INFODOWNLIST[$itemid]}" = "UNSUPPORTED" -o "${INFODOWNLIST[$itemid]}" = "UNTESTED" ]; then
     log_warning -n ":-/ $itemid is ${INFODOWNLIST[$itemid]} on $SR_ARCH /-:"
     SKIPPEDLIST+=( "$itemid" )
+    if [ "$itemid" != "$ITEMID" ]; then
+      log_error -n "$ITEMID ABORTED"
+      ABORTEDLIST+=( "$ITEMID" )
+    fi
     return 1
   fi
 

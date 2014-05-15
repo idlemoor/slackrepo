@@ -30,8 +30,6 @@ function build_item
   local itemfile="${ITEMFILE[$itemid]}"
   local -a pkglist
 
-  do_hint_skipme "$itemid" && return 5
-
   SR_TMPIN="$SR_TMP/sr_IN.$$"
   # initial wipe of $SR_TMPIN, even if $OPT_KEEPTMP is set
   rm -rf "$SR_TMPIN"

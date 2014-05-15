@@ -97,7 +97,7 @@ function uninstall_packages
     pkglist=( $(ls "$SR_PKGREPO"/"$itemdir"/*.t?z 2>/dev/null) )
   # should have something by now!
   [ "${#pkglist[@]}" = 0 ] && \
-    { log_error -a "${itemid}: Can't find any packages to install"; return 1; }
+    { log_error -a "${itemid}: Can't find any packages to uninstall"; return 1; }
 
   for pkgpath in "${pkglist[@]}"; do
     pkgbase=$(basename "$pkgpath" | sed 's/\.t.z$//')

@@ -324,7 +324,20 @@ function parse_hints_and_info
 
   if [ "${INFOVERSION[$itemid]+yesitisset}" != 'yesitisset' ]; then
 
-    # These are the variables we need:
+    # Not from prgnam.info -- GITREV and GITDIRTY
+    if [ "$GOTGIT" = 'y' ]; then
+      GITREV[$itemid]="$(cd $SR_SBREPO/$itemdir; git log -n 1 --format=format:%H .)"
+      GITDIRTY[$itemid]="n"
+      if [ -n "$(cd $SR_SBREPO/$itemdir; git status -s .)" ]; then
+        GITDIRTY[$itemid]="y"
+        log_warning "${itemid}: git is dirty"
+      fi
+    else
+      GITREV[$itemid]=''
+      GITDIRTY[$itemid]="n"
+    fi
+
+    # These are the variables we need from prgnam.info:
     unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH} REQUIRES
     # Preferably, get them from prgnam.info:
     if [ -f "$SR_SBREPO/$itemdir/$itemprgnam.info" ]; then
@@ -337,19 +350,15 @@ function parse_hints_and_info
     # VERSION
     if [ -z "$VERSION" ]; then
       # The next bit is necessarily dependent on the empirical characteristics of Slackware's SlackBuilds :-/
-      versioncmds="$(grep -E '^(PKGNAM|SRCNAM|VERSION)=' $SR_SBREPO/$itemdir/$itemfile)"
+      versioncmds="$(grep -E '^(PKGNAM|SRCNAM|VERSION)=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
       cd "$SR_SBREPO/$itemdir/"
         eval $versioncmds
       cd - >/dev/null
       unset PKGNAM SRCNAM
-      if [ -z "$VERSION" ]; then
-        log_error "Could not determine VERSION from $itemprgnam.info or $itemfile"
-        if [ "$itemid" = "$ITEMID" ]; then
-          log_error -n ":-( $ITEMID ABORTED )-:"
-          ABORTEDLIST+=( "$ITEMID" )
-        fi
-        return 1
-      fi
+      # increasingly desperate...
+      [ -z "$VERSION" ] && VERSION="${HINT_version[$itemid]}"
+      [ -z "$VERSION" ] && VERSION="${GITREV[$itemid]:0:7}"
+      [ -z "$VERSION" ] && VERSION="$(date --date=@$(stat --format-='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile") '+%Y%m%d')"
     fi
     INFOVERSION[$itemid]="$VERSION"
     # DOWNLOAD[_ARCH] and MD5SUM[_ARCH]
@@ -370,19 +379,6 @@ function parse_hints_and_info
       log_normal "Dependencies of $itemid could not be determined."
     fi
     INFOREQUIRES[$itemid]="${REQUIRES:-}"
-
-    # Not from prgnam.info -- GITREV and GITDIRTY
-    if [ "$GOTGIT" = 'y' ]; then
-      GITREV[$itemid]="$(cd $SR_SBREPO/$itemdir; git log -n 1 --format=format:%H .)"
-      GITDIRTY[$itemid]="n"
-      if [ -n "$(cd $SR_SBREPO/$itemdir; git status -s .)" ]; then
-        GITDIRTY[$itemid]="y"
-        log_warning "${itemid}: git is dirty"
-      fi
-    else
-      GITREV[$itemid]=''
-      GITDIRTY[$itemid]="n"
-    fi
 
   fi
 

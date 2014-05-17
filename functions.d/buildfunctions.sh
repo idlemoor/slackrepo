@@ -23,6 +23,7 @@ function build_item
 # 5 = skipped by hint, or unsupported on this arch
 # 6 = SlackBuild returned 0 status, but nothing in $SR_TMPOUT
 # 7 = excessively dramatic qa test fail
+# 8 = package install fail
 {
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
@@ -82,7 +83,7 @@ function build_item
   buildassign=$(grep '^BUILD=' "$SR_TMPIN"/"$itemfile")
   if [ -z "$buildassign" ]; then
     buildassign="BUILD=1"
-    log_warning -a "${itemid}: \"BUILD=\" not found in $itemfile; using 1"
+    log_warning -a "${itemid}: no \"BUILD=\" in $itemfile; using 1"
   fi
   eval $buildassign
   if [ "${BUILDINFO:0:3}" = 'add' -o "${BUILDINFO:0:18}" = 'update for version' ]; then
@@ -106,10 +107,10 @@ function build_item
   do_hint_uidgid "$itemid"
   # ... makej1 (with MAKEFLAGS and NUMJOBS env vars) ...
   if [ "${HINT_makej1[$itemid]}" = 'y' ]; then
-    tempmakeflags="MAKEFLAGS='-j1' $MAKEFLAGS"
+    tempmakeflags="MAKEFLAGS='-j1 $MAKEFLAGS'"
     USE_NUMJOBS=" -j1 "
   else
-    tempmakeflags="MAKEFLAGS='$SR_NUMJOBS' $MAKEFLAGS"
+    tempmakeflags="MAKEFLAGS='$SR_NUMJOBS $MAKEFLAGS'"
     USE_NUMJOBS=" $SR_NUMJOBS "
   fi
   # ... options ...
@@ -134,7 +135,11 @@ function build_item
     NUMJOBS="$USE_NUMJOBS"
   log_normal -a "Running $itemfile ..."
   log_verbose -a "$SLACKBUILDCMD"
-  ( cd "$SR_TMPIN"; eval $SLACKBUILDCMD ) >> "$ITEMLOG" 2>&1
+  if [ "$OPT_VERBOSE" = 'y' ]; then
+    ( cd "$SR_TMPIN"; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
+  else
+    ( cd "$SR_TMPIN"; eval $SLACKBUILDCMD ) >> "$ITEMLOG" 2>&1
+  fi
   stat=$?
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
   if [ "$stat" != 0 ]; then
@@ -176,6 +181,8 @@ function build_item
 
   if [ "$OPT_TEST" = 'y' ]; then
     test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
+  elif [ "$OPT_INSTALL" = 'y' ]; then
+    install_packages "$itemid" || { build_failed "$itemid"; return 8; }
   fi
 
   build_ok "$itemid"  # \o/

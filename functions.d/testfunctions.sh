@@ -61,7 +61,7 @@ function test_slackbuild
     grep -q -v -e '^#' -e "^${itemprgnam}:" -e '^$' -e '^ *|-.*-|$' "$slackdesc" && \
       log_warning -a "${itemid}: slack-desc: unrecognised text (appname wrong?)"
   else
-    log_warning -a "${itemid}: slack-desc not found"
+    log_warning -a "${itemid}: no slack-desc"
   fi
 
 
@@ -100,7 +100,7 @@ function test_slackbuild
     [ $(wc -L < "$SR_SBREPO"/"$itemdir"/README) -le 79 ] || \
       log_warning -a "${itemid}: long lines in README"
   else
-    log_warning -a "${itemid}: README not found"
+    log_warning -a "${itemid}: no README"
   fi
 
 

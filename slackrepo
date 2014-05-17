@@ -58,11 +58,10 @@ starttime=$(date +%s)
 #-------------------------------------------------------------------------------
 
 PROCMODE=''
-OPT_TEST='n'
-OPT_DRYRUN='n'
-OPT_VERBOSE='n'
-OPT_QUIET='n'
-OPT_KEEPTMP='n'
+optnames="VERBOSE QUIET TEST DRYRUN INSTALL KEEPTMP"
+for opt in $optnames ; do
+  eval OPT_$opt='n'
+done
 
 while [ $# != 0 ]; do
   case "$1" in
@@ -96,7 +95,10 @@ while [ $# != 0 ]; do
       OPT_TEST='y'
       shift; continue ;;
     --dry-run )
-      OPT_DRYRUN='y'
+      OPT_DRYRUN='y'; OPT_INSTALL='n'
+      shift; continue ;;
+    --install )
+      OPT_INSTALL='y'; OPT_DRYRUN='n'
       shift; continue ;;
     --keep-tmp )
       OPT_KEEPTMP='y'
@@ -200,11 +202,12 @@ SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
 log_verbose "Configuration:"
 log_verbose "  $PROCMODE"
 log_verbose "  --repo=$SR_REPO"
-[ "$OPT_DRYRUN" = 'y'  ] && log_verbose "  --dry-run"
-[ "$OPT_TEST" = 'y'    ] && log_verbose "  --test"
-[ "$OPT_KEEPTMP" = 'y' ] && log_verbose "  --keep-tmp"
 [ "$OPT_VERBOSE" = 'y' ] && log_verbose "  --verbose"
 [ "$OPT_QUIET" = 'y'   ] && log_verbose "  --quiet"
+[ "$OPT_DRYRUN" = 'y'  ] && log_verbose "  --dry-run"
+[ "$OPT_INSTALL" = 'y' ] && log_verbose "  --install"
+[ "$OPT_TEST" = 'y'    ] && log_verbose "  --test"
+[ "$OPT_KEEPTMP" = 'y' ] && log_verbose "  --keep-tmp"
 for var in $varnames; do
   myvar="SR_$var"
   log_verbose "  $var='${!myvar}'"

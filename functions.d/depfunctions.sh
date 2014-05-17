@@ -139,7 +139,7 @@ function build_with_deps
     return 0
   else
     if [ "$itemid" != "$ITEMID" ]; then
-      log_error -n "$ITEMID ABORTED"
+      log_error -n ":-( $ITEMID ABORTED )-:"
       ABORTEDLIST+=( "$ITEMID" )
     fi
     return 1

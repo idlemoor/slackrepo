@@ -304,7 +304,7 @@ function parse_hints_and_info
   do_hint_skipme "$itemid"
   if [ $? = 0 ]; then
     if [ "$itemid" != "$ITEMID" ]; then
-      log_error -n "$ITEMID ABORTED"
+      log_error -n ":-( $ITEMID ABORTED"
       ABORTEDLIST+=( "$ITEMID" )
     fi
     return 1
@@ -345,7 +345,7 @@ function parse_hints_and_info
       if [ -z "$VERSION" ]; then
         log_error "Could not determine VERSION from $itemprgnam.info or $itemfile"
         if [ "$itemid" = "$ITEMID" ]; then
-          log_error -n "$ITEMID ABORTED"
+          log_error -n ":-( $ITEMID ABORTED )-:"
           ABORTEDLIST+=( "$ITEMID" )
         fi
         return 1
@@ -390,7 +390,7 @@ function parse_hints_and_info
     log_warning -n ":-/ $itemid is ${INFODOWNLIST[$itemid]} on $SR_ARCH /-:"
     SKIPPEDLIST+=( "$itemid" )
     if [ "$itemid" != "$ITEMID" ]; then
-      log_error -n "$ITEMID ABORTED"
+      log_error -n ":-( $ITEMID ABORTED )-:"
       ABORTEDLIST+=( "$ITEMID" )
     fi
     return 1

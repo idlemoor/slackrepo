@@ -6,6 +6,7 @@
 #   parse_items
 #   scan_item_dir
 #   add_item_file
+#   parse_queuefile
 #   parse_package_name
 #   parse_info_and_hints
 #-------------------------------------------------------------------------------
@@ -120,12 +121,16 @@ function parse_items
 declare -A ITEMDIR ITEMFILE ITEMPRGNAM
 
 function add_item_file
-# Adds an ID for the item to the global array $ITEMLIST. The ID is a user-friendly name for the item.
-#   If the item is category/prgnam/prgnam.(SlackBuild|sh), the ID will be "category/prgnam"
+# Adds an item ID for the file to the global array $ITEMLIST. The ID is a
+# user-friendly name for the item: if the item is cat/prg/prg.(SlackBuild|sh),
+# then the ID will be shortened to "cat/prg".
 # Also sets the following:
 # $ITEMDIR[$id] = the directory of the item relative to SR_SBREPO
 # $ITEMFILE[$id] = the full basename of the file (prgnam.SlackBuild, mate-build-base.sh, etc)
 # $ITEMPRGNAM[$id] = the basename of the item with .(SlackBuild|sh) removed
+# $1 = -s => look up in SlackBuild repo, or -p => look up in Package repo
+# $2 = pathname (relative to the repo) of the file to add as an item
+# Returns: always 0
 {
   local searchtype="$1"
   local id="$2"
@@ -155,6 +160,10 @@ function add_item_file
 #-------------------------------------------------------------------------------
 
 function scan_item_dir
+# Looks in directories (and subdirectories) for files to add.
+# $1 = -s => look up in SlackBuild repo, or -p => look up in Package repo
+# $2 = pathname (relative to the repo) of the directory to scan
+# Returns: always 0
 {
   local searchtype="$1"
   local dir="$2"
@@ -185,6 +194,32 @@ function scan_item_dir
   for subdir in "${subdirlist[@]}"; do
     scan_item_dir "$searchtype" "$subdir"
   done
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function parse_queuefile
+# Parses a queuefile, adding its component items (with options and inferred deps).
+# $1 = -s => look up in SlackBuild repo, or -p => look up in Package repo
+# $2 = pathname (not necessarily in the repo) of the queuefile to scan
+# Return status: always 0
+{
+  local searchtype="$1"
+  local sqfile="$2"
+
+  cat "$sqfile" | \
+  while read sqfitem sqfoptsep sqfoptions ; do
+    case "$sqfitem"
+    in
+      @*) parse_queuefile "${sqfitem:1}"
+          ;;
+      * ) parse_items -s "$sqfitem"
+          #### set deps and possibly HINT_options
+          ;;
+    esac
+  done
+
   return 0
 }
 

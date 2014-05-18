@@ -45,7 +45,7 @@ function install_packages
         if [ "$(basename "$instpkg" | rev | cut -f4- -d- | rev)" = "$pkgid" ]; then
           log_verbose -a "A previous instance of $pkgid is already installed; upgrading ..."
           if [ "$OPT_VERBOSE" = 'y' ]; then
-            /sbin/upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
+            /sbin/upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$ITEMLOG"
             stat=$?
           else
             /sbin/upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1

@@ -149,6 +149,7 @@ SR_REPO="${SR_REPO:-$REPO}"
 # Set config variables from environment:
 varnames="SBREPO PKGREPO SRCREPO \
           HINTS LOGDIR TMP \
+          INSTALL PKGSUBDIR \
           ARCH TAG PKGTYPE NUMJOBS USE_GENREPOS \
           INIT_GITCLONE INIT_GITBRANCH"
 # We'll prefix all these with SR_ to stop SlackBuilds picking them up

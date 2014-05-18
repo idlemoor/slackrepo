@@ -107,10 +107,10 @@ function build_item
   do_hint_uidgid "$itemid"
   # ... makej1 (with MAKEFLAGS and NUMJOBS env vars) ...
   if [ "${HINT_makej1[$itemid]}" = 'y' ]; then
-    tempmakeflags="MAKEFLAGS='-j1 $MAKEFLAGS'"
+    tempmakeflags="MAKEFLAGS='-j1'"
     USE_NUMJOBS=" -j1 "
   else
-    tempmakeflags="MAKEFLAGS='$SR_NUMJOBS $MAKEFLAGS'"
+    tempmakeflags="MAKEFLAGS='$SR_NUMJOBS'"
     USE_NUMJOBS=" $SR_NUMJOBS "
   fi
   # ... options ...

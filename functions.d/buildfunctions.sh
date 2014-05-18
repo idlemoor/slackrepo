@@ -136,7 +136,11 @@ function build_item
   log_normal -a "Running $itemfile ..."
   log_verbose -a "$SLACKBUILDCMD"
   if [ "$OPT_VERBOSE" = 'y' ]; then
+    echo ''
+    echo '---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---'
     ( cd "$SR_TMPIN"; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
+    echo '----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<---'
+    echo ''
   else
     ( cd "$SR_TMPIN"; eval $SLACKBUILDCMD ) >> "$ITEMLOG" 2>&1
   fi
@@ -427,12 +431,15 @@ function remove_item
     log_important "$itemid would be removed (--dry-run)"
     #### log a list of packages
   else
-    log_important "Removing $itemid"
     for repodir in "$SR_PKGREPO" "$SR_SRCREPO"; do
-      ( cd "$repodir"/"$itemdir"
-        find * -depth -print0 | xargs --null rm -f --
-      )
-      rmdir --parents --ignore-fail-on-non-empty "$repodir"/"$itemdir"
+      if [ -d "$repodir"/"$itemdir" ]; then
+        rm -rf "$repodir"/"$itemdir"
+        up="$(dirname "$itemdir")"
+        [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "$repodir"/"$up"
+        log_important "Removed $itemid"
+      else
+        log_important "No packages found: $itemid"
+      fi
     done
     echo "$itemid: Removed. NEWLINE" >> "$CHANGELOG"
   fi

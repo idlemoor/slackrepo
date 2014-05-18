@@ -45,10 +45,10 @@ function install_packages
         if [ "$(basename "$instpkg" | rev | cut -f4- -d- | rev)" = "$pkgid" ]; then
           log_verbose -a "A previous instance of $pkgid is already installed; upgrading ..."
           if [ "$OPT_VERBOSE" = 'y' ]; then
-            upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
+            /sbin/upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
             stat=$?
           else
-            upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
+            /sbin/upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
             stat=$?
           fi
           [ "$stat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $stat)"; return 1; }
@@ -58,10 +58,10 @@ function install_packages
       done
     else
       if [ "$OPT_VERBOSE" = 'y' ]; then
-        installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
+        /sbin/installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
         stat=$?
       else
-        installpkg --terse "$pkgpath" >> "$ITEMLOG" 2>&1
+        /sbin/installpkg --terse "$pkgpath" >> "$ITEMLOG" 2>&1
         stat=$?
       fi
       [ "$stat" = 0 ] || { log_error -a "${itemid}: installpkg $pkgbase failed (status $stat)"; return 1; }
@@ -111,7 +111,7 @@ function uninstall_packages
       etcdirs=$(grep '^etc/.*/$' /var/log/packages/"$pkgbase")
 
       log_verbose -a "Uninstalling $pkgbase ..."
-      removepkg "$pkgbase" >> "$ITEMLOG" 2>&1
+      /sbin/removepkg "$pkgbase" >> "$ITEMLOG" 2>&1
 
       # Remove any surviving detritus
       for etcfile in $etcnewfiles; do

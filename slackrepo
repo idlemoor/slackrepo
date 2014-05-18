@@ -294,19 +294,17 @@ fi
 GOTGIT='n'
 if [ -d "$SR_SBREPO"/.git ]; then
   GOTGIT='y'
+  [ -n "$(cd $SR_SBREPO; git status -s .)" ] && dirty=' (DIRTY)'
   [ "$OPT_VERBOSE" = 'y' ] && echo ""
   log_verbose "Git repo:   $SR_SBREPO"
   log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"
-  log_verbose "  revision: $(git rev-parse HEAD)"
+  log_verbose "  revision: $(git rev-parse HEAD)$dirty"
   log_verbose "  title:    $(git log -n 1 --format=%s)"
-  if [ -n "$(cd $SR_SBREPO; git status -s .)" ]; then
-    log_warning "Git repository $SR_SBREPO is dirty"
-  fi
-  [ "$OPT_VERBOSE" = 'y' ] && echo ""
+  echo ""
 fi
 
 # Warn about already installed packages (using package tag)
-if [ -n "$SR_TAG" ]; then
+if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' ]; then
   installed=$(ls /var/log/packages/*"$SR_TAG" 2>/dev/null)
   if [ -n "$installed" ]; then
     for pkg in $installed; do

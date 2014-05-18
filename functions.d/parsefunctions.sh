@@ -4,9 +4,9 @@
 #-------------------------------------------------------------------------------
 # parsefunctions.sh - parse functions for slackrepo
 #   parse_items
-#   scan_item_dir
+#   scan_dir
+#   scan_queuefile
 #   add_item_file
-#   parse_queuefile
 #   parse_package_name
 #   parse_info_and_hints
 #-------------------------------------------------------------------------------
@@ -45,7 +45,6 @@ function parse_items
   fi
 
   cd "$toplevel"
-  unset ITEMLIST
 
   while [ $# != 0 ]; do
 
@@ -55,7 +54,13 @@ function parse_items
     # An item can be an absolute pathname of an object; or a relative pathname
     # of an object; or the basename of an object deep in the repo, provided that
     # there is only one object with that name.  An object can be either a directory
-    # or a file.
+    # or a file.  Queue files are special.
+
+    # Queue file?
+    if [ -f "$item" -a "${item##*.}" = 'sqf' ]; then
+      scan_queuefile "$item"
+      continue
+    fi
 
     # Absolute path?
     if [ "${item:0:1}" = '/' ]; then
@@ -73,7 +78,7 @@ function parse_items
 
     # Null?  Interpret that as "whatever is in the repo's root directory":
     if [ "$item" = '' ]; then
-      scan_item_dir "$searchtype" .
+      scan_dir "$searchtype" .
       continue
     fi
 
@@ -82,7 +87,7 @@ function parse_items
       add_item_file "$searchtype" "$item"
       continue
     elif [ -d "$item" ]; then
-      scan_item_dir "$searchtype" "$item"
+      scan_dir "$searchtype" "$item"
       continue
     elif [ -n "$(echo "$item" | sed 's:[^/]::g')" ]; then
       log_error "${blamemsg}Item $item not found"
@@ -101,7 +106,7 @@ function parse_items
         add_item_file "$searchtype" "${gotitems[0]}"
         continue
       else
-        scan_item_dir "$searchtype" "${gotitems[0]}"
+        scan_dir "$searchtype" "${gotitems[0]}"
         continue
       fi
     else
@@ -159,7 +164,7 @@ function add_item_file
 
 #-------------------------------------------------------------------------------
 
-function scan_item_dir
+function scan_dir
 # Looks in directories (and subdirectories) for files to add.
 # $1 = -s => look up in SlackBuild repo, or -p => look up in Package repo
 # $2 = pathname (relative to the repo) of the directory to scan
@@ -192,34 +197,38 @@ function scan_item_dir
     return 0
   fi
   for subdir in "${subdirlist[@]}"; do
-    scan_item_dir "$searchtype" "$subdir"
+    scan_dir "$searchtype" "$subdir"
   done
   return 0
 }
 
 #-------------------------------------------------------------------------------
 
-function parse_queuefile
-# Parses a queuefile, adding its component items (with options and inferred deps).
+function scan_queuefile
+# Scans a queuefile, adding its component items (with options and inferred deps).
 # $1 = -s => look up in SlackBuild repo, or -p => look up in Package repo
 # $2 = pathname (not necessarily in the repo) of the queuefile to scan
 # Return status: always 0
 {
-  local searchtype="$1"
-  local sqfile="$2"
+  local sqfile="$1"
 
-  cat "$sqfile" | \
-  while read sqfitem sqfoptsep sqfoptions ; do
-    case "$sqfitem"
+  if [ ! -f "$sqfile" ]; then
+    log_warning "No such queue file: $sqfile"
+    return 0
+  fi
+
+  while read sqfitem sqfoptions ; do
+    case $sqfitem
     in
-      @*) parse_queuefile "${sqfitem:1}"
+      @*) parse_queuefile "${sqfitem:1}.sqf"
+          ;;
+      -*) log_verbose "Note: ignoring unselected queuefile item ${sqfitem:1}"
           ;;
       * ) parse_items -s "$sqfitem"
           #### set deps and possibly HINT_options
           ;;
     esac
-  done
-
+  done < "$sqfile"
   return 0
 }
 

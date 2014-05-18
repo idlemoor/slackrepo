@@ -4,7 +4,9 @@
 # (1) Environment variables when slackrepo is called
 # (2) ~/.genreprc   [for gen_repos_files.sh only]
 # (3) /etc/slackrepo/repo_SBo.conf
+
 #-------------------------------------------------------------------------------
+# Filestore locations
 
 # Where is the local SlackBuild repo:
 SBREPO=/var/lib/slackrepo/git_SBo
@@ -23,6 +25,9 @@ LOGDIR=/var/log/slackrepo/log_SBo
 
 # Where to store temporary files (you will need plenty of space):
 TMP=/tmp/SBo
+
+#-------------------------------------------------------------------------------
+# Build control variables
 
 # Number of make jobs to set in MAKEFLAGS:
 # specify it as (for example) '-j2'.
@@ -44,10 +49,21 @@ TAG=_SBo
 PKGTYPE=tgz
 
 #-------------------------------------------------------------------------------
+# Advanced and experimental features
 
+# Whether to create an arch-specific subdirectory in each package directory.
+# If both PKGSUBDIR and USE_GENREPOS are enabled, REPO_SUBDIRS below will
+# be set automatically.
+PKGSUBDIR='0'
+
+# Whether to install built packages.  The built packages will NOT be clean.
+INSTALL='0'
+
+#-------------------------------------------------------------------------------
 # Variables for calling gen_repos_files.sh
+
+# Change this to '1' if you want to enable gen_repos_files.sh
 # If enabled, you *must* set correct values for all the variables below!
-# Change this to 1 if you want to enable gen_repos_files.sh
 USE_GENREPOS='0'
 
 # Don't change this! it is needed so gen_repos_files.sh can find your packages
@@ -107,11 +123,11 @@ FOLLOW_SYMLINKS=${FOLLOW_SYMLINKS:-1}
 
 # If the repository has separate package subdirectories (for separate
 # Slackware releases or architectures) then define them here.
-# Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them:
+# Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them.
+# See also PKGSUBDIR above.
 REPO_SUBDIRS=${REPO_SUBDIRS:-""}
 
 #-------------------------------------------------------------------------------
-
 # Variables for creating the SlackBuild repository if it does not already exist.
 
 # URL of the remote git repo to be cloned:

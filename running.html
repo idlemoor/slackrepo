@@ -93,7 +93,10 @@ everything in the package repository is compared.</p>
 
 <p>Use the SlackBuild and package repository identified by ID.  The location of
 the SlackBuild and package repositories are determined by the configuration
-file /etc/slackrepo/repo_ID.conf.  The default repository ID is SBo.</p>
+file /etc/slackrepo/repo_ID.conf.  The default repository ID is <strong>SBo</strong>
+(<a href="http://SlackBuilds.org" class="ext">SlackBuilds.org</a>), but others
+supplied include <strong>csb</strong> 
+(<a href="https://github.com/willysr/csb" class="ext">Cinnamon SlackBuilds</a>).</p>
 
 <pre>--test</pre>
 
@@ -102,12 +105,24 @@ quality assurance tests.</p>
 
 <pre>--dry-run</pre>
 
-<p>Builds and rebuilds will be performed, and removals will be notified,
+<p>Builds, rebuilds and updates will be performed, and removals will be notified,
 but no changes will be made to the package repository.</p>
+
+<pre>--install</pre>
+
+<p>Built, rebuilt and updated packages will be installed on the host system.
+This results in a "queue" style build, and packages may not be 100% clean of
+unexpected dependencies. The default is for packages <strong>not</strong> to
+be installed.</p>
 
 <pre>-v, --verbose</pre>
 
 <p>Increase the quantity of messages printed on the console during execution.</p>
+
+<pre>-vv, --very-verbose</pre>
+
+<p>Print <strong>all</strong> messages on the console during execution, including
+output from invoked SlackBuilds (e.g. compilation).</p>
 
 <pre>-q, --quiet</pre>
 

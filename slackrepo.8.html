@@ -155,7 +155,7 @@ For details, see
 <!-- .B \-\-test -->
 <b>--test</b> </td><td valign="bottom">
 The SlackBuild files and the built packages will be subjected to additional
-quality assurance tests.
+quality assurance tests. This option has no effect in remove mode.
 <!-- . -->
 <!-- .TP -->
 </td></tr>
@@ -163,7 +163,18 @@ quality assurance tests.
 <!-- .B \-\-dry\-run -->
 <b>--dry-run</b> </td><td valign="bottom">
 Builds and rebuilds will be performed, and removals will be notified, but no
-changes will be made to the package repository.
+changes will be made to the package repository. This option conflicts with --install.
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td nowrap="nowrap" width="6%">
+<!-- .B \-\-install -->
+<b>--install</b> </td><td valign="bottom">
+Built, rebuilt and updated packages will be installed on the host system.
+This results in a "queue" style build, and packages may not be 100% clean of
+unexpected dependencies. The default is for packages <strong>not</strong>
+to be installed. This option conflicts with --dry-run, and has no effect in
+remove mode.
 <!-- . -->
 <!-- .TP -->
 </td></tr>
@@ -171,6 +182,17 @@ changes will be made to the package repository.
 <!-- .BR \-v ", " \-\-verbose -->
 <b>-v</b>, <b>--verbose</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Increase the quantity of messages printed on the console during execution.
+If --verbose or -v is specified multiple times, it is equivalent to --very-verbose.
+This option conflicts with --quiet.
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td colspan="2">
+<!-- .BR \-vv ", " \-\-very\-verbose -->
+<b>-vv</b>, <b>--very-verbose</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
+Print <strong>all</strong> messages on the console during execution, including
+output from invoked SlackBuilds (e.g. compilation).
+This option conflicts with --quiet.
 <!-- . -->
 <!-- .TP -->
 </td></tr>
@@ -178,6 +200,7 @@ Increase the quantity of messages printed on the console during execution.
 <!-- .BR \-q ", " \-\-quiet -->
 <b>-q</b>, <b>--quiet</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Reduce the quantity of messages printed on the console during execution.
+This option conflicts with --verbose and --very-verbose.
 <!-- . -->
 <!-- .TP -->
 </td></tr>

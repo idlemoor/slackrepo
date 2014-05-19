@@ -48,7 +48,7 @@ function verify_src
     # check files in this dir only (arch-specific subdirectories may exist, ignore them)
     IFS=$'\n'; srcfilelist=( $(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$' | sed 's:^\./::') ); unset IFS
     numgot=${#srcfilelist[@]}
-    numwant=$(echo $MD5LIST | wc -w)
+    numwant=$(echo $DOWNLIST | wc -w)
     # no files, empty directory => return 3 (same as no directory)
     [ $numgot = 0 ] && return 3
     # or if we have not got the right number of sources, return 2

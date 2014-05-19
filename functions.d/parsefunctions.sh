@@ -382,7 +382,7 @@ function parse_hints_and_info
     fi
 
     # These are the variables we need from prgnam.info:
-    unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH} REQUIRES
+    local VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH} REQUIRES
     # Preferably, get them from prgnam.info:
     if [ -f "$SR_SBREPO/$itemdir/$itemprgnam.info" ]; then
       # is prgnam.info plausibly in SBo format?
@@ -417,6 +417,15 @@ function parse_hints_and_info
       INFODOWNLIST[$itemid]="${DOWNLOAD:-}"
       INFOMD5LIST[$itemid]="${MD5SUM:-}"
       SRCDIR[$itemid]="$SR_SRCREPO/$itemdir"
+    fi
+    if [ -z "${INFODOWNLIST[$itemid]}" ]; then
+      # sneaky slackbuild snarf ;-) 
+      # The url might contain $PRGNAM and $VERSION, or even SRCNAM :-(
+      local PRGNAM SRCNAM
+      eval $(grep 'PRGNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")
+      eval $(grep 'SRCNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")
+      eval INFODOWNLIST[$itemid]="$(grep 'wget -c ' "$SR_SBREPO"/"$itemdir"/"$itemfile" | sed 's/^.* //')"
+      HINT_md5ignore[$itemid]='y'
     fi
     # REQUIRES
     if [ "${REQUIRES+yesitisset}" != "yesitisset" ]; then

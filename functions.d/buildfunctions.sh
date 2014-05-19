@@ -77,6 +77,10 @@ function build_item
   # Get all dependencies installed
   install_deps "$itemid" || { uninstall_deps "$itemid"; return 1; }
 
+  # Remove any existing packages (some builds fail if already installed)
+  # (... this might not be entirely appropriate for gcc or glibc ...)
+  uninstall_packages "$itemid"
+
   # Work out BUILD
   # Get the value from the SlackBuild
   unset BUILD
@@ -135,7 +139,7 @@ function build_item
     NUMJOBS="$USE_NUMJOBS"
   log_normal -a "Running $itemfile ..."
   log_verbose -a "$SLACKBUILDCMD"
-  if [ "$OPT_VERBOSE" = 'y' ]; then
+  if [ "$OPT_VERYVERBOSE" = 'y' ]; then
     echo ''
     echo '---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---'
     ( cd "$SR_TMPIN"; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
@@ -231,7 +235,8 @@ function build_ok
 
   buildtype=$(echo $BUILDINFO | cut -f1 -d" ")
   msg="$buildtype OK"
-  [ "$OPT_DRYRUN" = 'y' ] && msg="$buildtype --dry-run OK"
+  [ "$OPT_DRYRUN" = 'y'  ] && msg="$buildtype --dry-run OK"
+  [ "$OPT_INSTALL" = 'y' ] && msg="$buildtype --install OK"
   log_success ":-) $itemid $msg (-:"
   OKLIST+=( "$itemid" )
 
@@ -436,9 +441,9 @@ function remove_item
         rm -rf "$repodir"/"$itemdir"
         up="$(dirname "$itemdir")"
         [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "$repodir"/"$up"
-        log_important "Removed $itemid"
+        log_important "Removed $repodir/$itemdir"
       else
-        log_important "No packages found: $itemid"
+        log_important "Nothing found in $repodir/$itemdir"
       fi
     done
     echo "$itemid: Removed. NEWLINE" >> "$CHANGELOG"

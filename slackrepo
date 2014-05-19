@@ -35,7 +35,7 @@ function print_usage
   echo '  --verbose | --quiet'
   echo '  --repo=ID'
   echo '  --test'
-  echo '  --dry-run'
+  echo '  --dry-run | --install'
   echo '  --keep-tmp'
   return
 }
@@ -85,11 +85,15 @@ while [ $# != 0 ]; do
     --repo=* )
       SR_REPO=$(echo "$1" | sed 's/^--repo=//')
       shift; continue ;;
+    --quiet | -q )
+      OPT_QUIET='y'; OPT_VERBOSE='n'; OPT_VERYVERBOSE='n'
+      shift; continue ;;
     --verbose | -v )
+      [ "$OPT_VERBOSE" = 'y' ] && OPT_VERYVERBOSE='y'
       OPT_VERBOSE='y'; OPT_QUIET='n'
       shift; continue ;;
-    --quiet | -q )
-      OPT_QUIET='y'; OPT_VERBOSE='n'
+    --very-verbose | -vv )
+      OPT_VERYVERBOSE='y'; OPT_VERBOSE='y'; OPT_QUIET='n'
       shift; continue ;;
     --test )
       OPT_TEST='y'
@@ -198,13 +202,24 @@ fi
 [ -f /etc/slackware-version ] || { log_error "/etc/slackware-version not found"; exit_cleanup; exit 4; }
 SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
 
+# Substitute %SLACKVER% and %ARCH%
+for var in $varnames; do
+  myvar="SR_$var"
+  eval $myvar=\"$(echo "${!myvar}" | sed -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
+done
+
 # Log the config
 [ "$OPT_VERBOSE" = 'y' ] && echo ""
 log_verbose "Configuration:"
 log_verbose "  $PROCMODE"
 log_verbose "  --repo=$SR_REPO"
-[ "$OPT_VERBOSE" = 'y' ] && log_verbose "  --verbose"
-[ "$OPT_QUIET" = 'y'   ] && log_verbose "  --quiet"
+if [ "$OPT_VERYVERBOSE" = 'y' ]; then
+  log_verbose "  --very-verbose"
+elif [ "$OPT_VERBOSE" = 'y' ]; then
+  log_verbose "  --verbose"
+elif [ "$OPT_QUIET" = 'y' ]; then
+  log_verbose "  --quiet"
+fi
 [ "$OPT_DRYRUN" = 'y'  ] && log_verbose "  --dry-run"
 [ "$OPT_INSTALL" = 'y' ] && log_verbose "  --install"
 [ "$OPT_TEST" = 'y'    ] && log_verbose "  --test"

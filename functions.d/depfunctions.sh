@@ -173,13 +173,14 @@ function install_deps
       return 1
     fi
   fi
+
   return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function uninstall_deps
-# Uninstall dependencies of $itemid
+# Uninstall dependencies of $itemid (but NOT $itemid itself)
 # $1 = itemid
 # Return status always 0
 {

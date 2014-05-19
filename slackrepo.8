@@ -81,16 +81,36 @@ For details, see
 .TP
 .B \-\-test
 The SlackBuild files and the built packages will be subjected to additional
-quality assurance tests.
+quality assurance tests. This option has no effect in remove mode.
 .
 .TP
 .B \-\-dry\-run
 Builds and rebuilds will be performed, and removals will be notified, but no
 changes will be made to the package repository.
+This option conflicts with --install.
+.
+.TP
+.B \-\-install
+Built, rebuilt and updated packages will be installed on the host system.
+This results in a "queue" style build, and packages may not be 100% clean of
+unexpected dependencies. The default is for packages
+.B not
+to be installed. This option conflicts with --dry-run, and has no effect in
+remove mode.
 .
 .TP
 .BR \-v ", " \-\-verbose
 Increase the quantity of messages printed on the console during execution.
+If --verbose or -v is specified multiple times, it is equivalent to --very-verbose.
+This option conflicts with --quiet.
+.
+.TP
+.BR \-vv ", " \-\-very\-verbose
+Print
+.B all
+messages on the console during execution, including
+output from invoked SlackBuilds (e.g. compilation).
+This option conflicts with --quiet.
 .
 .TP
 .BR \-q ", " \-\-quiet

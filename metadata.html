@@ -41,8 +41,9 @@
 
 <div id="main">
 
-<p>The following files are created by slackrepo and gen_repos_files.sh in the package repository:</p>
+<p>The following files are created by slackrepo and gen_repos_files.sh in the package repository.</p>
 
+<h4>For each package</h4>
 <ul>
 <li><code>package.tgz</code> (or .txz, .tbz, .tlz) - the package itself</li>
 <li><code>package.tgz.asc</code> (or .txz.asc, .tbz.asc, .tlz.asc) - a detached GPG signature that can be used to verify the package</li>
@@ -54,6 +55,22 @@
 </ul>
 
 <p>In addition, each package directory contains a file <code>.revision</code> that contains revision information about the SlackBuild and dependencies from which the packages were built.</p>
+
+<h4>In the repository's root directory</h4>
+<ul>
+<li><code>CHECKSUMS.md5</code> - md5 checksums for all the packages and the package metadata</li>
+<li><code>CHECKSUMS.md5.asc</code> - a detached GPG signature that can be used to verify CHECKSUMS.md5</li>
+<li><code>CHECKSUMS.md5.gz</code> - a compressed copy of CHECKSUMS.md5</li>
+<li><code>CHECKSUMS.md5.gz.asc</code> - a detached GPG signature that can be used to verify CHECKSUMS.md5.gz</li>
+<li><code>ChangeLog.rss</code> - an RSS feed of recent ChangeLog.txt entries</li>
+<li><code>ChangeLog.txt</code> - the cumulative ChangeLog for this package repository</li>
+<li><code>ChangeLog.txt.gz</code> - a compressed copy of ChangeLog.txt</li>
+<li><code>FILELIST.TXT</code> - a listing of all the files in the package repository</li>
+<li><code>GPG-KEY</code> - your public GPG key</li>
+<li><code>MANIFEST.bz2</code> - a compressed listing of the contents of all the packages in the package repository</li>
+<li><code>PACKAGES.TXT</code> - a listing of all the packages in the package repository</li>
+<li><code>PACKAGES.TXT.gz</code> - a compressed copy of PACKAGES.TXT</li>
+</ul>
 
 </div>
 

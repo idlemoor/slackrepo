@@ -47,6 +47,7 @@ function parse_items
   fi
 
   cd "$toplevel"
+  unset ITEMLIST
 
   while [ $# != 0 ]; do
 
@@ -269,7 +270,7 @@ declare -A INFOVERSION INFOREQUIRES INFODOWNLIST INFOMD5LIST
 declare -A SRCDIR GITREV GITDIRTY
 # and to store hints:
 declare -A \
-  HINT_skipme HINT_md5ignore HINT_makej1 HINT_no_uninstall \
+  HINT_skipme HINT_md5ignore HINT_makej1 HINT_install \
   HINT_cleanup HINT_uidgid HINT_answers \
   HINT_options HINT_optdeps HINT_readmedeps HINT_version \
   HINT_SUMMARY
@@ -298,7 +299,7 @@ function parse_hints_and_info
 
   if [ "${HINT_SUMMARY[$itemid]+yesitisset}" != 'yesitisset' ]; then
 
-    FLAGHINTS="md5ignore makej1 no_uninstall"
+    FLAGHINTS="md5ignore makej1 install"
     # These are Boolean hints.
     # HINT_xxx contains 'y' or '' ;-)
     # Query them like this: '[ "${HINT_xxx[$itemid]}" = 'y' ]'

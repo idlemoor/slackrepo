@@ -88,7 +88,7 @@ function uninstall_packages
   local pkgpath pkgbase pkgid
   local etcnewfiles etcdirs etcfile etcdir
 
-  [ "${HINT_no_uninstall[$itemid]}" = 'y' ] && return 0
+  [ "${HINT_install[$itemid]}" = 'y' ] && return 0
 
   # Look for the package(s).
   # Start with the temp output dir

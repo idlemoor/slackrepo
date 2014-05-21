@@ -20,7 +20,7 @@ function build_item
 # 2 = download failed
 # 3 = checksum failed
 # 4 = [not used]
-# 5 = skipped by hint, or unsupported on this arch
+# 5 = skipped (skipme or nodownload hint, or unsupported on this arch)
 # 6 = SlackBuild returned 0 status, but nothing in $SR_TMPOUT
 # 7 = excessively dramatic qa test fail
 # 8 = package install fail
@@ -54,11 +54,11 @@ function build_item
     INFOVERSION[$itemid]="$NEWVERSION"
   fi
 
-  # Get the source (including check for unsupported/untested)
+  # Get the source (including check for unsupported/untested/nodownload)
   verify_src "$itemid"
   case $? in
     0) # already got source, and it's good
-       [ "$OPT_TEST" = 'y' ] && test_download "$itemid"
+       [ "$OPT_TEST" = 'y' -a -z "${HINT_nodownload[$itemid]}" ] && test_download "$itemid"
        ;;
     1|2|3|4)
        # already got source but it's bad, or not got source, or wrong version => get it
@@ -66,6 +66,12 @@ function build_item
        verify_src "$itemid" || { log_error -a "${itemid}: Downloaded source is bad"; build_failed "$itemid"; return 3; }
        ;;
     5) # unsupported/untested
+       SKIPPEDLIST+=( "$itemid" )
+       return 5
+       ;;
+    6) # nodownload hint (probably needs manual download due to licence agreement)
+       log_warning -n "SKIPPED $itemid - the source needs manual download"
+       cat "$HINT_nodownload"
        SKIPPEDLIST+=( "$itemid" )
        return 5
        ;;

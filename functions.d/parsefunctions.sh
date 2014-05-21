@@ -312,7 +312,7 @@ function parse_hints_and_info
       fi
     done
 
-    FILEHINTS="skipme cleanup uidgid answers"
+    FILEHINTS="skipme cleanup uidgid answers nodownload"
     # These are hints where the file contents will be used.
     # HINT_xxx contains the filename, or ''.
     # Query them like this: '[ -n "${HINT_xxx[$itemid]}" ]'

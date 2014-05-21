@@ -18,6 +18,7 @@ function verify_src
 # 3 - directory not found or empty => not in source cache, need to download
 # 4 - version mismatch, need to download new version
 # 5 - .info says item is unsupported/untested on this arch
+# 6 - not in source cache and there is a nodownload hint
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
 
@@ -35,15 +36,17 @@ function verify_src
   # if unsupported/untested, return 5
   [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ] && \
     { log_warning -n "$itemid is $DOWNLIST on $SR_ARCH"; return 5; }
-  # if no directory, return 3
+  # if no directory, return 6 (nodownload hint) or 3 (source not found)
+  [ ! -d "$DOWNDIR" -a -n "${HINT_nodownload[$itemid]}" ] && return 6
   [ ! -d "$DOWNDIR" ] && return 3
 
   # More complex checks:
   ( cd "$DOWNDIR"
-    # if wrong version, return 4
+    # if wrong version, return 6 (nodownload hint) or 4 (version mismatch)
     if [ "$VERSION" != "$(cat .version 2>/dev/null)" ]; then
       log_verbose -a "Removing old source files"
       find . -maxdepth 1 -type f -exec rm -f {} \;
+      [ -n "${HINT_nodownload[$itemid]}" ] && return 6
       return 4
     fi
     log_normal -a "Verifying source files ..."
@@ -51,11 +54,16 @@ function verify_src
     IFS=$'\n'; srcfilelist=( $(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$' | sed 's:^\./::') ); unset IFS
     numgot=${#srcfilelist[@]}
     numwant=$(echo $DOWNLIST | wc -w)
-    # no files, empty directory => return 3 (same as no directory)
+    # no files, empty directory => return 3 (same as no directory) or 6
+    [ $numgot = 0 -a -n "${HINT_nodownload[$itemid]}" ] && return 6
     [ $numgot = 0 ] && return 3
-    # or if we have not got the right number of sources, return 2
-    [ $numgot != $numwant ] && { log_verbose -a "Note: need $numwant source files, but have $numgot"; return 2; }
-    # if we're ignoring the md5sums, we've finished => return 0
+    # or if we have not got the right number of sources, return 2 (or 6)
+    if [ $numgot != $numwant ]; then
+      log_verbose -a "Note: need $numwant source files, but have $numgot"
+      [ -n "${HINT_nodownload[$itemid]}" ] && return 6
+      return 2
+    fi
+    # if we're ignoring the md5sums, we've finished! => return 0
     [ "${HINT_md5ignore[$itemid]}" = 'y' ] && return 0
     # run the md5 check on all the files (don't give up at the first error)
     allok='y'
@@ -66,7 +74,7 @@ function verify_src
       for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
       [ "$ok" = 'y' ] || { log_verbose -a "Note: failed md5sum: $f"; allok='n'; }
     done
-    [ "$allok" = 'y' ] || { return 1; }
+    [ "$allok" = 'y' ] || { if [ -n "${HINT_nodownload[$itemid]}" ]; then return 6; else return 1; fi; }
   )
   return $?  # status comes directly from subshell
 }

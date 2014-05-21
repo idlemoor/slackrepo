@@ -1,10 +1,10 @@
-# This is the slackrepo configuration file for the SBo repository.
+# This is the slackrepo configuration file for the mate repository.
 #
 # The priority order for configuration is:
 # (1) Environment variables when slackrepo is called
 # (2) ~/.genreprc   [for gen_repos_files.sh only]
 # (3) ~/.slackreporc
-# (4) /etc/slackrepo/repo_SBo.conf
+# (4) /etc/slackrepo/repo_mate.conf
 #
 # %REPO%, %SLACKVER% and %ARCH% will be replaced by the repo ID, Slackware version and arch
 
@@ -42,10 +42,8 @@ NUMJOBS=''
 ARCH=''
 
 # Tag for built packages.
-# If you are publishing packages from SlackBuilds.org,
-# *please* change SBo to something else
-# (see http://slackbuilds.org/faq/ item 20).
-TAG='_SBo'
+# If you are publishing these packages, *please* change mate to something else
+TAG='_mate'
 
 # Package compression type.
 # Valid values are: tgz, txz, tbz, tlz
@@ -61,7 +59,7 @@ VERBOSE='n'
 VERY_VERBOSE='n'
 TEST='n'
 DRY_RUN='n'
-INSTALL='n'
+INSTALL='y'
 KEEP_TMP='n'
 
 #-------------------------------------------------------------------------------
@@ -135,8 +133,7 @@ REPO_SUBDIRS=""
 # Variables for creating the SlackBuild repository if it does not already exist
 
 # URL of the remote git repo to be cloned:
-INIT_GITCLONE='git://slackbuilds.org/slackbuilds'
+INIT_GITCLONE='https://github.com/mateslackbuilds/msb.git'
 
 # Git branch to set up: %SLACKVER% implies '14.1' for Slackware 14.1, etc
-# If you want 'master', change this to 'master' ;-)
-INIT_GITBRANCH='%SLACKVER%'
+INIT_GITBRANCH='14.1-mate-1.8'

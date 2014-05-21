@@ -6,28 +6,28 @@
 # (3) ~/.slackreporc
 # (4) /etc/slackrepo/repo_csb.conf
 #
-# %SLACKVER% and %ARCH% will be replaced by the Slackware version and the arch
+# %REPO%, %SLACKVER% and %ARCH% will be replaced by the repo ID, Slackware version and arch
 
 #-------------------------------------------------------------------------------
 # Filestore locations
 
 # Where is the local SlackBuild repo:
-SBREPO="/var/lib/slackrepo/git_csb"
+SBREPO="/var/lib/slackrepo/git_%REPO%"
 
 # Where to store cached sources (you will need plenty of space):
-SRCREPO="/var/lib/slackrepo/src_csb"
+SRCREPO="/var/lib/slackrepo/src_%REPO%"
 
 # Where to store built packages (you will need plenty of space):
-PKGREPO="/var/lib/slackrepo/pkg_csb/%SLACKVER%/%ARCH%"
+PKGREPO="/var/lib/slackrepo/pkg_%REPO%/%SLACKVER%/%ARCH%"
 
 # Where to find hints for this repo:
-HINTS="/etc/slackrepo/hints_csb"
+HINTS="/etc/slackrepo/hints_%REPO%"
 
 # Where to store log files:
-LOGDIR="/var/log/slackrepo/log_csb"
+LOGDIR="/var/log/slackrepo/log_%REPO%"
 
 # Where to store temporary files (you will need plenty of space):
-TMP="/tmp/csb"
+TMP="/tmp/%REPO%"
 
 #-------------------------------------------------------------------------------
 # Build control variables
@@ -59,7 +59,7 @@ VERBOSE='n'
 VERY_VERBOSE='n'
 TEST='n'
 DRY_RUN='n'
-INSTALL='n'
+INSTALL='y'
 KEEP_TMP='n'
 
 #-------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ REPOSOWNERGPG=""
 
 # Under what URL is the repository accessible:
 # (this is just an example, you will need to setup the http server)
-DL_URL="http://localhost/pkgrepo/csb/%SLACKVER%/%ARCH%"
+DL_URL="http://localhost/pkgrepo/%REPO%/%SLACKVER%/%ARCH%"
 
 # The title of the generated RSS feed:
 RSS_TITLE="Local SlackBuild Packages"

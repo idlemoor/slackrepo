@@ -147,7 +147,8 @@ done
 # Set the repo ID from control arg, or env...
 SR_REPO="${SR_REPO:-$REPO}"
 # ... or just fall back to hardcoded SBo.
-[ -z "${SR_REPO:=$REPO}" ] && SR_REPO="SBo"
+[ -z "${SR_REPO:=$REPO}"  ] && SR_REPO="SBo"
+[ "${SR_REPO}" = '%REPO%' ] && SR_REPO="SBo"
 
 # Set config variables from environment:
 varnames="SBREPO PKGREPO SRCREPO \
@@ -206,7 +207,7 @@ if [ -z "$SR_NUMJOBS" ]; then
   SR_NUMJOBS="-j$(( $(nproc) + 1 ))"
 fi
 # setting ARCH breaks lots of SlackBuilds, which is why we do it ;-)
-if [ -z "$SR_ARCH" ]; then
+if [ -z "$SR_ARCH" -o "$SR_ARCH" = '%ARCH%' ]; then
   case "$( uname -m )" in
     i?86) SR_ARCH=i486 ;;
     arm*) SR_ARCH=arm ;;
@@ -219,10 +220,10 @@ fi
 [ -f /etc/slackware-version ] || { log_error "/etc/slackware-version not found"; exit_cleanup; exit 4; }
 SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
 
-# Substitute %SLACKVER% and %ARCH%
+# Substitute %REPO%, %SLACKVER% and %ARCH%
 for var in $varnames; do
   myvar="SR_$var"
-  eval $myvar=\"$(echo "${!myvar}" | sed -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
+  eval $myvar=\"$(echo "${!myvar}" | sed -e "s/%REPO%/$SR_REPO/g" -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
 done
 
 # Log the config

@@ -15,6 +15,8 @@ function test_slackbuild
 # 0 = all good or warnings only
 # 1 = significant error
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -114,6 +116,8 @@ function test_download
 # $1 = itemid
 # Return status: always 0
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   local -a downlist
   local TMP_HEADER url curlstat
@@ -179,6 +183,8 @@ function test_package
 # 0 = all good or warnings only
 # 1 = significant error
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   shift
   local itemprgnam="${ITEMPRGNAM[$itemid]}"

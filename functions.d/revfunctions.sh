@@ -32,6 +32,8 @@ function print_current_revinfo
 # $1 = itemid
 # Return status always 0
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   local itemprgnam=${ITEMPRGNAM[$itemid]}
   local itemdir=${ITEMDIR[$itemid]}
@@ -93,6 +95,8 @@ function needs_build
 # Also sets these variables when status=0:
 # BUILDINFO = friendly changelog-style message describing the build
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   local itemprgnam=${ITEMPRGNAM[$itemid]}
   local itemdir=${ITEMDIR[$itemid]}

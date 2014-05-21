@@ -16,6 +16,8 @@ function install_packages
 # 0 = installed ok or already installed
 # 1 = install failed or not found
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   local itemdir="${ITEMDIR[$itemid]}"
   local -a pkglist
@@ -78,6 +80,8 @@ function uninstall_packages
 # $1 = itemid
 # Return status: always 0
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   local itemdir="${ITEMDIR[$itemid]}"
   local -a pkglist
@@ -150,6 +154,8 @@ function dotprofilizer
 # $1 = path of package
 # Return status: always 0
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local pkgpath="$1"
   local varlogpkg script
   # examine /var/log/packages/xxxx because it's quicker than looking inside a .t?z

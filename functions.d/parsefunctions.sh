@@ -24,6 +24,8 @@ function parse_items
 # 1 = errors logged
 #
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid
   local searchtype toplevel
   local errstat=0
@@ -137,6 +139,8 @@ function add_item_file
 # $2 = pathname (relative to the repo) of the file to add as an item
 # Returns: always 0
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local searchtype="$1"
   local id="$2"
   local dir=$(dirname "$id")
@@ -170,6 +174,8 @@ function scan_dir
 # $2 = pathname (relative to the repo) of the directory to scan
 # Returns: always 0
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local searchtype="$1"
   local dir="$2"
   local dirbase
@@ -210,6 +216,8 @@ function scan_queuefile
 # $2 = pathname (not necessarily in the repo) of the queuefile to scan
 # Return status: always 0
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local sqfile="$1"
 
   if [ ! -f "$sqfile" ]; then
@@ -242,6 +250,7 @@ function parse_package_name
 # Returns global variables PN_{PRGNAM,VERSION,ARCH,BUILD,TAG,PKGTYPE}
 # Return status: always 0
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
   local pkgnam=$(basename $1)
   PN_PRGNAM=$(echo $pkgnam | rev | cut -f4- -d- | rev)
   PN_VERSION=$(echo $pkgnam | rev | cut -f3 -d- | rev)
@@ -275,6 +284,7 @@ function parse_hints_and_info
 # 0 = normal
 # 1 = skipme hint, or unsupported/untested in .info, or cannot determine VERSION
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
 
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
@@ -419,7 +429,7 @@ function parse_hints_and_info
       SRCDIR[$itemid]="$SR_SRCREPO/$itemdir"
     fi
     if [ -z "${INFODOWNLIST[$itemid]}" ]; then
-      # sneaky slackbuild snarf ;-) 
+      # sneaky slackbuild snarf ;-)
       # The url might contain $PRGNAM and $VERSION, or even SRCNAM :-(
       local PRGNAM SRCNAM
       eval $(grep 'PRGNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")

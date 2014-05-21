@@ -19,6 +19,8 @@ function calculate_deps
 # 0 = ok
 # 1 = any error
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+
   local itemid="$1"
 
   # If $FULLDEPS already has an entry for $itemid, do nothing
@@ -75,6 +77,7 @@ function calculate_deps
   fi
 
   local -a myfulldeps
+
   for dep in "${deplist[@]}"; do
     calculate_deps "$dep" || return 1
     for newdep in ${FULLDEPS[$dep]} "$dep"; do
@@ -107,6 +110,8 @@ function build_with_deps
 # 0 = build ok, or already up-to-date so not built, or dry run
 # 1 = build failed, or sub-build failed => abort parent, or any other error
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -156,6 +161,8 @@ function install_deps
 # 0 = all installs succeeded
 # 1 = any install failed
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   local mydep
   local allinstalled='y'
@@ -184,6 +191,8 @@ function uninstall_deps
 # $1 = itemid
 # Return status always 0
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   local mydep
 

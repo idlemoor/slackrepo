@@ -15,6 +15,8 @@ function do_hint_skipme
 # 0 = skipped
 # 1 = not skipped
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -43,6 +45,8 @@ function do_hint_uidgid
 # 0 = There is a uidgid hint, and an attempt was made to process it
 # 1 = There is no uidgid hint
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
 

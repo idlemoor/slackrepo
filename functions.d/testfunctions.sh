@@ -167,7 +167,7 @@ function test_download
         ;;
       esac
     done
-    [ "$OPT_KEEPTMP" != 'y' ] && rm -f "$TMP_HEADER"
+    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_HEADER"
   fi
 
   return 0
@@ -271,11 +271,11 @@ function test_package
       log_warning -a "${itemid}: ${pkgnam} has uncompressed man pages"
     fi
 
-    [ "$OPT_KEEPTMP" != 'y' ] && rm -f "$TMP_PKGJUNK"
+    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_PKGJUNK"
     # Note! Don't remove TMP_PKGCONTENTS yet, create_metadata will use it.
 
     # Install it to see what happens (but not if --dry-run)
-    if [ "$OPT_DRYRUN" != 'y' ]; then
+    if [ "$OPT_DRY_RUN" != 'y' ]; then
       install_packages "$itemid" || return 1
       uninstall_packages "$itemid"
     fi

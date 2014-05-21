@@ -27,7 +27,7 @@ function install_packages
   # Start with the temp output dir
   pkglist=( $(ls "$SR_TMPOUT"/*.t?z 2>/dev/null) )
   # If nothing there, look in the dryrun repo
-  [ "${#pkglist[@]}" = 0 -a "$OPT_DRYRUN" = 'y' ] &&
+  [ "${#pkglist[@]}" = 0 -a "$OPT_DRY_RUN" = 'y' ] &&
     pkglist=( $(ls "$DRYREPO"/"$itemdir"/*.t?z 2>/dev/null) )
   # Finally, look in the proper package repo
   [ "${#pkglist[@]}" = 0 ] && \
@@ -46,7 +46,7 @@ function install_packages
       for instpkg in /var/log/packages/"$pkgid"-*; do
         if [ "$(basename "$instpkg" | rev | cut -f4- -d- | rev)" = "$pkgid" ]; then
           log_normal -a "A previous instance of $pkgid is already installed; upgrading ..."
-          if [ "$OPT_VERYVERBOSE" = 'y' ]; then
+          if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
             /sbin/upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$ITEMLOG"
             stat=$?
           else
@@ -94,7 +94,7 @@ function uninstall_packages
   # Start with the temp output dir
   pkglist=( $(ls "$SR_TMPOUT"/*.t?z 2>/dev/null) )
   # If nothing there, look in the dryrun repo
-  [ "${#pkglist[@]}" = 0 -a "$OPT_DRYRUN" = 'y' ] &&
+  [ "${#pkglist[@]}" = 0 -a "$OPT_DRY_RUN" = 'y' ] &&
     pkglist=( $(ls "$DRYREPO"/"$itemdir"/*.t?z 2>/dev/null) )
   # Finally, look in the proper package repo
   [ "${#pkglist[@]}" = 0 ] && \

@@ -58,9 +58,9 @@ starttime=$(date +%s)
 #-------------------------------------------------------------------------------
 
 PROCMODE=''
-optnames="VERBOSE QUIET TEST DRYRUN INSTALL KEEPTMP TRACE"
+optnames="QUIET VERBOSE VERY_VERBOSE TEST DRY_RUN INSTALL KEEP_TMP TRACE"
 for opt in $optnames ; do
-  eval OPT_$opt='n'
+  eval OPT_$opt=''
 done
 
 while [ $# != 0 ]; do
@@ -85,33 +85,29 @@ while [ $# != 0 ]; do
     --repo=* )
       SR_REPO=$(echo "$1" | sed 's/^--repo=//')
       shift; continue ;;
-    --quiet | -q )
-      OPT_QUIET='y'; OPT_VERBOSE='n'; OPT_VERYVERBOSE='n'
+    --very-verbose | -vv )
+      OPT_VERY_VERBOSE='y'
       shift; continue ;;
     --verbose | -v )
-      [ "$OPT_VERBOSE" = 'y' ] && OPT_VERYVERBOSE='y'
-      OPT_VERBOSE='y'; OPT_QUIET='n'
+      [ "$OPT_VERBOSE" = 'y' ] && OPT_VERY_VERBOSE='y'
+      OPT_VERBOSE='y'
       shift; continue ;;
-    --very-verbose | -vv )
-      OPT_VERYVERBOSE='y'; OPT_VERBOSE='y'; OPT_QUIET='n'
-      shift; continue ;;
-    --test )
-      OPT_TEST='y'
-      shift; continue ;;
-    --dry-run )
-      OPT_DRYRUN='y'; OPT_INSTALL='n'
-      shift; continue ;;
-    --install )
-      OPT_INSTALL='y'; OPT_DRYRUN='n'
-      shift; continue ;;
-    --keep-tmp )
-      OPT_KEEPTMP='y'
-      shift; continue ;;
-    --trace | --debug )
-      OPT_TRACE='y'
+    --quiet | -q )
+      OPT_QUIET='y'
       shift; continue ;;
     --* )
-      print_usage; exit_cleanup; exit 3 ;;
+      found='n'
+      for opt in $(echo $optnames | sed 's/_/-/g'); do
+        if [ "$1" = "--${opt}" -o "$1" = "--${opt}=yes" -o "$1" = "--${opt}=y" ]; then
+          eval OPT_${opt}='y'
+          found='y'; break
+        elif [ "$1" = "--no-${opt}" -o "$1" = "--${opt}=no" -o "$1" = "--${opt}=n" ]; then
+          eval OPT_${opt}='n'
+          found='y'; break
+        fi
+      done
+      [ "$found" = 'n' ] && echo "$(basename $0): invalid control argument: $1" >&2
+      shift; continue ;;
     * )
       break ;;
   esac
@@ -175,12 +171,31 @@ userconf="~/.slackreporc"
 if [ -f "$userconf" ]; then
   . "$userconf"
 fi
+
 # Backfill the SR_ variables from config and unset the config variables
 for confvar in $varnames ; do
   myvar="SR_$confvar"
   [ -z "${!myvar}" ] && eval $myvar=\"${!confvar}\"
   eval unset $confvar
 done
+# and do something similar for the OPT_ variables
+for confvar in $optnames ; do
+  myvar="OPT_$confvar"
+  [ -z "${!myvar}" ] && eval $myvar=\"${!confvar}\"
+  if [ "${!myvar}" = '0' -o "${!myvar}" = 'no' -o "${!myvar}" = 'NO' -o "${!myvar}" = 'N' -o "${!myvar}" = '' ]; then
+    eval $myvar='n'
+  elif [ "${!myvar}" = '1' -o "${!myvar}" = 'yes' -o "${!myvar}" = 'YES' -o "${!myvar}" = 'Y' ]; then
+    eval $myvar='y'
+  else
+    echo "Error: ${confvar}=${!myvar} is invalid, should be 0/n/no or 1/y/yes"
+  fi
+  eval unset $confvar
+done
+
+# Resolve conflicting options
+[ "$OPT_VERY_VERBOSE" = 'y' ] && OPT_VERBOSE='y'
+[ "$OPT_VERBOSE" = 'y' ] && OPT_QUIET='n'
+[ "$OPT_DRY_RUN" = 'y' ] && OPT_INSTALL='n'
 
 # Do this early so we can log the config:
 mkdir -p "$SR_LOGDIR"
@@ -201,7 +216,7 @@ if [ -z "$SR_ARCH" ]; then
 fi
 
 # Find out the version of Slackware
-# (used by the git stuff below, but we also need this in revfunctions.sh)
+# (used by the git stuff below, but we also need this in revfunctions.sh, and possibly the package repo's pathname)
 [ -f /etc/slackware-version ] || { log_error "/etc/slackware-version not found"; exit_cleanup; exit 4; }
 SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
 
@@ -216,18 +231,18 @@ done
 log_verbose "Configuration:"
 log_verbose "  $PROCMODE"
 log_verbose "  --repo=$SR_REPO"
-if [ "$OPT_VERYVERBOSE" = 'y' ]; then
+if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
   log_verbose "  --very-verbose"
 elif [ "$OPT_VERBOSE" = 'y' ]; then
   log_verbose "  --verbose"
 elif [ "$OPT_QUIET" = 'y' ]; then
   log_verbose "  --quiet"
 fi
-[ "$OPT_DRYRUN" = 'y'  ] && log_verbose "  --dry-run"
-[ "$OPT_INSTALL" = 'y' ] && log_verbose "  --install"
-[ "$OPT_TEST" = 'y'    ] && log_verbose "  --test"
-[ "$OPT_KEEPTMP" = 'y' ] && log_verbose "  --keep-tmp"
-[ "$OPT_TRACE" = 'y'   ] && log_verbose "  --trace"
+[ "$OPT_DRY_RUN" = 'y'  ] && log_verbose "  --dry-run"
+[ "$OPT_INSTALL" = 'y'  ] && log_verbose "  --install"
+[ "$OPT_TEST" = 'y'     ] && log_verbose "  --test"
+[ "$OPT_KEEP_TMP" = 'y' ] && log_verbose "  --keep-tmp"
+[ "$OPT_TRACE" = 'y'    ] && log_verbose "  --trace"
 for var in $varnames; do
   myvar="SR_$var"
   log_verbose "  $var='${!myvar}'"
@@ -244,7 +259,7 @@ declare -a OKLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST
 # Temporary directory:
 SR_TMP=${SR_TMP:-/tmp/SBo}
 # really really don't want the next bit to go badly ;-)
-if [ -n "$SR_TMP" -a -d "$SR_TMP" -a "$OPT_KEEPTMP" != 'y' ]; then
+if [ -n "$SR_TMP" -a -d "$SR_TMP" -a "$OPT_KEEP_TMP" != 'y' ]; then
   log_normal "Removing $SR_TMP/* ..."
   rm -rf "${SR_TMP:-dont-tase-me-bro}"/*
 else
@@ -256,7 +271,7 @@ fi
 TMPDIR=${TMPDIR:-/tmp}
 
 # Disposable package repository for dry run:
-if [ "$OPT_DRYRUN" = 'y' ]; then
+if [ "$OPT_DRY_RUN" = 'y' ]; then
   DRYREPO="$SR_TMP"/sr_DRY.$$
   rm -rf "$DRYREPO"
   mkdir -p "$DRYREPO"
@@ -410,7 +425,7 @@ h=$(( $secs / 3600 )); m=$(( ( $secs / 60) % 60 )); s=$(( $secs % 60 ))
 echo "Time:       ${h}h ${m}m ${s}s"
 echo "Processed:  $(( ${#OKLIST[@]} + ${#SKIPPEDLIST[@]} + ${#FAILEDLIST[@]} + ${#ABORTEDLIST[@]} ))"
 
-if [ "$OPT_DRYRUN" = 'y' ]; then
+if [ "$OPT_DRY_RUN" = 'y' ]; then
   OKLIST=( $(printf '%s\n' "${OKLIST[@]}" | sort -u) )
   okcount="${#OKLIST[@]}"
   echo "Dry run OK: $okcount"
@@ -450,7 +465,7 @@ echo "Warnings:   $warningcount"
 #-------------------------------------------------------------------------------
 
 genrepstat=0
-if [ "$OPT_DRYRUN" != 'y' -a -s "$CHANGELOG" ]; then
+if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
   rcfile=~/.genreprc
   [ -f "$rcfile" ] && { set -e; . "$rcfile"; set +e; }
   if [ "$SR_USE_GENREPOS" = 1 ]; then
@@ -481,8 +496,8 @@ fi
 
 echo ""
 
-[ "$genrepstat" = 0 -a "$OPT_KEEPTMP" != 'y' ] && rm -f "$CHANGELOG"
-[ "$OPT_KEEPTMP" != 'y' ] && rm -rf "$DRYREPO"
+[ "$genrepstat" = 0 -a "$OPT_KEEP_TMP" != 'y' ] && rm -f "$CHANGELOG"
+[ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$DRYREPO"
 exit_cleanup
 
 exit 0

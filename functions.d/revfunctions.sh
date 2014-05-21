@@ -71,7 +71,7 @@ function print_current_revinfo
   for dep in ${DIRECTDEPS[$itemid]}; do
     if [ -n "${REVCACHE[$dep]}" ]; then
       deprev="${REVCACHE[$dep]}"
-    elif [ "$OPT_DRYRUN" = 'y' -a -f $DRYREPO/$dep/.revision ]; then
+    elif [ "$OPT_DRY_RUN" = 'y' -a -f $DRYREPO/$dep/.revision ]; then
       deprev=$(head -q -n 1 $DRYREPO/$dep/.revision)
       REVCACHE[$dep]="$deprev"
     else
@@ -104,10 +104,10 @@ function needs_build
   local prgnam version built revision depends slackware hints
 
   # Tweak BUILDINFO for control args
-  [ "$OPT_DRYRUN" = 'y' ] && TWEAKINFO=' --dry-run'
+  [ "$OPT_DRY_RUN" = 'y' ] && TWEAKINFO=' --dry-run'
   [ "$OPT_INSTALL" = 'y' ] && TWEAKINFO=' --install'
 
-  if [ "$OPT_DRYRUN" = 'y' ]; then
+  if [ "$OPT_DRY_RUN" = 'y' ]; then
     pkglist=( $(ls "$DRYREPO"/"$itemdir"/*.t?z 2>/dev/null) )
     [ "${#pkglist[@]}" = 0 ] && \
       pkglist=( $(ls "$SR_PKGREPO"/"$itemdir"/*.t?z 2>/dev/null) )

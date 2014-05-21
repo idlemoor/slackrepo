@@ -34,7 +34,7 @@ function build_item
   local -a pkglist
 
   SR_TMPIN="$SR_TMP/sr_IN.$$"
-  # initial wipe of $SR_TMPIN, even if $OPT_KEEPTMP is set
+  # initial wipe of $SR_TMPIN, even if $OPT_KEEP_TMP is set
   rm -rf "$SR_TMPIN"
   cp -a "$SR_SBREPO/$itemdir" "$SR_TMPIN"
 
@@ -128,7 +128,7 @@ function build_item
 
   # Build it
   SR_TMPOUT="$SR_TMP/sr_OUT.$$"
-  # initial wipe of $SR_TMPOUT, even if $OPT_KEEPTMP is set
+  # initial wipe of $SR_TMPOUT, even if $OPT_KEEP_TMP is set
   rm -rf "$SR_TMPOUT"
   mkdir -p "$SR_TMPOUT"
   export \
@@ -141,7 +141,7 @@ function build_item
     NUMJOBS="$USE_NUMJOBS"
   log_normal -a "Running $itemfile ..."
   log_verbose -a "$SLACKBUILDCMD"
-  if [ "$OPT_VERYVERBOSE" = 'y' ]; then
+  if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
     echo ''
     echo '---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---'
     ( cd "$SR_TMPIN"; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
@@ -214,9 +214,9 @@ function build_ok
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
-  [ "$OPT_KEEPTMP" != 'y' ] && rm -rf "$SR_TMPIN"
+  [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$SR_TMPIN"
 
-  if [ "$OPT_DRYRUN" = 'y' ]; then
+  if [ "$OPT_DRY_RUN" = 'y' ]; then
     # put the packages into the special dryrun repo
     mkdir -p "$DRYREPO"/"$itemdir"
     rm -rf "$DRYREPO"/"$itemdir"/*
@@ -227,7 +227,7 @@ function build_ok
     rm -rf "$SR_PKGREPO"/"$itemdir"/*
     mv "$SR_TMPOUT"/* "$SR_PKGREPO"/"$itemdir"/
   fi
-  # SR_TMPOUT is empty now, so remove it even if OPT_KEEPTMP is set
+  # SR_TMPOUT is empty now, so remove it even if OPT_KEEP_TMP is set
   rm -rf "$SR_TMPOUT"
 
   uninstall_deps "$itemid"
@@ -235,11 +235,11 @@ function build_ok
   create_pkg_metadata "$itemid"
 
   # This won't always kill everything, but it's good enough for saving space
-  [ "$OPT_KEEPTMP" != 'y' ] && rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
+  [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
 
   buildtype=$(echo $BUILDINFO | cut -f1 -d" ")
   msg="$buildtype OK"
-  [ "$OPT_DRYRUN" = 'y'  ] && msg="$buildtype --dry-run OK"
+  [ "$OPT_DRY_RUN" = 'y'  ] && msg="$buildtype --dry-run OK"
   [ "$OPT_INSTALL" = 'y' ] && msg="$buildtype --install OK"
   log_success ":-) $itemid $msg (-:"
   OKLIST+=( "$itemid" )
@@ -261,7 +261,7 @@ function build_failed
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
-  if [ "$OPT_KEEPTMP" != 'y' ]; then
+  if [ "$OPT_KEEP_TMP" != 'y' ]; then
     rm -rf "$SR_TMPIN" "$SR_TMPOUT"
     rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
   fi
@@ -295,12 +295,12 @@ function create_pkg_metadata
   local -a pkglist
 
   MYREPO="$SR_PKGREPO"
-  [ "$OPT_DRYRUN" = 'y' ] && MYREPO="$DRYREPO"
+  [ "$OPT_DRY_RUN" = 'y' ] && MYREPO="$DRYREPO"
 
   #-----------------------------#
   # changelog entry: needlessly elaborate :-)
   #-----------------------------#
-  if [ "$OPT_DRYRUN" != 'y' ]; then
+  if [ "$OPT_DRY_RUN" != 'y' ]; then
     OPERATION="$(echo $BUILDINFO | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/')"
     extrastuff=''
     case "$BUILDINFO" in
@@ -417,7 +417,7 @@ EOF
     cat "$dottxt" >> "$dotmeta"
     echo "" >> "$dotmeta"
 
-    [ "$OPT_KEEPTMP" != 'y' ] && rm -f "$TMP_PKGCONTENTS"
+    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_PKGCONTENTS"
 
   done
   return 0
@@ -442,7 +442,7 @@ function remove_item
     do_hint_skipme "$itemid" && return 1
   fi
 
-  if [ "$OPT_DRYRUN" = 'y' ]; then
+  if [ "$OPT_DRY_RUN" = 'y' ]; then
     log_important "$itemid would be removed (--dry-run)"
     #### log a list of packages
   else

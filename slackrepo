@@ -32,8 +32,8 @@ function print_usage
   echo "  $(basename $0) update  [--control_args] [item...]"
   echo "  $(basename $0) remove  [--control_args] item..."
   echo 'Control args:'
-  echo '  --verbose | --quiet'
   echo '  --repo=ID'
+  echo '  --quiet | --verbose | --very-verbose'
   echo '  --test'
   echo '  --dry-run | --install'
   echo '  --keep-tmp'
@@ -85,15 +85,15 @@ while [ $# != 0 ]; do
     --repo=* )
       SR_REPO=$(echo "$1" | sed 's/^--repo=//')
       shift; continue ;;
-    --very-verbose | -vv )
-      OPT_VERY_VERBOSE='y'
+    --quiet | -q )
+      OPT_QUIET='y'
       shift; continue ;;
     --verbose | -v )
       [ "$OPT_VERBOSE" = 'y' ] && OPT_VERY_VERBOSE='y'
       OPT_VERBOSE='y'
       shift; continue ;;
-    --quiet | -q )
-      OPT_QUIET='y'
+    --very-verbose | -vv )
+      OPT_VERY_VERBOSE='y'
       shift; continue ;;
     --* )
       found='n'

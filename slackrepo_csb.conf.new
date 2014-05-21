@@ -3,9 +3,10 @@
 # The priority order for configuration is:
 # (1) Environment variables when slackrepo is called
 # (2) ~/.genreprc   [for gen_repos_files.sh only]
-# (3) /etc/slackrepo/repo_csb.conf
+# (3) ~/.slackreporc
+# (4) /etc/slackrepo/repo_csb.conf
 #
-# %SLACKVER% and %ARCH% will be replaced by the Slackware version and the arch,
+# %SLACKVER% and %ARCH% will be replaced by the Slackware version and the arch
 
 #-------------------------------------------------------------------------------
 # Filestore locations
@@ -51,9 +52,15 @@ PKGTYPE='tgz'
 #-------------------------------------------------------------------------------
 # Advanced and experimental features
 
-# Whether to install built packages.
-# If this is set to '1', the built packages will NOT be clean.
-INSTALL='1'
+# Defaults for control arguments
+# (the command line will override values set here)
+QUIET='n'
+VERBOSE='n'
+VERY_VERBOSE='n'
+TEST='n'
+DRY_RUN='n'
+INSTALL='n'
+KEEP_TMP='n'
 
 #-------------------------------------------------------------------------------
 # Variables for calling gen_repos_files.sh

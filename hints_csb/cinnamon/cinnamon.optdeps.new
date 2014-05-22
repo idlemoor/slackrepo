@@ -1,0 +1,13 @@
+cinnamon-desktop
+cjs
+clutter
+cogl
+gnome-menus
+json-c
+json-glib
+lxml
+muffin
+pexpect
+pulseaudio
+pygobject3
+python-pam

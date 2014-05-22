@@ -97,11 +97,12 @@ while [ $# != 0 ]; do
       shift; continue ;;
     --* )
       found='n'
-      for opt in $(echo $optnames | sed 's/_/-/g'); do
-        if [ "$1" = "--${opt}" -o "$1" = "--${opt}=yes" -o "$1" = "--${opt}=y" ]; then
+      for opt in $optnames; do
+        arg=$(echo $opt | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+        if [ "$1" = "--${arg}" -o "$1" = "--${arg}=yes" -o "$1" = "--${arg}=y" ]; then
           eval OPT_${opt}='y'
           found='y'; break
-        elif [ "$1" = "--no-${opt}" -o "$1" = "--${opt}=no" -o "$1" = "--${opt}=n" ]; then
+        elif [ "$1" = "--no-${arg}" -o "$1" = "--${arg}=no" -o "$1" = "--${arg}=n" ]; then
           eval OPT_${opt}='n'
           found='y'; break
         fi

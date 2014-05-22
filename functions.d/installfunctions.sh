@@ -16,7 +16,7 @@ function install_packages
 # 0 = installed ok or already installed
 # 1 = install failed or not found
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
 
   local itemid="$1"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -80,7 +80,7 @@ function uninstall_packages
 # $1 = itemid
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
 
   local itemid="$1"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -154,7 +154,7 @@ function dotprofilizer
 # $1 = path of package
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
 
   local pkgpath="$1"
   local varlogpkg script

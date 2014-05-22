@@ -20,7 +20,7 @@ function verify_src
 # 5 - .info says item is unsupported/untested on this arch
 # 6 - not in source cache and there is a nodownload hint
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
 
   local itemid="$1"
   local -a srcfilelist
@@ -87,7 +87,7 @@ function download_src
 # Return status:
 # 1 - curl failed
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
 
   if [ -n "$DOWNDIR" ]; then
     mkdir -p "$DOWNDIR"
@@ -129,7 +129,7 @@ function print_curl_status
 # $1 = curl status code
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n>>>> $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
   case $1 in
   1)   echo "Unsupported protocol" ;;
   2)   echo "Failed to initialize" ;;

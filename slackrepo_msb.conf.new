@@ -1,10 +1,10 @@
-# This is the slackrepo configuration file for the mate repository.
+# This is the slackrepo configuration file for the msb repository.
 #
 # The priority order for configuration is:
 # (1) Environment variables when slackrepo is called
 # (2) ~/.genreprc   [for gen_repos_files.sh only]
 # (3) ~/.slackreporc
-# (4) /etc/slackrepo/repo_mate.conf
+# (4) /etc/slackrepo/repo_msb.conf
 #
 # %REPO%, %SLACKVER% and %ARCH% will be replaced by the repo ID, Slackware version and arch
 
@@ -42,8 +42,8 @@ NUMJOBS=''
 ARCH=''
 
 # Tag for built packages.
-# If you are publishing these packages, *please* change mate to something else
-TAG='_mate'
+# If you are publishing these packages, *please* change msb to something else
+TAG='_msb'
 
 # Package compression type.
 # Valid values are: tgz, txz, tbz, tlz

@@ -70,8 +70,12 @@ function build_item
        return 5
        ;;
     6) # nodownload hint (probably needs manual download due to licence agreement)
-       log_warning -n "SKIPPED $itemid - the source needs manual download"
-       cat "$HINT_nodownload"
+       log_warning -n "SKIPPED $itemid - please download the source"
+       echo "  from: ${INFODOWNLIST[$itemid]}"
+       echo "  to:   ${SRCDIR[$itemid]}"
+       # We ought to prepare that directory ;-)
+       mkdir -p "${SRCDIR[$itemid]}"
+       cat "${HINT_nodownload[$itemid]}"
        SKIPPEDLIST+=( "$itemid" )
        return 5
        ;;

@@ -271,7 +271,7 @@ declare -A SRCDIR GITREV GITDIRTY
 # and to store hints:
 declare -A \
   HINT_skipme HINT_md5ignore HINT_makej1 HINT_install \
-  HINT_cleanup HINT_uidgid HINT_answers \
+  HINT_cleanup HINT_uidgid HINT_answers HINT_nodownload \
   HINT_options HINT_optdeps HINT_readmedeps HINT_version \
   HINT_SUMMARY
 

@@ -43,21 +43,22 @@ function verify_src
   # More complex checks:
   ( cd "$DOWNDIR"
     # if wrong version, return 6 (nodownload hint) or 4 (version mismatch)
-    if [ "$VERSION" != "$(cat .version 2>/dev/null)" ]; then
-      log_verbose -a "Removing old source files"
-      find . -maxdepth 1 -type f -exec rm -f {} \;
-      [ -n "${HINT_nodownload[$itemid]}" ] && return 6
-      return 4
+    if [ -f .version ]; then
+      if [ "$VERSION" != "$(cat .version)" ]; then
+        log_verbose -a "Removing old source files"
+        find . -maxdepth 1 -type f -exec rm -f {} \;
+        [ -n "${HINT_nodownload[$itemid]}" ] && return 6
+        return 4
+      fi
     fi
-    log_normal -a "Verifying source files ..."
     # check files in this dir only (arch-specific subdirectories may exist, ignore them)
     IFS=$'\n'; srcfilelist=( $(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$' | sed 's:^\./::') ); unset IFS
     numgot=${#srcfilelist[@]}
-    numwant=$(echo $DOWNLIST | wc -w)
     # no files, empty directory => return 3 (same as no directory) or 6
     [ $numgot = 0 -a -n "${HINT_nodownload[$itemid]}" ] && return 6
     [ $numgot = 0 ] && return 3
     # or if we have not got the right number of sources, return 2 (or 6)
+    numwant=$(echo $DOWNLIST | wc -w)
     if [ $numgot != $numwant ]; then
       log_verbose -a "Note: need $numwant source files, but have $numgot"
       [ -n "${HINT_nodownload[$itemid]}" ] && return 6
@@ -66,6 +67,7 @@ function verify_src
     # if we're ignoring the md5sums, we've finished! => return 0
     [ "${HINT_md5ignore[$itemid]}" = 'y' ] && return 0
     # run the md5 check on all the files (don't give up at the first error)
+    log_normal -a "Verifying source files ..."
     allok='y'
     for f in "${srcfilelist[@]}"; do
       mf=$(md5sum "$f" | sed 's/ .*//')

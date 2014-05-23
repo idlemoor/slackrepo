@@ -164,13 +164,9 @@ function needs_build
     return 0
   fi
 
-  # has a hint changed => update
-  currhnt=''
-  if [ -d "$SR_HINTS"/"$itemdir" ]; then
-    currhnt="$(cd "$SR_HINTS"/"$itemdir"; md5sum "$itemprgnam".* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
-  fi
-  if [ "$pkghnt" != "$currhnt" ]; then
-    BUILDINFO="update for changed hints$TWEAKINFO"
+  # if this is the top-level item and we're in rebuild mode => rebuild
+  if [ "$itemid" = "$ITEMID" -a "$PROCMODE" = 'rebuild' ]; then
+    BUILDINFO="rebuild$TWEAKINFO"
     return 0
   fi
 
@@ -207,9 +203,13 @@ function needs_build
     return 0
   fi
 
-  # if this is the top-level item and we're in rebuild mode => rebuild
-  if [ "$itemid" = "$ITEMID" -a "$PROCMODE" = 'rebuild' ]; then
-    BUILDINFO="rebuild$TWEAKINFO"
+  # has a hint changed => rebuild
+  currhnt=''
+  if [ -d "$SR_HINTS"/"$itemdir" ]; then
+    currhnt="$(cd "$SR_HINTS"/"$itemdir"; md5sum "$itemprgnam".* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
+  fi
+  if [ "$pkghnt" != "$currhnt" ]; then
+    BUILDINFO="rebuild for changed hints$TWEAKINFO"
     return 0
   fi
 

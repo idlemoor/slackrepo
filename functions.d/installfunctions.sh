@@ -25,7 +25,7 @@ function install_packages
 
   # Look for the package(s).
   # Start with the temp output dir
-  pkglist=( $(ls "$SR_TMPOUT"/*.t?z 2>/dev/null) )
+  pkglist=( $(ls "$MYTMPOUT"/*.t?z 2>/dev/null) )
   # If nothing there, look in the dryrun repo
   [ "${#pkglist[@]}" = 0 -a "$OPT_DRY_RUN" = 'y' ] &&
     pkglist=( $(ls "$DRYREPO"/"$itemdir"/*.t?z 2>/dev/null) )
@@ -92,7 +92,7 @@ function uninstall_packages
 
   # Look for the package(s).
   # Start with the temp output dir
-  pkglist=( $(ls "$SR_TMPOUT"/*.t?z 2>/dev/null) )
+  pkglist=( $(ls "$MYTMPOUT"/*.t?z 2>/dev/null) )
   # If nothing there, look in the dryrun repo
   [ "${#pkglist[@]}" = 0 -a "$OPT_DRY_RUN" = 'y' ] &&
     pkglist=( $(ls "$DRYREPO"/"$itemdir"/*.t?z 2>/dev/null) )

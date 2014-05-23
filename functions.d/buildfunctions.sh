@@ -13,7 +13,7 @@
 function build_item
 # Build the package(s) for an item
 # $1 = itemid
-# The built package goes into $SR_TMPOUT, but function build_ok then stores it elsewhere
+# The built package goes into $MYTMPOUT, but function build_ok then stores it elsewhere
 # Return status:
 # 0 = total success, world peace and happiness
 # 1 = build failed
@@ -21,7 +21,7 @@ function build_item
 # 3 = checksum failed
 # 4 = [not used]
 # 5 = skipped (skipme or nodownload hint, or unsupported on this arch)
-# 6 = SlackBuild returned 0 status, but nothing in $SR_TMPOUT
+# 6 = SlackBuild returned 0 status, but nothing in $MYTMPOUT
 # 7 = excessively dramatic qa test fail
 # 8 = package install fail
 {
@@ -33,10 +33,10 @@ function build_item
   local itemfile="${ITEMFILE[$itemid]}"
   local -a pkglist
 
-  SR_TMPIN="$SR_TMP/sr_IN.$$"
-  # initial wipe of $SR_TMPIN, even if $OPT_KEEP_TMP is set
-  rm -rf "$SR_TMPIN"
-  cp -a "$SR_SBREPO/$itemdir" "$SR_TMPIN"
+  MYTMPIN="$MYTMPDIR/slackbuild_$itemprgnam"
+  # initial wipe of $MYTMPIN, even if $OPT_KEEP_TMP is set
+  rm -rf "$MYTMPIN"
+  cp -a "$SR_SBREPO/$itemdir" "$MYTMPIN"
 
   if [ "$OPT_TEST" = 'y' ]; then
     test_slackbuild "$itemid" || return 7
@@ -47,7 +47,7 @@ function build_item
   if [ -n "$NEWVERSION" -a "${INFOVERSION[$itemid]}" != "$NEWVERSION" ]; then
     # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
     log_verbose "Note: $itemid: setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]}) and ignoring md5sums"
-    sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$SR_TMPIN/$itemfile"
+    sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$MYTMPIN/$itemfile"
     verpat="$(echo ${INFOVERSION[$itemid]} | sed 's/\./\\\./g')"
     INFODOWNLIST[$itemid]="$(echo "${INFODOWNLIST[$itemid]}" | sed "s/$verpat/$NEWVERSION/g")"
     HINT_md5ignore[$itemid]='y'
@@ -83,7 +83,7 @@ function build_item
 
   # Symlink the source (if any) into the temporary SlackBuild directory
   if [ -n "${INFODOWNLIST[$itemid]}" ]; then
-    ln -sf -t "$SR_TMPIN/" "${SRCDIR[$itemid]}"/*
+    ln -sf -t "$MYTMPIN/" "${SRCDIR[$itemid]}"/*
   fi
 
   # Get all dependencies installed
@@ -96,7 +96,7 @@ function build_item
   # Work out BUILD
   # Get the value from the SlackBuild
   unset BUILD
-  buildassign=$(grep '^BUILD=' "$SR_TMPIN"/"$itemfile")
+  buildassign=$(grep '^BUILD=' "$MYTMPIN"/"$itemfile")
   if [ -z "$buildassign" ]; then
     buildassign="BUILD=1"
     log_warning -a "${itemid}: no \"BUILD=\" in $itemfile; using 1"
@@ -137,16 +137,16 @@ function build_item
   [ -n "${HINT_answers[$itemid]}" ] && SLACKBUILDCMD="cat ${HINT_answers[$itemid]} | $SLACKBUILDCMD"
 
   # Build it
-  SR_TMPOUT="$SR_TMP/sr_OUT.$$"
-  # initial wipe of $SR_TMPOUT, even if $OPT_KEEP_TMP is set
-  rm -rf "$SR_TMPOUT"
-  mkdir -p "$SR_TMPOUT"
+  MYTMPOUT="$MYTMPDIR/packages_$itemprgnam"
+  # initial wipe of $MYTMPOUT, even if $OPT_KEEP_TMP is set
+  rm -rf "$MYTMPOUT"
+  mkdir -p "$MYTMPOUT"
   export \
     ARCH="$SR_ARCH" \
     BUILD="$SR_BUILD" \
     TAG="$SR_TAG" \
     TMP="$SR_TMP" \
-    OUTPUT="$SR_TMPOUT" \
+    OUTPUT="$MYTMPOUT" \
     PKGTYPE="$SR_PKGTYPE" \
     NUMJOBS="$USE_NUMJOBS"
   log_normal -a "Running $itemfile ..."
@@ -154,11 +154,11 @@ function build_item
   if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
     echo ''
     echo '---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---'
-    ( cd "$SR_TMPIN"; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
+    ( cd "$MYTMPIN"; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
     echo '----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<---'
     echo ''
   else
-    ( cd "$SR_TMPIN"; eval $SLACKBUILDCMD ) >> "$ITEMLOG" 2>&1
+    ( cd "$MYTMPIN"; eval $SLACKBUILDCMD ) >> "$ITEMLOG" 2>&1
   fi
   stat=$?
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
@@ -169,29 +169,29 @@ function build_item
   fi
 
   # Make sure we got *something* :-)
-  pkglist=( $(ls "$SR_TMPOUT"/*.t?z 2>/dev/null) )
+  pkglist=( $(ls "$MYTMPOUT"/*.t?z 2>/dev/null) )
   if [ "${#pkglist[@]}" = 0 ]; then
     # let's get sneaky and snarf it/them from where makepkg said it/them was/were going ;-)
     logpkgs=$(grep "Slackware package .* created." "$ITEMLOG" | cut -f3 -d" ")
     if [ -n "$logpkgs" ]; then
       for pkgpath in $logpkgs; do
-        if [ -f "$SR_TMPIN/README" -a -f "$SR_TMPIN"/$(basename "$itemfile" .SlackBuild).info ]; then
+        if [ -f "$MYTMPIN/README" -a -f "$MYTMPIN"/$(basename "$itemfile" .SlackBuild).info ]; then
           # it's probably an SBo SlackBuild, so complain and don't retag
           log_warning -a "${itemid}: Package should have been in \$OUTPUT: $pkgpath"
-          mv "$pkgpath" "$SR_TMPOUT"
+          mv "$pkgpath" "$MYTMPOUT"
         else
           pkgnam=$(basename "$pkgpath")
           currtag=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
           if [ "$currtag" != "$SR_TAG" ]; then
             # retag it
             pkgtype=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
-            mv "$pkgpath" "$SR_TMPOUT"/$(echo "$pkgnam" | sed 's/'"$currtag"'\.'"$pkgtype"'$/'$SR_TAG'.'"$pkgtype"'/')
+            mv "$pkgpath" "$MYTMPOUT"/$(echo "$pkgnam" | sed 's/'"$currtag"'\.'"$pkgtype"'$/'$SR_TAG'.'"$pkgtype"'/')
           else
-            mv "$pkgpath" "$SR_TMPOUT"/
+            mv "$pkgpath" "$MYTMPOUT"/
           fi
         fi
       done
-      pkglist=( $(ls "$SR_TMPOUT"/*.t?z 2>/dev/null) )
+      pkglist=( $(ls "$MYTMPOUT"/*.t?z 2>/dev/null) )
     else
       log_error -a "${itemid}: No packages were created"
       build_failed "$itemid"
@@ -224,21 +224,21 @@ function build_ok
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
-  [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$SR_TMPIN"
+  [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$MYTMPIN"
 
   if [ "$OPT_DRY_RUN" = 'y' ]; then
     # put the packages into the special dryrun repo
     mkdir -p "$DRYREPO"/"$itemdir"
     rm -rf "$DRYREPO"/"$itemdir"/*
-    mv "$SR_TMPOUT"/* "$DRYREPO"/"$itemdir"/
+    mv "$MYTMPOUT"/* "$DRYREPO"/"$itemdir"/
   else
     # put them into the real package repo
     mkdir -p "$SR_PKGREPO"/"$itemdir"
     rm -rf "$SR_PKGREPO"/"$itemdir"/*
-    mv "$SR_TMPOUT"/* "$SR_PKGREPO"/"$itemdir"/
+    mv "$MYTMPOUT"/* "$SR_PKGREPO"/"$itemdir"/
   fi
-  # SR_TMPOUT is empty now, so remove it even if OPT_KEEP_TMP is set
-  rm -rf "$SR_TMPOUT"
+  # MYTMPOUT is empty now, so remove it even if OPT_KEEP_TMP is set
+  rm -rf "$MYTMPOUT"
 
   uninstall_deps "$itemid"
 
@@ -272,7 +272,7 @@ function build_failed
   local itemfile="${ITEMFILE[$itemid]}"
 
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
-    rm -rf "$SR_TMPIN" "$SR_TMPOUT"
+    rm -rf "$MYTMPIN" "$MYTMPOUT"
     rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
   fi
 

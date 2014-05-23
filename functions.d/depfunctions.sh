@@ -48,7 +48,7 @@ function calculate_deps
         unset BLAME
         deplist+=( "${ITEMLIST[@]}" )
       else
-        log_warning "${itemid}: Unhandled %README% in $itemprgnam.info - please create $SR_HINTS/$itemdir/$itemprgnam.readmedeps"
+        log_warning "${itemid}: Unhandled %README% in $itemprgnam.info - please create $SR_HINTDIR/$itemdir/$itemprgnam.readmedeps"
       fi
     else
       BLAME="$itemprgnam.info"

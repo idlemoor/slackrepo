@@ -156,7 +156,7 @@ done
 # All config vars are prefixed with SR_ to stop SlackBuilds picking them up.
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO PKGREPO SRCREPO \
-          HINTS LOGDIR TMP \
+          HINTDIR LOGDIR TMP \
           ARCH TAG PKGTYPE NUMJOBS USE_GENREPOS"
 initnames="INIT_GITCLONE INIT_GITBRANCH"
 
@@ -296,7 +296,7 @@ fi
 [ -d "$SR_SRCREPO" ] || { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO" ; }
 [ -d "$SR_PKGREPO" ] || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO" ; }
 [ -d "$SR_LOGDIR" ]  || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"  ; }
-[ -d "$SR_HINTS" ]   || { log_normal "Creating hints directory: $SR_HINTS"        ; mkdir -p "$SR_HINTS"   ; }
+[ -d "$SR_HINTDIR" ] || { log_normal "Creating hints directory: $SR_HINTDIR"      ; mkdir -p "$SR_HINTDIR"   ; }
 
 # Changelog:
 CHANGELOG="$SR_PKGREPO"/.changelog
@@ -359,7 +359,7 @@ if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' ]; then
     for pkg in $installed; do
       # don't moan if it has an install hint
       pkgnam=$(basename $pkg | rev | cut -f4- -d- | rev)
-      if [ -z "$(find $SR_HINTS -name $pkgnam.install)" ]; then
+      if [ -z "$(find $SR_HINTDIR -name $pkgnam.install)" ]; then
         log_warning "$(basename $pkg): package is already installed"
       fi
     done

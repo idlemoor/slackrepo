@@ -60,8 +60,8 @@ function print_current_revinfo
   [ -n "$directdeps" ] && depstuff="depends=${directdeps};"
 
   hintstuff=''
-  if [ -d "$SR_HINTS"/"$itemdir" ]; then
-    hintmd5sums="$(cd "$SR_HINTS"/"$itemdir"; md5sum "$itemprgnam".* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
+  if [ -d "$SR_HINTDIR"/"$itemdir" ]; then
+    hintmd5sums="$(cd "$SR_HINTDIR"/"$itemdir"; md5sum "$itemprgnam".* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
     [ -n "$hintmd5sums" ] && hintstuff="hints=${hintmd5sums};"
   fi
 
@@ -205,8 +205,8 @@ function needs_build
 
   # has a hint changed => rebuild
   currhnt=''
-  if [ -d "$SR_HINTS"/"$itemdir" ]; then
-    currhnt="$(cd "$SR_HINTS"/"$itemdir"; md5sum "$itemprgnam".* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
+  if [ -d "$SR_HINTDIR"/"$itemdir" ]; then
+    currhnt="$(cd "$SR_HINTDIR"/"$itemdir"; md5sum "$itemprgnam".* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
   fi
   if [ "$pkghnt" != "$currhnt" ]; then
     BUILDINFO="rebuild for changed hints$TWEAKINFO"

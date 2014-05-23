@@ -21,7 +21,7 @@ SRCREPO="/var/lib/slackrepo/src_%REPO%"
 PKGREPO="/var/lib/slackrepo/pkg_%REPO%/%SLACKVER%/%ARCH%"
 
 # Where to find hints for this repo:
-HINTS="/etc/slackrepo/hints_%REPO%"
+HINTDIR="/etc/slackrepo/hints_%REPO%"
 
 # Where to store log files:
 LOGDIR="/var/log/slackrepo/log_%REPO%"

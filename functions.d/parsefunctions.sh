@@ -304,7 +304,7 @@ function parse_hints_and_info
     # HINT_xxx contains 'y' or '' ;-)
     # Query them like this: '[ "${HINT_xxx[$itemid]}" = 'y' ]'
     for hint in $FLAGHINTS; do
-      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
+      if [ -f "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint" ]; then
         eval HINT_$hint[$itemid]='y'
         hintlist+=( "$hint" )
       else
@@ -317,8 +317,8 @@ function parse_hints_and_info
     # HINT_xxx contains the filename, or ''.
     # Query them like this: '[ -n "${HINT_xxx[$itemid]}" ]'
     for hint in $FILEHINTS; do
-      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
-        eval HINT_$hint[$itemid]="$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint"
+      if [ -f "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint" ]; then
+        eval HINT_$hint[$itemid]="$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint"
         hintlist+=( "$hint" )
       else
         eval HINT_$hint[$itemid]=''
@@ -330,8 +330,8 @@ function parse_hints_and_info
     # HINT_xxx contains the contents of the file, or ''.
     # Query them like this: '[ -n "${HINT_xxx[$itemid]}" ]'
     for hint in $VARHINTS; do
-      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
-        eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint")\"
+      if [ -f "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint" ]; then
+        eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint")\"
         eval hintlist+=( "$hint=\${HINT_$hint[$itemid]}" )
       else
         eval HINT_$hint[$itemid]=''
@@ -344,8 +344,8 @@ function parse_hints_and_info
     # or '%NONE%' => the file doesn't exist, or '' => the file exists and is empty.
     # Query them like this: '[ "${HINT_xxx[$itemid]}" != '%NONE%' ]'
     for hint in $DEPHINTS; do
-      if [ -f "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint" ]; then
-        eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTS"/"$itemdir"/"$itemprgnam"."$hint")\"
+      if [ -f "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint" ]; then
+        eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint")\"
         eval hintlist+=( "$hint=\"\${HINT_$hint[$itemid]}\"" )
       else
         eval HINT_$hint[$itemid]='%NONE%'

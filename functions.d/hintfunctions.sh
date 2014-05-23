@@ -22,7 +22,7 @@ function do_hint_skipme
   local itemdir="${ITEMDIR[$itemid]}"
 
   # called before parse_hints runs, so check the file directly:
-  SKIPFILE="$SR_HINTS"/"$itemdir"/"$itemprgnam".skipme
+  SKIPFILE="$SR_HINTDIR"/"$itemdir"/"$itemprgnam".skipme
   if [ ! -f "$SKIPFILE" ]; then
     return 1
   fi

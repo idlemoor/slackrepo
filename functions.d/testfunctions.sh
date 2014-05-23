@@ -125,7 +125,7 @@ function test_download
   downlist=( ${INFODOWNLIST[$itemid]} )
   if [ "${#downlist[@]}" != 0 ]; then
     log_normal -a "Testing download URLs ..."
-    TMP_HEADER="$TMPDIR"/sr_header.$$.tmp
+    TMP_HEADER="$MYTMPDIR"/curlheader
     for url in "${downlist[@]}"; do
       > "$TMP_HEADER"
       case "$url" in
@@ -189,53 +189,53 @@ function test_package
   shift
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local -a baddirlist
-  local pkgpath pkgnam filetype baddirlist baddir
+  local pkgpath pkgbasename filetype baddirlist baddir
 
   while [ $# != 0 ]; do
     pkgpath="$1"
-    pkgnam=$(basename "$pkgpath")
+    pkgbasename=$(basename "$pkgpath")
     shift
-    log_normal -a "Testing $pkgnam..."
+    log_normal -a "Testing $pkgbasename..."
 
     # check the package name
-    parse_package_name $pkgnam
+    parse_package_name $pkgbasename
     [ "$PN_PRGNAM" != "$itemprgnam" ] && \
-      log_warning -a "${itemid}: ${pkgnam}: PRGNAM is \"$PN_PRGNAM\" (expected \"$itemprgnam\")"
+      log_warning -a "${itemid}: ${pkgbasename}: PRGNAM is \"$PN_PRGNAM\" (expected \"$itemprgnam\")"
     [ "$PN_VERSION" != "${INFOVERSION[$itemid]}" -a \
       "$PN_VERSION" != "${INFOVERSION[$itemid]}_$(uname -r | tr - _)" ] && \
-      log_warning -a "${itemid}: ${pkgnam}: VERSION is \"$PN_VERSION\" (expected \"${INFOVERSION[$itemid]}\")"
+      log_warning -a "${itemid}: ${pkgbasename}: VERSION is \"$PN_VERSION\" (expected \"${INFOVERSION[$itemid]}\")"
     [ "$PN_ARCH" != "$SR_ARCH" -a \
       "$PN_ARCH" != "noarch" -a \
       "$PN_ARCH" != "fw" ] && \
-      log_warning -a "${itemid}: ${pkgnam}: ARCH is $PN_ARCH (expected $SR_ARCH)"
+      log_warning -a "${itemid}: ${pkgbasename}: ARCH is $PN_ARCH (expected $SR_ARCH)"
     [ "$PN_BUILD" != "$SR_BUILD" ] && \
-      log_warning -a "${itemid}: ${pkgnam}: BUILD is $PN_BUILD (expected $SR_BUILD)"
+      log_warning -a "${itemid}: ${pkgbasename}: BUILD is $PN_BUILD (expected $SR_BUILD)"
     [ "$PN_TAG" != "$SR_TAG" ] && \
-      log_warning -a "${itemid}: ${pkgnam}: TAG is \"$PN_TAG\" (expected \"$SR_TAG\")"
+      log_warning -a "${itemid}: ${pkgbasename}: TAG is \"$PN_TAG\" (expected \"$SR_TAG\")"
     [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && \
-      log_warning -a "${itemid}: ${pkgnam}: Package type is .$PN_PKGTYPE (expected .$SR_PKGTYPE)"
+      log_warning -a "${itemid}: ${pkgbasename}: Package type is .$PN_PKGTYPE (expected .$SR_PKGTYPE)"
 
     # check that the compression type matches the suffix
     filetype=$(file -b "$pkgpath")
     case "$filetype" in
-      'gzip compressed data'*)  [ "$PN_PKGTYPE" = 'tgz' ] || log_warning "${itemid}: ${pkgnam} has wrong suffix, should be .tgz" ;;
-      'XZ compressed data'*)    [ "$PN_PKGTYPE" = 'txz' ] || log_warning "${itemid}: ${pkgnam} has wrong suffix, should be .txz" ;;
-      'bzip2 compressed data'*) [ "$PN_PKGTYPE" = 'tbz' ] || log_warning "${itemid}: ${pkgnam} has wrong suffix, should be .tbz" ;;
-      'LZMA compressed data'*)  [ "$PN_PKGTYPE" = 'tlz' ] || log_warning "${itemid}: ${pkgnam} has wrong suffix, should be .tlz" ;;
-      *) log_error "${itemid}: ${pkgnam} is \"$filetype\", not a package" ; return 1 ;;
+      'gzip compressed data'*)  [ "$PN_PKGTYPE" = 'tgz' ] || log_warning "${itemid}: ${pkgbasename} has wrong suffix, should be .tgz" ;;
+      'XZ compressed data'*)    [ "$PN_PKGTYPE" = 'txz' ] || log_warning "${itemid}: ${pkgbasename} has wrong suffix, should be .txz" ;;
+      'bzip2 compressed data'*) [ "$PN_PKGTYPE" = 'tbz' ] || log_warning "${itemid}: ${pkgbasename} has wrong suffix, should be .tbz" ;;
+      'LZMA compressed data'*)  [ "$PN_PKGTYPE" = 'tlz' ] || log_warning "${itemid}: ${pkgbasename} has wrong suffix, should be .tlz" ;;
+      *) log_error "${itemid}: ${pkgbasename} is \"$filetype\", not a package" ; return 1 ;;
     esac
 
     # list what's in the package (and check if it's really a tarball)
-    TMP_PKGCONTENTS="$TMPDIR"/sr_pkgcontents_"$pkgnam".$$.tmp
-    tar tvf "$pkgpath" > "$TMP_PKGCONTENTS" || { log_error "${itemid}: ${pkgnam} is not a tar archive"; return 1; }
+    TMP_PKGCONTENTS="$MYTMPDIR"/pkgcontents_"$pkgbasename"
+    tar tvf "$pkgpath" > "$TMP_PKGCONTENTS" || { log_error "${itemid}: ${pkgbasename} is not a tar archive"; return 1; }
 
     # we'll reuse this file several times to analyse the contents:
-    TMP_PKGJUNK="$TMPDIR"/sr_pkgjunk_"$pkgnam".$$.tmp
+    TMP_PKGJUNK="$MYTMPDIR"/pkgjunk_"$pkgbasename"
 
     # check where the files will be installed
     awk '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/' "$TMP_PKGCONTENTS" > "$TMP_PKGJUNK"
     if [ -s "$TMP_PKGJUNK" ]; then
-      log_warning -a "${itemid}: ${pkgnam} installs to unusual locations"
+      log_warning -a "${itemid}: ${pkgbasename} installs to unusual locations"
       cat "$TMP_PKGJUNK" >> "$ITEMLOG"
     fi
     baddirlist=( 'usr/local/' 'usr/share/man/' )
@@ -244,23 +244,23 @@ function test_package
     for baddir in "${baddirlist[@]}"; do
       awk '$6~/^'$(echo $baddir | sed s:/:'\\'/:g)'/' "$TMP_PKGCONTENTS" > "$TMP_PKGJUNK"
       if [ -s "$TMP_PKGJUNK" ]; then
-        log_warning -a "${itemid}: $pkgnam uses $baddir"
+        log_warning -a "${itemid}: $pkgbasename uses $baddir"
       fi
     done
 
     # check if it contains a slack-desc
     if ! grep -q ' install/slack-desc$' "$TMP_PKGCONTENTS"; then
-      log_warning -a "${itemid}: ${pkgnam} has no slack-desc"
+      log_warning -a "${itemid}: ${pkgbasename} has no slack-desc"
     fi
 
     # check top level
     if ! head -n 1 "$TMP_PKGCONTENTS" | grep -q '^drwxr-xr-x root/root .* \./$' ; then
-      log_warning "${itemid}: ${pkgnam} has wrong top level directory (not tar-1.13?)"
+      log_warning "${itemid}: ${pkgbasename} has wrong top level directory (not tar-1.13?)"
     fi
 
     # check for non root/root ownership (this may be a bit oversensitive)
     if awk '$6~/^(bin\/|lib\/|lib64\/|sbin\/|usr\/|\.\/$)/' "$TMP_PKGCONTENTS" | grep -q -v ' root/root ' ; then
-      log_warning -a "${itemid}: ${pkgnam} has files or dirs with owner not root/root"
+      log_warning -a "${itemid}: ${pkgbasename} has files or dirs with owner not root/root"
     fi
 
     #### TODO: check permissions
@@ -268,7 +268,7 @@ function test_package
     # check for uncompressed man pages (usr/share/man warning is handled above)
     #### maybe check for misplaced pages
     if grep -E '^-.* usr/(share/)?man/' "$TMP_PKGCONTENTS" | grep -q -v '\.gz$'; then
-      log_warning -a "${itemid}: ${pkgnam} has uncompressed man pages"
+      log_warning -a "${itemid}: ${pkgbasename} has uncompressed man pages"
     fi
 
     [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_PKGJUNK"

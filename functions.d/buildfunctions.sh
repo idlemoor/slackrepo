@@ -393,7 +393,7 @@ function create_pkg_metadata
 ||
 ++========================================
 EOF
-    TMP_PKGCONTENTS="$TMPDIR"/sr_pkgcontents_"$pkgbasename".$$.tmp
+    TMP_PKGCONTENTS="$MYTMPDIR"/pkgcontents_"$pkgbasename"
     if [ ! -f "$TMP_PKGCONTENTS" ]; then
       tar tvf "$pkgpath" > "$TMP_PKGCONTENTS"
     fi

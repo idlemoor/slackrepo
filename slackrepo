@@ -57,11 +57,19 @@ starttime=$(date +%s)
 # Mode and control args
 #-------------------------------------------------------------------------------
 
-PROCMODE=''
-optnames="QUIET VERBOSE VERY_VERBOSE TEST DRY_RUN INSTALL KEEP_TMP TRACE"
+# General rule:
+# OPT_XXXX represents command line option XXXX
+# SR_XXXX represents config file variable XXXX
+
+optnames="REPO QUIET VERBOSE VERY_VERBOSE TEST DRY_RUN INSTALL KEEP_TMP TRACE"
+# Initialise them all to null, set -u friendly ;-)
 for opt in $optnames ; do
   eval OPT_$opt=''
 done
+# Initialise OPT_REPO from env var $REPO:
+OPT_REPO="$REPO"
+# No default for the processing mode (build/rebuild/update/remove):
+PROCMODE=''
 
 while [ $# != 0 ]; do
   case "$1" in
@@ -83,7 +91,7 @@ while [ $# != 0 ]; do
       PROCMODE='remove'
       shift; continue ;;
     --repo=* )
-      SR_REPO=$(echo "$1" | sed 's/^--repo=//')
+      OPT_REPO=$(echo "$1" | sed 's/^--repo=//')
       shift; continue ;;
     --quiet | -q )
       OPT_QUIET='y'
@@ -145,63 +153,69 @@ done
 # Configuration
 #-------------------------------------------------------------------------------
 
-# Set the repo ID from control arg, or env...
-SR_REPO="${SR_REPO:-$REPO}"
-# ... or just fall back to hardcoded SBo.
-[ -z "${SR_REPO:=$REPO}"  ] && SR_REPO="SBo"
-[ "${SR_REPO}" = '%REPO%' ] && SR_REPO="SBo"
-
-# Set config variables from environment:
+# All config vars are prefixed with SR_ to stop SlackBuilds picking them up.
+# However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO PKGREPO SRCREPO \
           HINTS LOGDIR TMP \
           ARCH TAG PKGTYPE NUMJOBS USE_GENREPOS \
-          INIT_GITCLONE INIT_GITBRANCH"
-# We'll prefix all these with SR_ to stop SlackBuilds picking them up
+          INIT_GITCLONE INIT_GITBRANCH \
+          $optnames"
+
+# Initialise the SR_variables from the environment:
 for envvar in $varnames ; do
-  myvar="SR_$envvar"
-  eval $myvar="${!envvar}"
+  srvar="SR_$envvar"
+  eval $srvar="${!envvar}"
 done
-# Read the config files:
-repoconf="/etc/slackrepo/slackrepo_${SR_REPO}.conf"
+
+# Read the user config file to get $REPO:
+userconf="~/.slackreporc"
+if [ -f "$userconf" ]; then
+  . "$userconf"
+fi
+# If we didn't get a repo id from env or cmd line, drop $REPO from the user config file into $OPT_REPO:
+[ -z "$OPT_REPO" ] && OPT_REPO="${REPO:-SBo}"
+# Read the main repo config file, overriding anything that came from the user config file:
+repoconf="/etc/slackrepo/slackrepo_${OPT_REPO}.conf"
 if [ -f "$repoconf" ]; then
   . "$repoconf"
 else
   echo "Error: repo configuration file not found: $repoconf"; exit_cleanup; exit 2
 fi
-userconf="~/.slackreporc"
+# Read the user config file again to override everything in the main repo config file.
+# (Yes, we're reading it twice, but that's a lot easier than a proper solution)
 if [ -f "$userconf" ]; then
   . "$userconf"
 fi
 
-# Backfill the SR_ variables from config and unset the config variables
-for confvar in $varnames ; do
-  myvar="SR_$confvar"
-  [ -z "${!myvar}" ] && eval $myvar=\"${!confvar}\"
-  eval unset $confvar
+# Backfill the SR_ variables from config file variables,
+# and unset the config file variables to prevent SlackBuilds from seeing them:
+for name in $varnames ; do
+  srvar="SR_$name"
+  [ -z "${!srvar}" ] && eval $srvar=\"${!name}\"
+  eval unset $name
 done
-# and do something similar for the OPT_ variables
-for confvar in $optnames ; do
-  myvar="OPT_$confvar"
-  [ -z "${!myvar}" ] && eval $myvar=\"${!confvar}\"
-  if [ "${!myvar}" = '0' -o "${!myvar}" = 'no' -o "${!myvar}" = 'n' -o "${!myvar}" = 'NO' -o "${!myvar}" = 'N' -o "${!myvar}" = '' ]; then
-    eval $myvar='n'
-  elif [ "${!myvar}" = '1' -o "${!myvar}" = 'yes' -o "${!myvar}" = 'y' -o "${!myvar}" = 'YES' -o "${!myvar}" = 'Y' ]; then
-    eval $myvar='y'
+# and do something similar for the OPT_ variables:
+for name in $optnames ; do
+  optvar="OPT_$name"
+  [ -z "${!optvar}" ] && eval $optvar=\"${!name}\"
+  # simplify anything that looks like a Boolean:
+  if   [ "${!optvar}" = '1' -o "${!optvar}" = 'yes' -o "${!optvar}" = 'y' -o "${!optvar}" = 'YES' -o "${!optvar}" = 'Y' ]; then
+    eval $optvar='y'
+  elif [ "${!optvar}" = '0' -o "${!optvar}" = 'no'  -o "${!optvar}" = 'n' -o "${!optvar}" = 'NO'  -o "${!optvar}" = 'N' -o "${!optvar}" = '' ]; then
+    eval $optvar='n'
   else
-    echo "Error: ${confvar}=${!myvar} is invalid, should be 0/n/no or 1/y/yes"
+    echo "Error: ${name}=${!optvar} is invalid, should be 0/n/no or 1/y/yes"
   fi
-  eval unset $confvar
+  eval unset $name
 done
 
-# Resolve conflicting options
+# Resolve conflicting options:
+# --very-verbose implies --verbose
 [ "$OPT_VERY_VERBOSE" = 'y' ] && OPT_VERBOSE='y'
+# --verbose overrides --quiet
 [ "$OPT_VERBOSE" = 'y' ] && OPT_QUIET='n'
+# --dry-run overrides --install
 [ "$OPT_DRY_RUN" = 'y' ] && OPT_INSTALL='n'
-
-# Do this early so we can log the config:
-mkdir -p "$SR_LOGDIR"
-MAINLOG="$SR_LOGDIR"/$(basename $0)_$(date '+%F_%T').log
-> "$MAINLOG"
 
 # If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly
 if [ -z "$SR_NUMJOBS" ]; then
@@ -217,21 +231,25 @@ if [ -z "$SR_ARCH" -o "$SR_ARCH" = '%ARCH%' ]; then
 fi
 
 # Find out the version of Slackware
-# (used by the git stuff below, but we also need this in revfunctions.sh, and possibly the package repo's pathname)
 [ -f /etc/slackware-version ] || { log_error "/etc/slackware-version not found"; exit_cleanup; exit 4; }
 SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
 
 # Substitute %REPO%, %SLACKVER% and %ARCH%
-for var in $varnames; do
-  myvar="SR_$var"
-  eval $myvar=\"$(echo "${!myvar}" | sed -e "s/%REPO%/$SR_REPO/g" -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
+for name in $varnames; do
+  srvar="SR_$name"
+  eval $srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
 done
+
+# Do this now so we can log the config:
+mkdir -p "$SR_LOGDIR"
+MAINLOG="$SR_LOGDIR"/$(basename $0)_$(date '+%F_%T').log
+> "$MAINLOG"
 
 # Log the config
 [ "$OPT_VERBOSE" = 'y' ] && echo ""
 log_verbose "Configuration:"
 log_verbose "  $PROCMODE"
-log_verbose "  --repo=$SR_REPO"
+log_verbose "  --repo=$OPT_REPO"
 if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
   log_verbose "  --very-verbose"
 elif [ "$OPT_VERBOSE" = 'y' ]; then
@@ -244,9 +262,9 @@ fi
 [ "$OPT_TEST" = 'y'     ] && log_verbose "  --test"
 [ "$OPT_KEEP_TMP" = 'y' ] && log_verbose "  --keep-tmp"
 [ "$OPT_TRACE" = 'y'    ] && log_verbose "  --trace"
-for var in $varnames; do
-  myvar="SR_$var"
-  log_verbose "  $var='${!myvar}'"
+for name in $varnames; do
+  srvar="SR_$name"
+  log_verbose "  $srvar='${!srvar}'"
 done
 [ "$OPT_VERBOSE" = 'y' ] && echo ""
 
@@ -266,14 +284,12 @@ if [ -n "$SR_TMP" -a -d "$SR_TMP" -a "$OPT_KEEP_TMP" != 'y' ]; then
 else
   mkdir -p $SR_TMP
 fi
-
-# Use the standard Unix TMPDIR for things that SR_TMP wouldn't be good for
-# (SR_TMP gets cleaned during execution)
-TMPDIR=${TMPDIR:-/tmp}
+# We also need a slackrepo-specific temporary directory
+MYTMPDIR=$(mktemp -d slackrepo.XXXXXXXXXX || {exit_cleanup; exit 4; } )
 
 # Disposable package repository for dry run:
 if [ "$OPT_DRY_RUN" = 'y' ]; then
-  DRYREPO="$SR_TMP"/sr_DRY.$$
+  DRYREPO="$MYTMPDIR"/dryrun-packages
   rm -rf "$DRYREPO"
   mkdir -p "$DRYREPO"
 fi

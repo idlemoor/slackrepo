@@ -72,13 +72,14 @@ then its options hint file will be
 <li><b>prgnam.optdeps</b>      -- optional dependencies, including deps for options</li>
 <li><b>prgnam.readmedeps</b>   -- dependencies to substitute for %README% in REQUIRES="..."</li>
 <li><b>prgnam.uidgid</b>       -- groupadd and useradd commands needed for prgnam</li>
-<li><b>prgnam.md5ignore</b>    -- don't check source md5sum</li>
+<li><b>prgnam.md5ignore</b>    -- don't check the sources' md5sums</li>
+<li><b>prgnam.nodownload</b>   -- don't download the sources</li>
 <li><b>prgnam.makej1</b>       -- set MAKEFLAGS='-j1' during build</li>
 <li><b>prgnam.skipme</b>       -- don't build prgnam</li>
 <li><b>prgnam.answers</b>      -- answers for prompts printed when the SlackBuild is run</li>
 <li><b>prgnam.version</b>      -- attempt to patch prgnam.info and prgnam.SlackBuild for a new version</li>
 <li><b>prgnam.cleanup</b>      -- script to run after prgnam is uninstalled</li>
-<li><b>prgnam.no_uninstall</b> -- do not uninstall (and do not cleanup)</li>
+<li><b>prgnam.install</b>      -- install after building, and do not run cleanup</li>
 </ul>
 
 <h4>prgnam.options</h4>
@@ -137,6 +138,15 @@ fi
 sometimes without the version number being changed, so that the source archive's 
 md5sum will not be checked. Just create an empty file; its contents are not read.</p>
 
+<h4>prgnam.nodownload</h4>
+
+<p>This hint file can be created if the source needs to be manually downloaded
+(for example, because of a licence agreement).  If you have put the source in the
+source cache, the package will be built, otherwise a message will be displayed
+explaining what you should do and the package will be skipped.  If the hint file
+isn't empty, its contents will be displayed when the build is skipped, so you can
+put some helpful reminder text into it.</p>
+
 <h4>prgnam.makej1</h4>
 
 <p>This hint file can be created if the build process fails when multiple 'make' 
@@ -190,17 +200,14 @@ echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex-doc
 depmod -a
 </pre>
 
-<h4>prgnam.no_uninstall</h4>
+<h4>prgnam.install</h4>
 
-<p>After slackrepo builds or tests a package, it uninstalls the package and all
-its dependencies, and it aggressively removes files from /etc that Slackware's
-own tools would normally leave in place.
-<strong>This will cause serious damage if you attempt to rebuild a package that
-is already installed and in active use</strong>
-(for example, if you use slackrepo to test slackrepo, or if you rebuild 
-nvidia-driver on a system that uses nvidia-driver).  You can avoid this by 
-creating a <b>prgnam.no_uninstall</b> hint file, and then the package will not be 
-uninstalled.  Just create an empty file; its contents are not read.</p>
+<p>This hint file can be created if you want the package and its dependencies
+to remain installed on the system after building. This is like specifying
+--install on the command line. Just create an empty file;
+its contents are not read. Note (1): your build environment will not be clean.
+Packages may fail to build and may not be suitable for redistribution.
+Note (2): if --dry-run is specified, this hint will be ignored.</p>
 
 </div>
 

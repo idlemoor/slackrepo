@@ -157,12 +157,11 @@ done
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO PKGREPO SRCREPO \
           HINTS LOGDIR TMP \
-          ARCH TAG PKGTYPE NUMJOBS USE_GENREPOS \
-          INIT_GITCLONE INIT_GITBRANCH \
-          $optnames"
+          ARCH TAG PKGTYPE NUMJOBS USE_GENREPOS"
+initnames="INIT_GITCLONE INIT_GITBRANCH"
 
 # Initialise the SR_variables from the environment:
-for envvar in $varnames ; do
+for envvar in $varnames $initnames $optnames ; do
   srvar="SR_$envvar"
   eval $srvar="${!envvar}"
 done
@@ -189,7 +188,7 @@ fi
 
 # Backfill the SR_ variables from config file variables,
 # and unset the config file variables to prevent SlackBuilds from seeing them:
-for name in $varnames ; do
+for name in $varnames $initnames ; do
   srvar="SR_$name"
   [ -z "${!srvar}" ] && eval $srvar=\"${!name}\"
   eval unset $name
@@ -198,15 +197,13 @@ done
 for name in $optnames ; do
   optvar="OPT_$name"
   [ -z "${!optvar}" ] && eval $optvar=\"${!name}\"
+  eval unset $name
   # simplify anything that looks like a Boolean:
   if   [ "${!optvar}" = '1' -o "${!optvar}" = 'yes' -o "${!optvar}" = 'y' -o "${!optvar}" = 'YES' -o "${!optvar}" = 'Y' ]; then
     eval $optvar='y'
   elif [ "${!optvar}" = '0' -o "${!optvar}" = 'no'  -o "${!optvar}" = 'n' -o "${!optvar}" = 'NO'  -o "${!optvar}" = 'N' -o "${!optvar}" = '' ]; then
     eval $optvar='n'
-  else
-    echo "Error: ${name}=${!optvar} is invalid, should be 0/n/no or 1/y/yes"
   fi
-  eval unset $name
 done
 
 # Resolve conflicting options:
@@ -264,7 +261,7 @@ fi
 [ "$OPT_TRACE" = 'y'    ] && log_verbose "  --trace"
 for name in $varnames; do
   srvar="SR_$name"
-  log_verbose "  $srvar='${!srvar}'"
+  log_verbose "  $name='${!srvar}'"
 done
 [ "$OPT_VERBOSE" = 'y' ] && echo ""
 
@@ -285,7 +282,7 @@ else
   mkdir -p $SR_TMP
 fi
 # We also need a slackrepo-specific temporary directory
-MYTMPDIR=$(mktemp -d slackrepo.XXXXXXXXXX || {exit_cleanup; exit 4; } )
+MYTMPDIR=$(mktemp -t -d slackrepo.XXXXXXXXXX) || { exit_cleanup; exit 4; }
 
 # Disposable package repository for dry run:
 if [ "$OPT_DRY_RUN" = 'y' ]; then

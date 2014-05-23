@@ -404,8 +404,10 @@ function parse_hints_and_info
     # Backfill anything still unset:
     # VERSION
     if [ -z "$VERSION" ]; then
-      # The next bit is necessarily dependent on the empirical characteristics of Slackware's SlackBuilds :-/
+      # The next bit is necessarily dependent on the empirical characteristics
+      # of the SlackBuilds in Slackware, msb, csb, etc :-/
       versioncmds="$(grep -E '^(PKGNAM|SRCNAM|VERSION)=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
+      # execute $versioncmds in the SlackBuild's directory so it can use the source tarball's name:
       cd "$SR_SBREPO/$itemdir/"
         eval $versioncmds
       cd - >/dev/null

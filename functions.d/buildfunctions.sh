@@ -214,7 +214,6 @@ function build_item
 function build_ok
 # Log, cleanup and store the packages for a build that has succeeded
 # $1 = itemid
-# Also uses BUILDINFO set by rev_need_build
 # Return status: always 0
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
@@ -242,16 +241,12 @@ function build_ok
 
   uninstall_deps "$itemid"
 
-  create_pkg_metadata "$itemid"
+  create_pkg_metadata "$itemid"  # sets $CHANGEMSG
 
   # This won't always kill everything, but it's good enough for saving space
   [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
 
-  buildtype=$(echo $BUILDINFO | cut -f1 -d" ")
-  msg="$buildtype OK"
-  [ "$OPT_DRY_RUN" = 'y'  ] && msg="$buildtype --dry-run OK"
-  [ "$OPT_INSTALL" = 'y' ] && msg="$buildtype --install OK"
-  log_success ":-) $itemid $msg (-:"
+  log_success ":-) ${itemid}: $CHANGEMSG (-:"
   OKLIST+=( "$itemid" )
 
   return 0
@@ -262,6 +257,7 @@ function build_ok
 function build_failed
 # Log and cleanup for a build that has failed
 # $1 = itemid
+# Also uses BUILDINFO set by needs_build()
 # Return status: always 0
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
@@ -310,30 +306,37 @@ function create_pkg_metadata
   #-----------------------------#
   # changelog entry: needlessly elaborate :-)
   #-----------------------------#
-  if [ "$OPT_DRY_RUN" != 'y' ]; then
-    OPERATION="$(echo $BUILDINFO | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/')"
-    extrastuff=''
-    case "$BUILDINFO" in
-    add*)
-        # append short description from slack-desc (if there's no slack-desc, this should be null)
-        extrastuff="$(grep "^${itemprgnam}: " "$SR_SBREPO"/"$itemdir"/slack-desc 2>/dev/null| head -n 1 | sed -e 's/.*(/(/' -e 's/).*/)/')"
-        ;;
-    'update for git'*)
-        # append the title of the latest commit message
-        extrastuff="$(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //')"
-        ;;
-    *)  :
-        ;;
-    esac
+
+  OPERATION="$(echo $BUILDINFO | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/')"
+  extrastuff=''
+  case "$BUILDINFO" in
+  add*)
+      # add short description from slack-desc (if there's no slack-desc, this should be null)
+      extrastuff="$(grep "^${itemprgnam}: " "$SR_SBREPO"/"$itemdir"/slack-desc 2>/dev/null| head -n 1 | sed -e 's/.*(/(/' -e 's/).*/)/')"
+      ;;
+  'update for git'*)
+      # add title of the latest commit message
+      extrastuff="$(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //')"
+      ;;
+  *)  :
+      ;;
+  esac
+  # Set $changelogentry for the ChangeLog, and $CHANGEMSG for build_ok()
+  if [ -z "$extrastuff" ]; then
+    changelogentry="${itemid}: ${OPERATION}. NEWLINE"
+    CHANGEMSG="${OPERATION}"
+  else
+    changelogentry="${itemid}: ${OPERATION}. LINEFEED $extrastuff NEWLINE"
+    CHANGEMSG="${OPERATION} ${extrastuff}"
+  fi
+  if [ "$OPT_DRY_RUN" = 'y' ]; then
+    CHANGEMSG="$CHANGEMSG --dry-run"
+  else
     # Filter previous entries for this item from the changelog
     # (it may contain info from a previous run that was interrupted)
     newchangelog="$CHANGELOG".new
     grep -v "^${itemid}: " "$CHANGELOG" > "$newchangelog"
-    if [ -z "$extrastuff" ]; then
-      echo "${itemid}: ${OPERATION}. NEWLINE" >> "$newchangelog"
-    else
-      echo "${itemid}: ${OPERATION}. LINEFEED $extrastuff NEWLINE" >> "$newchangelog"
-    fi
+    echo "$changelogentry" >> "$newchangelog"
     mv "$newchangelog" "$CHANGELOG"
   fi
 

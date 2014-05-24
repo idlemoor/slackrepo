@@ -7,7 +7,7 @@
 <!-- .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K. -->
 <!-- .\" All rights reserved.  For licence details, see the file 'LICENCE'. -->
 <!-- . -->
-<!-- .TH SLACKREPO 8 "2014-04-01" slackrepo-0.1.0 -->
+<!-- .TH SLACKREPO 8 "2014-06-01" slackrepo-0.2.0 -->
 <center>
 <h1><hr><i>Manual Reference Pages &nbsp;-&nbsp;</i><nobr>SLACKREPO (8)</nobr><hr></h1>
 </center>
@@ -393,7 +393,7 @@ the version of Slackware has changed since the package was built
 <tr></tr></tbody></table></blockquote>
 <!-- .P -->
 <p>
-Changes in the SlackBuilds directory, and changes to the relevant hints, are
+Changes in the SlackBuilds directory are
 classified as "updates", which will cause directly depending items to be rebuilt.
 Other changes are classified as "rebuilds" and do not cause depending items to be rebuilt.
 For example, ffmpeg depends on x264, and transcode depends on ffmpeg.
@@ -454,6 +454,20 @@ Build shotwell, with all its dependencies:
 </blockquote>
 <!-- .P -->
 <p>
+Build and install shotwell and all its dependencies (this will NOT be a clean build):
+<!-- .P -->
+</p><p>
+<!-- .RS -->
+</p><blockquote>
+<!-- .EX -->
+<!-- ignored unsupported tag .EX -->
+<pre># slackrepo build --install shotwell</pre>
+<!-- .EE -->
+<!-- ignored unsupported tag .EE -->
+<!-- .RE -->
+</blockquote>
+<!-- .P -->
+<p>
 Remove grass (note, its dependencies and dependers will not be removed):
 <!-- .P -->
 </p><p>
@@ -496,14 +510,14 @@ Do a "dry run" update of all your SBo packages, with verbose messages:
 </blockquote>
 <!-- .P -->
 <p>
-Test-build myprog in the newstuff repo, with verbose messages; do not store the built package:
+Test-build colord (in the csb repo), with very verbose messages; do not store the built package:
 <!-- .P -->
 </p><p>
 <!-- .RS -->
 </p><blockquote>
 <!-- .EX -->
 <!-- ignored unsupported tag .EX -->
-<pre># slackrepo build -v --repo=newstuff --test --dry-run myprog</pre>
+<pre># slackrepo build -vv --repo=csb --test --dry-run colord</pre>
 <!-- .EE -->
 <!-- ignored unsupported tag .EE -->
 <!-- .RE -->
@@ -538,6 +552,6 @@ slackpkg(8).
 <!-- . -->
 </blockquote>
 <p></p><hr>
-<table width="100%"><tbody><tr> <td width="33%"><i>slackrepo-0.1.0</i></td> <td align="center" width="33%">SLACKREPO (8)</td> <td align="right" width="33%"><i>2014-04-01</i></td> </tr></tbody></table>
+<table width="100%"><tbody><tr> <td width="33%"><i>slackrepo-0.2.0</i></td> <td align="center" width="33%">SLACKREPO (8)</td> <td align="right" width="33%"><i>2014-06-01</i></td> </tr></tbody></table>
 
 </body></html>

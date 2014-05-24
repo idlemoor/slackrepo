@@ -7,7 +7,7 @@
 <!-- .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K. -->
 <!-- .\" All rights reserved.  For licence details, see the file 'LICENCE'. -->
 <!-- . -->
-<!-- .TH SLACKREPO.CONF 5 "2014-04-01" slackrepo-0.1.0 -->
+<!-- .TH SLACKREPO.CONF 5 "2014-06-01" slackrepo-0.2.0 -->
 <center>
 <h1><hr><i>Manual Reference Pages &nbsp;-&nbsp;</i><nobr>SLACKREPO.CONF (5)</nobr><hr></h1>
 </center>
@@ -35,10 +35,11 @@ slackrepo.conf - repository configuration files for slackrepo
 &nbsp; &nbsp; &nbsp;<a href="#4">Repository filestore locations</a><br>
 &nbsp; &nbsp; &nbsp;<a href="#5">Building packages</a><br>
 &nbsp; &nbsp; &nbsp;<a href="#6">Calling gen_repos_files.sh</a><br>
-&nbsp; &nbsp; &nbsp;<a href="#7">Initial setup</a><br>
-<a href="#8">See Also</a><br>
+&nbsp; &nbsp; &nbsp;<a href="#7">Defaults for control arguments</a><br>
+&nbsp; &nbsp; &nbsp;<a href="#8">Initial setup</a><br>
+<a href="#9">See Also</a><br>
 </blockquote>
-<a name="9">
+<a name="1">
 
      <h3>SYNOPSIS</h3>
 
@@ -99,6 +100,8 @@ The files are 'sourced' by
 <b>bash</b>, so spaces are not permitted either side of '='.
 Lines starting with '#' and empty lines are ignored.
 Assigned values may optionally be enclosed in single or double quotes.
+The strings %REPO%, %SLACKVER% and %ARCH% are automatically replaced by the
+repo ID, Slackware version, and arch, respectively.
 <!-- .P -->
 </p><p>
 Any values specified in the configuration files are overridden by
@@ -169,8 +172,8 @@ These variables can be set in
 <b>SBREPO</b> </td><td valign="bottom">
 Filestore location of the local SlackBuilds repository,
 for example:
-<!-- .B SBREPO=/var/lib/slackrepo/git_SBo -->
-<pre>SBREPO=/var/lib/slackrepo/git_SBo</pre> <!-- . -->
+<!-- .B SBREPO=/var/lib/slackrepo/git_%REPO% -->
+<pre>SBREPO=/var/lib/slackrepo/git_%REPO%</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
@@ -179,8 +182,8 @@ for example:
 Filestore location of the local package repository, i.e., where to store
 built packages. (You will need plenty of space.)
 For example:
-<!-- .B PKGREPO=/var/lib/slackrepo/pkg_SBo -->
-<pre>PKGREPO=/var/lib/slackrepo/pkg_SBo</pre> <!-- .IP -->
+<!-- .B PKGREPO=/var/lib/slackrepo/pkg_%REPO% -->
+<pre>PKGREPO=/var/lib/slackrepo/pkg_%REPO%</pre> <!-- .IP -->
 </td></tr>
 <tr valign="top"><td width="6%">
 
@@ -197,8 +200,8 @@ local web server (e.g., somewhere under
 <b>SRCREPO</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Where to store cached sources. (You will need plenty of space.)
 For example:
-<!-- .B SRCREPO=/var/lib/slackrepo/src_SBo -->
-<pre>SRCREPO=/var/lib/slackrepo/src_SBo</pre> <!-- . -->
+<!-- .B SRCREPO=/var/lib/slackrepo/src_%REPO% -->
+<pre>SRCREPO=/var/lib/slackrepo/src_%REPO%</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td nowrap="nowrap" width="6%">
@@ -206,8 +209,8 @@ For example:
 <b>HINTDIR</b> </td><td valign="bottom">
 Where to find hints for this repository,
 for example:
-<!-- .B HINTDIR=/etc/slackrepo/hints_SBo -->
-<pre>HINTDIR=/etc/slackrepo/hints_SBo</pre> <!-- . -->
+<!-- .B HINTDIR=/etc/slackrepo/hints_%REPO% -->
+<pre>HINTDIR=/etc/slackrepo/hints_%REPO%</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td nowrap="nowrap" width="6%">
@@ -215,8 +218,8 @@ for example:
 <b>LOGDIR</b> </td><td valign="bottom">
 Where to store log files,
 for example:
-<!-- .B LOGDIR=/var/log/slackrepo/log_SBo -->
-<pre>LOGDIR=/var/log/slackrepo/log_SBo</pre> <!-- . -->
+<!-- .B LOGDIR=/var/log/slackrepo/log_%REPO% -->
+<pre>LOGDIR=/var/log/slackrepo/log_%REPO%</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td nowrap="nowrap" width="6%">
@@ -224,8 +227,8 @@ for example:
 <b>TMP</b> </td><td valign="bottom">
 Where to store temporary files. (You will need plenty of space.)
 For example:
-<!-- .B TMP=/tmp/SBo -->
-<pre>TMP=/tmp/SBo</pre> <!-- . -->
+<!-- .B TMP=/tmp/%REPO% -->
+<pre>TMP=/tmp/%REPO%</pre> <!-- . -->
 <!-- . -->
 <!-- .SS Building packages -->
 </td></tr>
@@ -341,8 +344,8 @@ Whether to use
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
-<!-- .B REPOSROOT=${REPOSROOT:-$PKGREPO} -->
-<b>REPOSROOT=${REPOSROOT:-$PKGREPO}</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
+<!-- .B REPOSROOT=\(dq$PKGREPO\(dq -->
+<b>REPOSROOT="$PKGREPO"</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Don't change this! it is needed so gen_repos_files.sh can find your package
 repository.
 <!-- . -->
@@ -371,8 +374,8 @@ for all these variables - the default values will not be sufficient.
 <!-- .B REPOSOWNER -->
 <b>REPOSOWNER</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Repository maintainer, for example:
-<!-- .B REPOSOWNER=${REPOSOWNER:-\(dqLocal administrator <root@localhost>\(dq} -->
-<pre>REPOSOWNER=${REPOSOWNER:-"Local administrator &lt;root@localhost&gt;"}</pre> <!-- . -->
+<!-- .B REPOSOWNER=\(dqLocal administrator <root@localhost>\(dq -->
+<pre>REPOSOWNER="Local administrator &lt;root@localhost&gt;"</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
@@ -381,64 +384,64 @@ Repository maintainer, for example:
 The GPG key for the repository owner can contain a different string than
 the value of $REPOSOWNER . If you leave $REPOSOWNERGPG empty, the script will
 use the value you've set for $REPOSOWNER instead to search the GPG keyfile, for example:
-<!-- .B REPOSOWNERGPG=${REPOSOWNERGPG:-\(dq\(dq} -->
-<pre>REPOSOWNERGPG=${REPOSOWNERGPG:-""}</pre> <!-- . -->
+<!-- .B REPOSOWNERGPG=\(dq\(dq -->
+<pre>REPOSOWNERGPG=""</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td nowrap="nowrap" width="6%">
 <!-- .B DL_URL -->
 <b>DL_URL</b> </td><td valign="bottom">
 Under what URL is the repository accessible, for example:
-<!-- .B DL_URL=${DL_URL:-\(dq\(dq} -->
-<pre>DL_URL=${DL_URL:-""}</pre> <!-- . -->
+<!-- .B DL_URL=\(dqhttp://localhost/pkgrepo/%REPO%/%SLACKVER%/%ARCH%\(dq -->
+<pre>DL_URL="http://localhost/pkgrepo/%REPO%/%SLACKVER%/%ARCH%"</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
 <!-- .B RSS_TITLE -->
 <b>RSS_TITLE</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 The title of the generated RSS feed, for example:
-<!-- .B RSS_TITLE=${RSS_TITLE:-\(dqLocal SlackBuild Packages\(dq} -->
-<pre>RSS_TITLE=${RSS_TITLE:-"Local SlackBuild Packages"}</pre> <!-- . -->
+<!-- .B RSS_TITLE=\(dqLocal SlackBuild Packages\(dq -->
+<pre>RSS_TITLE="Local SlackBuild Packages"</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
 <!-- .B RSS_ICON -->
 <b>RSS_ICON</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 The logo picture used for the RSS feed, for example:
-<!-- .B RSS_ICON=${RSS_ICON:-\(dqhttp://www.slackware.com/~alien/graphics/blueorb.png\(dq} -->
-<pre>RSS_ICON=${RSS_ICON:-"http://www.slackware.com/~alien/graphics/blueorb.png"}</pre> <!-- . -->
+<!-- .B RSS_ICON=\(dqhttp://www.slackware.com/~alien/graphics/blueorb.png\(dq -->
+<pre>RSS_ICON="http://www.slackware.com/~alien/graphics/blueorb.png"</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
 <!-- .B RSS_LINK -->
 <b>RSS_LINK</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 The URL linked to when clicking on the logo, for example:
-<!-- .B RSS_LINK=${RSS_LINK:-\(dqfile://$REPOSROOT/ChangeLog.txt\(dq} -->
-<pre>RSS_LINK=${RSS_LINK:-"file://$REPOSROOT/ChangeLog.txt"}</pre> <!-- . -->
+<!-- .B RSS_LINK=\(dqfile://$REPOSROOT/ChangeLog.txt\(dq -->
+<pre>RSS_LINK="file://$REPOSROOT/ChangeLog.txt"</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
 <!-- .B RSS_CLURL -->
 <b>RSS_CLURL</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 URL to the full ChangeLog.txt, for example:
-<!-- .B RSS_CLURL=${RSS_CLURL:-\(dqfile://$REPOSROOT/ChangeLog.txt\(dq} -->
-<pre>RSS_CLURL=${RSS_CLURL:-"file://$REPOSROOT/ChangeLog.txt"}</pre> <!-- . -->
+<!-- .B RSS_CLURL=\(dqfile://$REPOSROOT/ChangeLog.txt\(dq -->
+<pre>RSS_CLURL="file://$REPOSROOT/ChangeLog.txt"</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
 <!-- .B RSS_DESCRIPTION -->
 <b>RSS_DESCRIPTION</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 The descriptive text for the RSS feed, for example:
-<!-- .B RSS_DESCRIPTION=${RSS_DESCRIPTION:-\(dqLocal SlackBuild Packages\(dq} -->
-<pre>RSS_DESCRIPTION=${RSS_DESCRIPTION:-"Local SlackBuild Packages"}</pre> <!-- . -->
+<!-- .B RSS_DESCRIPTION=\(dqLocal SlackBuild Packages\(dq -->
+<pre>RSS_DESCRIPTION="Local SlackBuild Packages"</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
 <!-- .B RSS_FEEDMAX -->
 <b>RSS_FEEDMAX</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Maximum number of RSS feed entries to display, for example:
-<!-- .B RSS_FEEDMAX=${RSS_FEEDMAX:-15} -->
-<pre>RSS_FEEDMAX=${RSS_FEEDMAX:-15}</pre> <!-- . -->
+<!-- .B RSS_FEEDMAX=15 -->
+<pre>RSS_FEEDMAX=15</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
@@ -447,16 +450,16 @@ Maximum number of RSS feed entries to display, for example:
 The RSS generator must use a unique feed identifier.
 Generate one for your feed by using the string returned by "uuidgen -t".
 Example:
-<!-- .B RSS_UUID=${RSS_UUID:-\(dq\(dq} -->
-<pre>RSS_UUID=${RSS_UUID:-""}</pre> <!-- . -->
+<!-- .B RSS_UUID=\(dq\(dq -->
+<pre>RSS_UUID=""</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td nowrap="nowrap" width="6%">
 <!-- .B GPGBIN -->
 <b>GPGBIN</b> </td><td valign="bottom">
 Either use gpg or gpg2, for example:
-<!-- .B GPGBIN=${GPGBIN:-\(dq/usr/bin/gpg\(dq} -->
-<pre>GPGBIN=${GPGBIN:-"/usr/bin/gpg"}</pre> <!-- . -->
+<!-- .B GPGBIN=\(dq/usr/bin/gpg\(dq -->
+<pre>GPGBIN="/usr/bin/gpg"</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
@@ -467,8 +470,8 @@ script keep it in the environment (note that if you define USE_GPGAGENT=1
 but gpg-agent is not running, you will get prompted for a passphrase every
 single time gpg runs).
 For example:
-<!-- .B USE_GPGAGENT=${USE_GPGAGENT:-0} -->
-<pre>USE_GPGAGENT=${USE_GPGAGENT:-0}</pre> <!-- . -->
+<!-- .B USE_GPGAGENT=0 -->
+<pre>USE_GPGAGENT=0</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
@@ -477,8 +480,8 @@ For example:
 Generate slack-requires, slack-suggests, and slack-conflicts lines in the
 metadata files by setting FOR_SLAPTGET to "1" -- these are used by slapt-get.
 Example:
-<!-- .B FOR_SLAPTGET=${FOR_SLAPTGET:-0} -->
-<pre>FOR_SLAPTGET=${FOR_SLAPTGET:-0}</pre> <!-- . -->
+<!-- .B FOR_SLAPTGET=0 -->
+<pre>FOR_SLAPTGET=0</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
@@ -489,8 +492,8 @@ indicating that one package works for those two Slackware releases.
 If the script does <em>not</em> follow symlinks, then the symlinks will appear in
 the repository listing instead of the packages they point to.
 Example:
-<!-- .B FOLLOW_SYMLINKS=${FOLLOW_SYMLINKS:-1} -->
-<pre>FOLLOW_SYMLINKS=${FOLLOW_SYMLINKS:-1}</pre> <!-- . -->
+<!-- .B FOLLOW_SYMLINKS=1 -->
+<pre>FOLLOW_SYMLINKS=1</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
@@ -500,8 +503,8 @@ If the repository has separate package subdirectories (for separate
 Slackware releases or architectures) then define them here.
 Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them.
 Example:
-<!-- .B REPO_SUBDIRS=${REPO_SUBDIRS:-\(dq\(dq} -->
-<pre>REPO_SUBDIRS=${REPO_SUBDIRS:-""}</pre> <!-- . -->
+<!-- .B REPO_SUBDIRS=\(dq\(dq -->
+<pre>REPO_SUBDIRS=""</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
@@ -509,15 +512,46 @@ Example:
 <b>REPO_EXCLUDES</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 If you want to exclude certain directories or files from being included
 in the repository metadata, define them here (space-separated).
-Examples:
-<!-- .B REPO_EXCLUDES=${REPO_EXCLUDES:-\(dq\(dq} -->
-<pre>REPO_EXCLUDES=${REPO_EXCLUDES:-""}
-REPO_EXCLUDES="RCS logs .genreprc"</pre> <!-- . -->
+Example:
+<!-- .B REPO_EXCLUDES=\(dq\(dq -->
+<pre>REPO_EXCLUDES=".revision"</pre> <!-- . -->
 <!-- . -->
 <!-- .SS Initial setup -->
 </td></tr>
 <tr></tr></tbody></table></p></blockquote>
+
 <a name="7">
+
+    <h4>&nbsp; &nbsp; Defaults for control arguments</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
+The configuration variables
+<b>QUIET</b>, <b>VERBOSE</b>, <b>VERY_VERBOSE</b>, <b>TEST</b>, <b>DRY_RUN</b>, <b>INSTALL</b> and <b>KEEP_TMP</b>
+set the defaults for slackrepo's command line control arguments.
+These variables can be set in
+<!-- .IR ~/.slackreporc or -->
+<i>~/.slackreporc</i> or
+<!-- .IR /etc/slackrepo/slackrepo_ID.conf . -->
+<i>/etc/slackrepo/slackrepo_ID.conf</i>.
+</p>
+<p>Examples:</p>
+<pre>
+QUIET='n'
+VERBOSE='n'
+VERY_VERBOSE='n'
+TEST='n'
+DRY_RUN='n'
+INSTALL='n'
+KEEP_TMP='n'
+</pre> <!-- . -->
+<!-- . -->
+<!-- . -->
+<!-- .SH SEE ALSO -->
+</blockquote>
+
+<a name="8">
 
     <h4>&nbsp; &nbsp; Initial setup</h4>
 </a>
@@ -528,7 +562,7 @@ The following configuration variables determine how the SlackBuilds
 repository will be created if it does not already exist.
 These variables are set in
 <!-- .IR /etc/slackrepo/slackrepo_ID.conf . -->
-<i>/etc/slackrepo/slackrepo_ID.conf</i>. Normally, they are only read the first time that
+<i>/etc/slackrepo/slackrepo_ID.conf</i>. Normally, they are only used the first time that
 <!-- .B slackrepo -->
 <b>slackrepo</b> is run.
 <!-- .TP -->
@@ -549,17 +583,15 @@ For example:
 <!-- .B INIT_GITBRANCH -->
 <b>INIT_GITBRANCH</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 The local git branch to be created, tracking the remote branch of the
-same name.  An empty value implies a branch named after the current
-Slackware version, i.e., '14.1' for Slackware 14.1.
-For example:
-<!-- .B INIT_GITBRANCH='' -->
-<pre>INIT_GITBRANCH=''</pre> <!-- . -->
+same name. For example:
+<!-- .B INIT_GITBRANCH='%SLACKVER%' -->
+<pre>INIT_GITBRANCH='%SLACKVER%'</pre> <!-- . -->
 <!-- . -->
 <!-- . -->
 <!-- .SH SEE ALSO -->
 </td></tr>
 <tr></tr></tbody></table></p></blockquote>
-<a name="8">
+<a name="9">
 
      <h3>SEE ALSO</h3>
 
@@ -584,6 +616,6 @@ slackpkg(8).
 <!-- . -->
 </blockquote>
 <p></p><hr>
-<table width="100%"><tbody><tr> <td width="33%"><i>slackrepo-0.1.0</i></td> <td align="center" width="33%">SLACKREPO.CONF (5)</td> <td align="right" width="33%"><i>2014-04-01</i></td> </tr></tbody></table>
+<table width="100%"><tbody><tr> <td width="33%"><i>slackrepo-0.2.0</i></td> <td align="center" width="33%">SLACKREPO.CONF (5)</td> <td align="right" width="33%"><i>2014-06-01</i></td> </tr></tbody></table>
 
 </body></html>

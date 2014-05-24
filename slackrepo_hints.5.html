@@ -7,7 +7,7 @@
 <!-- .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K. -->
 <!-- .\" All rights reserved.  For licence details, see the file 'LICENCE'. -->
 <!-- . -->
-<!-- .TH SLACKREPO_HINTS 5 "2014-04-01" slackrepo-0.1.0 -->
+<!-- .TH SLACKREPO_HINTS 5 "2014-06-01" slackrepo-0.2.0 -->
 <center>
 <h1><hr><i>Manual Reference Pages &nbsp;-&nbsp;</i><nobr>SLACKREPO_HINTS (5)</nobr><hr></h1>
 </center>
@@ -53,6 +53,9 @@ slackrepo_hints - hint files for slackrepo
 <!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .md5ignore -->
 <!-- Need break --><br>
 <b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.md5ignore</b> <!-- .br -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .nodownload -->
+<!-- Need break --><br>
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.nodownload</b> <!-- .br -->
 <!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .makej1 -->
 <!-- Need break --><br>
 <b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.makej1</b> <!-- .br -->
@@ -68,9 +71,9 @@ slackrepo_hints - hint files for slackrepo
 <!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .cleanup -->
 <!-- Need break --><br>
 <b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.cleanup</b> <!-- .br -->
-<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .no_uninstall -->
+<!-- .BI /etc/slackrepo/hints_ ID /.../ prgnam .install -->
 <!-- Need break --><br>
-<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.no_uninstall</b> <!-- .br -->
+<b>/etc/slackrepo/hints_</b><i>ID</i><b>/.../</b><i>prgnam</i><b>.install</b> <!-- .br -->
 <!-- Need break --><br>
 where
 <!-- .I ID -->
@@ -254,6 +257,23 @@ archive's md5sum will not be checked. Just create an empty file; its
 contents are not read.
 <!-- . -->
 <!-- . -->
+<!-- .SS prgnam.nodownload -->
+</blockquote>
+<a name="">
+
+    <h4>&nbsp; &nbsp; prgnam.nodownload</h4>
+</a>
+<blockquote>
+<!-- .P -->
+<p>
+This hint file can be created if the source needs to be manually downloaded
+(for example, because of a licence agreement). If you have put the source in
+the source cache, the package will be built, otherwise a message will be
+displayed explaining what you should do and the package will be skipped.
+If the hint file isn't empty, its contents will be displayed when the build is
+skipped, so you can put some helpful reminder text into it.
+<!-- . -->
+<!-- . -->
 <!-- .SS prgnam.makej1 -->
 </p></blockquote>
 <a name="">
@@ -370,33 +390,21 @@ or to clean up after a kernel module is uninstalled:
 </blockquote>
 <!-- . -->
 <!-- . -->
-<!-- .SS prgnam.no_uninstall -->
+<!-- .SS prgnam.install -->
 </blockquote>
 <a name="">
 
-    <h4>&nbsp; &nbsp; prgnam.no_uninstall</h4>
+    <h4>&nbsp; &nbsp; prgnam.install</h4>
 </a>
 <blockquote>
 <!-- .P -->
 <p>
-After slackrepo builds or tests a package, it uninstalls the package and
-all its dependencies, and it aggressively removes files from
-<!-- .I /etc -->
-<i>/etc</i> that
-Slackware's own tools would normally leave in place. This will cause
-serious damage if you attempt to rebuild a package that is already
-installed and in active use (for example, if you use
-<!-- .B slackrepo -->
-<b>slackrepo</b> to rebuild
-<!-- .BR slackrepo , -->
-<b>slackrepo</b>, or if you rebuild
-<!-- .B nvidia-driver -->
-<b>nvidia-driver</b> on a system that uses
-<!-- .BR nvidia-driver ). -->
-<b>nvidia-driver</b>). You can avoid this by creating a
-<!-- .IB prgnam .no_uninstall -->
-<i>prgnam</i><b>.no_uninstall</b> file, and then the package will not be uninstalled. Just create an
-empty file; its contents are not read.
+This hint file can be created if you want the package and its dependencies to
+remain installed on the system after building. This is like specifying --install
+on the command line. Just create an empty file; its contents are not read.
+Note (1): your build environment will not be clean. Packages may fail to build
+and may not be suitable for redistribution. Note (2): if --dry-run is specified,
+this hint will be ignored.
 <!-- . -->
 <!-- . -->
 <!-- . -->
@@ -427,5 +435,5 @@ slackpkg(8).
 <!-- . -->
 </blockquote>
 <p></p><hr>
-<table width="100%"><tbody><tr> <td width="33%"><i>slackrepo-0.1.0</i></td> <td align="center" width="33%">SLACKREPO_HINTS (5)</td> <td align="right" width="33%"><i>2014-04-01</i></td> </tr></tbody></table>
+<table width="100%"><tbody><tr> <td width="33%"><i>slackrepo-0.2.0</i></td> <td align="center" width="33%">SLACKREPO_HINTS (5)</td> <td align="right" width="33%"><i>2014-06-01</i></td> </tr></tbody></table>
 </body></html>

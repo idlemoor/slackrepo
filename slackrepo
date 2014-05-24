@@ -45,6 +45,7 @@ function print_usage
 function exit_cleanup
 {
   rm -f "$PIDFILE"
+  [ "$OPT_KEEP_TMP" != 'y' -a -n "$MYTMPDIR" ] && rm -rf "$MYTMPDIR"
 }
 
 #-------------------------------------------------------------------------------
@@ -282,7 +283,7 @@ else
   mkdir -p $SR_TMP
 fi
 # We also need a slackrepo-specific temporary directory
-MYTMPDIR=$(mktemp -t -d slackrepo.XXXXXXXXXX) || { exit_cleanup; exit 4; }
+MYTMPDIR=$(mktemp -t -d slackrepo.XXXXXX) || { exit_cleanup; exit 4; }
 
 # Disposable package repository for dry run:
 if [ "$OPT_DRY_RUN" = 'y' ]; then

@@ -332,7 +332,7 @@ function parse_hints_and_info
     for hint in $VARHINTS; do
       if [ -f "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint" ]; then
         eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint")\"
-        eval hintlist+=( "$hint=\${HINT_$hint[$itemid]}" )
+        eval hintlist+=( "$hint=\"\\\"\${HINT_$hint[$itemid]}\\\"\"" )
       else
         eval HINT_$hint[$itemid]=''
       fi
@@ -346,7 +346,7 @@ function parse_hints_and_info
     for hint in $DEPHINTS; do
       if [ -f "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint" ]; then
         eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint")\"
-        eval hintlist+=( "$hint=\"\${HINT_$hint[$itemid]}\"" )
+        eval hintlist+=( "$hint=\"\\\"\${HINT_$hint[$itemid]}\\\"\"" )
       else
         eval HINT_$hint[$itemid]='%NONE%'
       fi

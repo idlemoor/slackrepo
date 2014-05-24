@@ -180,13 +180,15 @@ function needs_build
   # have any of the deps been updated => rebuild
   local -a updeps
   for dep in ${DIRECTDEPS[$itemid]}; do
-    # ignore the built date/time - merely rebuilt deps don't matter
-    pkgdeprev=$(grep "^prgnam=${ITEMPRGNAM[$dep]};" $PKGREVFILE | sed 's/ built=[0-9]*;//')
+    # ignore built= (merely rebuilt deps don't matter) and hints= (significant
+    # hint changes will affect version= or depends=, which *are* checked)
+    # (note, hints= *must* be last for the regex to work!)
+    pkgdeprev=$(grep "^prgnam=${ITEMPRGNAM[$dep]};" $PKGREVFILE | sed -e 's/ built=[0-9]*;//' -e 's/ hints=.*//' )
     if [ -z "${REVCACHE[$dep]}" ]; then
       # if there is nothing in REVCACHE, the dep's package can't be in DRYREPO
       REVCACHE[$dep]="$(head -q -n 1 "$SR_PKGREPO"/"${ITEMDIR[$dep]}"/.revision)"
     fi
-    currdeprev="$(echo ${REVCACHE[$dep]} | sed 's/ built=[0-9]*;//')"
+    currdeprev="$(echo ${REVCACHE[$dep]} | sed -e 's/ built=[0-9]*;//' -e 's/ hints=.*//')"
     [ "$pkgdeprev" != "$currdeprev" ] && updeps+=( "$dep" )
   done
   if [ "${#updeps}" != 0 ]; then

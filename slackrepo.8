@@ -1,7 +1,7 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO 8 "2014-04-01" slackrepo-0.1.0
+.TH SLACKREPO 8 "2014-06-01" slackrepo-0.2.0
 .
 .
 .
@@ -115,6 +115,7 @@ This option conflicts with --quiet.
 .TP
 .BR \-q ", " \-\-quiet
 Reduce the quantity of messages printed on the console during execution.
+This option conflicts with --verbose and --very-verbose.
 .
 .TP
 .B \-\-keep\-tmp
@@ -222,8 +223,8 @@ any of its direct dependencies has been updated since the package was built
 the version of Slackware has changed since the package was built
 .RE
 .P
-Changes in the SlackBuilds directory, and changes to the relevant hints, are
-classified as \(dqupdates\(dq, which will cause directly depending items to be rebuilt.
+Changes in the SlackBuilds directory are classified as
+\(dqupdates\(dq, which will cause directly depending items to be rebuilt.
 Other changes are classified as \(dqrebuilds\(dq and do not cause depending items to be rebuilt.
 For example, ffmpeg depends on x264, and transcode depends on ffmpeg.
 If x264 is updated, ffmpeg will be rebuilt, but transcode will not be rebuilt.
@@ -262,6 +263,14 @@ Build shotwell, with all its dependencies:
 .EE
 .RE
 .P
+Build and install shotwell and all its dependencies (this will NOT be a clean build):
+.P
+.RS
+.EX
+slackrepo build --install shotwell
+.EE
+.RE
+.P
 Remove grass (note, its dependencies and dependers will not be removed):
 .P
 .RS
@@ -286,11 +295,11 @@ Do a \(dqdry run\(dq update of all your SBo packages, with verbose messages:
 .EE
 .RE
 .P
-Test-build myprog in the newstuff repo, with verbose messages; do not store the built package:
+Test-build colord (in the csb repo), with very verbose messages; do not store the built package:
 .P
 .RS
 .EX
-# slackrepo build -v --repo=newstuff --test --dry-run myprog
+# slackrepo build -vv --repo=csb --test --dry-run colord
 .EE
 .RE
 .

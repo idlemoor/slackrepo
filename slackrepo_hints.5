@@ -1,7 +1,7 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO_HINTS 5 "2014-04-01" slackrepo-0.1.0
+.TH SLACKREPO_HINTS 5 "2014-06-01" slackrepo-0.2.0
 .
 .
 .
@@ -21,6 +21,8 @@ slackrepo_hints \- hint files for slackrepo
 .br
 .BI /etc/slackrepo/hints_ ID /.../ prgnam .md5ignore
 .br
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .nodownload
+.br
 .BI /etc/slackrepo/hints_ ID /.../ prgnam .makej1
 .br
 .BI /etc/slackrepo/hints_ ID /.../ prgnam .skipme
@@ -31,7 +33,7 @@ slackrepo_hints \- hint files for slackrepo
 .br
 .BI /etc/slackrepo/hints_ ID /.../ prgnam .cleanup
 .br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .no_uninstall
+.BI /etc/slackrepo/hints_ ID /.../ prgnam .install
 .br
 where
 .I ID

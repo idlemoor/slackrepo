@@ -50,19 +50,6 @@ TAG='_msb'
 PKGTYPE='tgz'
 
 #-------------------------------------------------------------------------------
-# Advanced and experimental features
-
-# Defaults for control arguments
-# (the command line will override values set here)
-QUIET='n'
-VERBOSE='n'
-VERY_VERBOSE='n'
-TEST='n'
-DRY_RUN='n'
-INSTALL='y'
-KEEP_TMP='n'
-
-#-------------------------------------------------------------------------------
 # Variables for calling gen_repos_files.sh
 
 # Change this to '1' if you want to enable gen_repos_files.sh
@@ -128,6 +115,23 @@ FOLLOW_SYMLINKS="1"
 # If the repository has separate package subdirectories then define them here.
 # Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them.
 REPO_SUBDIRS=""
+
+# If you want to exclude certain directories or files from being included
+# in the repository metadata, define them here (space-separated).
+# Example: REPO_EXCLUDES="RCS logs .genreprc"
+# .revision files are created by slackrepo:
+REPO_EXCLUDES=".revision"
+
+#-------------------------------------------------------------------------------
+# Defaults for control arguments
+
+QUIET='n'
+VERBOSE='n'
+VERY_VERBOSE='n'
+TEST='n'
+DRY_RUN='n'
+INSTALL='y'
+KEEP_TMP='n'
 
 #-------------------------------------------------------------------------------
 # Variables for creating the SlackBuild repository if it does not already exist

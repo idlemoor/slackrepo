@@ -430,50 +430,46 @@ done
 # Print a summary of what happened
 #-------------------------------------------------------------------------------
 
-echo ""
-echo "==============================================================================="
-echo "! SUMMARY                                                            $(date +%T) !"
-echo "==============================================================================="
-echo ""
+log_start "SUMMARY"
 secs=$(( $(date +%s) - $starttime ))
 h=$(( $secs / 3600 )); m=$(( ( $secs / 60) % 60 )); s=$(( $secs % 60 ))
-echo "Time:       ${h}h ${m}m ${s}s"
-echo "Processed:  $(( ${#OKLIST[@]} + ${#SKIPPEDLIST[@]} + ${#FAILEDLIST[@]} + ${#ABORTEDLIST[@]} ))"
+log_normal "Time:       ${h}h ${m}m ${s}s"
+log_normal "Processed:  $(( ${#OKLIST[@]} + ${#SKIPPEDLIST[@]} + ${#FAILEDLIST[@]} + ${#ABORTEDLIST[@]} ))"
 
 if [ "$OPT_DRY_RUN" = 'y' ]; then
   OKLIST=( $(printf '%s\n' "${OKLIST[@]}" | sort -u) )
   okcount="${#OKLIST[@]}"
-  echo "Dry run OK: $okcount"
-  [ "$OPT_QUIET" != 'y' -a "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}"
+  log_normal "Dry run OK: $okcount"
+  [ "$OPT_QUIET" != 'y' -a "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}" | tee -a "$MAINLOG"
 else
-  echo "Added:      $(grep ': Added'   "$CHANGELOG" | wc -l)"
+  log_normal "Added:      $(grep ': Added'   "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Added'   "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Updated:    $(grep ': Updated' "$CHANGELOG" | wc -l)"
+    grep ': Added'   "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
+  log_normal "Updated:    $(grep ': Updated' "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Updated' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Rebuilt:    $(grep ': Rebuilt' "$CHANGELOG" | wc -l)"
+    grep ': Updated' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
+  log_normal "Rebuilt:    $(grep ': Rebuilt' "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Rebuilt' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-  echo "Removed:    $(grep ': Removed' "$CHANGELOG" | wc -l)"
+    grep ': Rebuilt' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
+  log_normal "Removed:    $(grep ': Removed' "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Removed' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    grep ': Removed' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
 fi
 SKIPPEDLIST=( $(printf '%s\n' "${SKIPPEDLIST[@]}" | sort -u) )
 skippedcount="${#SKIPPEDLIST[@]}"
-echo "Skipped:    $skippedcount"
-[ "$OPT_QUIET" != 'y' -a "$skippedcount" != 0 ] && printf '  %s\n' "${SKIPPEDLIST[@]}"
+log_normal "Skipped:    $skippedcount"
+[ "$OPT_QUIET" != 'y' -a "$skippedcount" != 0 ] && printf '  %s\n' "${SKIPPEDLIST[@]}" | tee -a "$MAINLOG"
 FAILEDLIST=( $(printf '%s\n' "${FAILEDLIST[@]}" | sort -u) )
 failedcount="${#FAILEDLIST[@]}"
-echo "Failed:     $failedcount"
-[ "$OPT_QUIET" != 'y' -a "$failedcount" != 0 ]  && printf '  %s\n' "${FAILEDLIST[@]}"
+log_normal "Failed:     $failedcount"
+[ "$OPT_QUIET" != 'y' -a "$failedcount" != 0 ]  && printf '  %s\n' "${FAILEDLIST[@]}" | tee -a "$MAINLOG"
 ABORTEDLIST=( $(printf '%s\n' "${ABORTEDLIST[@]}" | sort -u) )
 abortedcount="${#ABORTEDLIST[@]}"
-echo "Aborted:    $abortedcount"
-[ "$OPT_QUIET" != 'y' -a "$abortedcount" != 0 ] && printf '  %s\n' "${ABORTEDLIST[@]}"
+log_normal "Aborted:    $abortedcount"
+[ "$OPT_QUIET" != 'y' -a "$abortedcount" != 0 ] && printf '  %s\n' "${ABORTEDLIST[@]}" | tee -a "$MAINLOG"
 warningcount=$(grep '^WARNING: ' "$MAINLOG" | sort -u | wc -l)
-echo "Warnings:   $warningcount"
-[ "$OPT_QUIET" != 'y' ] && grep '^WARNING: ' "$MAINLOG" | sort -u | sed 's/^WARNING: /  /'
+log_normal "Warnings:   $warningcount"
+[ "$OPT_QUIET" != 'y' ] && grep '^WARNING: ' "$MAINLOG" | sort -u | sed 's/^WARNING: /  /' | tee -a "$MAINLOG"
 
 #-------------------------------------------------------------------------------
 # Package repository maintenance: gen_repos_files.sh

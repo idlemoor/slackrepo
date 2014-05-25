@@ -46,7 +46,7 @@ function build_item
   NEWVERSION="${HINT_version[$itemid]}"
   if [ -n "$NEWVERSION" -a "${INFOVERSION[$itemid]}" != "$NEWVERSION" ]; then
     # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
-    log_verbose "Note: $itemid: setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]}) and ignoring md5sums"
+    log_verbose -a "Note: $itemid: setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]}) and ignoring md5sums"
     sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$MYTMPIN/$itemfile"
     verpat="$(echo ${INFOVERSION[$itemid]} | sed 's/\./\\\./g')"
     INFODOWNLIST[$itemid]="$(echo "${INFODOWNLIST[$itemid]}" | sed "s/$verpat/$NEWVERSION/g")"
@@ -70,7 +70,7 @@ function build_item
        return 5
        ;;
     6) # nodownload hint (probably needs manual download due to licence agreement)
-       log_warning -n "SKIPPED $itemid - please download the source"
+       log_warning -n -a "SKIPPED $itemid - please download the source"
        echo "  from: ${INFODOWNLIST[$itemid]}"
        echo "  to:   ${SRCDIR[$itemid]}"
        # We ought to prepare that directory ;-)
@@ -275,7 +275,11 @@ function build_failed
   buildtype=$(echo $BUILDINFO | cut -f1 -d" ")
   msg="$buildtype FAILED"
   log_error -n ":-( $itemid $msg )-:"
-  errorscan_itemlog | tee -a "$MAINLOG"
+  if [ "$OPT_QUIET" != 'y' ]; then
+    errorscan_itemlog | tee -a "$MAINLOG"
+  else
+    errorscan_itemlog >> "$MAINLOG"
+  fi
   log_error -n "See $ITEMLOG"
   FAILEDLIST+=( "$itemid" )
 
@@ -464,12 +468,13 @@ function remove_item
         rm -rf "$repodir"/"$itemdir"
         up="$(dirname "$itemdir")"
         [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "$repodir"/"$up"
-        log_important "Removed $repodir/$itemdir"
+        log_normal "Removed $repodir/$itemdir"
       else
-        log_important "Nothing found in $repodir/$itemdir"
+        log_normal "Nothing found in $repodir/$itemdir"
       fi
     done
     echo "$itemid: Removed. NEWLINE" >> "$CHANGELOG"
+    log_success "$itemid: Removed"
   fi
   return
 }

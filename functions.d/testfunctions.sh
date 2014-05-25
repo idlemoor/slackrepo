@@ -218,16 +218,16 @@ function test_package
     # check that the compression type matches the suffix
     filetype=$(file -b "$pkgpath")
     case "$filetype" in
-      'gzip compressed data'*)  [ "$PN_PKGTYPE" = 'tgz' ] || log_warning "${itemid}: ${pkgbasename} has wrong suffix, should be .tgz" ;;
-      'XZ compressed data'*)    [ "$PN_PKGTYPE" = 'txz' ] || log_warning "${itemid}: ${pkgbasename} has wrong suffix, should be .txz" ;;
-      'bzip2 compressed data'*) [ "$PN_PKGTYPE" = 'tbz' ] || log_warning "${itemid}: ${pkgbasename} has wrong suffix, should be .tbz" ;;
-      'LZMA compressed data'*)  [ "$PN_PKGTYPE" = 'tlz' ] || log_warning "${itemid}: ${pkgbasename} has wrong suffix, should be .tlz" ;;
+      'gzip compressed data'*)  [ "$PN_PKGTYPE" = 'tgz' ] || log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .tgz" ;;
+      'XZ compressed data'*)    [ "$PN_PKGTYPE" = 'txz' ] || log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .txz" ;;
+      'bzip2 compressed data'*) [ "$PN_PKGTYPE" = 'tbz' ] || log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .tbz" ;;
+      'LZMA compressed data'*)  [ "$PN_PKGTYPE" = 'tlz' ] || log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .tlz" ;;
       *) log_error "${itemid}: ${pkgbasename} is \"$filetype\", not a package" ; return 1 ;;
     esac
 
     # list what's in the package (and check if it's really a tarball)
     TMP_PKGCONTENTS="$MYTMPDIR"/pkgcontents_"$pkgbasename"
-    tar tvf "$pkgpath" > "$TMP_PKGCONTENTS" || { log_error "${itemid}: ${pkgbasename} is not a tar archive"; return 1; }
+    tar tvf "$pkgpath" > "$TMP_PKGCONTENTS" || { log_error -a "${itemid}: ${pkgbasename} is not a tar archive"; return 1; }
 
     # we'll reuse this file several times to analyse the contents:
     TMP_PKGJUNK="$MYTMPDIR"/pkgjunk_"$pkgbasename"
@@ -255,7 +255,7 @@ function test_package
 
     # check top level
     if ! head -n 1 "$TMP_PKGCONTENTS" | grep -q '^drwxr-xr-x root/root .* \./$' ; then
-      log_warning "${itemid}: ${pkgbasename} has wrong top level directory (not tar-1.13?)"
+      log_warning -a "${itemid}: ${pkgbasename} has wrong top level directory (not tar-1.13?)"
     fi
 
     # check for non root/root ownership (this may be a bit oversensitive)

@@ -33,7 +33,7 @@ function log_start
   echo ""
   echo ""                             >> "$MAINLOG"
   echo "$line"                        >> "$MAINLOG"
-  echo "STARTING $@ $(date '+%F %T')" >> "$MAINLOG"
+  echo "$@ $(date '+%F %T')" >> "$MAINLOG"
 }
 
 #-------------------------------------------------------------------------------

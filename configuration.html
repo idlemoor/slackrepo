@@ -16,26 +16,23 @@
 </header>
 
 <nav>
-<h2>slackrepo</h2>
+<h2><a href="index.html">slackrepo</a></h2>
 <ul>
-<li><a href="index.html">About</a></li>
-<li><a href="installing.html">Installation</a></li>
-<li><a href="running.html">Running</a></li>
-<li><a href="examples.html">Examples</a></li>
-<li><a href="dependencies.html">Dependencies</a></li>
-<li><a href="updates.html">Updates</a></li>
-<li><a href="sbo_git.html">SlackBuilds.org git</a></li>
-<li><a href="messages.html">Logging</a></li>
-<li><a href="configuration.html">Configuration</a></li>
-<li><a href="hints.html">Hints</a></li>
-<li><a href="manpages.html">man pages</a></li>
-<li><a href="structure.html">Repo structure</a></li>
-<li><a href="metadata.html">Package metadata</a></li>
-<li><a href="tests.html">Tests</a></li>
-<li><a href="genrepos.html">gen_repos_files.sh</a></li>
-<li><a href="slackpkgplus.html">slackpkg+</a></li>
-<li><a href="links.html">Links</a></li>
-<li><a href="licence.html">Licence</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="quickstart.html">Quick start</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation</a></li>
+<li>
+  <ul>
+  <li><a href="usagenotes.html">Usage notes</a></li>
+  <li><a href="hintfiles.html">Hintfiles</a></li>
+  <li><a href="configuration.html">Configuration</a></li>
+  <li><a href="structure.html">Repo structure</a></li>
+  <li><a href="tests.html">Tests</a></li>
+  <li><a href="links.html">Links</a></li>
+  </ul>
+</li>
+<li><a href="slackrepo.8.html">manpages</a></li>
 </ul>
 </nav>
 
@@ -49,7 +46,7 @@ or <code>~/.slackreporc</code>.</p>
 <h4>Default repo ID</h4>
 
 <ul>
-<li><code>REPO=SBo</code> -- the default repo ID.  This determines the configuration file  
+<li><code>REPO=SBo</code> &mdash; the default repo ID.  This determines the configuration file  
 /etc/slackrepo/slackrepo_ID.conf from which other configuration variables will be read. 
 This can be set only in ~/.slackreporc, but can be overridden by the <code>REPO</code> environment 
 variable or by the command line option <code>--repo=ID</code>.</li>
@@ -58,29 +55,29 @@ variable or by the command line option <code>--repo=ID</code>.</li>
 <h4>Repository filestore locations</h4>
 
 <ul>
-<li><code>SBREPO=/var/lib/slackrepo/git_SBo</code> -- location of SlackBuilds repository</li>
-<li><code>PKGREPO=/var/lib/slackrepo/pkg_SBo</code> -- location of package repository</li>
-<li><code>SRCREPO=/var/lib/slackrepo/src_SBo</code> -- location of downloaded source repository</li>
-<li><code>HINTS=/etc/slackrepo/hints_SBo</code> -- location of 'hints' (see 'Hints' page)</li>
-<li><code>LOGDIR=/var/log/slackrepo/log_SBo</code> -- location of log files</li>
-<li><code>TMP=/tmp/SBo</code> - temporary directory</li>
+<li><code>SBREPO=/var/lib/slackrepo/git_SBo</code> &mdash; location of SlackBuilds repository</li>
+<li><code>PKGREPO=/var/lib/slackrepo/pkg_SBo</code> &mdash; location of package repository</li>
+<li><code>SRCREPO=/var/lib/slackrepo/src_SBo</code> &mdash; location of downloaded source repository</li>
+<li><code>HINTS=/etc/slackrepo/hints_SBo</code> &mdash; location of 'hints' (see 'Hints' page)</li>
+<li><code>LOGDIR=/var/log/slackrepo/log_SBo</code> &mdash; location of log files</li>
+<li><code>TMP=/tmp/SBo</code> &mdash; temporary directory</li>
 </ul>
 
-<h4>Building packages</h4>
+<h4>Building packages</h4> &
 
 <ul>
-<li><code>ARCH=''</code> -- arch for built packages (normally determined from the build host)</li>
-<li><code>TAG=_SBo</code> -- tag for built packages (<strong>please change this</strong>
+<li><code>ARCH=''</code> &mdash; arch for built packages (normally determined from the build host)</li>
+<li><code>TAG=_SBo</code> &mdash; tag for built packages (<strong>please change this</strong>
 if your packages will be publicly available, <a href="http://slackbuilds.org/faq/#package_repos">see SlackBuilds.org FAQ 20</a>)</li>
-<li><code>PKGTYPE=tgz</code> -- package compression type. Valid values are: tgz, txz, tbz, tlz</li>
-<li><code>NUMJOBS=''</code> -- number of make jobs to set in MAKEFLAGS (e.g., <code>NUMJOBS='-j2'</code>). 
+<li><code>PKGTYPE=tgz</code> &mdash; package compression type. Valid values are: tgz, txz, tbz, tlz</li>
+<li><code>NUMJOBS=''</code> &mdash; number of make jobs to set in MAKEFLAGS (e.g., <code>NUMJOBS='-j2'</code>). 
 Leave blank to have this automatically determined as one more than the number of processors on the build host.</li>
 </ul>
 
 <h4>Calling gen_repos_files.sh</h4>
 
 <ul>
-<li><code>USE_GENREPOS='0'</code> -- whether to use gen_repos_files.sh (to enable it, change 0 to 1)</li>
+<li><code>USE_GENREPOS='0'</code> &mdash; whether to use gen_repos_files.sh (to enable it, change 0 to 1)</li>
 </ul>
 
 <p>If you enable gen_repos_files.sh, you <strong>must</strong> set correct values for its

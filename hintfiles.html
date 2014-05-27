@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<title>slackrepo - Hintfiles</title>
+<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
+<link rel="shortcut icon" href="/slackrepo/favicon.ico">
+<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+</head>
+
+<body>
+
+<header>
+<h2>Hintfiles</h2>
+</header>
+
+<nav>
+<h2><a href="index.html">slackrepo</a></h2>
+<ul>
+<li><a href="download.html">Download</a></li>
+<li><a href="quickstart.html">Quick start</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation</a></li>
+<li>
+  <ul>
+  <li><a href="usagenotes.html">Usage notes</a></li>
+  <li><a href="hintfiles.html">Hintfiles</a></li>
+  <li><a href="configuration.html">Configuration</a></li>
+  <li><a href="structure.html">Repo structure</a></li>
+  <li><a href="tests.html">Tests</a></li>
+  <li><a href="links.html">Links</a></li>
+  </ul>
+</li>
+<li><a href="slackrepo.8.html">manpages</a></li>
+</ul>
+</nav>
+
+<div id="main">
+
+<p>You are encouraged to take full control of the building process by
+reviewing, customising and creating <strong><em>hintfiles</em></strong>.
+A hintfile is a file that supplements a SlackBuild's
+.info file, for example to specify options and extra dependencies,
+to override the version, downloads and md5sums, etc.</p>
+
+<p>Each repository has its own directory for hintfiles.  The hint directory contains a structure of
+subdirectories that is the same as the subdirectories in the SlackBuilds repository.
+For example, if the SBo repository's SlackBuild file for wxPython is
+<code>libraries/wxPython/wxPython.SlackBuild</code>,
+then its hintfile will be
+<code>/etc/slackrepo/hints_SBo/libraries/wxPython/wxPython.hint</code>.</p>
+
+<p class="scary">
+A sample set of hintfiles for SlackBuilds.org are supplied in the directory
+<code>/etc/slackrepo/hintfiles_SBo</code>.
+The sample hintfiles are always ignored. You must review the README files of the packages you are
+building, and then edit the sample hintfiles for your own choices, and then save them (or rename them) without the
+.sample suffix.</p>
+
+<p>The format of a hintfile is based on the format of SlackBuilds.org .info files,
+but all the hints are <strong>optional</strong>, and any unrecognised entries are
+<strong>ignored</strong>. The hints that can be defined are as follows:</p>
+
+<pre>
+VERSION="newversion"
+DOWNLOAD="new urls"
+MD5SUM="new md5sums"
+DOWNLOAD_arch="new urls"
+MD5SUM_arch="new md5sums"
+REQUIRES="replacement dependencies"
+ADDREQUIRES="additional dependencies"
+OPTIONS="OPT1=yes OPT2=no ..."
+UID="uid:username"
+GID="gid:groupname"
+SKIP="yesno"
+ARCH="arch"
+INSTALL="yesno"
+NUMJOBS="-j1"
+ANSWERS="strings"
+CLEANUP="commands"
+</pre>
+
+<h4>VERSION="newversion"</h4>
+<p>This hint can be specified to attempt an automatic patch of the version 
+number in both the SlackBuild and info files.  The automatic patch is done by a
+simple text substitution. This often won't work 
+(particularly if the old version number is something like '1', or if the download 
+URL has not been patched correctly and you have not supplied a new download URL in the
+hint file).  The md5sum of the source archive will not be checked, unless you have also supplied a new
+md5sum in the hint file. The patched SlackBuild and info files are 
+not kept.</p>
+
+<h4>DOWNLOAD="new urls"</h4>
+<p>This hint redefines download URLs that replace the URLs specified in the .info file, for
+example if you have also defined VERSION=, or if the upstream URL has changed.</p>
+<p>However, if specified as <code>DOWNLOAD="no"</code>, this hint indicates that the source needs to be downloaded
+manually (for example, because of a licence agreement).  If you have already downloaded
+the source into the source cache, and if the md5sum is correct, then the package will be built.
+Otherwise, a message will be displayed explaining what you should do, and the package will be skipped.</p>
+
+<h4>MD5SUM="new md5sums"</h4>
+<p>This hint redefines md5sums that replace the md5sums specified in the .info file, for
+example if you have also redefined VERSION=, or if the upstream source archive has been changed.</p>
+<p>However, if specified as <code>MD5SUM="no"</code>, this hint indicates that the source md5sums are not
+reliable (for example, because of an unversioned archive) and should not be checked.</p>
+
+<h4>DOWNLOAD_arch="new urls"
+<br>MD5SUM_arch="new md5sums"</h4>
+<p>These hints redefine DOWNLOAD and MD5SUM, as above, for the specified arch.</p>
+
+<h4>REQUIRES="replacement dependencies"</h4>
+<p>This hint should define a list of dependencies, separated by spaces.
+This list will replace the REQUIRES= list defined in the .info file.
+If the .info file specifies %README%, you should set this hint (without %README%)
+to stop slackrepo displaying a warning.</p>
+
+<h4>ADDREQUIRES="additional dependencies"</h4>
+<p>This hint should define a list of dependencies separated by spaces.
+Dependencies in this list will be added to the dependencies defined by
+REQUIRES=.</p>
+
+<h4>OPTIONS="OPT1=yes OPT2=no ..."</h4>
+<p>This hint should define options described in the SlackBuild's README file. Note that
+this is the only way in slackrepo that you can define SlackBuild options.</p>
+
+<h4>UID="uid:username"</h4>
+<p></p>
+
+<h4>GID="gid:groupname"</h4>
+<p></p>
+
+<h4>SKIP="yesno"</h4>
+<p>This hint can be specified if you want to skip the package when it would 
+otherwise be built, rebuilt, updated or removed.  If the hint isn't specified
+as <code>SKIP="yes"</code> or <code>SKIP="no"</code>, it will be interpreted
+as "yes", and the string will be displayed when the build is skipped, so that
+you can put a helpful message into it, for example:</p>
+<pre>SKIP="Please remove the Slackware nc package before you build netcat-openbsd"</pre>
+
+<h4>ARCH="arch"</h4>
+<p>This hint temporarily overrides the value of ARCH given in the
+configuration file or environment.  Use this hint if ... <i>(check multilib
+situation)</i>.</p>
+
+<h4>INSTALL="yesno"</h4>
+<p>This hint temporarily overrides the value of INSTALL given in the
+configuration file or on the command line. Use this hint if you want a specific
+package to be installed after it has been built (e.g. nvidia-driver). Note that
+if the control argument --dry-run is specified, this hint will be ignored.</p>
+
+<h4>NUMJOBS="-j1"</h4>
+<p>This hint temporarily overrides the value of NUMJOBS given in the
+configuration file or environment.  Use this hint if the build process fails
+when multiple 'make' jobs are used, so that the build will be executed with
+MAKEFLAGS='-j1'.</p>
+
+<h4>ANSWERS="string"</h4>
+<p>This hint can be specified if the build process wants to read answers to 
+its questions during execution, for example concerning a licence agreement. The
+string is piped into the SlackBuild's standard input, so it should contain whatever 
+will make the build process happy. Newlines can be specified as \n, for example</p>
+<pre>ANSWERS="ok\nyes"</pre>
+
+<h4>CLEANUP="commands"</h4>
+<p><p>This hint can be specified if the package needs extra cleanup when it is 
+uninstalled (e.g. packages that replace standard Slackware packages or 
+install kernel modules). The hint should define an appropriate shell command pipeline. 
+For example, to reinstall Slackware packages:</p>
+<pre>
+CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex-doc"
+</pre>
+<p>or to clean up after a kernel module is uninstalled:</p>
+<pre>
+CLEANUP="depmod -a"
+</pre>
+
+</div>
+
+</body>
+</html>

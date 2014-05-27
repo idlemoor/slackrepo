@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<title>slackrepo - Usage notes</title>
+<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
+<link rel="shortcut icon" href="/slackrepo/favicon.ico">
+<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+</head>
+
+<body>
+
+<header>
+<h2>Usage notes</h2>
+<p><a href="#dependencies">Dependencies</a> &bull; <a href="#git">git</a> &bull; <a href="#updates">Updates</a>
+&bull; <a href="#genrepos">gen_repos_files.sh</a> &bull; <a href="#slackpkgplus">slackpkg+</a></p>
+</header>
+
+<nav>
+<h2><a href="index.html">slackrepo</a></h2>
+<ul>
+<li><a href="download.html">Download</a></li>
+<li><a href="quickstart.html">Quick start</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation</a></li>
+<li>
+  <ul>
+  <li><a href="usagenotes.html">Usage notes</a></li>
+  <li><a href="hintfiles.html">Hintfiles</a></li>
+  <li><a href="configuration.html">Configuration</a></li>
+  <li><a href="structure.html">Repo structure</a></li>
+  <li><a href="tests.html">Tests</a></li>
+  <li><a href="links.html">Links</a></li>
+  </ul>
+</li>
+<li><a href="slackrepo.8.html">manpages</a></li>
+</ul>
+</nav>
+
+<div id="main">
+
+<h3><a name="dependencies"></a>Dependencies</h3>
+
+<p>Dependencies are built, installed and removed automatically, according to the
+contents of .info files (<code>REQUIRES="..."</code>) and <a href="hintfiles.html">hintfiles</a>.
+If a SlackBuild does not have a corresponding .info file, dependencies cannot
+be processed.</p>
+
+<p>Except when --install is specified, building, installing and removing is done
+as a 'tree' of dependencies, not a linear 'queue', so dependencies may be
+installed and removed multiple times.  Although time consuming, this
+is necessary in some cases to produce clean packages for redistribution.</p>
+
+<p>In update mode, when a package is found that is older than its dependencies,
+it will be rebuilt. To cause a rebuild, the dependency must have been updated
+significantly, not merely rebuilt: see <a href="#updates">updates</a> below for details.</p>
+
+<p>Remember that dependencies on standard Slackware packages are not (and
+should not be) listed in .info files and hints, and are not tracked by
+slackrepo.</p>
+
+<h3><a name="git"></a>git</h3>
+
+<p>If no SlackBuild Repository exists when slackrepo starts, it will clone the
+SlackBuilds.org git repository, and a local branch <code>14.1</code> will be created
+that tracks <code>origin/14.1</code> (i.e., the stable branch at SlackBuilds.org).</p>
+
+<p>As a special case, if the local branch is named <code>14.1</code> (as above) and is
+clean, then when slackrepo starts it will automatically update the local
+branch by fast forward (if possible) from its origin, but <strong>only if more than
+one day has elapsed</strong> since the last automatic update.</p>
+
+<h3><a name="updates"></a>Updates</h3>
+
+<p>In build mode and in rebuild mode, packages are updated or rebuilt
+if required; for example, if a package is being built, its dependencies will be
+updated and/or rebuilt if they are out-of-date. Update mode proactively looks for
+packages that are out-of-date, and also removes packages for which the SlackBuilds
+no longer exist.</p>
+
+<p>A package is out-of-date if:</p>
+<ul>
+<li>the git revision in the directory containing the SlackBuild has changed
+since the package was built</li>
+<li>the directory containing the SlackBuilds has untracked/uncommited files
+(i.e., git is "dirty") and they are newer than the package</li>
+<li>any relevant hint has changed since the package was built</li>
+<li>any of its direct dependencies has been updated since the package was built</li>
+<li>the version of Slackware has changed since the package was built</li>
+</ul>
+
+<p>Changes in the SlackBuilds directory are classified as 'updates', which will
+cause directly depending items to be rebuilt if and when they are processed.
+Other changes are classified as 'rebuilds' and do not cause
+depending items to be rebuilt.</p>
+
+<p>For example, ffmpeg depends on x264, and transcode depends on ffmpeg.
+If x264 is updated, ffmpeg will be rebuilt, but transcode will not be rebuilt.
+If x264 is rebuilt, ffmpeg will not be rebuilt.  If ffmpeg is updated,
+transcode will be rebuilt.</p>
+
+<p>When a package is rebuilt, and when a package is updated but its
+version number is unchanged, the BUILD number in the package repository
+is always incremented (and the BUILD number in the SlackBuild file is
+ignored).</p>
+
+<h3><a name="genrepos"></a>gen_repos_files.sh</h3>
+
+<p>Optionally, Eric Hameleers'
+<a href="http://www.slackware.com/~alien/tools/gen_repos_files.sh" class="ext">gen_repos_files.sh</a>
+(which is included) can
+be used to maintain additional package metadata in the package repository,
+such as package signing and a changelog.  Thanks, Eric!  To use it, you will
+need to set a few configuration values in the repository's configuration
+file /etc/slackrepo/slackrepo_SBo.conf (but, if you use gen_repos_files.sh
+already, your existing ~/.genreprc config file will be read).</p>
+
+<p>Note that you will be prompted for your GPG passphrase when gen_repos_files.sh
+runs (after all the packages have been built).  You can avoid this by using
+gpg-agent &mdash; see <a href="slackrepo.conf.5.html">slackrepo.conf(5)</a> for details.</p>
+
+<h3><a name="slackpkgplus"></a>slackpkg+</h3>
+
+<p>The repositories created by slackrepo are suitable for use with 
+<a href="http://slakfinder.org/slackpkg+.html" class="ext">slackpkg+</a>, which is a plugin for slackpkg
+that allows you to use slackpkg to manage packages from third party
+repositories.  Thanks, Matteo!</p>
+
+<p>To make your slackrepo package repositories accessible, you will need to
+export them as a shared directory (e.g. NFS or a Virtualbox shared folder),
+or perhaps serve them via a local webserver on the build host (e.g. by
+setting <code>PKGREPO=/var/www/htdocs/pkgrepo</code> in /etc/slackrepo/slackrepo_SBo.conf).</p>
+
+<p>For example, on a client system, to configure slackpkg+ to use a shared
+directory, /etc/slackpkg/slackpkgplus.conf would have something like this:</p>
+
+<pre>
+REPOPLUS=( SBo slackpkgplus restricted alienbob )
+MIRRORPLUS['SBo']=dir://repositories/pkg_SBo/
+</pre>
+
+<p>Or to configure slackpkg+ to use a web-served repository on the build
+host, you would have something like this:</p>
+
+<pre>
+REPOPLUS=( SBo slackpkgplus restricted alienbob )
+MIRRORPLUS['SBo']=http://buildhost/pkg_SBo/
+</pre>
+
+<p>If you choose not to sign your packages with gen_repos_files.sh, you will
+need to tell slackpkg+ not to check GPG signatures.  There are two ways
+of doing this: (1) set <code>CHECKGPG=off</code> in /etc/slackpkg/slackpkg.conf, or
+(2) use the slackpkg control argument <code>-checkgpg=off</code>.</p>
+
+<p>Note that slackpkg+ will not install newly added packages from your own
+package repository when you run <code>slackpkg install-new</code>.  This command
+searches for new packages ONLY in the official Slackware repository.  To
+install specific packages in your own repository you can use</p>
+
+<pre>
+slackpkg install &lt;packagename&gt;
+</pre>
+
+<p>or to install and upgrade everything in your own repository, you can use</p>
+
+<pre>
+slackpkg add &lt;reponame&gt;
+</pre>
+</div>
+
+</body>
+</html>

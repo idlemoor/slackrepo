@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="utf-8">
-<title>slackrepo - Licence</title>
+<title>slackrepo - Download</title>
 <link rel="icon" type="image/png" href="/slackrepo/favicon.png">
 <link rel="shortcut icon" href="/slackrepo/favicon.ico">
 <link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
@@ -12,39 +12,43 @@
 <body>
 
 <header>
-<h2>Licence</h2>
+<h2>Download and installation</h2>
 </header>
 
 <nav>
-<h2>slackrepo</h2>
+<h2><a href="index.html">slackrepo</a></h2>
 <ul>
-<li><a href="index.html">About</a></li>
-<li><a href="installing.html">Installation</a></li>
-<li><a href="running.html">Running</a></li>
-<li><a href="examples.html">Examples</a></li>
-<li><a href="dependencies.html">Dependencies</a></li>
-<li><a href="updates.html">Updates</a></li>
-<li><a href="sbo_git.html">SlackBuilds.org git</a></li>
-<li><a href="messages.html">Logging</a></li>
-<li><a href="configuration.html">Configuration</a></li>
-<li><a href="hints.html">Hints</a></li>
-<li><a href="manpages.html">man pages</a></li>
-<li><a href="structure.html">Repo structure</a></li>
-<li><a href="metadata.html">Package metadata</a></li>
-<li><a href="tests.html">Tests</a></li>
-<li><a href="genrepos.html">gen_repos_files.sh</a></li>
-<li><a href="slackpkgplus.html">slackpkg+</a></li>
-<li><a href="links.html">Links</a></li>
-<li><a href="licence.html">Licence</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="quickstart.html">Quick start</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation</a></li>
+<li><a href="slackrepo.8.html">manpages</a></li>
 </ul>
 </nav>
 
 <div id="main">
 
-<h4>slackrepo</h4>
+<h4>Package</h4>
+<p>A prebuilt package can be downloaded here:</p>
+
+
+<h4>Git</h4>
+<p>You can clone the git repository, and then run the embedded
+SlackBuild to create a package that you can install:</p>
 
 <pre>
-Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
+git clone git@github.com:idlemoor/slackrepo.git
+cd slackrepo
+git archive --format=tar --prefix=slackrepo-0.2.0/ HEAD | gzip > SlackBuild/slackrepo-0.2.0.tar.gz
+cd SlackBuild
+VERSION=0.2.0 TAG=_github sh ./slackrepo.SlackBuild
+installpkg /tmp/slackrepo-0.2.0-noarch-1_github.tgz
+</pre>
+
+<h4>Licence - slackrepo</h4>
+
+<pre style="font-family: serif; font-size: small; font-weight: normal">
+Copyright &copy; 2014 David Spencer, Baildon, West Yorkshire, U.K.
 All rights reserved.
 
 Redistribution and use of this software, with or without modification, is
@@ -65,14 +69,13 @@ permitted provided that the following conditions are met:
    ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </pre>
 
-<h4>gen_repos_files.sh
-<br />checkpkg</h4>
+<h4>Licence - gen_repos_files.sh and checkpkg</h4>
 
 <p><code><a href="http://www.slackware.com/~alien/tools/gen_repos_files.sh" class="ext">http://www.slackware.com/~alien/tools/gen_repos_files.sh</a></code>
 <br /><code><a href="http://www.slackware.com/~alien/tools/checkpkg" class="ext">http://www.slackware.com/~alien/tools/checkpkg</a></code></p>
 
-<pre>
-Copyright (c) 2006-2014  Eric Hameleers, Eindhoven, The Netherlands
+<pre style="font-family: serif; font-size: small; font-weight: normal">
+Copyright &copy; 2006-2014  Eric Hameleers, Eindhoven, The Netherlands
 All rights reserved.
 
    Permission to use, copy, modify, and distribute this software for

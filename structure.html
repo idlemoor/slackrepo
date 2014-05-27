@@ -12,34 +12,33 @@
 <body>
 
 <header>
-<h2>Repository filestore structure</h2>
+<h2>Repository structure</h2>
 </header>
 
 <nav>
-<h2>slackrepo</h2>
+<h2><a href="index.html">slackrepo</a></h2>
 <ul>
-<li><a href="index.html">About</a></li>
-<li><a href="installing.html">Installation</a></li>
-<li><a href="running.html">Running</a></li>
-<li><a href="examples.html">Examples</a></li>
-<li><a href="dependencies.html">Dependencies</a></li>
-<li><a href="updates.html">Updates</a></li>
-<li><a href="sbo_git.html">SlackBuilds.org git</a></li>
-<li><a href="messages.html">Logging</a></li>
-<li><a href="configuration.html">Configuration</a></li>
-<li><a href="hints.html">Hints</a></li>
-<li><a href="manpages.html">man pages</a></li>
-<li><a href="structure.html">Repo structure</a></li>
-<li><a href="metadata.html">Package metadata</a></li>
-<li><a href="tests.html">Tests</a></li>
-<li><a href="genrepos.html">gen_repos_files.sh</a></li>
-<li><a href="slackpkgplus.html">slackpkg+</a></li>
-<li><a href="links.html">Links</a></li>
-<li><a href="licence.html">Licence</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="quickstart.html">Quick start</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation</a></li>
+<li>
+  <ul>
+  <li><a href="usagenotes.html">Usage notes</a></li>
+  <li><a href="hintfiles.html">Hintfiles</a></li>
+  <li><a href="configuration.html">Configuration</a></li>
+  <li><a href="structure.html">Repo structure</a></li>
+  <li><a href="tests.html">Tests</a></li>
+  <li><a href="links.html">Links</a></li>
+  </ul>
+</li>
+<li><a href="slackrepo.8.html">manpages</a></li>
 </ul>
 </nav>
 
 <div id="main">
+
+<h3>Repository paths</h3>
 
 <p>Multiple repositories are supported.  The Repository ID, e.g. <code>SBo</code>,
 selects a configuration file, e.g. /etc/slackrepo/slackrepo_SBo.conf, and
@@ -66,6 +65,39 @@ in the file ~/.slackreporc.  By default, the default default is <code>SBo</code>
 <p>Under each of git_SBo, src_SBo, pkg_SBo, log_SBo and hints_SBo is a directory
 for each SBo category, and under each category directory is a subdirectory for each
 item.</p>
+
+<h3>Package repository files</h3>
+
+<p>The following files are created by gen_repos_files.sh and slackrepo in the package repository.</p>
+
+<p>In the package repository's root directory:</p>
+<ul>
+<li><code>CHECKSUMS.md5</code> - md5 checksums for all the packages and the package metadata</li>
+<li><code>CHECKSUMS.md5.asc</code> - a detached GPG signature that can be used to verify CHECKSUMS.md5</li>
+<li><code>CHECKSUMS.md5.gz</code> - a compressed copy of CHECKSUMS.md5</li>
+<li><code>CHECKSUMS.md5.gz.asc</code> - a detached GPG signature that can be used to verify CHECKSUMS.md5.gz</li>
+<li><code>ChangeLog.rss</code> - an RSS feed of recent ChangeLog.txt entries</li>
+<li><code>ChangeLog.txt</code> - the cumulative ChangeLog for this package repository</li>
+<li><code>ChangeLog.txt.gz</code> - a compressed copy of ChangeLog.txt</li>
+<li><code>FILELIST.TXT</code> - a listing of all the files in the package repository</li>
+<li><code>GPG-KEY</code> - your public GPG key</li>
+<li><code>MANIFEST.bz2</code> - a compressed listing of the contents of all the packages in the package repository</li>
+<li><code>PACKAGES.TXT</code> - a listing of all the packages in the package repository</li>
+<li><code>PACKAGES.TXT.gz</code> - a compressed copy of PACKAGES.TXT</li>
+</ul>
+
+<p>For each package:</p>
+<ul>
+<li><code>package.tgz</code> (or .txz, .tbz, .tlz) - the package itself</li>
+<li><code>package.tgz.asc</code> (or .txz.asc, .tbz.asc, .tlz.asc) - a detached GPG signature that can be used to verify the package</li>
+<li><code>package.tgz.md5</code> (or .txz.md5, .tbz.md5, .tlz.md5) - the package's md5sum</li>
+<li><code>package.dep</code> - a plaintext list of all dependencies of the package (including indirect dependencies, but excluding any dependencies in Slackware itself)</li>
+<li><code>package.lst</code> - a listing of the contents of the package</li>
+<li><code>package.meta</code> - package management information, for generating PACKAGES.TXT</li>
+<li><code>package.txt</code> - text description of the package (based on the slack-desc)</li>
+</ul>
+
+<p>In addition, each package directory contains a file <code>.revision</code> that contains revision information about the SlackBuild and dependencies from which the packages were built.</p>
 
 </div>
 

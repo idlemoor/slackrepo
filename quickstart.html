@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="utf-8">
-<title>slackrepo - Running slackrepo</title>
+<title>slackrepo - Quick start</title>
 <link rel="icon" type="image/png" href="/slackrepo/favicon.png">
 <link rel="shortcut icon" href="/slackrepo/favicon.ico">
 <link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
@@ -12,42 +12,35 @@
 <body>
 
 <header>
-<h2>Running</h2>
+<h2>Quick start</h2>
+<p><a href="#running">Running</a> &bull; <a href="#options">Options</a> &bull; <a href="#examples">Examples</a></p>
 </header>
 
 <nav>
-<h2>slackrepo</h2>
+<h2><a href="index.html">slackrepo</a></h2>
 <ul>
-<li><a href="index.html">About</a></li>
-<li><a href="installing.html">Installation</a></li>
-<li><a href="running.html">Running</a></li>
-<li><a href="examples.html">Examples</a></li>
-<li><a href="dependencies.html">Dependencies</a></li>
-<li><a href="updates.html">Updates</a></li>
-<li><a href="sbo_git.html">SlackBuilds.org git</a></li>
-<li><a href="messages.html">Logging</a></li>
-<li><a href="configuration.html">Configuration</a></li>
-<li><a href="hints.html">Hints</a></li>
-<li><a href="manpages.html">man pages</a></li>
-<li><a href="structure.html">Repo structure</a></li>
-<li><a href="metadata.html">Package metadata</a></li>
-<li><a href="tests.html">Tests</a></li>
-<li><a href="genrepos.html">gen_repos_files.sh</a></li>
-<li><a href="slackpkgplus.html">slackpkg+</a></li>
-<li><a href="links.html">Links</a></li>
-<li><a href="licence.html">Licence</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="quickstart.html">Quick start</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation</a></li>
+<li><a href="slackrepo.8.html">manpages</a></li>
 </ul>
 </nav>
 
 <div id="main">
 
-<p>Slackrepo runs from the command line.  It is not interactive.  Like other
-Slackware package management tools, it should be run as the root user,
+<p class="scary"> Before you use slackrepo to build packages,
+you should read and understand the page about <b><a href="hintfiles.html">hintfiles</a></b>,
+and you should always check the README of each SlackBuild you intend to run.</p>
+
+<h3><a name="running"></a>Running</h3>
+
+<p>Slackrepo runs from the command line.
+It is not interactive and does not have a graphical interface.
+Like other Slackware package management tools, it should be run as the root user,
 for example with <code>su -</code>.  Sources are downloaded on demand (unless already
 available in the local cache); a well-functioning network connection is
 assumed.</p>
-
-<p><i>For full details, see the manpage <a href="slackrepo.8.html">slackrepo(8)</a></i></p>
 
 <p>Slackrepo has four modes of operation: build, rebuild, remove, and update.</p>
 
@@ -89,7 +82,7 @@ package repository is compared to the SlackBuild repository, and built,
 rebuilt or removed, as appropriate.  If no items are specified,
 everything in the package repository is compared.</p>
 
-<h2>Options</h2>
+<h3><a name="options"></a>Options</h3>
 
 <pre>--repo=ID</pre>
 
@@ -129,6 +122,36 @@ output from invoked SlackBuilds (e.g. compilation).</p>
 <pre>-q, --quiet</pre>
 
 <p>Reduce the quantity of messages printed on the console during execution.</p>
+
+
+<h3><a name="examples"></a>Examples</h4>
+
+<p>Build the whole SBo repository (you will need about four days and 61Gb of disk space):</p>
+<pre>slackrepo build</pre>
+
+<p>Build graphics/shotwell, with all its dependencies:</p>
+<p><code>slackrepo build graphics/shotwell</code> or just <code>slackrepo build shotwell</code></p>
+
+<p>Build and install shotwell and all its dependencies (this will NOT be a clean build):</p>
+<p><code>slackrepo build --install shotwell</code></p>
+
+<p>Update all the academic/ packages in your package repository for SBo's latest
+changes (this WILL NOT add new packages from upstream, unless they are required dependencies):</p>
+<pre>slackrepo update academic</pre>
+
+<p>Build all the academic/ packages in SBo (this WILL add new packages from upstream,
+and also will update for SBo's latest changes):</p>
+<pre>slackrepo build academic</pre>
+
+<p>Do a "dry run" update of all your SBo packages:</p>
+<pre>slackrepo update --dry-run</pre>
+
+<p>Remove the package academic/grass (note, its dependencies and dependers will not be removed):</p>
+<p><code>slackpkg remove academic/grass</code> or just <code>slackpkg remove grass</code></p>
+
+<p>Test-build colord (in the csb repo), with very verbose messages; do not store the built package:</p>
+<pre>slackrepo build -vv --repo=csb --test --dry-run colord</pre>
+
 
 </div>
 

@@ -1,25 +1,46 @@
-header      { float: right; width: 75%; margin: 10px; text-align: left; font-family: sans-serif; }
-header h2   { margin-bottom: 0; font-weight: bold; }
+p           { font-size: small; }
+li          { font-size: small; }
+td          { font-size: small; }
+blockquote  { font-size: small; }
+pre         { font-weight:bold; font-size: medium; }
+code        { font-weight:bold; font-size: medium; }
 
-nav         { float: left;  width: 20%; padding: 10px; text-align: left; font-family: sans-serif; font-weight: bold; background-color: #E0E0E0; }
-nav h2      { margin-bottom: 30px; font-weight: bold; font-style: italic; color: #955f20 }
+header      { float: right; width: 75%; margin: 10px 10px 0 10px; text-align: left; font-family: sans-serif; font-weight: bold; }
+header h2   { margin-top: 0; margin-bottom: 0; font-weight: bold; }
+header a    { text-decoration: none; }
+
+nav         { float: left;  width: 20%; padding: 10px; text-align: left; font-family: sans-serif; font-weight: bold; 
+              background-color: #a0a0a0; background-image: linear-gradient(#808080, #ffffff 120px ); position: fixed; }
+nav h2      { margin-top: 0; margin-bottom: 20px; font-weight: bold; color: #ffffff; }
+nav a       { text-decoration: none; }
+nav h2 a    { color: #ffffff; }
 nav ul      { margin: 0; padding: 0; list-style: none; }
-nav li      { margin-bottom: 10px; }
+nav li      { margin-bottom: 4px; }
+nav li li   { margin-left: 20px; margin-bottom: 0px; }
 
 #main       { float: right; width: 75%; margin: 10px; text-align: left; font-family: serif; }
-#main h2    { font-family: sans-serif; }
-#main h4    { font-family: sans-serif; }
+#main h3    { font-family: sans-serif; background-color: #e0e0e0; padding: 8px; }
+#main h4    { font-family: sans-serif; background-color: #e0e0e0; padding: 4px; }
+#main h4 .subhead    { font-family: sans-serif; font-weight: normal; font-style: italic; }
 #main p     { font-family: serif; margin-bottom: 10px; }
+#main p.scary  { background-image: url("warning.png");  background-repeat: no-repeat; background-position: left 8px center;
+                 padding: 8px 8px 8px 50px; border: 1px solid black; font-family: sans-serif; font-weight: bold; }
 #main ul    { margin: 0; }
 #main li    { margin-bottom: 10px; }
 #main table { border-collapse: collapse; }
 #main th    { border: 1px solid black; padding: 4px; font-family: sans-serif; font-style: italic; }
 #main td    { border: 1px solid black; padding: 4px; }
 
+#man        { float: right; width: 75%; margin: 10px; text-align: left; font-family: serif; }
+#man h2     { font-family: sans-serif; background-color: #e0e0e0; padding: 8px; }
+#man h4     { font-family: sans-serif; }
+#man p      { font-family: serif; margin-bottom: 10px; }
+#man ul     { margin: 0; }
+#man li     { margin-bottom: 10px; }
+
 a.ext       { background: url("exticon.png") no-repeat right center; padding-right: 12px; }
 
 footer      { clear:both; margin: 10px; text-align: right; font-family: sans-serif; }
 footer p    { font-size: x-small; font-style: italic; }
 
-pre         { font-weight:bold; }
-code        { font-weight:bold; }
+hr          { margin-top: 20px; margin-bottom: 20px; }

@@ -1,0 +1,2 @@
+REQUIRES="gdal numpy wxPython blas lapack ffmpeg postgresql"
+OPTIONS="ENABLE=blas,lapack,ffmpeg,postgresql,mysql,sqlite"

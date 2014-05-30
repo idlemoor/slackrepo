@@ -1,0 +1,1 @@
+CLEANUP="rm -rf /etc/zfs/"

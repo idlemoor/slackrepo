@@ -1,0 +1,1 @@
+REQUIRES="gst1-plugins-base pulseaudio"

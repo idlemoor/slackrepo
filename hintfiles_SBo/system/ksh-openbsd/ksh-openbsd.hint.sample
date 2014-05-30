@@ -1,0 +1,1 @@
+CLEANUP="sed -i '/\/bin\/pdksh/d' /etc/shells"

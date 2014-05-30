@@ -1,3 +1,0 @@
-if ! getent group fax | grep -q ^fax: 2>/dev/null ; then
-  groupadd -g 273 fax
-fi

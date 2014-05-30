@@ -1,6 +1,0 @@
-if grep /opt/kde3/lib64 etc/ld.so.conf 1> /dev/null 2> /dev/null ; then
-  sed -i '/\/opt\/kde3\/lib64/d' etc/ld.so.conf
-fi
-if [ -x /sbin/ldconfig ]; then
-  /sbin/ldconfig 2> /dev/null
-fi

@@ -1,0 +1,2 @@
+GID="274:prosody"
+UID="274:prosody:-d/var/lib/prosody:-s/sbin/nologin"

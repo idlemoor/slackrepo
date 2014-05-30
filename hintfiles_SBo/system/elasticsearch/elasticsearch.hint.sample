@@ -1,0 +1,2 @@
+GID="280:elasticsearch"
+UID="280:elasticsearch:-d/dev/null:-s/bin/sh"

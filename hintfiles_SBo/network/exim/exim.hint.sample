@@ -1,0 +1,4 @@
+REQUIRES=""
+GID="222:exim"
+UID="222:exim:-d/var/spool/exim"
+CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall sendmail"

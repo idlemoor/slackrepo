@@ -1,0 +1,2 @@
+GID="213:nagios"
+UID="213:nagios:-d/usr/libexec/nagios"

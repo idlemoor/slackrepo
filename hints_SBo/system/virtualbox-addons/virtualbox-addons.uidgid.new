@@ -1,3 +1,0 @@
-if ! getent passwd vboxadd | grep -q ^vboxadd: 2>/dev/null ; then
-  useradd -u 215 -d /var/run/vboxadd -g 1 -s /bin/sh vboxadd
-fi

@@ -1,0 +1,2 @@
+GID="231:couchdb"
+UID="231:couchdb:-s/bin/sh:-d/var/lib/couchdb"

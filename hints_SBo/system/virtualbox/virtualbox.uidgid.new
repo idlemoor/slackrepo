@@ -1,3 +1,0 @@
-if ! getent group vboxusers | grep -q ^vboxusers: 2>/dev/null ; then
-  groupadd -g 215 vboxusers
-fi

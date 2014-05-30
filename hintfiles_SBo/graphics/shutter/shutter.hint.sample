@@ -1,0 +1,1 @@
+REQUIRES="perl-goo-canvas exiftool perl-gnome2 perl-gnome2-gconf perl-gnome2-wnck perl-gtk2-imageview perl-net-dbus perl-proc-processtable perl-www-mechanize perl-x11-protocol perl-Gtk2-Unique"

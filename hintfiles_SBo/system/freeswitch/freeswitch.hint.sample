@@ -1,0 +1,2 @@
+GID="269:freeswitch"
+UID="269:freeswitch:-d/opt/freeswitch:-s/bin/bash"

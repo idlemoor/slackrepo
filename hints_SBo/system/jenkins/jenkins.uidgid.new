@@ -1,7 +1,0 @@
-if ! getent group jenkins | grep -q ^jenkins: 2>/dev/null ; then
-  groupadd -g 251 jenkins
-fi
-
-if ! getent passwd jenkins | grep -q ^jenkins: 2>/dev/null ; then
-  useradd -g 251 -u 251 -r -s /bin/bash -d /var/lib/jenkins jenkins
-fi

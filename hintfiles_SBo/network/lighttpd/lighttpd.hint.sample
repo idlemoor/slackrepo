@@ -1,0 +1,2 @@
+GID="208:lighttpd"
+UID="208:lighttpd:-d/var/www"

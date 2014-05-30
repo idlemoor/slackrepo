@@ -1,0 +1,2 @@
+REQUIRES="BeautifulSoup"
+ADDREQUIRES="Cython pysetuptools"

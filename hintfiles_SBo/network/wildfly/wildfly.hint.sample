@@ -1,0 +1,2 @@
+GID="281:wildfly"
+UID="281:wildfly:-M:-r:-s/bin/bash:-d/usr/share/wildfly"

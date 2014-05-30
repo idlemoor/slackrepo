@@ -1,0 +1,2 @@
+GID="253:activemq"
+UID="253:activemq:-d/var/lib/activemq:-s/bin/sh"

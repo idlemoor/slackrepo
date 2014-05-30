@@ -1,3 +1,0 @@
-if ! getent passwd usbmux | grep -q ^usbmux: 2>/dev/null ; then
-  useradd -u 277 -g plugdev -d /dev/null -s /bin/false usbmux
-fi

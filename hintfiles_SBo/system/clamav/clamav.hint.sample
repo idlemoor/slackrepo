@@ -1,0 +1,3 @@
+REQUIRES=""
+GID="210:clamav"
+UID="210:clamav"

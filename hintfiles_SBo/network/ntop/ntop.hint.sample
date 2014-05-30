@@ -1,0 +1,2 @@
+GID="212:ntop"
+UID="212:ntop:-d/var/lib/ntop"

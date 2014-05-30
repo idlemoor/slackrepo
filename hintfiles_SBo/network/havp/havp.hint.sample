@@ -1,0 +1,2 @@
+GID="210:clamav"
+UID="256:havp:-d/dev/null:-s/bin/false:-gclamav"

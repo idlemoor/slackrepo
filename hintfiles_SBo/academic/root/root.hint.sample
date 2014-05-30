@@ -1,0 +1,2 @@
+REQUIRES="gsl ftgl"
+OPTIONS="GSL=yes FFTW=yes QT=no"

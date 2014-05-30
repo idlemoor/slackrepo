@@ -1,0 +1,1 @@
+SKIP="For a 32bit guest support 32bit libs are required to build the\nstub-domain. This is usualy done by installing multilib, but\nthere is also a chance that you do not need 32bit guest support,\nso you might want to try symlinking stubs-64.h to stubs-32.h\nlike this:\n\n# ln -s /usr/include/gnu/stubs-64.h /usr/include/gnu/stubs-32.h"

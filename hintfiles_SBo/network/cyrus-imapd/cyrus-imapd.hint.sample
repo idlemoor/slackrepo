@@ -1,0 +1,3 @@
+CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall imapd"
+GID="238:cyrus"
+UID="238:cyrus:-d/var/imap:-s/bin/sh"

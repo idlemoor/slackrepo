@@ -1,0 +1,1 @@
+CLEANUP="[ -f /usr/bin/scp.openssh ] && mv /usr/bin/scp.openssh /usr/bin/scp"

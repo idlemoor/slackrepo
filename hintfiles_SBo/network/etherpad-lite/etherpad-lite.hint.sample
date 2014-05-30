@@ -1,0 +1,3 @@
+REQUIRES="node"
+GID="264:etherpad"
+UID="264:etherpad:-m"

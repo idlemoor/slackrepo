@@ -1,0 +1,1 @@
+REQUIRES="fontforge mftrace guile1.8"

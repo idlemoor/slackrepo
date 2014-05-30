@@ -1,3 +1,0 @@
-if [ -f /usr/bin/scp.openssh ]; then
-  mv /usr/bin/scp.openssh /usr/bin/scp
-fi

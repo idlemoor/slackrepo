@@ -27,6 +27,7 @@ function log_start
 {
   msg="${*}                                                                      "
   line="==============================================================================="
+  echo ""
   echo "$line"
   echo "! ${msg:0:66} $(date +%T) !"
   echo "$line"
@@ -49,6 +50,7 @@ function log_itemstart
   local itemdir="${ITEMDIR[$itemid]}"
   [ "$itemid" != "$ITEMID" ] && ITEMTOTAL=$(( $ITEMTOTAL + 1 ))
 
+  [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
   line="-------------------------------------------------------------------------------"
   tput bold; tput setaf 7
   if [ ${#1} -ge ${#line} ]; then

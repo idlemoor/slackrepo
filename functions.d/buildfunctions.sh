@@ -150,6 +150,7 @@ function build_item
   if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
     echo ''
     echo '---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---'
+    echo ''
     ( cd "$MYTMPIN"; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
     echo '----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<---'
     echo ''

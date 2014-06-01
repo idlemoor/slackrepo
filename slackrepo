@@ -404,7 +404,6 @@ while [ $# != 0 ]; do
   # called recursively (which get $itemid as an argument) can test whether they
   # are dealing with the top level item.
   for ITEMID in "${ITEMLIST[@]}"; do
-    echo ""
     log_start "$ITEMID"
     case "$PROCMODE" in
     'build' | 'rebuild' )
@@ -483,7 +482,6 @@ if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
   rcfile=~/.genreprc
   [ -f "$rcfile" ] && { set -e; . "$rcfile"; set +e; }
   if [ "$SR_USE_GENREPOS" = 1 ]; then
-    echo ""
     log_start "gen_repos_files.sh"
     # 'man sort' says an in-place sort is ok, so let's be lazy :-)
     sort -o "$CHANGELOG" "$CHANGELOG"

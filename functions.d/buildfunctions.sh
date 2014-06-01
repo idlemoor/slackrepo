@@ -8,7 +8,7 @@
 #   build_failed
 #   create_pkg_metadata
 #   remove_item
-#   do_gid_uid
+#   do_groupadd_useradd
 #-------------------------------------------------------------------------------
 
 function build_item
@@ -120,7 +120,7 @@ function build_item
   fi
 
   # Process other hints for the build:
-  # GID and UID ...
+  # GROUPADD and USERADD ...
   do_gid_uid "$itemid"
   # ... NUMJOBS (with MAKEFLAGS and NUMJOBS env vars) ...
   tempmakeflags="MAKEFLAGS='${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS}'"
@@ -474,31 +474,32 @@ function remove_item
   fi
   return
 }
+
 #-------------------------------------------------------------------------------
 
-function do_gid_uid
-# If there is a GID or UID hint for this item, set up the group and username.
-# GID hint format: GID="<gnum>:<gname> ..."
-# UID hint format: UID="<unum>:<uname>:[-g<ugroup>:][-d<udir>:][-s<ushell>:][-uargs:...] ..."
-#   but if the UID hint is messed up, we can take a wild guess or two, see below ;-)
+function do_groupadd_useradd
+# If there is a GROUPADD or USERADD hint for this item, set up the group and username.
+# GROUPADD hint format: GROUPADD="<gnum>:<gname> ..."
+# USERADD hint format:  USERADD="<unum>:<uname>:[-g<ugroup>:][-d<udir>:][-s<ushell>:][-uargs:...] ..."
+#   but if the USERADD hint is messed up, we can take a wild guess or two, see below ;-)
 # $1 = itemid
 # Return status: always 0
 {
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
 
-  if [ -n "${HINT_GID[$itemid]}" ]; then
-    for gidstring in ${HINT_GID[$itemid]}; do
+  if [ -n "${HINT_GROUPADD[$itemid]}" ]; then
+    for gidstring in ${HINT_GROUPADD[$itemid]}; do
       gnum=''; gname="$itemprgnam"
-      shopt -s extglob
       for gfield in $(echo $gidstring | tr ':' ' '); do
         case "$gfield" in
-          +([0-9]) ) gnum="$gfield" ;;
+          [0-9]* ) gnum="$gfield" ;;
           * ) gname="$gfield" ;;
         esac
       done
-      shopt -u extglob
-      [ -z "$gnum" ] && { log_warning "${itemid}: GID hint has no GID number" ; break ; }
+      [ -z "$gnum" ] && { log_warning "${itemid}: GROUPADD hint has no GID number" ; break ; }
       if ! getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
         gaddcmd="groupadd -g $gnum $gname"
         log_verbose "${itemid}: Adding group: $gaddcmd"
@@ -509,24 +510,22 @@ function do_gid_uid
     done
   fi
 
-  if [ -n "${HINT_UID[$itemid]}" ]; then
-    for uidstring in ${HINT_UID[$itemid]}; do
+  if [ -n "${HINT_USERADD[$itemid]}" ]; then
+    for uidstring in ${HINT_USERADD[$itemid]}; do
       unum=''; uname="$itemprgnam"; ugroup="$itemprgnam"
       udir='/dev/null'; ushell='/bin/false'; uargs=''
-      shopt -s extglob
       for ufield in $(echo $uidstring | tr ':' ' '); do
         case "$ufield" in
           -g* ) ugroup="${ufield:2}" ;;
           -d* ) udir="${ufield:2}" ;;
           -s* ) ushell="${ufield:2}" ;;
-          -*  ) uargs="$uargs ${ufield:0:2} ${ufield:2}"
+          -*  ) uargs="$uargs ${ufield:0:2} ${ufield:2}" ;;
           /*  ) if [ -x "$ufield" ]; then ushell="$ufield"; else udir="$ufield"; fi ;;
-          +([0-9]) ) unum="$ufield" ;;
+          [0-9]* ) unum="$ufield" ;;
           *   ) uname="$ufield" ;;
         esac
       done
-      shopt -u extglob
-      [ -z "$unum" ] && { log_warning "${itemid}: UID hint has no UID number" ; break ; }
+      [ -z "$unum" ] && { log_warning "${itemid}: USERADD hint has no UID number" ; break ; }
       if ! getent passwd "$uname" | grep -q "^${uname}:" 2>/dev/null ; then
         if ! getent group "$ugroup" | grep -q "^${ugroup}:" 2>/dev/null ; then
           gaddcmd="groupadd -g $unum $uname"

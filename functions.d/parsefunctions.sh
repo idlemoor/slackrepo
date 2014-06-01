@@ -271,7 +271,7 @@ declare -A SRCDIR GITREV GITDIRTY
 # and to store hints:
 declare -A \
   HINT_SKIP HINT_MD5IGNORE HINT_NUMJOBS HINT_INSTALL HINT_ARCH \
-  HINT_CLEANUP HINT_UID HINT_GID HINT_ANSWER HINT_NODOWNLOAD \
+  HINT_CLEANUP HINT_USERADD HINT_GROUPADD HINT_ANSWER HINT_NODOWNLOAD \
   HINT_OPTIONS HINT_VERSION HINT_SUMMARY HINTFILE
 
 #-------------------------------------------------------------------------------
@@ -318,7 +318,7 @@ function parse_info_and_hints
     fi
 
     # These are the variables we want:
-    unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH} REQUIRES
+    local VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH} REQUIRES
     # Preferably, get them from the info file:
     if [ -f "$SR_SBREPO/$itemdir/$itemprgnam.info" ]; then
       # is prgnam.info plausibly in SBo format?
@@ -405,8 +405,8 @@ function parse_info_and_hints
   fi
 
   if [ -n "${HINTFILE[$itemid]}" ]; then
-    unset SKIP \
-          VERSION OPTIONS GID UID INSTALL NUMJOBS ANSWER CLEANUP \
+    local SKIP \
+          VERSION OPTIONS GROUPADD USERADD INSTALL NUMJOBS ANSWER CLEANUP \
           ARCH DOWNLOAD MD5SUM \
           REQUIRES ADDREQUIRES
     . "${HINTFILE[$itemid]}"
@@ -427,14 +427,14 @@ function parse_info_and_hints
 
     # Process the hint file's variables individually (looping for each variable would need
     # 'eval', which would mess up the payload, so we don't do that).
-    [ -n "$VERSION" ] && HINT_VERSION[$itemid]="$VERSION"
-    [ -n "$OPTIONS" ] && HINT_OPTIONS[$itemid]="$OPTIONS"
-    [ -n "$GID"     ] &&     HINT_GID[$itemid]="$GID"
-    [ -n "$UID"     ] &&     HINT_UID[$itemid]="$UID"
-    [ -n "$INSTALL" ] && HINT_INSTALL[$itemid]="$INSTALL"
-    [ -n "$NUMJOBS" ] && HINT_NUMJOBS[$itemid]="$NUMJOBS"
-    [ -n "$ANSWER"  ] &&  HINT_ANSWER[$itemid]="$ANSWER"
-    [ -n "$CLEANUP" ] && HINT_CLEANUP[$itemid]="$CLEANUP"
+    [ -n "$VERSION"  ] &&  HINT_VERSION[$itemid]="$VERSION"
+    [ -n "$OPTIONS"  ] &&  HINT_OPTIONS[$itemid]="$OPTIONS"
+    [ -n "$GROUPADD" ] && HINT_GROUPADD[$itemid]="$GROUPADD"
+    [ -n "$USERADD"  ] &&  HINT_USERADD[$itemid]="$USERADD"
+    [ -n "$INSTALL"  ] &&  HINT_INSTALL[$itemid]="$INSTALL"
+    [ -n "$NUMJOBS"  ] &&  HINT_NUMJOBS[$itemid]="$NUMJOBS"
+    [ -n "$ANSWER"   ] &&   HINT_ANSWER[$itemid]="$ANSWER"
+    [ -n "$CLEANUP"  ] &&  HINT_CLEANUP[$itemid]="$CLEANUP"
 
     # Process hint file's ARCH, DOWNLOAD[_ARCH] and MD5SUM[_ARCH] together:
     [ -v ARCH ] && HINT_ARCH[$itemid]="$ARCH"
@@ -463,13 +463,14 @@ function parse_info_and_hints
       INFOREQUIRES[$itemid]="$req"
     fi
 
-    log_verbose "Hints from ${HINTFILE[itemid]}:" ${VERSION+VERSION} \
-                ${OPTIONS+OPTIONS} ${GID+GID} ${UID+UID} ${INSTALL+INSTALL} \
+    log_verbose "Hints from ${HINTFILE[$itemid]}:"
+    log_verbose ' ' ${VERSION+VERSION} \
+                ${OPTIONS+OPTIONS} ${GROUPADD+GROUPADD} ${USERADD+USERADD} ${INSTALL+INSTALL} \
                 ${NUMJOBS+NUMJOBS} ${ANSWER+ANSWER+} ${CLEANUP+CLEANUP} \
                 ${ARCH+ARCH} ${DOWNLOAD+DOWNLOAD} ${MD5SUM+MD5SUM} \
-                ${REQUIRES+REQUIRES} ${ADDREQUIRES+ADDREQUIRES} 
+                ${REQUIRES+REQUIRES} ${ADDREQUIRES+ADDREQUIRES}
     unset SKIP \
-          VERSION OPTIONS GID UID INSTALL NUMJOBS ANSWER CLEANUP \
+          VERSION OPTIONS GROUPADD USERADD INSTALL NUMJOBS ANSWER CLEANUP \
           ARCH DOWNLOAD MD5SUM \
           REQUIRES ADDREQUIRES
 

@@ -41,15 +41,7 @@ function calculate_deps
 
   for dep in ${INFOREQUIRES[$itemid]}; do
     if [ $dep = '%README%' ]; then
-      if [ "${HINT_readmedeps[$itemid]}" != '%NONE%' ]; then
-        BLAME="$itemprgnam.readmedeps"
-        parse_items -s ${HINT_readmedeps[$itemid]}
-        [ $? != 0 ] && log_warning "${itemid}: Some dependencies were not found"
-        unset BLAME
-        deplist+=( "${ITEMLIST[@]}" )
-      else
-        log_warning "${itemid}: Unhandled %README% in $itemprgnam.info - please create $SR_HINTDIR/$itemdir/$itemprgnam.readmedeps"
-      fi
+      log_warning "${itemid}: Unhandled %README% in $itemprgnam.info"
     else
       BLAME="$itemprgnam.info"
       parse_items -s "$dep"
@@ -58,14 +50,6 @@ function calculate_deps
       deplist+=( "${ITEMLIST[@]}" )
     fi
   done
-
-  if [ "${HINT_optdeps[$itemid]}" != '%NONE%' ]; then
-    BLAME="$itemprgnam.optdeps"
-    parse_items -s ${HINT_optdeps[$itemid]}
-    [ $? != 0 ] && log_warning "${itemid}: Some dependencies were not found"
-    unset BLAME
-    deplist+=( "${ITEMLIST[@]}" )
-  fi
 
   deplist=( $(printf '%s\n' "${deplist[@]}" | sort -u) )
   DIRECTDEPS["$itemid"]="${deplist[@]}"

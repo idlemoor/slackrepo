@@ -237,6 +237,9 @@ for name in $varnames; do
   srvar="SR_$name"
   eval $srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
 done
+for initvar in $initnames; do
+  eval $initvar=\"$(echo "${!initvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
+done
 
 # Do this now so we can log the config:
 mkdir -p "$SR_LOGDIR"
@@ -297,7 +300,7 @@ fi
 [ -d "$SR_SRCREPO" ] || { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO" ; }
 [ -d "$SR_PKGREPO" ] || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO" ; }
 [ -d "$SR_LOGDIR" ]  || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"  ; }
-[ -d "$SR_HINTDIR" ] || { log_normal "Creating hints directory: $SR_HINTDIR"      ; mkdir -p "$SR_HINTDIR"   ; }
+[ -d "$SR_HINTDIR" ] || { log_normal "Creating hints directory: $SR_HINTDIR"      ; mkdir -p "$SR_HINTDIR" ; }
 
 # Changelog:
 CHANGELOG="$SR_PKGREPO"/.changelog

@@ -1,4 +1,3 @@
-REQUIRES=""
 GROUPADD="222:exim"
 USERADD="222:exim:-d/var/spool/exim"
 CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall sendmail"

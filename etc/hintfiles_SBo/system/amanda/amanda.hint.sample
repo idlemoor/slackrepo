@@ -1,3 +1,2 @@
-REQUIRES=""
 GROUPADD="211:amanda"
 USERADD="211:amanda:-d/var/lib/amanda"

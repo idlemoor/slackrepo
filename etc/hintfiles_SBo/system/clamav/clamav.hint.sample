@@ -1,3 +1,2 @@
-REQUIRES=""
 GROUPADD="210:clamav"
 USERADD="210:clamav"

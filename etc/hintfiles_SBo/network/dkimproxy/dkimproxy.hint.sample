@@ -1,2 +1,2 @@
-GID="239:dkim"
-UID="239:dkim:-d/dev/null"
+GROUPADD="239:dkim"
+USERADD="239:dkim:-d/dev/null"

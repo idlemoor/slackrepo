@@ -1,2 +1,2 @@
-GID="227:thttpd"
-UID="227:thttpd:-d/"
+GROUPADD="227:thttpd"
+USERADD="227:thttpd:-d/"

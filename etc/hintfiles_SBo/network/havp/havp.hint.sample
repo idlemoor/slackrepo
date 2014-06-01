@@ -1,2 +1,2 @@
-GID="210:clamav"
-UID="256:havp:-d/dev/null:-s/bin/false:-gclamav"
+GROUPADD="210:clamav"
+USERADD="256:havp:-d/dev/null:-s/bin/false:-gclamav"

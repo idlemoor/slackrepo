@@ -1,2 +1,2 @@
-GID="269:freeswitch"
-UID="269:freeswitch:-d/opt/freeswitch:-s/bin/bash"
+GROUPADD="269:freeswitch"
+USERADD="269:freeswitch:-d/opt/freeswitch:-s/bin/bash"

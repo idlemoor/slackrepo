@@ -1,2 +1,2 @@
-GID="223:policyd"
-UID="223:policyd"
+GROUPADD="223:policyd"
+USERADD="223:policyd"

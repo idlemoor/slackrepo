@@ -1,2 +1,2 @@
-GID="252:nexus"
-UID="252:nexus:-d/bin/sh"
+GROUPADD="252:nexus"
+USERADD="252:nexus:-d/bin/sh"

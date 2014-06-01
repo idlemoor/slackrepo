@@ -1,2 +1,2 @@
-GID="250:bitlbee"
-UID="250:bitlbee"
+GROUPADD="250:bitlbee"
+USERADD="250:bitlbee"

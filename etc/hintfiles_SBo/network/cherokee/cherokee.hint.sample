@@ -1,2 +1,2 @@
-GID="299:cherokee"
-UID="299:cherokee:-d/var/www/htdocs-cherokee"
+GROUPADD="299:cherokee"
+USERADD="299:cherokee:-d/var/www/htdocs-cherokee"

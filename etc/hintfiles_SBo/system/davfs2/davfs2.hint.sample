@@ -1,2 +1,2 @@
-GID="230:davfs2"
-UID="230:davfs2:-d/var/cache/davfs2"
+GROUPADD="230:davfs2"
+USERADD="230:davfs2:-d/var/cache/davfs2"

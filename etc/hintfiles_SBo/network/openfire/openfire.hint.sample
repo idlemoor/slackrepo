@@ -1,2 +1,2 @@
-GID="265:openfire"
-UID="265:openfire:-m"
+GROUPADD="265:openfire"
+USERADD="265:openfire:-m"

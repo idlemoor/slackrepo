@@ -1,2 +1,2 @@
-GID="208:lighttpd"
-UID="208:lighttpd:-d/var/www"
+GROUPADD="208:lighttpd"
+USERADD="208:lighttpd:-d/var/www"

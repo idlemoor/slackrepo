@@ -1,2 +1,2 @@
-GID="206:privoxy"
-UID="206:privoxy:-d/dev/null"
+GROUPADD="206:privoxy"
+USERADD="206:privoxy:-d/dev/null"

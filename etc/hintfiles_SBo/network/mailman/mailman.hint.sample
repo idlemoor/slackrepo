@@ -1,2 +1,2 @@
-GID="204:mailman"
-UID="204:mailman"
+GROUPADD="204:mailman"
+USERADD="204:mailman"

@@ -1,3 +1,3 @@
 REQUIRES=""
-GID="202:dovecot 248:dovenull"
-UID="202:dovecot:-d/dev/null:-s/bin/false 248:dovenull:-d/dev/null:/-s/bin/false"
+GROUPADD="202:dovecot 248:dovenull"
+USERADD="202:dovecot:-d/dev/null:-s/bin/false 248:dovenull:-d/dev/null:/-s/bin/false"

@@ -1,2 +1,2 @@
-GID="274:prosody"
-UID="274:prosody:-d/var/lib/prosody:-s/sbin/nologin"
+GROUPADD="274:prosody"
+USERADD="274:prosody:-d/var/lib/prosody:-s/sbin/nologin"

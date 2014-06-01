@@ -1,2 +1,2 @@
-GID="218:nut"
-UID="218:nut"
+GROUPADD="218:nut"
+USERADD="218:nut"

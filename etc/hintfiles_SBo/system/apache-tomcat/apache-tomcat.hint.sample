@@ -1,2 +1,2 @@
-GID="232:tomcat"
-UID="232:tomcat"
+GROUPADD="232:tomcat"
+USERADD="232:tomcat"

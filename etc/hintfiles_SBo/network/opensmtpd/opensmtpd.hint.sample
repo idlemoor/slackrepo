@@ -1,4 +1,4 @@
 REQUIRES=""
-GID="270:smtpd 271:smtpq"
-UID="270:smtpd:-g0:-r:-s/bin/false:-d/var/empty 271:smtpq:-r:-s/bin/false:-d/var/empty"
+GROUPADD="270:smtpd 271:smtpq"
+USERADD="270:smtpd:-g0:-r:-s/bin/false:-d/var/empty 271:smtpq:-r:-s/bin/false:-d/var/empty"
 CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall sendmail"

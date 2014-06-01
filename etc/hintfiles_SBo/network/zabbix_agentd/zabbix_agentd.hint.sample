@@ -1,2 +1,2 @@
-GID="228:zabbix"
-UID="228:zabbix:-d/dev/null:-s/bin/false 266:zabbixagent:-d/dev/null:-s/bin/false"
+GROUPADD="228:zabbix"
+USERADD="228:zabbix:-d/dev/null:-s/bin/false 266:zabbixagent:-d/dev/null:-s/bin/false"

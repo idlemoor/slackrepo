@@ -1,2 +1,2 @@
-GID="214:avahi"
-UID="214:avahi"
+GROUPADD="214:avahi"
+USERADD="214:avahi"

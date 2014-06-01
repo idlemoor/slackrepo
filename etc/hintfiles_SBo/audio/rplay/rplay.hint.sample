@@ -1,2 +1,2 @@
-GID="258:rplayd"
-UID="258:rplayd"
+GROUPADD="258:rplayd"
+USERADD="258:rplayd"

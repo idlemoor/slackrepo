@@ -1,2 +1,2 @@
-GID="255:miredo"
-UID="255:miredo"
+GROUPADD="255:miredo"
+USERADD="255:miredo"

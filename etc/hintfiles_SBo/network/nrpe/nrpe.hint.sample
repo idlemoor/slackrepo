@@ -1,2 +1,2 @@
-GID="213:nagios"
-UID="213:nagios:-d/usr/libexec/nagios"
+GROUPADD="213:nagios"
+USERADD="213:nagios:-d/usr/libexec/nagios"

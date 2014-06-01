@@ -1,2 +1,2 @@
-GID="212:ntop"
-UID="212:ntop:-d/var/lib/ntop"
+GROUPADD="212:ntop"
+USERADD="212:ntop:-d/var/lib/ntop"

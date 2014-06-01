@@ -1,2 +1,2 @@
-GID="251:jenkins"
-UID="251:jenkins:-d/var/lib/jenkins:-s/bin/bash:-r"
+GROUPADD="251:jenkins"
+USERADD="251:jenkins:-d/var/lib/jenkins:-s/bin/bash:-r"

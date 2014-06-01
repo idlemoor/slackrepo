@@ -1,2 +1,2 @@
-GID="267:shibd"
-UID="267:shibd:-d/var/run/shibboleth"
+GROUPADD="267:shibd"
+USERADD="267:shibd:-d/var/run/shibboleth"

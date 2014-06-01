@@ -1,2 +1,2 @@
-GID="275:jabber"
-UID="275:jabber"
+GROUPADD="275:jabber"
+USERADD="275:jabber"

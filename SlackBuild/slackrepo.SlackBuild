@@ -66,21 +66,16 @@ cp -a \
 
 mkdir -p $PKG/etc/$PRGNAM
 cp -a \
-  slackrepo_*.conf.new \
-  hints_*/ \
+  etc/* \
   $PKG/etc/$PRGNAM
 
 mkdir -p $PKG/var/log/$PRGNAM
 mkdir -p $PKG/var/lib/$PRGNAM
 
-mkdir -p $PKG/usr/man/man{5,8}
+mkdir -p $PKG/usr/man
 cp -a \
-  slackrepo.conf.5 \
-  slackrepo_hints.5 \
-  $PKG/usr/man/man5
-cp -a \
-  slackrepo.8 \
-  $PKG/usr/man/man8
+  man/* \
+  $PKG/usr/man/
 find $PKG/usr/man -type f -exec gzip -9 {} \;
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION

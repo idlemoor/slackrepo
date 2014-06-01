@@ -13,6 +13,7 @@
 #   log_itemstart
 #   log_verbose
 #   log_normal
+#   log_always
 #   log_important
 #   log_success
 #   log_warning
@@ -101,6 +102,23 @@ function log_normal
   if [ "$OPT_QUIET" != 'y' ]; then
     echo "$@"
   fi
+  echo "$@" >> "$MAINLOG"
+  [ "$A" = 'y' ] && \
+  echo "$@" >> "$ITEMLOG"
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function log_always
+# Log a message to MAINLOG and standard output
+# (and ITEMLOG if '-a' is specified)
+# $* = message
+# Return status: always 0
+{
+  A='n'
+  [ "$1" = '-a' ] && { A='y'; shift; }
+  echo "$@"
   echo "$@" >> "$MAINLOG"
   [ "$A" = 'y' ] && \
   echo "$@" >> "$ITEMLOG"

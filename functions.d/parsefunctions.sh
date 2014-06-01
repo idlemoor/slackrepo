@@ -463,7 +463,7 @@ function parse_info_and_hints
       INFOREQUIRES[$itemid]="$req"
     fi
 
-    log_verbose "Hints from ${HINTFILE[$itemid]}:"
+    log_verbose "Hints for $itemid:"
     log_verbose ' ' ${VERSION+VERSION} \
                 ${OPTIONS+OPTIONS} ${GROUPADD+GROUPADD} ${USERADD+USERADD} ${INSTALL+INSTALL} \
                 ${NUMJOBS+NUMJOBS} ${ANSWER+ANSWER+} ${CLEANUP+CLEANUP} \

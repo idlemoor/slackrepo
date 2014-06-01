@@ -313,11 +313,11 @@ function create_pkg_metadata
   case "$BUILDINFO" in
   add*)
       # add short description from slack-desc (if there's no slack-desc, this should be null)
-      extrastuff="$(grep "^${itemprgnam}: " "$SR_SBREPO"/"$itemdir"/slack-desc 2>/dev/null| head -n 1 | sed -e 's/.*(/(/' -e 's/).*/)/')"
+      extrastuff="($(grep "^${itemprgnam}: " "$SR_SBREPO"/"$itemdir"/slack-desc 2>/dev/null| head -n 1 | sed -e 's/.*(//' -e 's/).*//'))"
       ;;
   'update for git'*)
       # add title of the latest commit message
-      extrastuff="$(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //')"
+      extrastuff="($(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //' -e 's/\.$//'))"
       ;;
   *)  :
       ;;

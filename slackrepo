@@ -433,44 +433,45 @@ done
 #-------------------------------------------------------------------------------
 
 log_start "SUMMARY"
+log_always "Logfile:    $MAINLOG"
 secs=$(( $(date +%s) - $starttime ))
 h=$(( $secs / 3600 )); m=$(( ( $secs / 60) % 60 )); s=$(( $secs % 60 ))
-log_normal "Time:       ${h}h ${m}m ${s}s"
-log_normal "Processed:  $(( ${#OKLIST[@]} + ${#SKIPPEDLIST[@]} + ${#FAILEDLIST[@]} + ${#ABORTEDLIST[@]} ))"
+log_normal "Runtime:    ${h}h ${m}m ${s}s"
+log_always "Processed:  $(( ${#OKLIST[@]} + ${#SKIPPEDLIST[@]} + ${#FAILEDLIST[@]} + ${#ABORTEDLIST[@]} ))"
 
 if [ "$OPT_DRY_RUN" = 'y' ]; then
   OKLIST=( $(printf '%s\n' "${OKLIST[@]}" | sort -u) )
   okcount="${#OKLIST[@]}"
-  log_normal "Dry run OK: $okcount"
+  log_always "Dry run OK: $okcount"
   [ "$OPT_QUIET" != 'y' -a "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}" | tee -a "$MAINLOG"
 else
-  log_normal "Added:      $(grep ': Added'   "$CHANGELOG" | wc -l)"
+  log_always "Added:      $(grep ': Added'   "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
     grep ': Added'   "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
-  log_normal "Updated:    $(grep ': Updated' "$CHANGELOG" | wc -l)"
+  log_always "Updated:    $(grep ': Updated' "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
     grep ': Updated' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
-  log_normal "Rebuilt:    $(grep ': Rebuilt' "$CHANGELOG" | wc -l)"
+  log_always "Rebuilt:    $(grep ': Rebuilt' "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
     grep ': Rebuilt' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
-  log_normal "Removed:    $(grep ': Removed' "$CHANGELOG" | wc -l)"
+  log_always "Removed:    $(grep ': Removed' "$CHANGELOG" | wc -l)"
   [ "$OPT_QUIET" != 'y' ] && \
     grep ': Removed' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
 fi
 SKIPPEDLIST=( $(printf '%s\n' "${SKIPPEDLIST[@]}" | sort -u) )
 skippedcount="${#SKIPPEDLIST[@]}"
-log_normal "Skipped:    $skippedcount"
+log_always "Skipped:    $skippedcount"
 [ "$OPT_QUIET" != 'y' -a "$skippedcount" != 0 ] && printf '  %s\n' "${SKIPPEDLIST[@]}" | tee -a "$MAINLOG"
 FAILEDLIST=( $(printf '%s\n' "${FAILEDLIST[@]}" | sort -u) )
 failedcount="${#FAILEDLIST[@]}"
-log_normal "Failed:     $failedcount"
+log_always "Failed:     $failedcount"
 [ "$OPT_QUIET" != 'y' -a "$failedcount" != 0 ]  && printf '  %s\n' "${FAILEDLIST[@]}" | tee -a "$MAINLOG"
 ABORTEDLIST=( $(printf '%s\n' "${ABORTEDLIST[@]}" | sort -u) )
 abortedcount="${#ABORTEDLIST[@]}"
-log_normal "Aborted:    $abortedcount"
+log_always "Aborted:    $abortedcount"
 [ "$OPT_QUIET" != 'y' -a "$abortedcount" != 0 ] && printf '  %s\n' "${ABORTEDLIST[@]}" | tee -a "$MAINLOG"
 warningcount=$(grep '^WARNING: ' "$MAINLOG" | sort -u | wc -l)
-log_normal "Warnings:   $warningcount"
+log_always "Warnings:   $warningcount"
 [ "$OPT_QUIET" != 'y' ] && grep '^WARNING: ' "$MAINLOG" | sort -u | sed 's/^WARNING: /  /' | tee -a "$MAINLOG"
 
 #-------------------------------------------------------------------------------

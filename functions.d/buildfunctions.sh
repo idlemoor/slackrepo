@@ -121,7 +121,7 @@ function build_item
 
   # Process other hints for the build:
   # GROUPADD and USERADD ...
-  do_gid_uid "$itemid"
+  do_groupadd_useradd "$itemid"
   # ... NUMJOBS (with MAKEFLAGS and NUMJOBS env vars) ...
   tempmakeflags="MAKEFLAGS='${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS}'"
   tempnumjobs=" ${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS} "
@@ -492,9 +492,9 @@ function do_groupadd_useradd
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
 
   if [ -n "${HINT_GROUPADD[$itemid]}" ]; then
-    for gidstring in ${HINT_GROUPADD[$itemid]}; do
+    for groupstring in ${HINT_GROUPADD[$itemid]}; do
       gnum=''; gname="$itemprgnam"
-      for gfield in $(echo $gidstring | tr ':' ' '); do
+      for gfield in $(echo $groupstring | tr ':' ' '); do
         case "$gfield" in
           [0-9]* ) gnum="$gfield" ;;
           * ) gname="$gfield" ;;
@@ -512,10 +512,10 @@ function do_groupadd_useradd
   fi
 
   if [ -n "${HINT_USERADD[$itemid]}" ]; then
-    for uidstring in ${HINT_USERADD[$itemid]}; do
+    for userstring in ${HINT_USERADD[$itemid]}; do
       unum=''; uname="$itemprgnam"; ugroup="$itemprgnam"
       udir='/dev/null'; ushell='/bin/false'; uargs=''
-      for ufield in $(echo $uidstring | tr ':' ' '); do
+      for ufield in $(echo $userstring | tr ':' ' '); do
         case "$ufield" in
           -g* ) ugroup="${ufield:2}" ;;
           -d* ) udir="${ufield:2}" ;;

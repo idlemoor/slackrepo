@@ -206,7 +206,7 @@ function needs_build
   # has the hintfile changed => rebuild
   currhnt=''
   if [ -n "${HINTFILE[$itemdir]}" ]; then
-    currhnt="hintfile=$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//');"
+    currhnt="$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//')"
   fi
   if [ "$pkghnt" != "$currhnt" ]; then
     BUILDINFO="rebuild for hintfile changes$TWEAKINFO"

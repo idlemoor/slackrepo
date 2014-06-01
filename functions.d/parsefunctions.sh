@@ -234,7 +234,7 @@ function scan_queuefile
       -*) log_verbose "Note: ignoring unselected queuefile item ${sqfitem:1}"
           ;;
       * ) parse_items -s "$sqfitem"
-          #### set deps and possibly HINT_options
+          #### set deps and possibly HINT_OPTIONS
           ;;
     esac
   done < "$sqfile"
@@ -270,20 +270,19 @@ declare -A INFOVERSION INFOREQUIRES INFODOWNLIST INFOMD5LIST
 declare -A SRCDIR GITREV GITDIRTY
 # and to store hints:
 declare -A \
-  HINT_skipme HINT_md5ignore HINT_makej1 HINT_install \
-  HINT_cleanup HINT_uidgid HINT_answers HINT_nodownload \
-  HINT_options HINT_optdeps HINT_readmedeps HINT_version \
-  HINT_SUMMARY
+  HINT_SKIP HINT_MD5IGNORE HINT_NUMJOBS HINT_INSTALL HINT_ARCH \
+  HINT_CLEANUP HINT_UID HINT_GID HINT_ANSWER HINT_NODOWNLOAD \
+  HINT_OPTIONS HINT_VERSION HINT_SUMMARY HINTFILE
 
 #-------------------------------------------------------------------------------
 
-function parse_hints_and_info
-# Load up hint files into variables HINT_*, and .info file into variables INFO*
+function parse_info_and_hints
+# Load up .info file into variables INFO*, and hints into variables HINT_*
 # Also populates SRCDIR, GITREV and GITDIRTY
 # $1 = itemid
 # Return status:
 # 0 = normal
-# 1 = skipme hint, or unsupported/untested in .info, or cannot determine VERSION
+# 1 = skip/unsupported/untested, or cannot determine VERSION
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
 
@@ -292,94 +291,20 @@ function parse_hints_and_info
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
-  # HINT DEPARTMENT
-  # ===============
-
-  local -a hintlist
-
-  if [ "${HINT_SUMMARY[$itemid]+yesitisset}" != 'yesitisset' ]; then
-
-    FLAGHINTS="md5ignore makej1 install"
-    # These are Boolean hints.
-    # HINT_xxx contains 'y' or '' ;-)
-    # Query them like this: '[ "${HINT_xxx[$itemid]}" = 'y' ]'
-    for hint in $FLAGHINTS; do
-      if [ -f "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint" ]; then
-        eval HINT_$hint[$itemid]='y'
-        hintlist+=( "$hint" )
-      else
-        eval HINT_$hint[$itemid]=''
-      fi
-    done
-
-    FILEHINTS="skipme cleanup uidgid answers nodownload"
-    # These are hints where the file contents will be used.
-    # HINT_xxx contains the filename, or ''.
-    # Query them like this: '[ -n "${HINT_xxx[$itemid]}" ]'
-    for hint in $FILEHINTS; do
-      if [ -f "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint" ]; then
-        eval HINT_$hint[$itemid]="$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint"
-        hintlist+=( "$hint" )
-      else
-        eval HINT_$hint[$itemid]=''
-      fi
-    done
-
-    VARHINTS="options version"
-    # These are hints where the file contents will be used by slackrepo itself.
-    # HINT_xxx contains the contents of the file, or ''.
-    # Query them like this: '[ -n "${HINT_xxx[$itemid]}" ]'
-    for hint in $VARHINTS; do
-      if [ -f "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint" ]; then
-        eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint")\"
-        eval hintlist+=( "$hint=\"\\\"\${HINT_$hint[$itemid]}\\\"\"" )
-      else
-        eval HINT_$hint[$itemid]=''
-      fi
-    done
-
-    DEPHINTS="optdeps readmedeps"
-    # These are hints where the file contents will be used by slackrepo itself.
-    # HINT_xxx contains the contents of the file,
-    # or '%NONE%' => the file doesn't exist, or '' => the file exists and is empty.
-    # Query them like this: '[ "${HINT_xxx[$itemid]}" != '%NONE%' ]'
-    for hint in $DEPHINTS; do
-      if [ -f "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint" ]; then
-        eval HINT_$hint[$itemid]=\"$(cat "$SR_HINTDIR"/"$itemdir"/"$itemprgnam"."$hint")\"
-        eval hintlist+=( "$hint=\"\\\"\${HINT_$hint[$itemid]}\\\"\"" )
-      else
-        eval HINT_$hint[$itemid]='%NONE%'
-      fi
-    done
-
-    [ ${#hintlist[@]} != 0 ] && HINT_SUMMARY["$itemid"]="$(printf '  %s\n' "${hintlist[@]}")"
-
-  fi
-
-  do_hint_skipme "$itemid"
-  if [ $? = 0 ]; then
-    if [ "$itemid" != "$ITEMID" ]; then
-      log_error -n ":-( $ITEMID ABORTED"
-      ABORTEDLIST+=( "$ITEMID" )
-    fi
-    return 1
-  fi
-
-  if [ -n "${HINT_SUMMARY[$itemid]}" ]; then
-    log_normal "Hints for ${itemid}:"
-    log_normal "${HINT_SUMMARY[$itemid]}"
-  fi
 
   # INFO DEPARTMENT
   # ===============
-  # It's not straightforward to tell an SBo style SlackBuild from a Slackware
-  # style SlackBuild.  Some Slackware SlackBuilds have a partial or full .info,
-  # but also have source (often repackaged) that clashes with DOWNLOAD=. 
-  # Maybe it needs another kind of hint :-(
+  # INFOVERSION[$itemid] non-null => other variables have already been set.
+  #
+  # If there is no proper SBo info file, we can try to discover it from the
+  # SlackBuild etc, but it's tricky (e.g. Slackware info files may be SBo style,
+  # or *almost* SBo style, or *not* SBo style, but often also have repackaged
+  # source that doesn't match DOWNLOAD=.  If any of this breaks for a specific
+  # SlackBuild, fix it with a hintfile :P
 
   if [ "${INFOVERSION[$itemid]+yesitisset}" != 'yesitisset' ]; then
 
-    # Not from prgnam.info -- GITREV and GITDIRTY
+    # Set GITREV and GITDIRTY from repo
     if [ "$GOTGIT" = 'y' ]; then
       GITREV[$itemid]="$(cd $SR_SBREPO/$itemdir; git log -n 1 --format=format:%H .)"
       GITDIRTY[$itemid]="n"
@@ -392,17 +317,19 @@ function parse_hints_and_info
       GITDIRTY[$itemid]="n"
     fi
 
-    # These are the variables we need from prgnam.info:
-    local VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH} REQUIRES
-    # Preferably, get them from prgnam.info:
+    # These are the variables we want:
+    unset VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH} REQUIRES
+    # Preferably, get them from the info file:
     if [ -f "$SR_SBREPO/$itemdir/$itemprgnam.info" ]; then
       # is prgnam.info plausibly in SBo format?
       if grep -q '^VERSION=' "$SR_SBREPO/$itemdir/$itemprgnam.info" ; then
         . "$SR_SBREPO/$itemdir/$itemprgnam.info"
       fi
     fi
-    # Backfill anything still unset:
-    # VERSION
+    # Vape the variables we don't need:
+    unset PRGNAM MAINTAINER EMAIL
+
+    # If VERSION isn't set, snarf it from the SlackBuild:
     if [ -z "$VERSION" ]; then
       # The next bit is necessarily dependent on the empirical characteristics
       # of the SlackBuilds in Slackware, msb, csb, etc :-/
@@ -412,13 +339,12 @@ function parse_hints_and_info
         eval $versioncmds
       cd - >/dev/null
       unset PKGNAM SRCNAM
-      # increasingly desperate...
-      [ -z "$VERSION" ] && VERSION="${HINT_version[$itemid]}"
-      [ -z "$VERSION" ] && VERSION="${GITREV[$itemid]:0:7}"
-      [ -z "$VERSION" ] && VERSION="$(date --date=@$(stat --format-='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile") '+%Y%m%d')"
     fi
+    # If $VERSION is still unset, we'll deal with it after any hints have been parsed.
     INFOVERSION[$itemid]="$VERSION"
-    # DOWNLOAD[_ARCH] and MD5SUM[_ARCH]
+    unset VERSION
+
+    # Process DOWNLOAD[_ARCH] and MD5SUM[_ARCH] from info file
     # Don't bother checking if they are improperly paired (it'll become apparent later).
     # If they are unset, set empty strings in INFODOWNLIST / INFOMD5LIST.
     # Also set SRCDIR (even if there is no source, SRCDIR is needed to hold .version)
@@ -432,22 +358,23 @@ function parse_hints_and_info
       SRCDIR[$itemid]="$SR_SRCREPO/$itemdir"
     fi
     if [ -z "${INFODOWNLIST[$itemid]}" ]; then
-      # sneaky slackbuild snarf ;-)
+      # Another sneaky slackbuild snarf ;-)
       # The url might contain $PRGNAM and $VERSION, or even SRCNAM :-(
       local PRGNAM SRCNAM
       eval $(grep 'PRGNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")
       eval $(grep 'SRCNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")
       eval INFODOWNLIST[$itemid]="$(grep 'wget -c ' "$SR_SBREPO"/"$itemdir"/"$itemfile" | sed 's/^.* //')"
-      HINT_md5ignore[$itemid]='y'
+      HINT_MD5IGNORE[$itemid]='y'
     fi
-    # REQUIRES
-    if [ "${REQUIRES+yesitisset}" != "yesitisset" ]; then
-      log_normal "Dependencies of $itemid could not be determined."
-    fi
-    INFOREQUIRES[$itemid]="${REQUIRES:-}"
+    unset DOWNLOAD MD5SUM
+    eval unset DOWNLOAD_"$SR_ARCH" MD5SUM_"$SR_ARCH"
+
+    # Save REQUIRES from info file (the hintfile may or may not supersede this)
+    [ -v REQUIRES ] && INFOREQUIRES[$itemid]="$REQUIRES"
 
   fi
 
+  # Check for unsupported/untested:
   if [ "${INFODOWNLIST[$itemid]}" = "UNSUPPORTED" -o "${INFODOWNLIST[$itemid]}" = "UNTESTED" ]; then
     log_warning -n ":-/ $itemid is ${INFODOWNLIST[$itemid]} on $SR_ARCH /-:"
     SKIPPEDLIST+=( "$itemid" )
@@ -458,6 +385,140 @@ function parse_hints_and_info
     return 1
   fi
 
+
+  # HINT DEPARTMENT
+  # ===============
+  # HINTFILE[$itemid] not set => we need to check for a hintfile
+  # HINTFILE[$itemid] set to null => there is no hintfile
+  # HINTFILE[$itemid] non-null => other HINT_xxx variables have already been set
+
+  if [ "${HINTFILE[$itemid]+yesitisset}" != 'yesitisset' ]; then
+    hintfile=''
+    hintpath=( "$SR_HINTDIR"/"$itemdir" "$SR_HINTDIR" "$SR_SBREPO"/"$itemdir" )
+    for trydir in $hintpath; do
+      if [ -f "$trydir"/"$itemprgnam".hint ]; then
+        hintfile="$trydir"/"$itemprgnam".hint
+        break
+      fi
+    done
+    HINTFILE[$itemid]="$hintfile"
+  fi
+
+  if [ -n "${HINTFILE[$itemid]}" ]; then
+    unset SKIP \
+          VERSION OPTIONS GID UID INSTALL NUMJOBS ANSWER CLEANUP \
+          ARCH DOWNLOAD MD5SUM \
+          REQUIRES ADDREQUIRES
+    . "${HINTFILE[$itemid]}"
+
+    # Process hint file's SKIP first.
+    if [ -n "$SKIP" ]; then
+      if [ "$SKIP" != 'no' ]; then
+        log_warning -n ":-/ SKIPPED $itemid due to hint /-:"
+        [ "$SKIP" != 'yes' ] && echo -e "$SKIP"
+        SKIPPEDLIST+=( "$itemid" )
+        if [ "$itemid" != "$ITEMID" ]; then
+          log_error -n ":-( $ITEMID ABORTED )-:"
+          ABORTEDLIST+=( "$ITEMID" )
+        fi
+        return 0
+      fi
+    fi
+
+    # Process the hint file's variables individually (looping for each variable would need
+    # 'eval', which would mess up the payload, so we don't do that).
+    [ -n "$VERSION" ] && HINT_VERSION[$itemid]="$VERSION"
+    [ -n "$OPTIONS" ] && HINT_OPTIONS[$itemid]="$OPTIONS"
+    [ -n "$GID"     ] &&     HINT_GID[$itemid]="$GID"
+    [ -n "$UID"     ] &&     HINT_UID[$itemid]="$UID"
+    [ -n "$INSTALL" ] && HINT_INSTALL[$itemid]="$INSTALL"
+    [ -n "$NUMJOBS" ] && HINT_NUMJOBS[$itemid]="$NUMJOBS"
+    [ -n "$ANSWER"  ] &&  HINT_ANSWER[$itemid]="$ANSWER"
+    [ -n "$CLEANUP" ] && HINT_CLEANUP[$itemid]="$CLEANUP"
+
+    # Process hint file's ARCH, DOWNLOAD[_ARCH] and MD5SUM[_ARCH] together:
+    [ -v ARCH ] && HINT_ARCH[$itemid]="$ARCH"
+    if [ -n "$ARCH" ]; then
+      dlvar="DOWNLOAD_$ARCH"
+      [ -n "${!dlvar}" ] && DOWNLOAD="${!dlvar}"
+      md5var="MD5SUM_$ARCH"
+      [ -n "${!md5var}" ] && MD5SUM="${!md5var}"
+    fi
+    if [ "$DOWNLOAD" = 'no' ]; then
+      HINT_NODOWNLOAD["$itemid"]='y'
+    elif [ -n "$DOWNLOAD" ]; then
+      INFODOWNLIST["$itemid"]="$DOWNLOAD"
+    fi
+    if [ "$MD5SUM" = 'no' ]; then
+      HINT_MD5IGNORE["$itemid"]='y'
+    elif [ -n "$MD5SUM" ]; then
+      INFOMD5LIST["$itemid"]="$MD5SUM"
+    fi
+
+    # Fix INFOREQUIRES from hint file's REQUIRES and ADDREQUIRES
+    [ "${INFOREQUIRES[$itemid]+yesitisset}" = 'yesitisset' ] && req="${INFOREQUIRES[$itemid]}"
+    [ -v REQUIRES ] && req="$REQUIRES"
+    [ -n "$ADDREQUIRES" ] && req=$(echo $req $ADDREQUIRES)
+    if [ -v req ]; then
+      INFOREQUIRES[$itemid]="$req"
+    fi
+
+    log_verbose "Hints from ${HINTFILE[itemid]}:" ${VERSION+VERSION} \
+                ${OPTIONS+OPTIONS} ${GID+GID} ${UID+UID} ${INSTALL+INSTALL} \
+                ${NUMJOBS+NUMJOBS} ${ANSWER+ANSWER+} ${CLEANUP+CLEANUP} \
+                ${ARCH+ARCH} ${DOWNLOAD+DOWNLOAD} ${MD5SUM+MD5SUM} \
+                ${REQUIRES+REQUIRES} ${ADDREQUIRES+ADDREQUIRES} 
+    unset SKIP \
+          VERSION OPTIONS GID UID INSTALL NUMJOBS ANSWER CLEANUP \
+          ARCH DOWNLOAD MD5SUM \
+          REQUIRES ADDREQUIRES
+
+  fi
+
+  # Fix INFOVERSION from hint file's VERSION, or git, or SlackBuild's modification time
+  ver="${INFOVERSION[$itemid]}"
+  [ -z "$ver" ] && ver="${HINT_VERSION[$itemid]}"
+  [ -z "$ver" -a "$GOTGIT" = 'y' ] && ver="${GITREV[$itemid]:0:7}"
+  [ -z "$ver" ] && ver="$(date --date=@$(stat --format-='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile") '+%Y%m%d')"
+  INFOVERSION[$itemid]="$ver"
+
+  # Complain and fix INFOREQUIRES if still not set
+  if [ "${INFOREQUIRES[$itemid]+yesitisset}" != 'yesitisset' ]; then
+    log_normal "Dependencies of $itemid could not be determined."
+    INFOREQUIRES[$itemid]=""
+  fi
+
   return 0
 
+}
+
+#-------------------------------------------------------------------------------
+
+function do_hint_skipme
+# Is there a skipme hint for this item?
+# $1 = itemid
+# Return status:
+# 0 = skipped
+# 1 = not skipped
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+
+  local itemid="$1"
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
+  local itemdir="${ITEMDIR[$itemid]}"
+
+  # called before parse_info_and_hints runs, so check the file directly:
+  hintfile="$SR_HINTDIR"/"$itemdir"/"$itemprgnam".hint
+  if [ -f "$hintfile" ]; then
+    if grep -q '^SKIP=' "$hintfile"; then
+      eval $(grep '^SKIP=' "$hintfile")
+      if [ "$SKIP" != 'no' ]; then
+        log_warning -n "SKIPPED $itemid due to hint"
+        [ "$SKIP" != 'yes' ] && echo "$SKIP"
+        SKIPPEDLIST+=( "$itemid" )
+        return 0
+      fi
+    fi
+  fi
+  return 1
 }

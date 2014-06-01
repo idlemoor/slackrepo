@@ -358,11 +358,11 @@ if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' ]; then
   installed=$(ls /var/log/packages/*"$SR_TAG" 2>/dev/null)
   if [ -n "$installed" ]; then
     for pkg in $installed; do
-      # don't moan if it has an install hint
+      #### don't moan if it has an install hint
       pkgnam=$(basename $pkg | rev | cut -f4- -d- | rev)
-      if [ -z "$(find $SR_HINTDIR -name $pkgnam.install)" ]; then
+      #### if [ -z "$(find $SR_HINTDIR -name $pkgnam.install)" ]; then
         log_warning "$(basename $pkg): package is already installed"
-      fi
+      #### fi
     done
   fi
 fi

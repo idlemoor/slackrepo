@@ -88,7 +88,7 @@ function uninstall_packages
   local pkgpath pkgbase pkgid
   local etcnewfiles etcdirs etcfile etcdir
 
-  [ "${HINT_install[$itemid]}" = 'y' ] && return 0
+  [ "${HINT_INSTALL[$itemid]}" = 'y' ] && return 0
 
   # Look for the package(s).
   # Start with the temp output dir
@@ -136,8 +136,8 @@ function uninstall_packages
         #   * Unsetting environment variables set in an /etc/profile.d script
         #   * Removing specific files and directories that removepkg doesn't remove
         #   * Running depmod to remove references to removed kernel modules
-        if [ -n "${HINT_cleanup[$itemid]}" ]; then
-          . "${HINT_cleanup[$itemid]}" >> "$ITEMLOG" 2>&1
+        if [ -n "${HINT_CLEANUP[$itemid]}" ]; then
+          eval "${HINT_CLEANUP[$itemid]}" >> "$ITEMLOG" 2>&1
         fi
       fi
 

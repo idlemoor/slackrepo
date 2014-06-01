@@ -30,7 +30,7 @@ function calculate_deps
     return 0
   fi
 
-  parse_hints_and_info "$itemid" || return 1
+  parse_info_and_hints "$itemid" || return 1
 
   local dep
   local -a deplist

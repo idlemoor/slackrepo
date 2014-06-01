@@ -8,6 +8,7 @@
 #   build_failed
 #   create_pkg_metadata
 #   remove_item
+#   do_gid_uid
 #-------------------------------------------------------------------------------
 
 function build_item
@@ -20,7 +21,7 @@ function build_item
 # 2 = download failed
 # 3 = checksum failed
 # 4 = [not used]
-# 5 = skipped (skipme or nodownload hint, or unsupported on this arch)
+# 5 = skipped (skip hint, or download=no, or unsupported on this arch)
 # 6 = SlackBuild returned 0 status, but nothing in $MYTMPOUT
 # 7 = excessively dramatic qa test fail
 # 8 = package install fail
@@ -43,14 +44,14 @@ function build_item
   fi
 
   # Apply version hint
-  NEWVERSION="${HINT_version[$itemid]}"
+  NEWVERSION="${HINT_VERSION[$itemid]}"
   if [ -n "$NEWVERSION" -a "${INFOVERSION[$itemid]}" != "$NEWVERSION" ]; then
     # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
     log_verbose -a "Note: $itemid: setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]}) and ignoring md5sums"
     sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$MYTMPIN/$itemfile"
     verpat="$(echo ${INFOVERSION[$itemid]} | sed 's/\./\\\./g')"
     INFODOWNLIST[$itemid]="$(echo "${INFODOWNLIST[$itemid]}" | sed "s/$verpat/$NEWVERSION/g")"
-    HINT_md5ignore[$itemid]='y'
+    HINT_MD5IGNORE[$itemid]='y'
     INFOVERSION[$itemid]="$NEWVERSION"
   fi
 
@@ -58,7 +59,7 @@ function build_item
   verify_src "$itemid"
   case $? in
     0) # already got source, and it's good
-       [ "$OPT_TEST" = 'y' -a -z "${HINT_nodownload[$itemid]}" ] && test_download "$itemid"
+       [ "$OPT_TEST" = 'y' -a -z "${HINT_NODOWNLOAD[$itemid]}" ] && test_download "$itemid"
        ;;
     1|2|3|4)
        # already got source but it's bad, or not got source, or wrong version => get it
@@ -70,12 +71,12 @@ function build_item
        return 5
        ;;
     6) # nodownload hint (probably needs manual download due to licence agreement)
-       log_warning -n -a "SKIPPED $itemid - please download the source"
+       log_warning -n -a ":-/ SKIPPED $itemid - please download the source /-:"
        echo "  from: ${INFODOWNLIST[$itemid]}"
        echo "  to:   ${SRCDIR[$itemid]}"
        # We ought to prepare that directory ;-)
        mkdir -p "${SRCDIR[$itemid]}"
-       cat "${HINT_nodownload[$itemid]}"
+       [ "${HINT_NODOWNLOAD[$itemid]}" != 'y' ] && echo "${HINT_NODOWNLOAD[$itemid]}"
        SKIPPEDLIST+=( "$itemid" )
        return 5
        ;;
@@ -119,22 +120,17 @@ function build_item
   fi
 
   # Process other hints for the build:
-  # uidgid ...
-  do_hint_uidgid "$itemid"
-  # ... makej1 (with MAKEFLAGS and NUMJOBS env vars) ...
-  if [ "${HINT_makej1[$itemid]}" = 'y' ]; then
-    tempmakeflags="MAKEFLAGS='-j1'"
-    USE_NUMJOBS=" -j1 "
-  else
-    tempmakeflags="MAKEFLAGS='$SR_NUMJOBS'"
-    USE_NUMJOBS=" $SR_NUMJOBS "
-  fi
-  # ... options ...
-  options="${HINT_options[$itemid]}"
+  # GID and UID ...
+  do_gid_uid "$itemid"
+  # ... NUMJOBS (with MAKEFLAGS and NUMJOBS env vars) ...
+  tempmakeflags="MAKEFLAGS='${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS}'"
+  tempnumjobs=" ${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS} "
+  # ... OPTIONS ...
+  options="${HINT_OPTIONS[$itemid]}"
   SLACKBUILDCMD="sh ./$itemfile"
   [ -n "$tempmakeflags" -o -n "$options" ] && SLACKBUILDCMD="env $tempmakeflags $options $SLACKBUILDCMD"
   # ... and answers.
-  [ -n "${HINT_answers[$itemid]}" ] && SLACKBUILDCMD="cat ${HINT_answers[$itemid]} | $SLACKBUILDCMD"
+  [ -n "${HINT_ANSWER[$itemid]}" ] && SLACKBUILDCMD="echo -e '${HINT_ANSWER[$itemid]}' | $SLACKBUILDCMD"
 
   # Build it
   MYTMPOUT="$MYTMPDIR/packages_$itemprgnam"
@@ -148,7 +144,7 @@ function build_item
     TMP="$SR_TMP" \
     OUTPUT="$MYTMPOUT" \
     PKGTYPE="$SR_PKGTYPE" \
-    NUMJOBS="$USE_NUMJOBS"
+    NUMJOBS="$tempnumjobs"
   log_normal -a "Running $itemfile ..."
   log_verbose -a "$SLACKBUILDCMD"
   if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
@@ -477,4 +473,74 @@ function remove_item
     log_success "$itemid: Removed"
   fi
   return
+}
+#-------------------------------------------------------------------------------
+
+function do_gid_uid
+# If there is a GID or UID hint for this item, set up the group and username.
+# GID hint format: GID="<gnum>:<gname> ..."
+# UID hint format: UID="<unum>:<uname>:[-g<ugroup>:][-d<udir>:][-s<ushell>:][-uargs:...] ..."
+#   but if the UID hint is messed up, we can take a wild guess or two, see below ;-)
+# $1 = itemid
+# Return status: always 0
+{
+  local itemid="$1"
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
+
+  if [ -n "${HINT_GID[$itemid]}" ]; then
+    for gidstring in ${HINT_GID[$itemid]}; do
+      gnum=''; gname="$itemprgnam"
+      shopt -s extglob
+      for gfield in $(echo $gidstring | tr ':' ' '); do
+        case "$gfield" in
+          +([0-9]) ) gnum="$gfield" ;;
+          * ) gname="$gfield" ;;
+        esac
+      done
+      shopt -u extglob
+      [ -z "$gnum" ] && { log_warning "${itemid}: GID hint has no GID number" ; break ; }
+      if ! getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
+        gaddcmd="groupadd -g $gnum $gname"
+        log_verbose "${itemid}: Adding group: $gaddcmd"
+        exec "$gaddcmd"
+      else
+        log_verbose "${itemid}: Group $gname already exists"
+      fi
+    done
+  fi
+
+  if [ -n "${HINT_UID[$itemid]}" ]; then
+    for uidstring in ${HINT_UID[$itemid]}; do
+      unum=''; uname="$itemprgnam"; ugroup="$itemprgnam"
+      udir='/dev/null'; ushell='/bin/false'; uargs=''
+      shopt -s extglob
+      for ufield in $(echo $uidstring | tr ':' ' '); do
+        case "$ufield" in
+          -g* ) ugroup="${ufield:2}" ;;
+          -d* ) udir="${ufield:2}" ;;
+          -s* ) ushell="${ufield:2}" ;;
+          -*  ) uargs="$uargs ${ufield:0:2} ${ufield:2}"
+          /*  ) if [ -x "$ufield" ]; then ushell="$ufield"; else udir="$ufield"; fi ;;
+          +([0-9]) ) unum="$ufield" ;;
+          *   ) uname="$ufield" ;;
+        esac
+      done
+      shopt -u extglob
+      [ -z "$unum" ] && { log_warning "${itemid}: UID hint has no UID number" ; break ; }
+      if ! getent passwd "$uname" | grep -q "^${uname}:" 2>/dev/null ; then
+        if ! getent group "$ugroup" | grep -q "^${ugroup}:" 2>/dev/null ; then
+          gaddcmd="groupadd -g $unum $uname"
+          log_verbose "${itemid}: Adding group: $gaddcmd"
+          exec "$gaddcmd"
+        fi
+        uaddcmd="useradd -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname"
+        log_verbose "${itemid}: Adding user: $uaddcmd"
+        exec "$uaddcmd"
+      else
+        log_verbose "${itemid}: User $uname already exists"
+      fi
+    done
+  fi
+
+  return 0
 }

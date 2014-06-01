@@ -25,7 +25,7 @@ function print_current_revinfo
 #   buildrev=<gitrevision|secs-since-epoch>;
 #   slackware=<slackversion>;
 #   [depends=<dep1>[:<dep2>[...]];]
-#   [hints=<hintname1>:<md5sum1>[:<hintname2>:<md5sum2>[...]]]
+#   [hintfile=<md5sum>;]
 #
 # This is repeated for each dependency.
 #
@@ -40,7 +40,7 @@ function print_current_revinfo
 
   prgstuff="prgnam=${itemprgnam};"
 
-  verstuff="version=${HINT_version[$itemid]:-${INFOVERSION[$itemid]}};"
+  verstuff="version=${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}};"
 
   bltstuff="built=$(date +%s);"
 
@@ -60,9 +60,8 @@ function print_current_revinfo
   [ -n "$directdeps" ] && depstuff="depends=${directdeps};"
 
   hintstuff=''
-  if [ -d "$SR_HINTDIR"/"$itemdir" ]; then
-    hintmd5sums="$(cd "$SR_HINTDIR"/"$itemdir"; md5sum "$itemprgnam".* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
-    [ -n "$hintmd5sums" ] && hintstuff="hints=${hintmd5sums};"
+  if [ -n "${HINTFILE[$itemdir]}" ]; then
+    hintstuff="hintfile=$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//');"
   fi
 
   REVCACHE[$itemid]=$(echo ${prgstuff} ${verstuff} ${bltstuff} ${revstuff} ${slackstuff} ${depstuff} ${hintstuff})
@@ -101,7 +100,7 @@ function needs_build
   local itemprgnam=${ITEMPRGNAM[$itemid]}
   local itemdir=${ITEMDIR[$itemid]}
   local -a pkglist modifilelist
-  local prgnam version built revision depends slackware hints
+  local prgnam version built revision depends slackware hintfile
 
   # Tweak BUILDINFO for control args
   [ "$OPT_DRY_RUN" = 'y' ] && TWEAKINFO=' --dry-run'
@@ -117,14 +116,14 @@ function needs_build
 
   # Package dir not found or has no packages => add
   if [ "${#pkglist[@]}" = 0 ]; then
-    BUILDINFO="add version ${HINT_version[$itemid]:-${INFOVERSION[$itemid]}}$TWEAKINFO"
+    BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}$TWEAKINFO"
     return 0
   fi
 
   # Is the .revision file missing => add
   PKGREVFILE=$(dirname "${pkglist[0]}")/.revision
   if [ ! -f "$PKGREVFILE" ]; then
-    BUILDINFO="add version ${HINT_version[$itemid]:-${INFOVERSION[$itemid]}}$TWEAKINFO"
+    BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}$TWEAKINFO"
     return 0
   fi
 
@@ -134,10 +133,10 @@ function needs_build
   pkgrev="$buildrev"
   pkgdep="$depends"
   pkgslk="$slackware"
-  pkghnt="$hints"
+  pkghnt="$hintfile"
 
   # Are we upversioning => update
-  currver="${HINT_version[$itemid]:-${INFOVERSION[$itemid]}}"
+  currver="${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
   if [ "$pkgver" != "$currver" ]; then
     BUILDINFO="update for version $currver$TWEAKINFO"
     return 0
@@ -180,15 +179,14 @@ function needs_build
   # have any of the deps been updated => rebuild
   local -a updeps
   for dep in ${DIRECTDEPS[$itemid]}; do
-    # ignore built= (merely rebuilt deps don't matter) and hints= (significant
-    # hint changes will affect version= or depends=, which *are* checked)
-    # (note, hints= *must* be last for the regex to work!)
-    pkgdeprev=$(grep "^prgnam=${ITEMPRGNAM[$dep]};" $PKGREVFILE | sed -e 's/ built=[0-9]*;//' -e 's/ hints=.*//' )
+    # ignore built= (merely rebuilt deps don't matter) and hintfile= (significant
+    # hintfile changes will affect version= or depends=, which *are* checked)
+    pkgdeprev=$(grep "^prgnam=${ITEMPRGNAM[$dep]};" $PKGREVFILE | sed -e 's/ built=[0-9]*;//' -e 's/ hintfile=[0-9a-f]*;//' )
     if [ -z "${REVCACHE[$dep]}" ]; then
       # if there is nothing in REVCACHE, the dep's package can't be in DRYREPO
       REVCACHE[$dep]="$(head -q -n 1 "$SR_PKGREPO"/"${ITEMDIR[$dep]}"/.revision)"
     fi
-    currdeprev="$(echo ${REVCACHE[$dep]} | sed -e 's/ built=[0-9]*;//' -e 's/ hints=.*//')"
+    currdeprev="$(echo ${REVCACHE[$dep]} | sed -e 's/ built=[0-9]*;//' -e 's/ hintfile=[0-9a-f]*;//')"
     [ "$pkgdeprev" != "$currdeprev" ] && updeps+=( "$dep" )
   done
   if [ "${#updeps}" != 0 ]; then
@@ -205,13 +203,13 @@ function needs_build
     return 0
   fi
 
-  # has a hint changed => rebuild
+  # has the hintfile changed => rebuild
   currhnt=''
-  if [ -d "$SR_HINTDIR"/"$itemdir" ]; then
-    currhnt="$(cd "$SR_HINTDIR"/"$itemdir"; md5sum "$itemprgnam".* 2>/dev/null | grep -v -e '.sample$' -e '.new$' | sed 's; .*/;:;' | tr -s '[:space:]' ':')"
+  if [ -n "${HINTFILE[$itemdir]}" ]; then
+    currhnt="hintfile=$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//');"
   fi
   if [ "$pkghnt" != "$currhnt" ]; then
-    BUILDINFO="rebuild for changed hints$TWEAKINFO"
+    BUILDINFO="rebuild for hintfile changes$TWEAKINFO"
     return 0
   fi
 

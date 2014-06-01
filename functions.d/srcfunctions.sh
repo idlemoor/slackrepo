@@ -37,7 +37,7 @@ function verify_src
   [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ] && \
     { log_warning -n "$itemid is $DOWNLIST on $SR_ARCH"; return 5; }
   # if no directory, return 6 (nodownload hint) or 3 (source not found)
-  [ ! -d "$DOWNDIR" -a -n "${HINT_nodownload[$itemid]}" ] && return 6
+  [ ! -d "$DOWNDIR" -a -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
   [ ! -d "$DOWNDIR" ] && return 3
 
   # More complex checks:
@@ -47,7 +47,7 @@ function verify_src
       if [ "$VERSION" != "$(cat .version)" ]; then
         log_verbose -a "Removing old source files"
         find . -maxdepth 1 -type f -exec rm -f {} \;
-        [ -n "${HINT_nodownload[$itemid]}" ] && return 6
+        [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
         return 4
       fi
     fi
@@ -55,17 +55,17 @@ function verify_src
     IFS=$'\n'; srcfilelist=( $(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$' | sed 's:^\./::') ); unset IFS
     numgot=${#srcfilelist[@]}
     # no files, empty directory => return 3 (same as no directory) or 6
-    [ $numgot = 0 -a -n "${HINT_nodownload[$itemid]}" ] && return 6
+    [ $numgot = 0 -a -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
     [ $numgot = 0 ] && return 3
     # or if we have not got the right number of sources, return 2 (or 6)
     numwant=$(echo $DOWNLIST | wc -w)
     if [ $numgot != $numwant ]; then
       log_verbose -a "Note: need $numwant source files, but have $numgot"
-      [ -n "${HINT_nodownload[$itemid]}" ] && return 6
+      [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
       return 2
     fi
     # if we're ignoring the md5sums, we've finished! => return 0
-    [ "${HINT_md5ignore[$itemid]}" = 'y' ] && return 0
+    [ "${HINT_MD5IGNORE[$itemid]}" = 'y' ] && return 0
     # run the md5 check on all the files (don't give up at the first error)
     log_normal -a "Verifying source files ..."
     allok='y'
@@ -76,7 +76,7 @@ function verify_src
       for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
       [ "$ok" = 'y' ] || { log_verbose -a "Note: failed md5sum: $f"; allok='n'; }
     done
-    [ "$allok" = 'y' ] || { if [ -n "${HINT_nodownload[$itemid]}" ]; then return 6; else return 1; fi; }
+    [ "$allok" = 'y' ] || { if [ -n "${HINT_NODOWNLOAD[$itemid]}" ]; then return 6; else return 1; fi; }
   )
   return $?  # status comes directly from subshell
 }

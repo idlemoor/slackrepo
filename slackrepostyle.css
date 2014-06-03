@@ -20,8 +20,8 @@ nav li li   { margin-left: 20px; margin-bottom: 0px; }
 nav li a:hover { background-color: #ffffff; }
 
 #main       { float: right; width: 75%; margin: 10px; text-align: left; font-family: serif; }
-#main h3    { font-family: sans-serif; background-color: #e0e0ff; padding: 8px; }
-#main h4    { font-family: sans-serif; background-color: #e0e0ff; padding: 4px; }
+#main h3    { font-family: sans-serif; background-color: #c0c0ff; padding: 8px; }
+#main h4    { font-family: sans-serif; background-color: #c0c0ff; padding: 4px; }
 #main h4 .subhead    { font-family: sans-serif; font-weight: normal; font-style: italic; }
 #main p     { font-family: serif; margin-bottom: 10px; }
 #main p.scary  { background-image: url("warning.png");  background-repeat: no-repeat; background-position: left 8px center;
@@ -33,7 +33,7 @@ nav li a:hover { background-color: #ffffff; }
 #main td    { border: 1px solid black; padding: 4px; }
 
 #man        { float: right; width: 75%; margin: 10px; text-align: left; font-family: serif; }
-#man h2     { font-family: sans-serif; background-color: #e0e0ff; padding: 8px; }
+#man h2     { font-family: sans-serif; background-color: #c0c0ff; padding: 8px; }
 #man h4     { font-family: sans-serif; }
 #man p      { font-family: serif; margin-bottom: 10px; }
 #man ul     { margin: 0; }

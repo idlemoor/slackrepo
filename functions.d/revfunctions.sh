@@ -163,10 +163,17 @@ function needs_build
     return 0
   fi
 
-  # if this is the top-level item and we're in rebuild mode => rebuild
+  # is this the top-level item and are we in rebuild mode
+  #   => rebuild if it hasn't previously been rebuilt (as a dep of something else)
   if [ "$itemid" = "$ITEMID" -a "$PROCMODE" = 'rebuild' ]; then
-    BUILDINFO="rebuild$TWEAKINFO"
-    return 0
+    found='n'
+    for previously in "${OKLIST[@]}"; do
+      if [ "$previously" = "$ITEMID" ]; then found='y'; break; fi
+    done
+    if [ "$found" = 'n' ]; then
+      BUILDINFO="rebuild$TWEAKINFO"
+      return 0
+    fi
   fi
 
   # has the list of deps changed => rebuild

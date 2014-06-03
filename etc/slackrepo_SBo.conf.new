@@ -12,19 +12,22 @@
 # Filestore locations
 
 # Where is the local SlackBuild repo:
-SBREPO="/var/lib/slackrepo/git_%REPO%"
+SBREPO="/var/lib/slackrepo/%REPO%/slackbuilds"
 
 # Where to store cached sources (you will need plenty of space):
-SRCREPO="/var/lib/slackrepo/src_%REPO%"
+SRCREPO="/var/lib/slackrepo/%REPO%/source"
 
 # Where to store built packages (you will need plenty of space):
-PKGREPO="/var/lib/slackrepo/pkg_%REPO%/%SLACKVER%/%ARCH%"
+PKGREPO="/var/lib/slackrepo/%REPO%/packages/%SLACKVER%/%ARCH%"
 
-# Where to find hints for this repo:
-HINTDIR="/etc/slackrepo/hintfiles_%REPO%"
+# Where to find hintfiles for this repo:
+HINTDIR="/etc/slackrepo/%REPO%/hintfiles"
+
+# Where to find queuefiles for this repo:
+QUEUEDIR="/etc/slackrepo/%REPO%/queuefiles"
 
 # Where to store log files:
-LOGDIR="/var/log/slackrepo/log_%REPO%"
+LOGDIR="/var/log/slackrepo/%REPO%/logs"
 
 # Where to store temporary files (you will need plenty of space):
 TMP="/tmp/%REPO%"

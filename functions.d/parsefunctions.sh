@@ -345,7 +345,7 @@ function parse_info_and_hints
     fi
     # If $VERSION is still unset, we'll deal with it after any hints have been parsed.
     INFOVERSION[$itemid]="$VERSION"
-    unset VERSION
+    # don't unset VERSION, it'll be needed when we snarf from the SlackBuild below
 
     # Process DOWNLOAD[_ARCH] and MD5SUM[_ARCH] from info file
     # Don't bother checking if they are improperly paired (it'll become apparent later).
@@ -369,7 +369,7 @@ function parse_info_and_hints
       eval INFODOWNLIST[$itemid]="$(grep 'wget -c ' "$SR_SBREPO"/"$itemdir"/"$itemfile" | sed 's/^.* //')"
       HINT_MD5IGNORE[$itemid]='y'
     fi
-    unset DOWNLOAD MD5SUM
+    unset DOWNLOAD MD5SUM PRGNAM SRCNAM VERSION
     eval unset DOWNLOAD_"$SR_ARCH" MD5SUM_"$SR_ARCH"
 
     # Save REQUIRES from info file (the hintfile may or may not supersede this)

@@ -154,11 +154,15 @@ done
 # Configuration
 #-------------------------------------------------------------------------------
 
-# All config vars are prefixed with SR_ to stop SlackBuilds picking them up.
+# These config vars are prefixed with SR_ to stop SlackBuilds picking them up.
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO PKGREPO SRCREPO \
           HINTDIR QUEUEDIR LOGDIR TMP \
-          ARCH TAG PKGTYPE NUMJOBS USE_GENREPOS"
+          ARCH TAG PKGTYPE NUMJOBS"
+# These config vars don't need to be obfuscated:
+genrepnames="USE_GENREPOS REPOSROOT REPOSOWNER REPOSOWNERGPG DL_URL \
+             RSS_TITLE RSS_ICON RSS_LINK RSS_CLURL RSS_DESCRIPTION RSS_FEEDMAX RSS_UUID \
+             GPGBIN USE_GPGAGENT FOR_SLAPTGET FOLLOW_SYMLINKS REPO_SUBDIRS REPO_EXCLUDES"
 initnames="INIT_GITCLONE INIT_GITBRANCH"
 
 # Initialise the SR_variables from the environment:
@@ -239,6 +243,9 @@ for name in $varnames; do
 done
 for initvar in $initnames; do
   eval $initvar=\"$(echo "${!initvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
+done
+for genrepvar in $genrepnames; do
+  eval $genrepvar=\"$(echo "${!genrepvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
 done
 
 # Do this now so we can log the config:
@@ -435,7 +442,7 @@ log_always "Logfile:    $MAINLOG"
 secs=$(( $(date +%s) - $starttime ))
 h=$(( $secs / 3600 )); m=$(( ( $secs / 60) % 60 )); s=$(( $secs % 60 ))
 log_normal "Runtime:    ${h}h ${m}m ${s}s"
-log_always "Processed:  $(( ${#OKLIST[@]} + ${#SKIPPEDLIST[@]} + ${#FAILEDLIST[@]} + ${#ABORTEDLIST[@]} ))"
+log_always "Processed:  ${#ITEMPRGNAM[@]}"
 
 if [ "$OPT_DRY_RUN" = 'y' ]; then
   OKLIST=( $(printf '%s\n' "${OKLIST[@]}" | sort -u) )
@@ -480,7 +487,7 @@ genrepstat=0
 if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
   rcfile=~/.genreprc
   [ -f "$rcfile" ] && { set -e; . "$rcfile"; set +e; }
-  if [ "$SR_USE_GENREPOS" = 1 ]; then
+  if [ "$USE_GENREPOS" = 1 ]; then
     log_start "gen_repos_files.sh"
     # 'man sort' says an in-place sort is ok, so let's be lazy :-)
     sort -o "$CHANGELOG" "$CHANGELOG"

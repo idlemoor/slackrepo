@@ -1,1 +1,1 @@
-ADDREQUIRES="lame flac faad2 Unidecode pyOpenSSL"
+ADDREQUIRES="lame faad2 Unidecode pyOpenSSL"

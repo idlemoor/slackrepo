@@ -1,0 +1,2 @@
+REQUIRES="eventlog"
+INSTALL="no"

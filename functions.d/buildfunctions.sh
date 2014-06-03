@@ -505,7 +505,7 @@ function do_groupadd_useradd
       if ! getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
         gaddcmd="groupadd -g $gnum $gname"
         log_verbose -a "Adding group: $gaddcmd"
-        exec "$gaddcmd"
+        eval $gaddcmd
       else
         log_verbose -a "Group $gname already exists."
       fi
@@ -514,7 +514,7 @@ function do_groupadd_useradd
 
   if [ -n "${HINT_USERADD[$itemid]}" ]; then
     for userstring in ${HINT_USERADD[$itemid]}; do
-      unum=''; uname="$itemprgnam"; ugroup="$itemprgnam"
+      unum=''; uname="$itemprgnam"; ugroup=""
       udir='/dev/null'; ushell='/bin/false'; uargs=''
       for ufield in $(echo $userstring | tr ':' ' '); do
         case "$ufield" in
@@ -529,14 +529,15 @@ function do_groupadd_useradd
       done
       [ -z "$unum" ] && { log_warning "${itemid}: USERADD hint has no UID number" ; break ; }
       if ! getent passwd "$uname" | grep -q "^${uname}:" 2>/dev/null ; then
-        if ! getent group "$ugroup" | grep -q "^${ugroup}:" 2>/dev/null ; then
-          gaddcmd="groupadd -g $unum $uname"
+        [ -z "$ugroup" ] && ugroup="$uname"
+        if ! getent group "${ugroup}" | grep -q "^${ugroup}:" 2>/dev/null ; then
+          gaddcmd="groupadd -g $unum $ugroup"
           log_verbose -a "Adding group: $gaddcmd"
-          exec "$gaddcmd"
+          eval $gaddcmd
         fi
         uaddcmd="useradd -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname"
-        log_verbose -a "Adding user: $uaddcmd"
-        exec "$uaddcmd"
+        log_verbose -a "Adding user:  $uaddcmd"
+        eval $uaddcmd
       else
         log_verbose -a "User $uname already exists."
       fi

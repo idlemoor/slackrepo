@@ -163,10 +163,10 @@ function dotprofilizer
   if grep -q -E 'etc/profile\.d/.*\.sh(\.new)?' "$varlogpkg"; then
     for script in $(grep 'etc/profile\.d/.*\.sh' "$varlogpkg" | sed 's/.new$//'); do
       if [ -f /"$script" ]; then
-        log_verbose -a "  Running profile script /$script"
+        log_verbose -a "  Running profile script: /$script"
         . /"$script"
       elif [ -f /"$script".new ]; then
-        log_verbose -a "  Running profile script /$script.new"
+        log_verbose -a "  Running profile script: /$script.new"
         . /"$script".new
       fi
     done

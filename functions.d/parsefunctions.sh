@@ -464,11 +464,20 @@ function parse_info_and_hints
     fi
 
     log_verbose "Hints for $itemid:"
-    log_verbose ' ' ${VERSION+VERSION} \
-                ${OPTIONS+OPTIONS} ${GROUPADD+GROUPADD} ${USERADD+USERADD} ${INSTALL+INSTALL} \
-                ${NUMJOBS+NUMJOBS} ${ANSWER+ANSWER+} ${CLEANUP+CLEANUP} \
-                ${ARCH+ARCH} ${DOWNLOAD+DOWNLOAD} ${MD5SUM+MD5SUM} \
-                ${REQUIRES+REQUIRES} ${ADDREQUIRES+ADDREQUIRES}
+    log_verbose "$(printf '  %s\n' \
+      ${VERSION+"VERSION=\"$VERSION\""} \
+      ${OPTIONS+"OPTIONS=\"$OPTIONS\""} \
+      ${GROUPADD+"GROUPADD=\"$GROUPADD\""} \
+      ${USERADD+"USERADD=\"$USERADD\""} \
+      ${INSTALL+"INSTALL=\"$INSTALL\""} \
+      ${NUMJOBS+"NUMJOBS=\"$NUMJOBS\""} \
+      ${ANSWER+"ANSWER=\"$ANSWER\""} \
+      ${CLEANUP+"CLEANUP=\"$CLEANUP\""} \
+      ${ARCH+"ARCH=\"$ARCH\""} \
+      ${DOWNLOAD+"DOWNLOAD=\"$DOWNLOAD\""} \
+      ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
+      ${REQUIRES+"REQUIRES=\"$REQUIRES\""} \
+      ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )"
     unset SKIP \
           VERSION OPTIONS GROUPADD USERADD INSTALL NUMJOBS ANSWER CLEANUP \
           ARCH DOWNLOAD MD5SUM \
@@ -515,7 +524,7 @@ function do_hint_skipme
       eval $(grep '^SKIP=' "$hintfile")
       if [ "$SKIP" != 'no' ]; then
         log_warning -n "SKIPPED $itemid due to hint"
-        [ "$SKIP" != 'yes' ] && echo "$SKIP"
+        [ "$SKIP" != 'yes' ] && log_normal "$SKIP"
         SKIPPEDLIST+=( "$itemid" )
         return 0
       fi

@@ -33,9 +33,11 @@ function log_start
   echo "! ${msg:0:66} $(date +%T) !"
   echo "$line"
   echo ""
-  echo ""                             >> "$MAINLOG"
-  echo "$line"                        >> "$MAINLOG"
-  echo "$@ $(date '+%F %T')" >> "$MAINLOG"
+  echo ""                                 >> "$MAINLOG"
+  echo "$line"                            >> "$MAINLOG"
+  echo "! ${msg:0:55} $(date '+%F %T') !" >> "$MAINLOG"
+  echo "$line"                            >> "$MAINLOG"
+  echo ""                                 >> "$MAINLOG"
 }
 
 #-------------------------------------------------------------------------------

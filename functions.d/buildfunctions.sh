@@ -72,11 +72,10 @@ function build_item
        ;;
     6) # nodownload hint (probably needs manual download due to licence agreement)
        log_warning -n -a ":-/ SKIPPED $itemid - please download the source /-:"
-       echo "  from: ${INFODOWNLIST[$itemid]}"
-       echo "  to:   ${SRCDIR[$itemid]}"
+       log_normal "  from: ${INFODOWNLIST[$itemid]}"
+       log_normal "  to:   ${SRCDIR[$itemid]}"
        # We ought to prepare that directory ;-)
        mkdir -p "${SRCDIR[$itemid]}"
-       [ "${HINT_NODOWNLOAD[$itemid]}" != 'y' ] && echo "${HINT_NODOWNLOAD[$itemid]}"
        SKIPPEDLIST+=( "$itemid" )
        return 5
        ;;
@@ -462,6 +461,8 @@ function remove_item
   else
     for repodir in "$SR_PKGREPO" "$SR_SRCREPO"; do
       if [ -d "$repodir"/"$itemdir" ]; then
+        #### uninstall any installed packages
+        #### log a list of packages
         rm -rf "$repodir"/"$itemdir"
         up="$(dirname "$itemdir")"
         [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "$repodir"/"$up"
@@ -471,7 +472,7 @@ function remove_item
       fi
     done
     echo "$itemid: Removed. NEWLINE" >> "$CHANGELOG"
-    log_success "$itemid: Removed"
+    log_success ":-) $itemid: Removed (-:"
   fi
   return
 }
@@ -503,10 +504,10 @@ function do_groupadd_useradd
       [ -z "$gnum" ] && { log_warning "${itemid}: GROUPADD hint has no GID number" ; break ; }
       if ! getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
         gaddcmd="groupadd -g $gnum $gname"
-        log_verbose "${itemid}: Adding group: $gaddcmd"
+        log_verbose -a "Adding group: $gaddcmd"
         exec "$gaddcmd"
       else
-        log_verbose "${itemid}: Group $gname already exists"
+        log_verbose -a "Group $gname already exists."
       fi
     done
   fi
@@ -530,14 +531,14 @@ function do_groupadd_useradd
       if ! getent passwd "$uname" | grep -q "^${uname}:" 2>/dev/null ; then
         if ! getent group "$ugroup" | grep -q "^${ugroup}:" 2>/dev/null ; then
           gaddcmd="groupadd -g $unum $uname"
-          log_verbose "${itemid}: Adding group: $gaddcmd"
+          log_verbose -a "Adding group: $gaddcmd"
           exec "$gaddcmd"
         fi
         uaddcmd="useradd -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname"
-        log_verbose "${itemid}: Adding user: $uaddcmd"
+        log_verbose -a "Adding user: $uaddcmd"
         exec "$uaddcmd"
       else
-        log_verbose "${itemid}: User $uname already exists"
+        log_verbose -a "User $uname already exists."
       fi
     done
   fi

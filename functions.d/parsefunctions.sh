@@ -424,7 +424,7 @@ function parse_info_and_hints
           log_error -n ":-( $ITEMID ABORTED )-:"
           ABORTEDLIST+=( "$ITEMID" )
         fi
-        return 0
+        return 1
       fi
     fi
 
@@ -503,35 +503,4 @@ function parse_info_and_hints
 
   return 0
 
-}
-
-#-------------------------------------------------------------------------------
-
-function do_hint_skipme
-# Is there a skipme hint for this item?
-# $1 = itemid
-# Return status:
-# 0 = skipped
-# 1 = not skipped
-{
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
-
-  local itemid="$1"
-  local itemprgnam="${ITEMPRGNAM[$itemid]}"
-  local itemdir="${ITEMDIR[$itemid]}"
-
-  # called before parse_info_and_hints runs, so check the file directly:
-  hintfile="$SR_HINTDIR"/"$itemdir"/"$itemprgnam".hint
-  if [ -f "$hintfile" ]; then
-    if grep -q '^SKIP=' "$hintfile"; then
-      eval $(grep '^SKIP=' "$hintfile")
-      if [ "$SKIP" != 'no' ]; then
-        log_warning -n "SKIPPED $itemid due to hint"
-        [ "$SKIP" != 'yes' ] && log_normal "$SKIP"
-        SKIPPEDLIST+=( "$itemid" )
-        return 0
-      fi
-    fi
-  fi
-  return 1
 }

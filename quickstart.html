@@ -13,7 +13,7 @@
 
 <header>
 <h2>Quick start</h2>
-<p><a href="#running">Running</a> &bull; <a href="#options">Options</a> &bull; <a href="#examples">Examples</a></p>
+<p><a href="#running">Running</a> &bull; <a href="#options">Options</a> &bull; <a href="#examples">Examples</a> &bull; <a href="#logging">Logging</a></p>
 </header>
 
 <nav>
@@ -110,18 +110,12 @@ This results in a "queue" style build, and packages may not be 100% clean of
 unexpected dependencies. The default is for packages <strong>not</strong> to
 be installed.</p>
 
-<pre>-v, --verbose</pre>
+<pre>-v, --verbose
+-vv, --very-verbose
+-q, --quiet</pre>
 
-<p>Increase the quantity of messages printed on the console during execution.</p>
-
-<pre>-vv, --very-verbose</pre>
-
-<p>Print <strong>all</strong> messages on the console during execution, including
-output from invoked SlackBuilds (e.g. compilation).</p>
-
-<pre>-q, --quiet</pre>
-
-<p>Reduce the quantity of messages printed on the console during execution.</p>
+<p>Increase or reduce the messages printed on the console during execution.
+See <a href="#logging">Logging</a> (below) for details.</p>
 
 
 <h3><a name="examples"></a>Examples</h4>
@@ -151,6 +145,33 @@ and also will update for SBo's latest changes):</p>
 
 <p>Test-build colord (in the csb repo), with very verbose messages; do not store the built package:</p>
 <pre>slackrepo build -vv --repo=csb --test --dry-run colord</pre>
+
+
+<h3><a name="logging"></a>Logging</h3>
+
+<p>All messages from slackrepo are sent to a main log file.  Progress messages are
+displayed on the screen.  Control arguments <code>--verbose</code> (<code>-v</code>) and
+<code>--quiet</code> (<code>-q</code>) can be specified, to increase or decrease the details
+that are displayed on the screen.</p>
+
+<p>Detailed output from each build process is sent to an item-specific log
+file, but is not displayed on the screen unless you specify the <code>--very-verbose</code>
+(<code>-vv</code>) control argument.</p>
+
+<p>The log files are in a repository-specific directory.  A new main log file is created
+for each run of slackrepo, with a name of the form</p>
+
+<pre>
+/var/log/slackrepo/log_SBo/slackrepo_YYYY-MM-DD_hh:mm:ss.log
+</pre>
+
+<p>Each item-specific log file is in a subdirectory if the SlackBuilds directory
+has subdirectories.  For example, the log file for the SBo item 'graphics/shotwell'
+is</p>
+
+<pre>
+/var/log/slackrepo/log_SBo/graphics/shotwell/shotwell.log
+</pre>
 
 
 </div>

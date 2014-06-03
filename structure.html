@@ -43,7 +43,7 @@
 <p>Multiple repositories are supported.  The Repository ID, e.g. <code>SBo</code>,
 selects a configuration file, e.g. /etc/slackrepo/slackrepo_SBo.conf, and
 the configuration file sets the paths of the SlackBuild repository, the
-source repository, the package repository, the hints directory, and the
+source repository, the package repository, the hintfile directory, and the
 log directory.  The Repository ID can be specified by the control argument
 <code>--repo=ID</code>, or by the <code>REPO</code> environment variable, or by setting <code>REPO=ID</code>
 in the file ~/.slackreporc.  By default, the default default is <code>SBo</code>.</p>
@@ -57,12 +57,12 @@ in the file ~/.slackreporc.  By default, the default default is <code>SBo</code>
     [PKGREPO]   |--/var/lib/slackrepo/pkg_SBo/category/prgnam/prgnam-1.0-i486-1_SBo.tgz
     [SRCREPO]   |--/var/lib/slackrepo/src_SBo/category/prgnam/prgnam-1.0.tar.gz
                 |
-    [HINTDIR]   |--/etc/slackrepo/hints_SBo/category/prgnam/prgnam.options
+    [HINTDIR]   |--/etc/slackrepo/hintfiles_SBo/category/prgnam/prgnam.hint
                 |
     [LOGDIR]    |--/var/log/slackrepo/log_SBo/category/prgnam/prgnam.log
 </pre>
 
-<p>Under each of git_SBo, src_SBo, pkg_SBo, log_SBo and hints_SBo is a directory
+<p>Under each of git_SBo, src_SBo, pkg_SBo, log_SBo and hintfiles_SBo is a directory
 for each SBo category, and under each category directory is a subdirectory for each
 item.</p>
 

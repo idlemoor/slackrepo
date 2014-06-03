@@ -150,10 +150,10 @@ according to changes in the SlackBuild repository.
 <!-- .I ITEM -->
 <i>ITEM</i> </td><td valign="bottom">
 An item specifies
-(in build and rebuild mode) a directory in the SlackBuild repository
-that contains a set of SlackBuild files,
-or (in remove and update mode) a directory in the package repository
-that contains one or more packages built from a SlackBuild.
+(in build and rebuild mode)
+a directory or a SlackBuild file in the SlackBuild repository, or a queuefile,
+or (in remove and update mode)
+a directory or a package file in the package repository.
 If no items are specified, all directories in the SlackBuild or package
 repository are processed (except in remove mode, where it is mandatory
 to specify the items to be removed).
@@ -404,7 +404,7 @@ the git revision in the directory containing the SlackBuild has changed since th
 <tr valign="top"><td width="4%">
 &bull;
 </td><td>
-the directory containing the SlackBuilds has untracked/uncommited files 
+the directory containing the SlackBuilds has untracked/uncommited files
 (i.e., "git is dirty") and they are newer than the package
 <!-- .IP \(bu 4 -->
 </td></tr>

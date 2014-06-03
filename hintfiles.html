@@ -41,7 +41,7 @@
 <p>You are encouraged to take full control of the building process by
 reviewing, customising and creating <strong><em>hintfiles</em></strong>.
 A hintfile is a file that supplements a SlackBuild's
-.info file, for example to specify options and extra dependencies,
+.info file, for example to specify options and additional dependencies,
 to override the version, downloads and md5sums, etc.</p>
 
 <p>Each repository has its own directory for hintfiles.  The hint directory contains a structure of
@@ -71,8 +71,8 @@ MD5SUM_arch="new md5sums"
 REQUIRES="replacement dependencies"
 ADDREQUIRES="additional dependencies"
 OPTIONS="OPT1=yes OPT2=no ..."
-UID="uid:username"
-GID="gid:groupname"
+GROUPADD="gid:groupname ..."
+USERADD="uid:username[:controlargs...] ..."
 SKIP="yesno"
 ARCH="arch"
 INSTALL="yesno"
@@ -116,7 +116,7 @@ If the .info file specifies %README%, you should set this hint (without %README%
 to stop slackrepo displaying a warning.</p>
 
 <h4>ADDREQUIRES="additional dependencies"</h4>
-<p>This hint should define a list of dependencies separated by spaces.
+<p>This hint should define a list of dependencies, separated by spaces.
 Dependencies in this list will be added to the dependencies defined by
 REQUIRES=.</p>
 
@@ -124,11 +124,20 @@ REQUIRES=.</p>
 <p>This hint should define options described in the SlackBuild's README file. Note that
 this is the only way in slackrepo that you can define SlackBuild options.</p>
 
-<h4>UID="uid:username"</h4>
-<p></p>
+<h4>GROUPADD="gid:groupname ..."</h4>
+<p>This hint defines groups to be added on the host system.  If a group already exists,
+nothing will be done. If more than one group is to be added, a space-separated list can be specified.
+Example:</p>
+<pre>GROUPADD="209:postgres"</pre>
 
-<h4>GID="gid:groupname"</h4>
-<p></p>
+<h4>USERADD="uid:username[:controlargs...] ..."</h4>
+<p>This hint defines usernames to be added on the host system.  If a username already exists,
+nothing will be done. Optionally, additional control arguments of the useradd
+command can be specified, separated by colons, with the space between the control argument
+and its argument omitted. If more than one username is required, a space-separated list of
+specifications can be defined. Examples:</p>
+<pre>USERADD="209:postgres:-d/var/lib/pgsql"
+USERADD="270:smtpd:-g0:-r:-s/bin/false:-d/var/empty 271:smtpq:-r:-s/bin/false:-d/var/empty"</pre>
 
 <h4>SKIP="yesno"</h4>
 <p>This hint can be specified if you want to skip the package when it would 

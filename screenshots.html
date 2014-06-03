@@ -28,32 +28,6 @@
 
 <div id="main">
 
-<h3><a name="logging"></a>Logging</h3>
-
-<p>All messages from slackrepo are sent to a main log file.  Progress messages are
-displayed on the screen.  Control arguments <code>--verbose</code> (<code>-v</code>) and
-<code>--quiet</code> (<code>-q</code>) can be specified, to increase or decrease the details
-that are displayed on the screen.</p>
-
-<p>Detailed output from each build process is sent to an item-specific log
-file, but is not displayed on the screen unless you specify the <code>--very-verbose</code>
-(<code>-vv</code>) control argument.</p>
-
-<p>The log files are in a repository-specific directory.  A new main log file is created
-for each run of slackrepo, with a name of the form</p>
-
-<pre>
-/var/log/slackrepo/log_SBo/slackrepo_YYYY-MM-DD_hh:mm:ss.log
-</pre>
-
-<p>Each item-specific log file is in a subdirectory if the SlackBuilds directory
-has subdirectories.  For example, the log file for the SBo item 'graphics/shotwell'
-is</p>
-
-<pre>
-/var/log/slackrepo/log_SBo/graphics/shotwell/shotwell.log
-</pre>
-
 
 </div>
 

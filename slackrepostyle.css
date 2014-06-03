@@ -10,17 +10,18 @@ header h2   { margin-top: 0; margin-bottom: 0; font-weight: bold; }
 header a    { text-decoration: none; }
 
 nav         { float: left;  width: 20%; padding: 10px; text-align: left; font-family: sans-serif; font-weight: bold; 
-              background-color: #a0a0a0; background-image: linear-gradient(#808080, #ffffff 120px ); position: fixed; }
+              background-color: #a0a0a0; background-image: linear-gradient(#4040aa, #ffffff 120px ); position: fixed; }
 nav h2      { margin-top: 0; margin-bottom: 20px; font-weight: bold; color: #ffffff; }
 nav a       { text-decoration: none; }
 nav h2 a    { color: #ffffff; }
 nav ul      { margin: 0; padding: 0; list-style: none; }
 nav li      { margin-bottom: 4px; }
 nav li li   { margin-left: 20px; margin-bottom: 0px; }
+nav li a:hover { background-color: #ffffff; }
 
 #main       { float: right; width: 75%; margin: 10px; text-align: left; font-family: serif; }
-#main h3    { font-family: sans-serif; background-color: #e0e0e0; padding: 8px; }
-#main h4    { font-family: sans-serif; background-color: #e0e0e0; padding: 4px; }
+#main h3    { font-family: sans-serif; background-color: #e0e0ff; padding: 8px; }
+#main h4    { font-family: sans-serif; background-color: #e0e0ff; padding: 4px; }
 #main h4 .subhead    { font-family: sans-serif; font-weight: normal; font-style: italic; }
 #main p     { font-family: serif; margin-bottom: 10px; }
 #main p.scary  { background-image: url("warning.png");  background-repeat: no-repeat; background-position: left 8px center;
@@ -32,7 +33,7 @@ nav li li   { margin-left: 20px; margin-bottom: 0px; }
 #main td    { border: 1px solid black; padding: 4px; }
 
 #man        { float: right; width: 75%; margin: 10px; text-align: left; font-family: serif; }
-#man h2     { font-family: sans-serif; background-color: #e0e0e0; padding: 8px; }
+#man h2     { font-family: sans-serif; background-color: #e0e0ff; padding: 8px; }
 #man h4     { font-family: sans-serif; }
 #man p      { font-family: serif; margin-bottom: 10px; }
 #man ul     { margin: 0; }

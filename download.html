@@ -28,21 +28,24 @@
 
 <div id="main">
 
-<h4>Package</h4>
-<p>A prebuilt package can be downloaded here:</p>
+<h4>Prebuilt package</h4>
+<p>You can download a prebuilt package here:</p>
 
+<pre><a href="https://dl.dropboxusercontent.com/u/26560685/slackrepo-0.0.993-noarch-1_github.txz">slackrepo-0.0.993-noarch-1_github.txz</a>
+md5sum: 43a98a0b91648fafd94a2cc42c31e337</pre>
 
-<h4>Git</h4>
+<h4>Git snapshot</h4>
 <p>You can clone the git repository, and then run the embedded
 SlackBuild to create a package that you can install:</p>
 
 <pre>
 git clone git@github.com:idlemoor/slackrepo.git
 cd slackrepo
-git archive --format=tar --prefix=slackrepo-0.2.0/ HEAD | gzip > SlackBuild/slackrepo-0.2.0.tar.gz
+gitrev=git$(git log -n 1 --format=format:%H .)
+git archive --format=tar --prefix=slackrepo-$gitrev/ HEAD | gzip > SlackBuild/slackrepo-$gitrev.tar.gz
 cd SlackBuild
-VERSION=0.2.0 TAG=_github sh ./slackrepo.SlackBuild
-installpkg /tmp/slackrepo-0.2.0-noarch-1_github.tgz
+VERSION=$gitrev TAG=_github sh ./slackrepo.SlackBuild
+installpkg /tmp/slackrepo-$gitrev-noarch-1_github.tgz
 </pre>
 
 <h4>Licence - slackrepo</h4>

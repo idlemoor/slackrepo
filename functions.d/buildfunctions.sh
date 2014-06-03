@@ -7,8 +7,8 @@
 #   build_ok
 #   build_failed
 #   create_pkg_metadata
-#   remove_item
 #   do_groupadd_useradd
+#   remove_item
 #-------------------------------------------------------------------------------
 
 function build_item
@@ -433,47 +433,6 @@ EOF
 
 #-------------------------------------------------------------------------------
 
-function remove_item
-# Remove an item's package(s) from the package repository and the source repository
-# $1 = itemid
-# Return status:
-# 0 = item removed
-# 1 = item was skipped
-{
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
-
-  local itemid="$1"
-  local itemdir="${ITEMDIR[$itemid]}"
-
-  # Don't remove if this is an update and it's marked to be skipped
-  if [ "$PROCMODE" = 'update' ]; then
-    do_hint_skipme "$itemid" && return 1
-  fi
-
-  if [ "$OPT_DRY_RUN" = 'y' ]; then
-    log_important "$itemid would be removed (--dry-run)"
-    #### log a list of packages
-  else
-    for repodir in "$SR_PKGREPO" "$SR_SRCREPO"; do
-      if [ -d "$repodir"/"$itemdir" ]; then
-        #### uninstall any installed packages
-        #### log a list of packages
-        rm -rf "$repodir"/"$itemdir"
-        up="$(dirname "$itemdir")"
-        [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "$repodir"/"$up"
-        log_normal "Removed $repodir/$itemdir"
-      else
-        log_normal "Nothing found in $repodir/$itemdir"
-      fi
-    done
-    echo "$itemid: Removed. NEWLINE" >> "$CHANGELOG"
-    log_success ":-) $itemid: Removed (-:"
-  fi
-  return
-}
-
-#-------------------------------------------------------------------------------
-
 function do_groupadd_useradd
 # If there is a GROUPADD or USERADD hint for this item, set up the group and username.
 # GROUPADD hint format: GROUPADD="<gnum>:<gname> ..."
@@ -539,5 +498,90 @@ function do_groupadd_useradd
     done
   fi
 
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function remove_item
+# Remove an item's package(s) from the package repository and the source repository
+# $1 = itemid
+# Return status: always 0
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+
+  local itemid="$1"
+  local itemdir="${ITEMDIR[$itemid]}"
+
+  if [ "$OPT_DRY_RUN" = 'y' ]; then
+
+    if [ -d "$SR_PKGREPO"/"$itemdir" ]; then
+      pkglist=( $(ls "$SR_PKGREPO"/"$itemdir"/*.t?z 2>/dev/null) )
+      if [ "${#pkglist[@]}" = 0 ]; then
+        log_normal "There is nothing in $SR_PKGREPO/$itemdir"
+      else
+        for pkg in "${pkglist[@]}"; do
+          pkgbase=$(basename "$pkg")
+          log_normal "Would remove $pkgbase"
+          if [ -f /var/log/packages/$(echo $pkgbase | sed 's/\.t.z$//') ]; then
+            log_warning "$pkgbase is still installed, use removepkg to uninstall it"
+          fi
+        done
+      fi
+    fi
+
+    if [ -d "$SR_SRCREPO"/"$itemdir" ]; then
+      srclist=( $(ls "$SR_SRCREPO"/"$itemdir"/* 2>/dev/null) )
+      if [ "${#srclist[@]}" = 0 ]; then
+        log_normal "There is nothing in $SR_SRCREPO/$itemdir"
+      else
+        for src in "${srclist[@]}"; do
+          log_normal "Would remove $(basename "$src")"
+        done
+      fi
+    fi
+
+    log_success ":-) $itemid would be removed (--dry-run) (-:"
+
+  else
+
+    if [ -d "$SR_PKGREPO"/"$itemdir" ]; then
+      rm -f "$SR_PKGREPO"/"$itemdir"/.revision
+      pkglist=( $(ls "$SR_PKGREPO"/"$itemdir"/*.t?z 2>/dev/null) )
+      if [ "${#pkglist[@]}" = 0 ] ; then
+        log_normal "There is nothing in $SR_PKGREPO/$itemdir"
+      else
+        for pkg in "${pkglist[@]}"; do
+          pkgbase=$(basename "$pkg")
+          log_normal "Removing $pkgbase"
+          rm "$pkg"
+          if [ -f /var/log/packages/$(echo $pkgbase | sed 's/\.t.z$//') ]; then
+            log_warning "$pkgbase is still installed, use removepkg to uninstall it"
+          fi
+        done
+      fi
+      rm -rf "$SR_PKGREPO"/"$itemdir"
+      up="$(dirname "$itemdir")"
+      [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "$SR_PKGREPO"/"$up"
+      log_normal "Removed $SR_PKGREPO/$itemdir"
+    fi
+
+    if [ -d "$SR_SRCREPO"/"$itemdir" ]; then
+      rm -f "$SR_SRCREPO"/"$itemdir"/.version
+      srclist=( $(ls "$SR_SRCREPO"/"$itemdir"/* 2>/dev/null) )
+      for src in "${srclist[@]}"; do
+        log_normal "Removing $(basename "$src")"
+        rm "$src"
+      done
+      rm -rf "$SR_SRCREPO"/"$itemdir"
+      up="$(dirname "$itemdir")"
+      [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "$SR_SRCREPO"/"$up"
+      log_normal "Removed $SR_SRCREPO/$itemdir"
+    fi
+
+    echo "$itemid: Removed. NEWLINE" >> "$CHANGELOG"
+    log_success ":-) $itemid: Removed (-:"
+
+  fi
   return 0
 }

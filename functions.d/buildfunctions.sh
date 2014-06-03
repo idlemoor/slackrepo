@@ -329,15 +329,10 @@ function create_pkg_metadata
     changelogentry="${itemid}: ${OPERATION}. LINEFEED $extrastuff NEWLINE"
     CHANGEMSG="${OPERATION} ${extrastuff}"
   fi
-  if [ "$OPT_DRY_RUN" = 'y' ]; then
-    CHANGEMSG="$CHANGEMSG --dry-run"
+  if [ "$OPT_DRY_RUN" != 'y' ]; then
+    echo "$changelogentry" >> "$CHANGELOG"
   else
-    # Filter previous entries for this item from the changelog
-    # (it may contain info from a previous run that was interrupted)
-    newchangelog="$CHANGELOG".new
-    grep -v "^${itemid}: " "$CHANGELOG" > "$newchangelog"
-    echo "$changelogentry" >> "$newchangelog"
-    mv "$newchangelog" "$CHANGELOG"
+    CHANGEMSG="$CHANGEMSG --dry-run"
   fi
 
   #-----------------------------#
@@ -535,7 +530,7 @@ function do_groupadd_useradd
           log_verbose -a "Adding group: $gaddcmd"
           eval $gaddcmd
         fi
-        uaddcmd="useradd -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname"
+        uaddcmd="useradd  -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname"
         log_verbose -a "Adding user:  $uaddcmd"
         eval $uaddcmd
       else

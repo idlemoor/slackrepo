@@ -55,10 +55,10 @@ according to changes in the SlackBuild repository.
 .TP
 .I ITEM
 An item specifies
-(in build and rebuild mode) a directory in the SlackBuild repository
-that contains a set of SlackBuild files,
-or (in remove and update mode) a directory in the package repository
-that contains one or more packages built from a SlackBuild.
+(in build and rebuild mode)
+a directory or a SlackBuild file in the SlackBuild repository, or a queuefile,
+or (in remove and update mode)
+a directory or a package file in the package repository.
 If no items are specified, all directories in the SlackBuild or package
 repository are processed (except in remove mode, where it is mandatory
 to specify the items to be removed).
@@ -189,9 +189,9 @@ and override configuration variables set in
 see
 .BR slackrepo.conf (5).
 .TP 5
-.I /etc/slackrepo/hints_SBo/
-This directory contains the hint files for the SBo repository; see
-.BR slackrepo_hints (5).
+.I /etc/slackrepo/hintfiles_SBo/
+This directory contains the hintfiles for the SBo repository; see
+.BR slackrepo.hint (5).
 .
 .
 .
@@ -216,9 +216,9 @@ the git revision in the directory containing the SlackBuild has changed since th
 .IP \(bu 4
 the directory containing the SlackBuilds has untracked/uncommited files (i.e., \(dqgit is dirty\(dq) and they are newer than the package
 .IP \(bu 4
-any relevant hint has changed since the package was built
-.IP \(bu 4
 any of its direct dependencies has been updated since the package was built
+.IP \(bu 4
+the hintfile has changed since the package was built
 .IP \(bu 4
 the version of Slackware has changed since the package was built
 .RE
@@ -308,7 +308,7 @@ Test-build colord (in the csb repo), with very verbose messages; do not store th
 .SH SEE ALSO
 .
 .BR slackrepo.conf (5),
-.BR slackrepo_hints (5),
+.BR slackrepo.hint (5),
 .BR installpkg (8),
 .BR upgradepkg (8),
 .BR removepkg (8),

@@ -27,7 +27,7 @@ HINTDIR="/etc/slackrepo/%REPO%/hintfiles"
 QUEUEDIR="/etc/slackrepo/%REPO%/queuefiles"
 
 # Where to store log files:
-LOGDIR="/var/log/slackrepo/%REPO%/logs"
+LOGDIR="/var/log/slackrepo/%REPO%"
 
 # Where to store temporary files (you will need plenty of space):
 TMP="/tmp/%REPO%"

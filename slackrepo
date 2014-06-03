@@ -157,7 +157,7 @@ done
 # All config vars are prefixed with SR_ to stop SlackBuilds picking them up.
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO PKGREPO SRCREPO \
-          HINTDIR LOGDIR TMP \
+          HINTDIR QUEUEDIR LOGDIR TMP \
           ARCH TAG PKGTYPE NUMJOBS USE_GENREPOS"
 initnames="INIT_GITCLONE INIT_GITBRANCH"
 
@@ -296,11 +296,12 @@ if [ "$OPT_DRY_RUN" = 'y' ]; then
 fi
 
 # Create directories:
-[ -d "$SR_SBREPO" ]  || { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"  ; }
-[ -d "$SR_SRCREPO" ] || { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO" ; }
-[ -d "$SR_PKGREPO" ] || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO" ; }
-[ -d "$SR_LOGDIR" ]  || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"  ; }
-[ -d "$SR_HINTDIR" ] || { log_normal "Creating hints directory: $SR_HINTDIR"      ; mkdir -p "$SR_HINTDIR" ; }
+[ -d "$SR_SBREPO" ]   || { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"   ; }
+[ -d "$SR_SRCREPO" ]  || { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO"  ; }
+[ -d "$SR_PKGREPO" ]  || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO"  ; }
+[ -d "$SR_HINTDIR" ]  || { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"  ; }
+[ -d "$SR_QUEUEDIR" ] || { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR" ; }
+[ -d "$SR_LOGDIR" ]   || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"   ; }
 
 # Changelog:
 CHANGELOG="$SR_PKGREPO"/.changelog
@@ -361,11 +362,8 @@ if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' ]; then
   installed=$(ls /var/log/packages/*"$SR_TAG" 2>/dev/null)
   if [ -n "$installed" ]; then
     for pkg in $installed; do
-      #### don't moan if it has an install hint
       pkgnam=$(basename $pkg | rev | cut -f4- -d- | rev)
-      #### if [ -z "$(find $SR_HINTDIR -name $pkgnam.install)" ]; then
-        log_warning "$(basename $pkg): package is already installed"
-      #### fi
+      log_warning "$(basename $pkg): package is already installed"
     done
   fi
 fi

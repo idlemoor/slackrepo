@@ -57,9 +57,9 @@ function parse_items
     # An item can be an absolute pathname of an object; or a relative pathname
     # of an object; or the basename of an object deep in the repo, provided that
     # there is only one object with that name.  An object can be either a directory
-    # or a file.  Queue files are special.
+    # or a file.  Queuefiles are special.
 
-    # Queue file?
+    # Queuefile?
     if [ -f "$item" -a "${item##*.}" = 'sqf' ]; then
       scan_queuefile "$item"
       continue
@@ -213,8 +213,7 @@ function scan_dir
 
 function scan_queuefile
 # Scans a queuefile, adding its component items (with options and inferred deps).
-# $1 = -s => look up in SlackBuild repo, or -p => look up in Package repo
-# $2 = pathname (not necessarily in the repo) of the queuefile to scan
+# $1 = pathname (not necessarily in the repo) of the queuefile to scan
 # Return status: always 0
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
@@ -222,8 +221,12 @@ function scan_queuefile
   local sqfile="$1"
 
   if [ ! -f "$sqfile" ]; then
-    log_warning "No such queue file: $sqfile"
-    return 0
+    if [ -f "$SR_QUEUEDIR"/"$sqfile" ]; then
+      sqfile="$SR_QUEUEDIR"/"$sqfile"
+    else
+      log_warning "No such queuefile: $sqfile"
+      return 0
+    fi
   fi
 
   while read sqfitem sqfoptions ; do

@@ -47,7 +47,6 @@ function parse_items
   fi
 
   cd "$toplevel"
-  unset ITEMLIST
 
   while [ $# != 0 ]; do
 
@@ -186,9 +185,6 @@ function scan_dir
     if [ -f "$dir"/"$dirbase".SlackBuild ]; then
       add_item_file "$searchtype" "$dir"/"$dirbase".SlackBuild
       return 0
-    elif [ -f "$dir"/"$dirbase".sh ]; then
-      add_item_file "$searchtype" "$dir"/"$dirbase".sh
-      return 0
     fi
   else
     if [ -f "$dir"/.revision ]; then
@@ -203,9 +199,8 @@ function scan_dir
     log_error "${blamemsg}${dir} contains nothing useful"
     return 0
   fi
-  for subdir in "${subdirlist[@]}"; do
-    scan_dir "$searchtype" "$subdir"
-  done
+  # don't recurse - just push the subdirs onto the argument list
+  set -- "${subdirlist[@]}" "$@"
   return 0
 }
 

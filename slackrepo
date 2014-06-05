@@ -400,6 +400,7 @@ BLAME="$(basename $0)"
 while [ $# != 0 ]; do
   item="$1"
   shift
+  unset ITEMLIST
   if [ "$PROCMODE" = 'build' -o "$PROCMODE" = 'rebuild' ]; then
     parse_items -s "$item"
   else # 'update' or 'remove'

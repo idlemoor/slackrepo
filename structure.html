@@ -40,31 +40,32 @@
 
 <h3>Repository paths</h3>
 
-<p>Multiple repositories are supported.  The Repository ID, e.g. <code>SBo</code>,
-selects a configuration file, e.g. /etc/slackrepo/slackrepo_SBo.conf, and
+<p>Multiple repositories are supported.  The Repository ID, e.g. <b>SBo</b>,
+selects a configuration file, e.g. <code>/etc/slackrepo/slackrepo_<b>SBo</b>.conf</code>, and
 the configuration file sets the paths of the SlackBuild repository, the
-source repository, the package repository, the hintfile directory, and the
+source repository, the package repository, the hintfile and queuefile directories, and the
 log directory.  The Repository ID can be specified by the control argument
 <code>--repo=ID</code>, or by the <code>REPO</code> environment variable, or by setting <code>REPO=ID</code>
-in the file ~/.slackreporc.  By default, the default default is <code>SBo</code>.</p>
+in the file <code>~/.slackreporc</code>.  By default, the default default is <b>SBo</b>.</p>
 
-<p>Example showing repository trees for Repository ID 'SBo':</p>
+<p>Example showing repository trees for Repository ID <b>SBo</b>:</p>
 
 <pre>
     [REPO=SBo] /etc/slackrepo/slackrepo_SBo.conf
                 |
-    [SBREPO]    |--/var/lib/slackrepo/git_SBo/category/prgnam/prgnam.SlackBuild
-    [PKGREPO]   |--/var/lib/slackrepo/pkg_SBo/category/prgnam/prgnam-1.0-i486-1_SBo.tgz
-    [SRCREPO]   |--/var/lib/slackrepo/src_SBo/category/prgnam/prgnam-1.0.tar.gz
+    [SBREPO]    |--/var/lib/slackrepo/SBo/slackbuilds/category/prgnam/prgnam.SlackBuild
+    [PKGREPO]   |--/var/lib/slackrepo/SBo/packages/category/prgnam/prgnam-1.0-i486-1_SBo.tgz
+    [SRCREPO]   |--/var/lib/slackrepo/SBo/source/category/prgnam/prgnam-1.0.tar.gz
                 |
-    [HINTDIR]   |--/etc/slackrepo/hintfiles_SBo/category/prgnam/prgnam.hint
+    [HINTDIR]   |--/etc/slackrepo/SBo/hintfiles/[category/prgnam/]prgnam.hint
+    [QUEUEDIR]  |--/etc/slackrepo/SBo/queuefiles/[category/prgnam/]prgnam.sqf
                 |
-    [LOGDIR]    |--/var/log/slackrepo/log_SBo/category/prgnam/prgnam.log
+    [LOGDIR]    |--/var/log/slackrepo/SBo/category/prgnam/prgnam.log
 </pre>
 
-<p>Under each of git_SBo, src_SBo, pkg_SBo, log_SBo and hintfiles_SBo is a directory
-for each SBo category, and under each category directory is a subdirectory for each
-item.</p>
+<p>Under each of SBREPO, PKGREPO, SRCREPO and LOGDIR is a subdirectory structure for each
+SBo category and item. In HINTDIR and QUEUEDIR, the subdirectory structure is optional: this allows you
+to use your existing queuefile directory, if you have one.</p>
 
 <h3>Package repository files</h3>
 

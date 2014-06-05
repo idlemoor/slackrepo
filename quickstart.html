@@ -124,10 +124,12 @@ See <a href="#logging">Logging</a> (below) for details.</p>
 <pre>slackrepo build</pre>
 
 <p>Build graphics/shotwell, with all its dependencies:</p>
-<p><code>slackrepo build graphics/shotwell</code> or just <code>slackrepo build shotwell</code></p>
+<pre>slackrepo build graphics/shotwell</pre>
+<p>or just</p>
+<pre>slackrepo build shotwell</pre>
 
-<p>Build and install shotwell and all its dependencies (this will NOT be a clean build):</p>
-<p><code>slackrepo build --install shotwell</code></p>
+<p>Build and install shotwell and all its dependencies (note, the system will no longer be a clean build environment):</p>
+<pre>slackrepo build --install shotwell</pre>
 
 <p>Update all the academic/ packages in your package repository for SBo's latest
 changes (this WILL NOT add new packages from upstream, unless they are required dependencies):</p>
@@ -140,8 +142,8 @@ and also will update for SBo's latest changes):</p>
 <p>Do a "dry run" update of all your SBo packages:</p>
 <pre>slackrepo update --dry-run</pre>
 
-<p>Remove the package academic/grass (note, its dependencies and dependers will not be removed):</p>
-<p><code>slackpkg remove academic/grass</code> or just <code>slackpkg remove grass</code></p>
+<p>Remove the package grass (note, its dependencies and dependers will not be removed):</p>
+<pre>slackpkg remove grass</pre>
 
 <p>Test-build colord (in the csb repo), with very verbose messages; do not store the built package:</p>
 <pre>slackrepo build -vv --repo=csb --test --dry-run colord</pre>
@@ -159,20 +161,12 @@ file, but is not displayed on the screen unless you specify the <code>--very-ver
 (<code>-vv</code>) control argument.</p>
 
 <p>The log files are in a repository-specific directory.  A new main log file is created
-for each run of slackrepo, with a name of the form</p>
-
-<pre>
-/var/log/slackrepo/log_SBo/slackrepo_YYYY-MM-DD_hh:mm:ss.log
-</pre>
+for each run of slackrepo, with a name of the form
+<br><code>/var/log/slackrepo/SBo/slackrepo_YYYY-MM-DD_hh:mm:ss.log</code></p>
 
 <p>Each item-specific log file is in a subdirectory if the SlackBuilds directory
-has subdirectories.  For example, the log file for the SBo item 'graphics/shotwell'
-is</p>
-
-<pre>
-/var/log/slackrepo/log_SBo/graphics/shotwell/shotwell.log
-</pre>
-
+has subdirectories.  For example, the log file for the SBo item 'graphics/shotwell' is
+<br><code>/var/log/slackrepo/SBo/graphics/shotwell/shotwell.log</code></p>
 
 </div>
 

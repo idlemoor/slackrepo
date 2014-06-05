@@ -63,10 +63,10 @@ slackrepo.</p>
 <h3><a name="git"></a>git</h3>
 
 <p>If no SlackBuild Repository exists when slackrepo starts, it will clone the
-SlackBuilds.org git repository, and a local branch <code>14.1</code> will be created
-that tracks <code>origin/14.1</code> (i.e., the stable branch at SlackBuilds.org).</p>
+SlackBuilds.org git repository, and a local branch <b>14.1</b> will be created
+that tracks <b>origin/14.1</b> (i.e., the stable branch at SlackBuilds.org).</p>
 
-<p>As a special case, if the local branch is named <code>14.1</code> (as above) and is
+<p>As a special case, if the local branch is named <b>14.1</b> (as above) and is
 clean, then when slackrepo starts it will automatically update the local
 branch by fast forward (if possible) from its origin, but <strong>only if more than
 one day has elapsed</strong> since the last automatic update.</p>
@@ -130,10 +130,10 @@ repositories.  Thanks, Matteo!</p>
 <p>To make your slackrepo package repositories accessible, you will need to
 export them as a shared directory (e.g. NFS or a Virtualbox shared folder),
 or perhaps serve them via a local webserver on the build host (e.g. by
-setting <code>PKGREPO=/var/www/htdocs/pkgrepo</code> in /etc/slackrepo/slackrepo_SBo.conf).</p>
+setting <code>PKGREPO=/var/www/htdocs/pkgrepo</code> in <code>/etc/slackrepo/slackrepo_SBo.conf</code>).</p>
 
 <p>For example, on a client system, to configure slackpkg+ to use a shared
-directory, /etc/slackpkg/slackpkgplus.conf would have something like this:</p>
+directory, <code>/etc/slackpkg/slackpkgplus.conf</code> would have something like this:</p>
 
 <pre>
 REPOPLUS=( SBo slackpkgplus restricted alienbob )
@@ -150,7 +150,7 @@ MIRRORPLUS['SBo']=http://buildhost/pkg_SBo/
 
 <p>If you choose not to sign your packages with gen_repos_files.sh, you will
 need to tell slackpkg+ not to check GPG signatures.  There are two ways
-of doing this: (1) set <code>CHECKGPG=off</code> in /etc/slackpkg/slackpkg.conf, or
+of doing this: (1) set <code>CHECKGPG=off</code> in <code>/etc/slackpkg/slackpkg.conf</code>, or
 (2) use the slackpkg control argument <code>-checkgpg=off</code>.</p>
 
 <p>Note that slackpkg+ will not install newly added packages from your own

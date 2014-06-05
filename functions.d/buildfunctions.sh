@@ -513,75 +513,63 @@ function remove_item
   local itemid="$1"
   local itemdir="${ITEMDIR[$itemid]}"
 
-  if [ "$OPT_DRY_RUN" = 'y' ]; then
-
-    if [ -d "$SR_PKGREPO"/"$itemdir" ]; then
-      pkglist=( $(ls "$SR_PKGREPO"/"$itemdir"/*.t?z 2>/dev/null) )
-      if [ "${#pkglist[@]}" = 0 ]; then
-        log_normal "There is nothing in $SR_PKGREPO/$itemdir"
-      else
-        for pkg in "${pkglist[@]}"; do
-          pkgbase=$(basename "$pkg")
-          log_normal "Would remove $pkgbase"
-          if [ -f /var/log/packages/$(echo $pkgbase | sed 's/\.t.z$//') ]; then
-            log_warning "$pkgbase is still installed, use removepkg to uninstall it"
-          fi
-        done
-      fi
-    fi
-
-    if [ -d "$SR_SRCREPO"/"$itemdir" ]; then
-      srclist=( $(ls "$SR_SRCREPO"/"$itemdir"/* 2>/dev/null) )
-      if [ "${#srclist[@]}" = 0 ]; then
-        log_normal "There is nothing in $SR_SRCREPO/$itemdir"
-      else
-        for src in "${srclist[@]}"; do
-          log_normal "Would remove $(basename "$src")"
-        done
-      fi
-    fi
-
-    log_success ":-) $itemid would be removed (--dry-run) (-:"
-
-  else
-
-    if [ -d "$SR_PKGREPO"/"$itemdir" ]; then
-      rm -f "$SR_PKGREPO"/"$itemdir"/.revision
-      pkglist=( $(ls "$SR_PKGREPO"/"$itemdir"/*.t?z 2>/dev/null) )
-      if [ "${#pkglist[@]}" = 0 ] ; then
-        log_normal "There is nothing in $SR_PKGREPO/$itemdir"
-      else
-        for pkg in "${pkglist[@]}"; do
-          pkgbase=$(basename "$pkg")
-          log_normal "Removing $pkgbase"
+  if [ -d "$SR_PKGREPO"/"$itemdir" ]; then
+    [ "$OPT_DRY_RUN" != 'y' ] && rm -f "$SR_PKGREPO"/"$itemdir"/.revision
+    pkglist=( $(ls "$SR_PKGREPO"/"$itemdir"/*.t?z 2>/dev/null) )
+    if [ "${#pkglist[@]}" = 0 ] ; then
+      log_normal "There is nothing in $SR_PKGREPO/$itemdir"
+    else
+      for pkg in "${pkglist[@]}"; do
+        pkgbase=$(basename "$pkg")
+        if [ "$OPT_DRY_RUN" != 'y' ]; then
+          log_normal "Removing package $pkgbase"
           rm "$pkg"
-          if [ -f /var/log/packages/$(echo $pkgbase | sed 's/\.t.z$//') ]; then
-            log_warning "$pkgbase is still installed, use removepkg to uninstall it"
-          fi
-        done
-      fi
+        else
+          log_normal "Would remove package $pkgbase"
+        fi
+        if [ -f /var/log/packages/$(echo $pkgbase | sed 's/\.t.z$//') ]; then
+          log_warning "Package $pkgbase is installed, use removepkg to uninstall it"
+        fi
+      done
+    fi
+    if [ "$OPT_DRY_RUN" != 'y' ]; then
+      log_normal "Removing directory $SR_PKGREPO/$itemdir"
       rm -rf "$SR_PKGREPO"/"$itemdir"
       up="$(dirname "$itemdir")"
       [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "$SR_PKGREPO"/"$up"
-      log_normal "Removed $SR_PKGREPO/$itemdir"
+    else
+      log_normal "Would remove directory $SR_PKGREPO/$itemdir"
     fi
+  fi
 
-    if [ -d "$SR_SRCREPO"/"$itemdir" ]; then
-      rm -f "$SR_SRCREPO"/"$itemdir"/.version
-      srclist=( $(ls "$SR_SRCREPO"/"$itemdir"/* 2>/dev/null) )
-      for src in "${srclist[@]}"; do
-        log_normal "Removing $(basename "$src")"
+  if [ -d "$SR_SRCREPO"/"$itemdir" ]; then
+    [ "$OPT_DRY_RUN" != 'y' ] && rm -f "$SR_SRCREPO"/"$itemdir"/.version
+    srclist=( $(ls "$SR_SRCREPO"/"$itemdir"/* 2>/dev/null) )
+    for src in "${srclist[@]}"; do
+      if [ "$OPT_DRY_RUN" != 'y' ]; then
+        log_normal "Removing source $(basename "$src")"
         rm "$src"
-      done
+      else
+        log_normal "Would remove source $(basename "$src")"
+      fi
+    done
+    if [ "$OPT_DRY_RUN" != 'y' ]; then
+      log_normal "Removing directory $SR_SRCREPO/$itemdir"
       rm -rf "$SR_SRCREPO"/"$itemdir"
       up="$(dirname "$itemdir")"
       [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "$SR_SRCREPO"/"$up"
-      log_normal "Removed $SR_SRCREPO/$itemdir"
+    else
+      log_normal "Would remove directory $SR_SRCREPO/$itemdir"
     fi
+  fi
 
+  if [ "$OPT_DRY_RUN" != 'y' ]; then
     echo "$itemid: Removed. NEWLINE" >> "$CHANGELOG"
     log_success ":-) $itemid: Removed (-:"
-
+  else
+    log_success ":-) $itemid would be removed (--dry-run) (-:"
   fi
+  OKLIST+=( "$itemid" )
+
   return 0
 }

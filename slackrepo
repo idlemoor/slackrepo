@@ -359,6 +359,7 @@ if [ -d "$SR_SBREPO"/.git ]; then
   [ "$OPT_VERBOSE" = 'y' ] && echo ""
   log_verbose "Git repo:   $SR_SBREPO"
   log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"
+  log_verbose "  date:     $(date --date=@$(git log -n 1 --format=%ct))"
   log_verbose "  revision: $(git rev-parse HEAD)$dirty"
   log_verbose "  title:    $(git log -n 1 --format=%s)"
   echo ""
@@ -398,18 +399,19 @@ fi
 
 BLAME="$(basename $0)"
 while [ $# != 0 ]; do
-  item="$1"
+  arg="$1"
   shift
-  unset ITEMLIST
+  unset PARSEDLIST UNPARSEDLIST
   if [ "$PROCMODE" = 'build' -o "$PROCMODE" = 'rebuild' ]; then
-    parse_items -s "$item"
+    parse_args -s "$arg"
   else # 'update' or 'remove'
-    parse_items -p "$item"
+    parse_args -p "$arg"
   fi
+  set -- "${UNPARSEDLIST[@]}" "$@"
   # Note that we set the variable $ITEMID (upper case) so that other functions
   # called recursively (which get $itemid as an argument) can test whether they
   # are dealing with the top level item.
-  for ITEMID in "${ITEMLIST[@]}"; do
+  for ITEMID in "${PARSEDLIST[@]}"; do
     log_start "$ITEMID"
     case "$PROCMODE" in
     'build' | 'rebuild' )

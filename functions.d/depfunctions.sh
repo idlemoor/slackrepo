@@ -23,9 +23,11 @@ function calculate_deps
 
   local itemid="$1"
 
-  # If $FULLDEPS already has an entry for $itemid, do nothing
+  # If FULLDEPS already has an entry for $itemid, do nothing
   # (note that *null* means "we have already calculated that the item has no deps",
-  # whereas *unset* means "we have not yet calculated the deps of this item")
+  # whereas *unset* means "we have not yet calculated the deps of this item").
+  # (Don't use DIRECTDEPS -- it may contain fake deps from a queuefile that will
+  # be superseded by a hint.)
   if [ "${FULLDEPS[$itemid]+yesitisset}" = 'yesitisset' ]; then
     return 0
   fi
@@ -43,11 +45,11 @@ function calculate_deps
     if [ $dep = '%README%' ]; then
       log_warning "${itemid}: Unhandled %README% in $itemprgnam.info"
     else
-      BLAME="$itemprgnam.info"
-      parse_items -s "$dep"
-      [ $? != 0 ] && log_warning "${itemid}: Some dependencies were not found"
-      unset BLAME
-      deplist+=( "${ITEMLIST[@]}" )
+      find_slackbuild "$dep"
+      fstat=$?
+      [ $fstat = 1 ] && log_warning "${itemid}: Dependency $dep not found"
+      [ $fstat = 2 ] && log_warning "${itemid}: Dependency $dep matches more than one SlackBuild"
+      deplist+=( "${R_SLACKBUILD}" )
     fi
   done
 

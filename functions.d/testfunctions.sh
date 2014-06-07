@@ -263,10 +263,7 @@ function test_package
       log_warning -a "${itemid}: ${pkgbasename} has files or dirs with owner not root/root"
     fi
 
-    #### TODO: check permissions
-
     # check for uncompressed man pages (usr/share/man warning is handled above)
-    #### maybe check for misplaced pages
     if grep -E '^-.* usr/(share/)?man/' "$TMP_PKGCONTENTS" | grep -q -v '\.gz$'; then
       log_warning -a "${itemid}: ${pkgbasename} has uncompressed man pages"
     fi

@@ -3,21 +3,31 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # parsefunctions.sh - parse functions for slackrepo
-#   parse_items
+#   parse_args
 #   scan_dir
 #   scan_queuefile
-#   add_item_file
+#   add_parsed_file
+#   find_slackbuild
+#   find_queuefile
 #   parse_package_name
 #   parse_info_and_hints
 #-------------------------------------------------------------------------------
 
-declare -a ITEMLIST
+declare -a PARSEDLIST UNPARSEDLIST
 
-function parse_items
+function parse_args
 # Parse item names
 # $1 = -s => look up in SlackBuild repo, or -p => look up in Package repo
 # $* = the item names to be parsed :-)
 # Also uses $BLAME which the caller can set to prefix errors and warnings
+# PARSEDLIST and UNPARSEDLIST must be unset before calling parse_args
+#
+# Results are returned in the following global arrays:
+#   PARSEDLIST -- a list of item IDs that need to be processed
+#   ITEMFILE -- the filename of the SlackBuild or package to be processed
+#   ITEMDIR -- the path (relative to the repo root) of the directory that contains ITEMFILE
+#   ITEMPRGNAM -- the prgnam of the SlackBuild or package
+#   UNPARSEDLIST -- a list of newly discovered subdirectory names that need to be parsed
 #
 # Return status:
 # 0 = all ok
@@ -59,8 +69,13 @@ function parse_items
     # or a file.  Queuefiles are special.
 
     # Queuefile?
-    if [ -f "$item" -a "${item##*.}" = 'sqf' ]; then
-      scan_queuefile "$item"
+    if [ "${item##*.}" = 'sqf' ]; then
+      find_queuefile $item
+      if [ $? = 0 ]; then
+        scan_queuefile "$R_QUEUEFILE"
+      else
+        log_warning "${itemid}: Queuefile $item not found"
+      fi
       continue
     fi
 
@@ -86,7 +101,7 @@ function parse_items
 
     # Assume it's a relative path - does it exist?
     if [ -f "$item" ]; then
-      add_item_file "$searchtype" "$item"
+      add_parsed_file "$searchtype" "$item"
       continue
     elif [ -d "$item" ]; then
       scan_dir "$searchtype" "$item"
@@ -105,7 +120,7 @@ function parse_items
       continue
     elif [ "${#gotitems[@]}" = 1 ]; then
       if [ -f "${gotitems[0]}" ]; then
-        add_item_file "$searchtype" "${gotitems[0]}"
+        add_parsed_file "$searchtype" "${gotitems[0]}"
         continue
       else
         scan_dir "$searchtype" "${gotitems[0]}"
@@ -127,8 +142,8 @@ function parse_items
 
 declare -A ITEMDIR ITEMFILE ITEMPRGNAM
 
-function add_item_file
-# Adds an item ID for the file to the global array $ITEMLIST. The ID is a
+function add_parsed_file
+# Adds an item ID for the file to the global array $PARSEDLIST. The ID is a
 # user-friendly name for the item: if the item is cat/prg/prg.(SlackBuild|sh),
 # then the ID will be shortened to "cat/prg".
 # Also sets the following:
@@ -162,14 +177,145 @@ function add_item_file
   ITEMDIR[$id]="$dir"
   ITEMFILE[$id]="$file"
   ITEMPRGNAM[$id]="$prgnam"
-  ITEMLIST+=( "$id" )
+  PARSEDLIST+=( "$id" )
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function find_slackbuild
+# Find a SlackBuild in the repo.  Populates arrays ITEM{DIR,FILE,PRGNAM}, and
+# returns the SlackBuild's itemid (key for ITEM{DIR,FILE,PRGNAM}) in $R_SLACKBUILD.
+# $1 = prgnam
+# Return status:
+# 0 = all ok
+# 1 = not found
+# 2 = multiple matches
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+
+  unset R_SLACKBUILD
+  local prgnam="$1"
+  local file="${prgnam}.SlackBuild"
+
+  sblist=( $(find "$SR_SBREPO" -name "$file" 2>/dev/null) )
+  if [ "${#sblist[@]}" = 0 ]; then
+    return 1
+  elif [ "${#sblist[@]}" != 1 ]; then
+    return 2
+  fi
+
+  dir=$(dirname "${sblist[0]:$(( ${#SR_SBREPO} + 1 ))}")
+  dirbase=$(basename "$dir")
+
+  id="$dir"/"$file"
+  [ "$prgnam" = "$dirbase" ] && id="$dir"
+
+  ITEMDIR[$id]="$dir"
+  ITEMFILE[$id]="$file"
+  ITEMPRGNAM[$id]="$prgnam"
+  R_SLACKBUILD="$id"
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function find_queuefile
+# Find a queuefile.  Returns its pathname in R_QUEUEFILE.
+# $1 = queuefile pathname (with or without .sqf suffix)
+# Return status:
+# 0 = all ok
+# 1 = not found
+# 2 = multiple matches
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+
+  unset R_QUEUEFILE
+  local qpath="$1"
+  # try a quick win
+  if [ -f "$qpath" ]; then
+    R_QUEUEFILE="$qpath"
+    return 0
+  fi
+
+  local -a qlist
+  local qbase="$(basename $1)"
+  local qfound=''
+  local -a qsearch=( "$SR_QUEUEDIR" "$SR_HINTDIR" "$SR_SBREPO" )
+  for trydir in $qsearch; do
+    qlist=( $(find "$trydir" -name "$qbase" 2>/dev/null) )
+    if [ "${#qlist[@]}" = 0 ]; then
+      continue
+    elif [ "${#qlist[@]}" = 1 ]; then
+      qfound="${qlist[0]}"
+      break
+    else
+      return 2
+    fi
+  done
+  [ "$qfound" = '' ] && return 1
+  R_QUEUEFILE="$qfound"
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function scan_queuefile
+# Scans a queuefile, finding its slackbuilds (with options and inferred deps).
+# Sets the itemid of the last slackbuild in the queue in $lastinqueuefile so
+# the caller (probably scan_queuefile ;-) can use it as a dep of the next item.
+# $1 = pathname of the queuefile to scan
+# Return status: always 0 (any bad slackbuilds are ignored)
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+
+  local sqfile="$1"
+  local -a fakedeps
+  local depid
+
+  if [ ! -f "$sqfile" ]; then
+    if [ -f "$SR_QUEUEDIR"/"$sqfile" ]; then
+      sqfile="$SR_QUEUEDIR"/"$sqfile"
+    else
+      log_warning "No such queuefile: $sqfile"
+      return 1
+    fi
+  fi
+
+  while read sqfitem sqfoptions ; do
+    case $sqfitem
+    in
+      @*) queuefile=$(find_queuefile ${sqfitem:1}.sqf)
+          [ $? != 0 ] && log_warning "${itemid}: Queuefile $sqfitem not found"
+          scan_queuefile "$queuefile"
+          fakedeps+=( "$lastinqueuefile" )
+          ;;
+      -*) log_verbose "Note: ignoring unselected queuefile item ${sqfitem:1}"
+          ;;
+      * ) depid=$(find_slackbuild "$sqfitem")
+          fstat=$?
+          if [ $fstat = 1 ]; then
+            fakedeps+=( "$depid" )
+            DIRECTDEPS["$depid"]="${fakedeps[@]}"
+          elif [ $fstat = 1 ]; then
+            log_warning "${itemid}: Queuefile dep $sqfitem not found"
+          elif [ $fstat = 2 ]; then
+            log_warning "${itemid}: Queuefile dep $sqfitem matches more than one SlackBuild"
+          fi
+          if [ -n "$sqfoptions" ]; then
+            HINT_OPTIONS["$depid"]="$(echo "$sqfoptions" | sed 's/^ *| *//')"
+          fi
+          ;;
+    esac
+  done < "$sqfile"
+  lastinqueuefile="$depid"
   return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function scan_dir
-# Looks in directories (and subdirectories) for files to add.
+# Looks in directories for files or subdirectories.
 # $1 = -s => look up in SlackBuild repo, or -p => look up in Package repo
 # $2 = pathname (relative to the repo) of the directory to scan
 # Returns: always 0
@@ -183,59 +329,27 @@ function scan_dir
   dirbase=$(basename "$dir")
   if [ "$searchtype" = '-s' ]; then
     if [ -f "$dir"/"$dirbase".SlackBuild ]; then
-      add_item_file "$searchtype" "$dir"/"$dirbase".SlackBuild
+      add_parsed_file "$searchtype" "$dir"/"$dirbase".SlackBuild
       return 0
     fi
   else
     if [ -f "$dir"/.revision ]; then
       #### use a wild guess for the filename
       #### interim solution, won't work for e.g. *.sh
-      add_item_file "$searchtype" "$dir"/"$dirbase".SlackBuild
+      add_parsed_file "$searchtype" "$dir"/"$dirbase".SlackBuild
       return 0
     fi
   fi
+  # Descend one level only - some SlackBuilds have subdirectories
+  # (eg. for patches) that need to be ignored
   subdirlist=( $(find "$dir" -mindepth 1 -maxdepth 1 -type d -not -name '.*' | sort | sed 's:^\./::') )
   if [ "${#subdirlist[@]}" = 0 ]; then
-    log_error "${blamemsg}${dir} contains nothing useful"
+    log_normal "${blamemsg}${dir} does not contain a SlackBuild"
     return 0
   fi
-  # don't recurse - just push the subdirs onto the argument list
-  set -- "${subdirlist[@]}" "$@"
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function scan_queuefile
-# Scans a queuefile, adding its component items (with options and inferred deps).
-# $1 = pathname (not necessarily in the repo) of the queuefile to scan
-# Return status: always 0
-{
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
-
-  local sqfile="$1"
-
-  if [ ! -f "$sqfile" ]; then
-    if [ -f "$SR_QUEUEDIR"/"$sqfile" ]; then
-      sqfile="$SR_QUEUEDIR"/"$sqfile"
-    else
-      log_warning "No such queuefile: $sqfile"
-      return 0
-    fi
-  fi
-
-  while read sqfitem sqfoptions ; do
-    case $sqfitem
-    in
-      @*) parse_queuefile "${sqfitem:1}.sqf"
-          ;;
-      -*) log_verbose "Note: ignoring unselected queuefile item ${sqfitem:1}"
-          ;;
-      * ) parse_items -s "$sqfitem"
-          #### set deps and possibly HINT_OPTIONS
-          ;;
-    esac
-  done < "$sqfile"
+  # don't recurse (which would take a long time), just return the list of subdirectories
+  # (the main loop will parse and process them after it has processed the parsed items)
+  UNPARSEDLIST+=( "${subdirlist[@]}" )
   return 0
 }
 
@@ -338,9 +452,9 @@ function parse_info_and_hints
       cd - >/dev/null
       unset PKGNAM SRCNAM
     fi
-    # If $VERSION is still unset, we'll deal with it after any hints have been parsed.
+    # Save $VERSION.  If it is null, the Fixup department below will invent something.
     INFOVERSION[$itemid]="$VERSION"
-    # don't unset VERSION, it'll be needed when we snarf from the SlackBuild below
+    # but don't unset $VERSION yet, it'll be needed when we snarf from the SlackBuild below
 
     # Process DOWNLOAD[_ARCH] and MD5SUM[_ARCH] from info file
     # Don't bother checking if they are improperly paired (it'll become apparent later).
@@ -367,8 +481,10 @@ function parse_info_and_hints
     unset DOWNLOAD MD5SUM PRGNAM SRCNAM VERSION
     eval unset DOWNLOAD_"$SR_ARCH" MD5SUM_"$SR_ARCH"
 
-    # Save REQUIRES from info file (the hintfile may or may not supersede this)
+    # Conditionally save REQUIRES from info file into INFOREQUIRES
+    # (which will be processed in the Fixup department below).
     [ -v REQUIRES ] && INFOREQUIRES[$itemid]="$REQUIRES"
+    unset REQUIRES
 
   fi
 
@@ -392,8 +508,8 @@ function parse_info_and_hints
 
   if [ "${HINTFILE[$itemid]+yesitisset}" != 'yesitisset' ]; then
     hintfile=''
-    hintpath=( "$SR_HINTDIR"/"$itemdir" "$SR_HINTDIR" "$SR_SBREPO"/"$itemdir" )
-    for trydir in $hintpath; do
+    hintsearch=( "$SR_HINTDIR"/"$itemdir" "$SR_HINTDIR" "$SR_SBREPO"/"$itemdir" )
+    for trydir in $hintsearch; do
       if [ -f "$trydir"/"$itemprgnam".hint ]; then
         hintfile="$trydir"/"$itemprgnam".hint
         break
@@ -404,9 +520,8 @@ function parse_info_and_hints
 
   if [ -n "${HINTFILE[$itemid]}" ]; then
     local SKIP \
-          VERSION OPTIONS GROUPADD USERADD INSTALL NUMJOBS ANSWER CLEANUP \
-          ARCH DOWNLOAD MD5SUM \
-          REQUIRES ADDREQUIRES
+          VERSION ADDREQUIRES OPTIONS GROUPADD USERADD INSTALL NUMJOBS ANSWER CLEANUP \
+          ARCH DOWNLOAD MD5SUM
     . "${HINTFILE[$itemid]}"
 
     # Process hint file's SKIP first.
@@ -453,13 +568,7 @@ function parse_info_and_hints
       INFOMD5LIST["$itemid"]="$MD5SUM"
     fi
 
-    # Fix INFOREQUIRES from hint file's REQUIRES and ADDREQUIRES
-    [ "${INFOREQUIRES[$itemid]+yesitisset}" = 'yesitisset' ] && req="${INFOREQUIRES[$itemid]}"
-    [ -v REQUIRES ] && req="$REQUIRES"
-    [ -n "$ADDREQUIRES" ] && req=$(echo $req $ADDREQUIRES)
-    if [ -v req ]; then
-      INFOREQUIRES[$itemid]="$req"
-    fi
+    # Process ADDREQUIRES in the Fixup department below.
 
     log_verbose "Hints for $itemid:"
     log_verbose "$(printf '  %s\n' \
@@ -474,13 +583,30 @@ function parse_info_and_hints
       ${ARCH+"ARCH=\"$ARCH\""} \
       ${DOWNLOAD+"DOWNLOAD=\"$DOWNLOAD\""} \
       ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
-      ${REQUIRES+"REQUIRES=\"$REQUIRES\""} \
       ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )"
     unset SKIP \
           VERSION OPTIONS GROUPADD USERADD INSTALL NUMJOBS ANSWER CLEANUP \
-          ARCH DOWNLOAD MD5SUM \
-          REQUIRES ADDREQUIRES
+          ARCH DOWNLOAD MD5SUM
 
+  fi
+
+  # FIXUP DEPARTMENT
+  # ================
+
+  # Fix INFOREQUIRES from ADDREQUIRES, if possible
+  if [ "${INFOREQUIRES[$itemid]+yesitisset}" != 'yesitisset' ]; then
+    if [ -v ADDREQUIRES ]; then
+      INFOREQUIRES[$itemid]="$ADDREQUIRES"
+    else
+      log_normal "Dependencies of $itemid could not be determined."
+      INFOREQUIRES[$itemid]=""
+    fi
+  else
+    if [ -v ADDREQUIRES ]; then
+      # This gets rid of %README% if and only if ADDREQUIRES is set.
+      INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]} $ADDREQUIRES | sed -e 's/%README%//')"
+      # Else %README% will remain, and calculate_deps will issue a warning.
+    fi
   fi
 
   # Fix INFOVERSION from hint file's VERSION, or git, or SlackBuild's modification time
@@ -489,12 +615,6 @@ function parse_info_and_hints
   [ -z "$ver" -a "$GOTGIT" = 'y' ] && ver="${GITREV[$itemid]:0:7}"
   [ -z "$ver" ] && ver="$(date --date=@$(stat --format-='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile") '+%Y%m%d')"
   INFOVERSION[$itemid]="$ver"
-
-  # Complain and fix INFOREQUIRES if still not set
-  if [ "${INFOREQUIRES[$itemid]+yesitisset}" != 'yesitisset' ]; then
-    log_normal "Dependencies of $itemid could not be determined."
-    INFOREQUIRES[$itemid]=""
-  fi
 
   return 0
 

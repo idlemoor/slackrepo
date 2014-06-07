@@ -1,1 +1,1 @@
-REQUIRES="speex gst-ffmpeg gst-plugins-ugly agg xulrunner"
+ADDREQUIRES="speex gst-ffmpeg gst-plugins-ugly"

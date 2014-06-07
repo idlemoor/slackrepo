@@ -1,1 +1,1 @@
-REQUIRES="libgusb"
+ADDREQUIRES="libgusb"

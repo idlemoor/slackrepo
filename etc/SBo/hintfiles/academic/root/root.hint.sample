@@ -1,2 +1,2 @@
-REQUIRES="gsl ftgl"
+ADDREQUIRES="gsl"
 OPTIONS="GSL=yes FFTW=yes QT=no"

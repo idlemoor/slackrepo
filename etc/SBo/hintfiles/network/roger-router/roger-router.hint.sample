@@ -1,2 +1,2 @@
-REQUIRES="pulseaudio portaudio speex libpeas spandsp libcapi20"
+ADDREQUIRES="pulseaudio portaudio"
 GROUPADD="273:fax"

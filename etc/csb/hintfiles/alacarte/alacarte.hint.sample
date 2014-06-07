@@ -1,1 +1,1 @@
-REQUIRES="pygobject3 gnome-menus"
+ADDREQUIRES="pygobject3 gnome-menus"

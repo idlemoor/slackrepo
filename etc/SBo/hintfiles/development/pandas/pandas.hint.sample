@@ -1,1 +1,1 @@
-REQUIRES="numpy python-dateutil pytz numexpr Bottleneck"
+ADDREQUIRES="numexpr Bottleneck"

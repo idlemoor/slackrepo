@@ -1,1 +1,1 @@
-REQUIRES="amd suitesparseconfig"
+ADDREQUIRES="amd"

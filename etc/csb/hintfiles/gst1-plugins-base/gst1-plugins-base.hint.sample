@@ -1,1 +1,1 @@
-REQUIRES="gstreamer1"
+ADDREQUIRES="gstreamer1"

@@ -1,1 +1,1 @@
-REQUIRES="cinnamon-desktop libgnomekbd pam"
+ADDREQUIRES="cinnamon-desktop libgnomekbd pam"

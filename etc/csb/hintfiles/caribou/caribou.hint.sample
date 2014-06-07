@@ -1,1 +1,1 @@
-REQUIRES="clutter cogl json-glib libgee pygobject3"
+ADDREQUIRES="clutter cogl json-glib libgee pygobject3"

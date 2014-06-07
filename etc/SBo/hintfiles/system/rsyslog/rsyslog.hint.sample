@@ -1,2 +1,2 @@
-REQUIRES="json-c libee libestr liblogging"
+ADDREQUIRES=""
 INSTALL="no"

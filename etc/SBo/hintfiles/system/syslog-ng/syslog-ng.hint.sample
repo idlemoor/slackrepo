@@ -1,2 +1,2 @@
-REQUIRES="eventlog"
+ADDREQUIRES=""
 INSTALL="no"

@@ -1,2 +1,2 @@
-REQUIRES="scons jack-audio-connection-kit liblo rubberband"
+ADDREQUIRES="rubberband"
 OPTIONS="RUBBERBAND=yes"

@@ -1,1 +1,1 @@
-REQUIRES="numpy scipy tox virtualenv"
+ADDREQUIRES="scipy tox virtualenv"

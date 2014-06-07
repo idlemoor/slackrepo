@@ -1,1 +1,1 @@
-REQUIRES="libgtop"
+ADDREQUIRES="libgtop"

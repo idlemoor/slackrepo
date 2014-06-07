@@ -1,1 +1,1 @@
-REQUIRES="gst-ffmpeg gst-plugins-bad avahi ffmpeg2theora gst-plugins-ugly flashplayer-plugin ffmpeg gnome-python gst-python libtorrent-rasterbar mutagen pywebkitgtk"
+ADDREQUIRES="gst-ffmpeg gst-plugins-bad avahi ffmpeg2theora gst-plugins-ugly flashplayer-plugin"

@@ -1,1 +1,1 @@
-REQUIRES="lame lirc ffmpeg libmms"
+ADDREQUIRES="lame lirc"

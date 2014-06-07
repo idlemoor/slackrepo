@@ -1,1 +1,1 @@
-REQUIRES="libgksu"
+ADDREQUIRES="libgksu"

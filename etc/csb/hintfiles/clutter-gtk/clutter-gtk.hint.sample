@@ -1,1 +1,1 @@
-REQUIRES="clutter cogl json-glib"
+ADDREQUIRES="clutter cogl json-glib"

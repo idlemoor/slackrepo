@@ -1,1 +1,1 @@
-REQUIRES="lensfun GraphicsMagick openjpeg libwebp flickcurl json-glib"
+ADDREQUIRES="GraphicsMagick openjpeg libwebp flickcurl json-glib"

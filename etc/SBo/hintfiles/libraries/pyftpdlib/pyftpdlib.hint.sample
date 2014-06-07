@@ -1,1 +1,1 @@
-REQUIRES="pysendfile"
+ADDREQUIRES="pysendfile"

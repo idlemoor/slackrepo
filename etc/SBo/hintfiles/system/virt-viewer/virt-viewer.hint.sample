@@ -1,1 +1,1 @@
-REQUIRES="gtk-vnc libvirt spice"
+ADDREQUIRES="libvirt spice"

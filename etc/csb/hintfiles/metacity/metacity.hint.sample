@@ -1,1 +1,1 @@
-REQUIRES="libgtop zenity"
+ADDREQUIRES="libgtop zenity"

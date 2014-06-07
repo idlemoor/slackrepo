@@ -1,1 +1,1 @@
-REQUIRES="flvstreamer ffmpeg qt5"
+ADDREQUIRES="flvstreamer"

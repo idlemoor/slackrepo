@@ -1,1 +1,1 @@
-REQUIRES="gnome-common"
+ADDREQUIRES="gnome-common"

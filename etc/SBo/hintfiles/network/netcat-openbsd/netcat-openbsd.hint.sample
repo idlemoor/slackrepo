@@ -1,2 +1,2 @@
 SKIP="You must remove nc before installing this!"
-REQUIRES="libbsd"
+ADDREQUIRES="libbsd"

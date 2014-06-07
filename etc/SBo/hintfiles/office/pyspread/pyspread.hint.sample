@@ -1,1 +1,1 @@
-REQUIRES="wxPython matplotlib python-gnupg python-xlrd"
+ADDREQUIRES="python-xlrd"

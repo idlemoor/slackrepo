@@ -1,1 +1,1 @@
-REQUIRES="metis blas lapack suitesparseconfig amd camd colamd ccolamd"
+ADDREQUIRES="metis"

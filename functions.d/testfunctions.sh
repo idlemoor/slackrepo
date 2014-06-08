@@ -35,6 +35,7 @@ function test_slackbuild
   # (1) prgnam.SlackBuild
   #-----------------------------#
 
+  # Not sure how this could happen, but...
   [ -f "$SR_SBREPO"/"$itemdir"/"$itemfile" ] || \
     { log_error -a "${itemid}: $itemfile not found"; return 1; }
 
@@ -63,7 +64,7 @@ function test_slackbuild
     grep -q -v -e '^#' -e "^${itemprgnam}:" -e '^$' -e '^ *|-.*-|$' "$slackdesc" && \
       log_warning -a "${itemid}: slack-desc: unrecognised text (appname wrong?)"
   else
-    log_warning -a "${itemid}: no slack-desc"
+    log_warning -a "${itemid}: slack-desc not found"
   fi
 
 
@@ -91,6 +92,8 @@ function test_slackbuild
       log_warning -a "${itemid}: MAINTAINER not set in $itemprgnam.info"
     [ -v EMAIL ] || \
       log_warning -a "${itemid}: EMAIL not set in $itemprgnam.info"
+  elif [ "$OPT_REPO" = 'SBo' ]; then
+    log_warning -a "${itemid}: $itemprgnam.info not found"
   fi
 
 
@@ -101,8 +104,8 @@ function test_slackbuild
   if [ -f "$SR_SBREPO"/"$itemdir"/README ]; then
     [ $(wc -L < "$SR_SBREPO"/"$itemdir"/README) -le 79 ] || \
       log_warning -a "${itemid}: long lines in README"
-  else
-    log_warning -a "${itemid}: no README"
+  elif [ "$OPT_REPO" = 'SBo' ]; then
+    log_warning -a "${itemid}: README not found"
   fi
 
 

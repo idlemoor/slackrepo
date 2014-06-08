@@ -1,0 +1,1 @@
+ADDREQUIRES="libgtop glibmm gtkmm mate-common mate-icon-theme yelp-tools"

@@ -1,0 +1,1 @@
+ADDREQUIRES="pangox-compat mate-common mate-desktop mate-polkit mate-settings-daemon"

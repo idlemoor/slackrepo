@@ -1,0 +1,1 @@
+ADDREQUIRES="libmatekbd mate-common mate-desktop mate-menus mate-session-manager yelp-tools"

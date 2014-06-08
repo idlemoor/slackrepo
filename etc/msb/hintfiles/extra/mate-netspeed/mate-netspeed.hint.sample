@@ -1,0 +1,1 @@
+ADDREQUIRES="libgtop mate-common mate-panel yelp-tools"

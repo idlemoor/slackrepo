@@ -123,8 +123,17 @@ while [ $# != 0 ]; do
   esac
 done
 
-[ -z "$PROCMODE" ] && \
-  { print_usage; exit_cleanup; exit 3; }
+if [ -z "$PROCMODE" ]; then
+  print_usage
+  exit_cleanup
+  exit 3
+elif [ "$PROCMODE" = 'remove' -a $# = 0 ]; then
+  # remove mode with no args => do nothing
+  echo "Usage: $(basename $0) remove [--repo=ID] item..."
+  echo "In remove mode, you *must* specify the items to be removed."
+  exit_cleanup
+  exit 3
+fi
 
 #-------------------------------------------------------------------------------
 # Startup
@@ -378,15 +387,12 @@ if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' ]; then
   fi
 fi
 
-# Command arguments:
+#-------------------------------------------------------------------------------
+# Main loop
+#-------------------------------------------------------------------------------
+
 if [ $# = 0 ]; then
-  if [ "$PROCMODE" = 'remove' ]; then
-    # remove mode with no args => do nothing
-    echo "Usage: $(basename $0) remove [--repo=ID] item..."
-    echo "In remove mode, you *must* specify the items to be removed."
-    exit_cleanup
-    exit 3
-  elif [ "$PROCMODE" = 'update' ]; then
+  if [ "$PROCMODE" = 'update' ]; then
     # update mode with no args => process everything in the package repo
     set -- "$SR_PKGREPO"
   else
@@ -394,10 +400,6 @@ if [ $# = 0 ]; then
     set -- "$SR_SBREPO"
   fi
 fi
-
-#-------------------------------------------------------------------------------
-# Main loop
-#-------------------------------------------------------------------------------
 
 BLAME="$(basename $0)"
 while [ $# != 0 ]; do

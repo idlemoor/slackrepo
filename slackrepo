@@ -326,25 +326,27 @@ if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
     cd "$SR_SBREPO"
     git fetch -a
     git remote update
-    branch="${SR_INIT_GITBRANCH:-$SLACKVER}"
-    git checkout -b "$branch" -t origin/"$branch"
+    mybranch="${SR_INIT_GITBRANCH:-$SLACKVER}"
+    if [ $(git rev-parse --abbrev-ref HEAD) != "$mybranch" ]; then
+      git checkout -b "$mybranch" -t origin/"$mybranch"
+    fi
     log_normal "Finished cloning SlackBuilds repository."
   fi
 elif [ -d $SR_SBREPO/.git ]; then
   cd $SR_SBREPO
-  # Is git clean, and is the branch SBo's stable branch?
+  # Is git clean, and is the current branch SBo's stable branch?
   log_normal "Checking git ..."
   muck="$(git status -s .)"
-  branch=$(git rev-parse --abbrev-ref HEAD)
-  if [ -z "$muck" -a "$branch" = "$SLACKVER" ]; then
+  currbranch=$(git rev-parse --abbrev-ref HEAD)
+  if [ -z "$muck" -a "$currbranch" = "$SLACKVER" ]; then
     if [ -n "$(find "$SR_SBREPO"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
       log_normal "Updating git ..."
       if [ "$OPT_QUIET" = 'y' ]; then
-        git fetch -a                         >> "$MAINLOG" 2>&1
-        git merge --ff-only origin/"$branch" >> "$MAINLOG" 2>&1
+        git fetch -a                             >> "$MAINLOG" 2>&1
+        git merge --ff-only origin/"$currbranch" >> "$MAINLOG" 2>&1
       else
-        git fetch -a                         2>&1 | tee -a "$MAINLOG"
-        git merge --ff-only origin/"$branch" 2>&1 | tee -a "$MAINLOG"
+        git fetch -a                             2>&1 | tee -a "$MAINLOG"
+        git merge --ff-only origin/"$currbranch" 2>&1 | tee -a "$MAINLOG"
       fi
       log_normal "Finished updating git."
     fi

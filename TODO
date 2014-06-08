@@ -1,45 +1,6 @@
 TODO
 ----
 
-[done] nocleanup hint -> no_uninstall
-
-[done] version hint -> update (not rebuild) if it changed; also .version in srcrepo
-
-[done] Better logging (incl. --quiet)
-
-[done] manpages
-
-[done] revise documentation
-
-[done] github pages
-
-[done] document link to slackpkg+
-
-[done] finish doing comments at top of funcs
-
-Additional QA tests for test mode
- - [done] check source isn't 404
- - [done] package contents
- - anything else?
-
-[done] Test --test
-
-[done] don't test install if already installed
-
-[done] Non-Git SlackBuild repos
-
-[done] Slackware style SlackBuilds
-
-[done] NUMJOBS
-
-[done] pidfile
-
-[done] Rework item finding & parsing
-
-[done] Multilevel repos
-
-slackrepo-testpkg-good and slackrepo-testpkg-bad
-
 Multiple built packages from one SlackBuild
 
 test slackpkg+ with local directory
@@ -49,7 +10,6 @@ Report fails back to SBo
 speed up gen_repos, check that .genreprc works
 
 sbopkg compatibility
- - (env vars & filestore?)
  - custom .SlackBuild, .info
  - options
  - queuefiles
@@ -62,9 +22,7 @@ hints in SlackBuild dir
 
 Rebuilds to permit circular deps
 
-github tarball detection
-
-Per-ARCH package repos
+Multilib support
 
 ARM support
 

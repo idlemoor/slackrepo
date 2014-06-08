@@ -25,7 +25,7 @@ function install_packages
 
   # Look for the package(s).
   # Start with the temp output dir
-  pkglist=( $(ls "$MYTMPOUT"/*.t?z 2>/dev/null) )
+  [ -n "$MYTMPOUT" ] && pkglist=( $(ls "$MYTMPOUT"/*.t?z 2>/dev/null) )
   # If nothing there, look in the dryrun repo
   [ "${#pkglist[@]}" = 0 -a "$OPT_DRY_RUN" = 'y' ] &&
     pkglist=( $(ls "$DRYREPO"/"$itemdir"/*.t?z 2>/dev/null) )
@@ -42,31 +42,36 @@ function install_packages
     # Is it already installed? Find it in /var/log/packages
     if [ -f /var/log/packages/"$pkgbase" ]; then
       log_verbose -a "$pkgbase is already installed"
-    elif ls /var/log/packages/"$pkgid"-* 1>/dev/null 2>/dev/null; then
-      for instpkg in /var/log/packages/"$pkgid"-*; do
-        if [ "$(basename "$instpkg" | rev | cut -f4- -d- | rev)" = "$pkgid" ]; then
-          log_normal -a "A previous instance of $pkgid is already installed; upgrading ..."
-          if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
-            /sbin/upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$ITEMLOG"
-            stat=$?
-          else
-            /sbin/upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
-            stat=$?
-          fi
-          [ "$stat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $stat)"; return 1; }
-          dotprofilizer "$pkgpath"
-          break
-        fi
-      done
     else
-      if [ "$OPT_VERBOSE" = 'y' -o "$OPT_INSTALL" = 'y' ]; then
-        /sbin/installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
-        stat=$?
-      else
-        /sbin/installpkg --terse "$pkgpath" >> "$ITEMLOG" 2>&1
-        stat=$?
+      found='n'
+      if ls /var/log/packages/"$pkgid"-* 1>/dev/null 2>/dev/null; then
+        for instpkg in /var/log/packages/"$pkgid"-*; do
+          if [ "$(basename "$instpkg" | rev | cut -f4- -d- | rev)" = "$pkgid" ]; then
+            found='y'
+            break
+          fi
+        done
       fi
-      [ "$stat" = 0 ] || { log_error -a "${itemid}: installpkg $pkgbase failed (status $stat)"; return 1; }
+      if [ "$found" = 'y' ]; then
+        log_normal -a "A previous instance of $pkgid is already installed; upgrading ..."
+        if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
+          /sbin/upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$ITEMLOG"
+          stat=$?
+        else
+          /sbin/upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
+          stat=$?
+        fi
+        [ "$stat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $stat)"; return 1; }
+      else
+        if [ "$OPT_VERBOSE" = 'y' -o "$OPT_INSTALL" = 'y' ]; then
+          /sbin/installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
+          stat=$?
+        else
+          /sbin/installpkg --terse "$pkgpath" >> "$ITEMLOG" 2>&1
+          stat=$?
+        fi
+        [ "$stat" = 0 ] || { log_error -a "${itemid}: installpkg $pkgbase failed (status $stat)"; return 1; }
+      fi
       dotprofilizer "$pkgpath"
     fi
   done
@@ -77,6 +82,8 @@ function install_packages
 
 function uninstall_packages
 # Run removepkg, and do extra cleanup
+# NOTE: If OPT_INSTALL is set, this function will still uninstall the package,
+# but it won't shit down its neck :-)
 # $1 = itemid
 # Return status: always 0
 {
@@ -88,11 +95,12 @@ function uninstall_packages
   local pkgpath pkgbase pkgid
   local etcnewfiles etcdirs etcfile etcdir
 
+  # Never remove a package that has an install hint.
   [ "${HINT_INSTALL[$itemid]}" = 'y' ] && return 0
 
   # Look for the package(s).
   # Start with the temp output dir
-  pkglist=( $(ls "$MYTMPOUT"/*.t?z 2>/dev/null) )
+  [ -n "$MYTMPOUT" ] && pkglist=( $(ls "$MYTMPOUT"/*.t?z 2>/dev/null) )
   # If nothing there, look in the dryrun repo
   [ "${#pkglist[@]}" = 0 -a "$OPT_DRY_RUN" = 'y' ] &&
     pkglist=( $(ls "$DRYREPO"/"$itemdir"/*.t?z 2>/dev/null) )

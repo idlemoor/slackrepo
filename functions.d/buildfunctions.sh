@@ -197,7 +197,7 @@ function build_item
 
   if [ "$OPT_TEST" = 'y' ]; then
     test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
-  elif [ "$OPT_INSTALL" = 'y' ]; then
+  elif [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
     install_packages "$itemid" || { build_failed "$itemid"; return 8; }
   fi
 
@@ -235,7 +235,9 @@ function build_ok
   # MYTMPOUT is empty now, so remove it even if OPT_KEEP_TMP is set
   rm -rf "$MYTMPOUT"
 
-  uninstall_deps "$itemid"
+  if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
+    uninstall_deps "$itemid"
+  fi
 
   create_pkg_metadata "$itemid"  # sets $CHANGEMSG
 
@@ -279,7 +281,9 @@ function build_failed
   log_error -n "See $ITEMLOG"
   FAILEDLIST+=( "$itemid" )
 
-  uninstall_deps "$itemid"
+  if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
+    uninstall_deps "$itemid"
+  fi
 
   return 0
 }

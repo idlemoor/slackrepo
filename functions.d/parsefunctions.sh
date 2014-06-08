@@ -555,10 +555,16 @@ function parse_info_and_hints
     [ -n "$OPTIONS"  ] &&  HINT_OPTIONS[$itemid]="$OPTIONS"
     [ -n "$GROUPADD" ] && HINT_GROUPADD[$itemid]="$GROUPADD"
     [ -n "$USERADD"  ] &&  HINT_USERADD[$itemid]="$USERADD"
-    [ -n "$INSTALL"  ] &&  HINT_INSTALL[$itemid]="$INSTALL"
     [ -n "$NUMJOBS"  ] &&  HINT_NUMJOBS[$itemid]="$NUMJOBS"
     [ -n "$ANSWER"   ] &&   HINT_ANSWER[$itemid]="$ANSWER"
     [ -n "$CLEANUP"  ] &&  HINT_CLEANUP[$itemid]="$CLEANUP"
+
+    # Process hint file's INSTALL
+    if [ -n "$INSTALL" ]; then
+      HINT_INSTALL[$itemid]="y"
+      [ "${INSTALL:0:1}" = 'Y' -o "${INSTALL:0:1}" = '1' ] && HINT_INSTALL[$itemid]="y"
+      [ "${INSTALL:0:1}" = 'N' -o "${INSTALL:0:1}" = 'n' -o "${INSTALL:0:1}" = '0' ] && HINT_INSTALL[$itemid]="n"
+    fi
 
     # Process hint file's ARCH, DOWNLOAD[_ARCH] and MD5SUM[_ARCH] together:
     [ -v ARCH ] && HINT_ARCH[$itemid]="$ARCH"

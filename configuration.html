@@ -55,23 +55,24 @@ variable or by the command line option <code>--repo=ID</code>.</li>
 <h4>Repository filestore locations</h4>
 
 <ul>
-<li><code>SBREPO=/var/lib/slackrepo/git_SBo</code> &mdash; location of SlackBuilds repository</li>
-<li><code>PKGREPO=/var/lib/slackrepo/pkg_SBo</code> &mdash; location of package repository</li>
-<li><code>SRCREPO=/var/lib/slackrepo/src_SBo</code> &mdash; location of downloaded source repository</li>
-<li><code>HINTS=/etc/slackrepo/hints_SBo</code> &mdash; location of 'hints' (see 'Hints' page)</li>
-<li><code>LOGDIR=/var/log/slackrepo/log_SBo</code> &mdash; location of log files</li>
+<li><code>SBREPO=/var/lib/slackrepo/SBo/slackbuilds</code> &mdash; location of SlackBuilds repository</li>
+<li><code>PKGREPO=/var/lib/slackrepo/SBo/packages</code> &mdash; location of package repository</li>
+<li><code>SRCREPO=/var/lib/slackrepo/SBo/source</code> &mdash; location of downloaded source repository</li>
+<li><code>HINTDIR=/etc/slackrepo/SBo/hintfiles</code> &mdash; location of <a href="hintfiles.html">hintfiles</a></li>
+<li><code>QUEUEDIR=/etc/slackrepo/SBo/queuefiles</code> &mdash; location of queuefiles</li>
+<li><code>LOGDIR=/var/log/slackrepo/SBo</code> &mdash; location of log files</li>
 <li><code>TMP=/tmp/SBo</code> &mdash; temporary directory</li>
 </ul>
 
 <h4>Building packages</h4>
 
 <ul>
+<li><code>NUMJOBS=''</code> &mdash; number of make jobs to set in MAKEFLAGS (e.g., <code>NUMJOBS='-j2'</code>). 
+Leave blank to have this automatically determined as one more than the number of processors on the build host.</li>
 <li><code>ARCH=''</code> &mdash; arch for built packages (normally determined from the build host)</li>
 <li><code>TAG=_SBo</code> &mdash; tag for built packages (<strong>please change this</strong>
 if your packages will be publicly available, <a href="http://slackbuilds.org/faq/#package_repos">see SlackBuilds.org FAQ 20</a>)</li>
 <li><code>PKGTYPE=tgz</code> &mdash; package compression type. Valid values are: tgz, txz, tbz, tlz</li>
-<li><code>NUMJOBS=''</code> &mdash; number of make jobs to set in MAKEFLAGS (e.g., <code>NUMJOBS='-j2'</code>). 
-Leave blank to have this automatically determined as one more than the number of processors on the build host.</li>
 </ul>
 
 <h4>Calling gen_repos_files.sh</h4>

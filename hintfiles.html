@@ -47,13 +47,13 @@ to override the version, downloads and md5sums, etc.</p>
 <p>Each repository has its own directory for hintfiles.  The hint directory contains a structure of
 subdirectories that is the same as the subdirectories in the SlackBuilds repository.
 For example, if the SBo repository's SlackBuild file for wxPython is
-<code>libraries/wxPython/wxPython.SlackBuild</code>,
-then its hintfile will be
-<code>/etc/slackrepo/hints_SBo/libraries/wxPython/wxPython.hint</code>.</p>
+<code>libraries/wxPython/wxPython.SlackBuild</code>, then its hintfile will be
+<code>/etc/slackrepo/SBo/hintfiles/libraries/wxPython/wxPython.hint</code>. Alternatively, you
+can just put them in <code>/etc/slackrepo/SBo/hintfiles/</code>.</p>
 
 <p class="scary">
 A sample set of hintfiles for SlackBuilds.org are supplied in the directory
-<code>/etc/slackrepo/hintfiles_SBo</code>.
+<code>/etc/slackrepo/SBo/hintfiles</code>.
 The sample hintfiles are always ignored. You must review the README files of the packages you are
 building, and then edit the sample hintfiles for your own choices, and then save them (or rename them) without the
 .sample suffix.</p>
@@ -68,7 +68,6 @@ DOWNLOAD="new urls"
 MD5SUM="new md5sums"
 DOWNLOAD_arch="new urls"
 MD5SUM_arch="new md5sums"
-REQUIRES="replacement dependencies"
 ADDREQUIRES="additional dependencies"
 OPTIONS="OPT1=yes OPT2=no ..."
 GROUPADD="gid:groupname ..."
@@ -109,16 +108,12 @@ reliable (for example, because of an unversioned archive) and should not be chec
 <br>MD5SUM_arch="new md5sums"</h4>
 <p>These hints redefine DOWNLOAD and MD5SUM, as above, for the specified arch.</p>
 
-<h4>REQUIRES="replacement dependencies"</h4>
-<p>This hint should define a list of dependencies, separated by spaces.
-This list will replace the REQUIRES= list defined in the .info file.
-If the .info file specifies %README%, you should set this hint (without %README%)
-to stop slackrepo displaying a warning.</p>
-
 <h4>ADDREQUIRES="additional dependencies"</h4>
 <p>This hint should define a list of dependencies, separated by spaces.
 Dependencies in this list will be added to the dependencies defined by
-REQUIRES=.</p>
+the REQUIRES= list defined in the .info file.
+If the .info file specifies %README%, you should set this hint
+to stop slackrepo displaying a warning..</p>
 
 <h4>OPTIONS="OPT1=yes OPT2=no ..."</h4>
 <p>This hint should define options described in the SlackBuild's README file. Note that

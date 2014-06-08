@@ -260,6 +260,10 @@ function find_queuefile
 
 #-------------------------------------------------------------------------------
 
+# Queuefile processing needs a special hint to stop factorial explosion when
+# enumerating the fake deps:
+declare -A HINT_Q
+
 function scan_queuefile
 # Scans a queuefile, finding its slackbuilds (with options and inferred deps).
 # Sets the itemid of the last slackbuild in the queue in $lastinqueuefile so
@@ -285,30 +289,37 @@ function scan_queuefile
   while read sqfitem sqfoptions ; do
     case $sqfitem
     in
-      @*) queuefile=$(find_queuefile ${sqfitem:1}.sqf)
-          [ $? != 0 ] && log_warning "${itemid}: Queuefile $sqfitem not found"
-          scan_queuefile "$queuefile"
-          fakedeps+=( "$lastinqueuefile" )
+      @*) find_queuefile ${sqfitem:1}.sqf
+          if [ $? = 0 ]; then
+            scan_queuefile "$R_QUEUEFILE"
+            fakedeps+=( "$lastinqueuefile" )
+          else
+            log_warning "${itemid}: Queuefile ${sqfitem:1}.sqf not found"
+          fi
           ;;
       -*) log_verbose "Note: ignoring unselected queuefile item ${sqfitem:1}"
           ;;
-      * ) depid=$(find_slackbuild "$sqfitem")
+      * ) find_slackbuild "$sqfitem"
           fstat=$?
-          if [ $fstat = 1 ]; then
-            fakedeps+=( "$depid" )
-            DIRECTDEPS["$depid"]="${fakedeps[@]}"
+          if [ $fstat = 0 ]; then
+            PARSEDLIST+=( "$R_SLACKBUILD" )
+            HINT_Q["$R_SLACKBUILD"]="$queuefile"
+            # add sqfitem to fakedeps *after* adding fakedeps to INFOREQUIRES
+            # so that sqfitem won't depend on itself
+            INFOREQUIRES["$R_SLACKBUILD"]="${fakedeps[@]}"
+            fakedeps+=( "$sqfitem" )
           elif [ $fstat = 1 ]; then
             log_warning "${itemid}: Queuefile dep $sqfitem not found"
           elif [ $fstat = 2 ]; then
             log_warning "${itemid}: Queuefile dep $sqfitem matches more than one SlackBuild"
           fi
           if [ -n "$sqfoptions" ]; then
-            HINT_OPTIONS["$depid"]="$(echo "$sqfoptions" | sed 's/^ *| *//')"
+            HINT_OPTIONS["$R_SLACKBUILD"]="$(echo "$sqfoptions" | sed 's/^ *| *//')"
           fi
           ;;
     esac
   done < "$sqfile"
-  lastinqueuefile="$depid"
+  lastinqueuefile="$sqfitem"
   return 0
 }
 

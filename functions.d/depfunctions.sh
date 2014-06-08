@@ -26,8 +26,6 @@ function calculate_deps
   # If FULLDEPS already has an entry for $itemid, do nothing
   # (note that *null* means "we have already calculated that the item has no deps",
   # whereas *unset* means "we have not yet calculated the deps of this item").
-  # (Don't use DIRECTDEPS -- it may contain fake deps from a queuefile that will
-  # be superseded by a hint.)
   if [ "${FULLDEPS[$itemid]+yesitisset}" = 'yesitisset' ]; then
     return 0
   fi
@@ -47,9 +45,13 @@ function calculate_deps
     else
       find_slackbuild "$dep"
       fstat=$?
-      [ $fstat = 1 ] && log_warning "${itemid}: Dependency $dep not found"
-      [ $fstat = 2 ] && log_warning "${itemid}: Dependency $dep matches more than one SlackBuild"
-      deplist+=( "${R_SLACKBUILD}" )
+      if [ $fstat = 0 ]; then
+        deplist+=( "${R_SLACKBUILD}" )
+      elif [ $fstat = 1 ]; then
+        log_warning "${itemid}: Dependency $dep does not exist"
+      elif [ $fstat = 2 ]; then
+        log_warning "${itemid}: Dependency $dep matches more than one SlackBuild"
+      fi
     fi
   done
 

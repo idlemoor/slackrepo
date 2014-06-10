@@ -53,7 +53,7 @@ function print_current_revinfo
   fi
   revstuff="buildrev=${rev};"
 
-  slackstuff="slackware=${SLACKVER};"
+  slackstuff="slackware=${SYS_SLACKVER};"
 
   depstuff=''
   directdeps=$(echo "${DIRECTDEPS[$itemid]}" | sed 's/ /:/g')
@@ -204,7 +204,7 @@ function needs_build
   fi
 
   # has Slackware changed => rebuild
-  currslk="$SLACKVER"
+  currslk="$SYS_SLACKVER"
   if [ "$pkgslk" != "$currslk" ]; then
     BUILDINFO="rebuild for upgraded Slackware$TWEAKINFO"
     return 0

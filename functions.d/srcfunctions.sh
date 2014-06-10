@@ -108,8 +108,10 @@ function download_src
   ( cd "$DOWNDIR"
     for url in $DOWNLIST; do
       if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
+        set -o pipefail
         curl -q -f '-#' -k --connect-timeout 60 --retry 5 -J -L -A SlackZilla -O $url 2>&1 | tee -a "$ITEMLOG"
         curlstat=$?
+        set +o pipefail
       else
         curl -q -f '-#' -k --connect-timeout 60 --retry 5 -J -L -A SlackZilla -O $url >> "$ITEMLOG" 2>&1
         curlstat=$?

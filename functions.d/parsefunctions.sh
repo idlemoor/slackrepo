@@ -393,7 +393,7 @@ declare -A INFOVERSION INFOREQUIRES INFODOWNLIST INFOMD5LIST
 declare -A SRCDIR GITREV GITDIRTY
 # and to store hints:
 declare -A \
-  HINT_SKIP HINT_MD5IGNORE HINT_NUMJOBS HINT_INSTALL HINT_ARCH \
+  HINT_SKIP HINT_MD5IGNORE HINT_NUMJOBS HINT_INSTALL HINT_SPECIAL HINT_ARCH \
   HINT_CLEANUP HINT_USERADD HINT_GROUPADD HINT_ANSWER HINT_NODOWNLOAD \
   HINT_OPTIONS HINT_VERSION HINT_SUMMARY HINTFILE
 
@@ -520,7 +520,7 @@ function parse_info_and_hints
   if [ "${HINTFILE[$itemid]+yesitisset}" != 'yesitisset' ]; then
     hintfile=''
     hintsearch=( "$SR_HINTDIR"/"$itemdir" "$SR_HINTDIR" "$SR_SBREPO"/"$itemdir" )
-    for trydir in $hintsearch; do
+    for trydir in "${hintsearch[@]}"; do
       if [ -f "$trydir"/"$itemprgnam".hint ]; then
         hintfile="$trydir"/"$itemprgnam".hint
         break
@@ -532,7 +532,7 @@ function parse_info_and_hints
   if [ -n "${HINTFILE[$itemid]}" ]; then
     local SKIP \
           VERSION ADDREQUIRES OPTIONS GROUPADD USERADD INSTALL NUMJOBS ANSWER CLEANUP \
-          ARCH DOWNLOAD MD5SUM
+          SPECIAL ARCH DOWNLOAD MD5SUM
     . "${HINTFILE[$itemid]}"
 
     # Process hint file's SKIP first.
@@ -558,6 +558,7 @@ function parse_info_and_hints
     [ -n "$NUMJOBS"  ] &&  HINT_NUMJOBS[$itemid]="$NUMJOBS"
     [ -n "$ANSWER"   ] &&   HINT_ANSWER[$itemid]="$ANSWER"
     [ -n "$CLEANUP"  ] &&  HINT_CLEANUP[$itemid]="$CLEANUP"
+    [ -n "$SPECIAL"  ] &&  HINT_SPECIAL[$itemid]="$SPECIAL"
 
     # Process hint file's INSTALL
     if [ -n "$INSTALL" ]; then
@@ -597,13 +598,14 @@ function parse_info_and_hints
       ${NUMJOBS+"NUMJOBS=\"$NUMJOBS\""} \
       ${ANSWER+"ANSWER=\"$ANSWER\""} \
       ${CLEANUP+"CLEANUP=\"$CLEANUP\""} \
+      ${SPECIAL+"SPECIAL=\"$SPECIAL\""} \
       ${ARCH+"ARCH=\"$ARCH\""} \
       ${DOWNLOAD+"DOWNLOAD=\"$DOWNLOAD\""} \
       ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
       ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )"
     unset SKIP \
           VERSION OPTIONS GROUPADD USERADD INSTALL NUMJOBS ANSWER CLEANUP \
-          ARCH DOWNLOAD MD5SUM
+          SPECIAL ARCH DOWNLOAD MD5SUM
 
   fi
 

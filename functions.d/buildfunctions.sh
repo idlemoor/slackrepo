@@ -128,8 +128,33 @@ function build_item
   options="${HINT_OPTIONS[$itemid]}"
   SLACKBUILDCMD="sh ./$itemfile"
   [ -n "$tempmakeflags" -o -n "$options" ] && SLACKBUILDCMD="env $tempmakeflags $options $SLACKBUILDCMD"
-  # ... and answers.
+  # ... ANSWER ...
   [ -n "${HINT_ANSWER[$itemid]}" ] && SLACKBUILDCMD="echo -e '${HINT_ANSWER[$itemid]}' | $SLACKBUILDCMD"
+  # ... and SPECIAL.
+  for special in ${HINT_SPECIAL[$itemid]}; do
+    case "$special" in
+    'multilib_ldflags' )
+      if [ "$SYS_MULTILIB" = 'y' ]; then
+        log_verbose "Attempting multilib LDFLAGS patch"
+        sed -i -e 's;^\./configure ;LDFLAGS="-L/usr/lib64" &;' "$MYTMPIN/$itemfile"
+      fi
+      ;;
+    'stubs-32' )
+      if [ "$SYS_ARCH" = 'x86_64' -a "$SYS_MULTILIB" = 'n' -a ! -e /usr/include/gnu/stubs-32.h ]; then
+        log_verbose "Symlinking /usr/include/gnu/stubs-32.h"
+        ln -s /usr/include/gnu/stubs-64.h /usr/include/gnu/stubs-32.h
+        if [ -z "${HINT_CLEANUP[$itemid]}" ]; then
+          HINT_CLEANUP[$itemid]="rm /usr/include/gnu/stubs-32.h"
+        else
+          HINT_CLEANUP[$itemid]="${HINT_CLEANUP[$itemid]}; rm /usr/include/gnu/stubs-32.h"
+        fi
+      fi
+      ;;
+    * )
+      log_warning "Hint SPECIAL=\"$special\" not recognised"
+      ;;
+    esac
+  done
 
   # Build it
   MYTMPOUT="$MYTMPDIR/packages_$itemprgnam"
@@ -150,16 +175,20 @@ function build_item
     echo ''
     echo '---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---'
     echo ''
+    set -o pipefail
     ( cd "$MYTMPIN"; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
+    buildstat=$?
+    set +o pipefail
     echo '----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<---'
     echo ''
   else
     ( cd "$MYTMPIN"; eval $SLACKBUILDCMD ) >> "$ITEMLOG" 2>&1
+    buildstat=$?
   fi
-  stat=$?
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
-  if [ "$stat" != 0 ]; then
-    log_error -a "${itemid}: $itemfile failed (status $stat)"
+
+  if [ "$buildstat" != 0 ]; then
+    log_error -a "${itemid}: $itemfile failed (status $buildstat)"
     build_failed "$itemid"
     return 1
   fi
@@ -235,7 +264,7 @@ function build_ok
   # MYTMPOUT is empty now, so remove it even if OPT_KEEP_TMP is set
   rm -rf "$MYTMPOUT"
 
-  if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
+  if [ "${HINT_INSTALL[$itemid]}" = 'n' ] || [ "$OPT_INSTALL" != 'y' -a "${HINT_INSTALL[$itemid]}" != 'y' ]; then
     uninstall_deps "$itemid"
   fi
 
@@ -281,7 +310,7 @@ function build_failed
   log_error -n "See $ITEMLOG"
   FAILEDLIST+=( "$itemid" )
 
-  if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
+  if [ "${HINT_INSTALL[$itemid]}" = 'n' ] || [ "$OPT_INSTALL" != 'y' -a "${HINT_INSTALL[$itemid]}" != 'y' ]; then
     uninstall_deps "$itemid"
   fi
 
@@ -531,8 +560,10 @@ function remove_item
         else
           log_normal "Would remove package $pkgbase"
         fi
-        if [ -f /var/log/packages/$(echo $pkgbase | sed 's/\.t.z$//') ]; then
-          log_warning "Package $pkgbase is installed, use removepkg to uninstall it"
+        is_installed "$pkg"
+        istat=$?
+        if [ "$istat" = 0 -o "$istat" = 1 -o "$istat" = 3 ]; then
+          log_warning "Package $R_INSTALLED is installed, use removepkg to uninstall it"
         fi
       done
     fi

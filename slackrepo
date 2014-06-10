@@ -163,6 +163,18 @@ done
 # Configuration
 #-------------------------------------------------------------------------------
 
+# Find out about the host system:
+# version of Slackware:
+[ -f /etc/slackware-version ] || { log_error "/etc/slackware-version not found"; exit_cleanup; exit 4; }
+SYS_SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
+# native arch:
+SYS_ARCH=$(uname -m)
+# multilib or not:
+SYS_MULTILIB='n'
+[ "$SYS_ARCH" = 'x86_64' -a -f /etc/profile.d/32dev.sh ] && SYS_MULTILIB='y'
+# number of processors:
+SYS_NPROC=$(nproc)
+
 # These config vars are prefixed with SR_ to stop SlackBuilds picking them up.
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO PKGREPO SRCREPO \
@@ -230,31 +242,27 @@ done
 
 # If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly
 if [ -z "$SR_NUMJOBS" ]; then
-  SR_NUMJOBS="-j$(( $(nproc) + 1 ))"
+  SR_NUMJOBS="-j$(( $SYS_NPROC + 1 ))"
 fi
 # setting ARCH breaks lots of SlackBuilds, which is why we do it ;-)
 if [ -z "$SR_ARCH" -o "$SR_ARCH" = '%ARCH%' ]; then
-  case "$( uname -m )" in
-    i?86) SR_ARCH=i486 ;;
-    arm*) SR_ARCH=arm ;;
-       *) SR_ARCH=$( uname -m ) ;;
+  case "$SYS_ARCH" in
+    i?86) SR_ARCH='i486' ;;
+    arm*) SR_ARCH='arm' ;;
+       *) SR_ARCH="$SYS_ARCH" ;;
   esac
 fi
-
-# Find out the version of Slackware
-[ -f /etc/slackware-version ] || { log_error "/etc/slackware-version not found"; exit_cleanup; exit 4; }
-SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
 
 # Substitute %REPO%, %SLACKVER% and %ARCH%
 for name in $varnames; do
   srvar="SR_$name"
-  eval $srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
+  eval $srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
 done
 for initvar in $initnames; do
-  eval $initvar=\"$(echo "${!initvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
+  eval $initvar=\"$(echo "${!initvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
 done
 for genrepvar in $genrepnames; do
-  eval $genrepvar=\"$(echo "${!genrepvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
+  eval $genrepvar=\"$(echo "${!genrepvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
 done
 
 # Do this now so we can log the config:
@@ -335,7 +343,7 @@ if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
     cd "$SR_SBREPO"
     git fetch -a
     git remote update
-    mybranch="${SR_INIT_GITBRANCH:-$SLACKVER}"
+    mybranch="${SR_INIT_GITBRANCH:-$SYS_SLACKVER}"
     if [ $(git rev-parse --abbrev-ref HEAD) != "$mybranch" ]; then
       git checkout -b "$mybranch" -t origin/"$mybranch"
     fi
@@ -347,7 +355,7 @@ elif [ -d $SR_SBREPO/.git ]; then
   log_normal "Checking git ..."
   muck="$(git status -s .)"
   currbranch=$(git rev-parse --abbrev-ref HEAD)
-  if [ -z "$muck" -a "$currbranch" = "$SLACKVER" ]; then
+  if [ -z "$muck" -a "$currbranch" = "$SYS_SLACKVER" ]; then
     if [ -n "$(find "$SR_SBREPO"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
       log_normal "Updating git ..."
       if [ "$OPT_QUIET" = 'y' ]; then
@@ -408,8 +416,10 @@ while [ $# != 0 ]; do
   unset PARSEDLIST UNPARSEDLIST
   if [ "$PROCMODE" = 'build' -o "$PROCMODE" = 'rebuild' ]; then
     parse_args -s "$arg"
+    [ $? != 0 ] && continue
   else # 'update' or 'remove'
     parse_args -p "$arg"
+    [ $? != 0 ] && continue
   fi
   set -- "${UNPARSEDLIST[@]}" "$@"
   # Note that we set the variable $ITEMID (upper case) so that other functions
@@ -504,6 +514,7 @@ if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
       echo "$setrssuuid" >> "$rcfile"
       eval $setrssuuid
     fi
+    set -o pipefail
     REPOSROOT="$REPOSROOT" REPOSOWNER="$REPOSOWNER" REPOSOWNERGPG="$REPOSOWNERGPG" DL_URL="$DL_URL" \
     RSS_TITLE="$RSS_TITLE" RSS_ICON="$RSS_ICON" RSS_LINK="$RSS_LINK" RSS_CLURL="$RSS_CLURL" \
     RSS_DESCRIPTION="$RSS_DESCRIPTION" RSS_FEEDMAX="$RSS_FEEDMAX" RSS_UUID="$RSS_UUID" \
@@ -511,6 +522,7 @@ if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
     FOLLOW_SYMLINKS="$FOLLOW_SYMLINKS" REPO_SUBDIRS="$REPO_SUBDIRS" \
     sh /usr/libexec/$(basename $0)/gen_repos_files.sh -l "$CHANGELOG" | tee -a "$MAINLOG"
     genrepstat=$?
+    set +o pipefail
     [ "$genrepstat" != 0 ] && log_error "gen_repos_files.sh failed -- changelog retained"
     echo ""
     log_important "Finished gen_repos_files.sh at $(date +%T)"

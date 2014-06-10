@@ -22,7 +22,6 @@
 <ul>
 <li><a href="download.html">Download</a></li>
 <li><a href="quickstart.html">Quick start</a></li>
-<li><a href="screenshots.html">Screenshots</a></li>
 <li><a href="usagenotes.html">Documentation</a></li>
 <li>
   <ul>
@@ -43,8 +42,8 @@
 <h3><a name="dependencies"></a>Dependencies</h3>
 
 <p>Dependencies are built, installed and removed automatically, according to the
-contents of .info files (<code>REQUIRES="..."</code>) and <a href="hintfiles.html">hintfiles</a>.
-If a SlackBuild does not have a corresponding .info file, dependencies cannot
+contents of .info files (<code>REQUIRES="..."</code>) and <a href="hintfiles.html">Hintfiles</a>.
+If a SlackBuild does not have a corresponding .info file or hintfile, dependencies cannot
 be processed.</p>
 
 <p>Except when --install is specified, building, installing and removing is done
@@ -53,11 +52,11 @@ installed and removed multiple times.  Although time consuming, this
 is necessary in some cases to produce clean packages for redistribution.</p>
 
 <p>In update mode, when a package is found that is older than its dependencies,
-it will be rebuilt. To cause a rebuild, the dependency must have been updated
-significantly, not merely rebuilt: see <a href="#updates">updates</a> below for details.</p>
+the package may need to be rebuilt. To cause a rebuild, the dependency must have been updated
+significantly, not merely rebuilt: see <a href="#updates">Updates</a> below for details.</p>
 
 <p>Remember that dependencies on standard Slackware packages are not (and
-should not be) listed in .info files and hints, and are not tracked by
+should not be) listed in .info files and hintfiles, and are not tracked by
 slackrepo.</p>
 
 <h3><a name="git"></a>git</h3>
@@ -74,7 +73,7 @@ one day has elapsed</strong> since the last automatic update.</p>
 <h3><a name="updates"></a>Updates</h3>
 
 <p>In build mode and in rebuild mode, packages are updated or rebuilt
-if required; for example, if a package is being built, its dependencies will be
+if required. For example, if a package is being built, its dependencies will be
 updated and/or rebuilt if they are out-of-date. Update mode proactively looks for
 packages that are out-of-date, and also removes packages for which the SlackBuilds
 no longer exist.</p>
@@ -85,7 +84,7 @@ no longer exist.</p>
 since the package was built</li>
 <li>the directory containing the SlackBuilds has untracked/uncommited files
 (i.e., git is "dirty") and they are newer than the package</li>
-<li>any relevant hint has changed since the package was built</li>
+<li>its hintfile has changed since the package was built</li>
 <li>any of its direct dependencies has been updated since the package was built</li>
 <li>the version of Slackware has changed since the package was built</li>
 </ul>
@@ -159,7 +158,7 @@ searches for new packages ONLY in the official Slackware repository.  To
 install specific packages in your own repository you can use</p>
 
 <pre>
-slackpkg install &lt;packagename&gt;
+slackpkg install &lt;packagename...&gt;
 </pre>
 
 <p>or to install and upgrade everything in your own repository, you can use</p>

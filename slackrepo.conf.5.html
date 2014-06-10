@@ -16,7 +16,7 @@
 <p>
 <a href="slackrepo.8.html">slackrepo(8)</a> &bull;
 <a href="slackrepo.conf.5.html">slackrepo.conf(5)</a> &bull;
-<a href="slackrepo_hints.5.html">slackrepo_hints(5)</a>
+<a href="slackrepo.hint.5.html">slackrepo.hint(5)</a>
 </p>
 </header>
 
@@ -25,14 +25,13 @@
 <ul>
 <li><a href="download.html">Download</a></li>
 <li><a href="quickstart.html">Quick start</a></li>
-<li><a href="screenshots.html">Screenshots</a></li>
 <li><a href="usagenotes.html">Documentation</a></li>
 <li><a href="slackrepo.8.html">manpages</a></li>
 <li>
 <ul>
 <li><a href="slackrepo.8.html">slackrepo(8)</a></li>
 <li><a href="slackrepo.conf.5.html">slackrepo.conf(5)</a></li>
-<li><a href="slackrepo_hints.5.html">slackrepo_hints(5)</a></li>
+<li><a href="slackrepo.hint.5.html">slackrepo.hint(5)</a></li>
 </ul>
 </li>
 </ul>
@@ -45,7 +44,7 @@
 <!-- .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K. -->
 <!-- .\" All rights reserved.  For licence details, see the file 'LICENCE'. -->
 <!-- . -->
-<!-- .TH SLACKREPO.CONF 5 "2014-06-01" slackrepo-0.2.0 -->
+<!-- .TH SLACKREPO.CONF 5 "2014-06-01" slackrepo-0.1.0 -->
 <h2>slackrepo.conf (5)</h2>
 <!-- . -->
 <!-- . -->
@@ -208,8 +207,8 @@ These variables can be set in
 <b>SBREPO</b> </td><td valign="bottom">
 Filestore location of the local SlackBuilds repository,
 for example:
-<!-- .B SBREPO=/var/lib/slackrepo/git_%REPO% -->
-<pre>SBREPO=/var/lib/slackrepo/git_%REPO%</pre> <!-- . -->
+<!-- .B SBREPO=/var/lib/slackrepo/%REPO%/slackbuilds -->
+<pre>SBREPO=/var/lib/slackrepo/%REPO%/slackbuilds</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td colspan="2">
@@ -218,8 +217,8 @@ for example:
 Filestore location of the local package repository, i.e., where to store
 built packages. (You will need plenty of space.)
 For example:
-<!-- .B PKGREPO=/var/lib/slackrepo/pkg_%REPO% -->
-<pre>PKGREPO=/var/lib/slackrepo/pkg_%REPO%</pre> <!-- .IP -->
+<!-- .B PKGREPO=/var/lib/slackrepo/%REPO%/packages -->
+<pre>PKGREPO=/var/lib/slackrepo/%REPO%/packages</pre> <!-- .IP -->
 </td></tr>
 <tr valign="top"><td width="6%">
 
@@ -236,17 +235,17 @@ local web server (e.g., somewhere under
 <b>SRCREPO</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Where to store cached sources. (You will need plenty of space.)
 For example:
-<!-- .B SRCREPO=/var/lib/slackrepo/src_%REPO% -->
-<pre>SRCREPO=/var/lib/slackrepo/src_%REPO%</pre> <!-- . -->
+<!-- .B SRCREPO=/var/lib/slackrepo/%REPO%/source -->
+<pre>SRCREPO=/var/lib/slackrepo/%REPO%/source</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td nowrap="nowrap" width="6%">
 <!-- .B HINTDIR -->
 <b>HINTDIR</b> </td><td valign="bottom">
-Where to find hints for this repository,
+Where to find hintfiles for this repository,
 for example:
-<!-- .B HINTDIR=/etc/slackrepo/hints_%REPO% -->
-<pre>HINTDIR=/etc/slackrepo/hints_%REPO%</pre> <!-- . -->
+<!-- .B HINTDIR=/etc/slackrepo/%REPO%/hintfiles -->
+<pre>HINTDIR=/etc/slackrepo/%REPO%/hintfiles</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td nowrap="nowrap" width="6%">
@@ -254,8 +253,8 @@ for example:
 <b>LOGDIR</b> </td><td valign="bottom">
 Where to store log files,
 for example:
-<!-- .B LOGDIR=/var/log/slackrepo/log_%REPO% -->
-<pre>LOGDIR=/var/log/slackrepo/log_%REPO%</pre> <!-- . -->
+<!-- .B LOGDIR=/var/log/slackrepo/%REPO% -->
+<pre>LOGDIR=/var/log/slackrepo/%REPO%</pre> <!-- . -->
 <!-- .TP -->
 </td></tr>
 <tr valign="top"><td nowrap="nowrap" width="6%">
@@ -636,8 +635,8 @@ same name. For example:
 <!-- . -->
 <!-- .BR slackrepo (8), -->
 <a href="slackrepo.8.html">slackrepo(8)</a>,
-<!-- .BR slackrepo_hints (5), -->
-<a href="slackrepo_hints.5.html">slackrepo_hints(5)</a>,
+<!-- .BR slackrepo.hint (5), -->
+<a href="slackrepo.hint.5.html">slackrepo.hint(5)</a>,
 <!-- .BR installpkg (8), -->
 installpkg(8),
 <!-- .BR upgradepkg (8), -->
@@ -652,7 +651,7 @@ slackpkg(8).
 <!-- . -->
 </blockquote>
 <p></p><hr>
-<table width="100%"><tbody><tr> <td width="33%"><i>slackrepo-0.2.0</i></td> <td align="center" width="33%">SLACKREPO.CONF (5)</td> <td align="right" width="33%"><i>2014-06-01</i></td> </tr></tbody></table>
+<table width="100%"><tbody><tr> <td width="33%"><i>slackrepo-0.1.0</i></td> <td align="center" width="33%">SLACKREPO.CONF (5)</td> <td align="right" width="33%"><i>2014-06-01</i></td> </tr></tbody></table>
 
 
 

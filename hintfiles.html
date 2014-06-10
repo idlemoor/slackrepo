@@ -20,7 +20,6 @@
 <ul>
 <li><a href="download.html">Download</a></li>
 <li><a href="quickstart.html">Quick start</a></li>
-<li><a href="screenshots.html">Screenshots</a></li>
 <li><a href="usagenotes.html">Documentation</a></li>
 <li>
   <ul>
@@ -47,13 +46,13 @@ to override the version, downloads and md5sums, etc.</p>
 <p>Each repository has its own directory for hintfiles.  The hint directory contains a structure of
 subdirectories that is the same as the subdirectories in the SlackBuilds repository.
 For example, if the SBo repository's SlackBuild file for wxPython is
-<code>libraries/wxPython/wxPython.SlackBuild</code>,
-then its hintfile will be
-<code>/etc/slackrepo/hints_SBo/libraries/wxPython/wxPython.hint</code>.</p>
+<code>libraries/wxPython/wxPython.SlackBuild</code>, then its hintfile will be
+<code>/etc/slackrepo/SBo/hintfiles/libraries/wxPython/wxPython.hint</code>. Alternatively, you
+can just put them in <code>/etc/slackrepo/SBo/hintfiles/</code>.</p>
 
 <p class="scary">
 A sample set of hintfiles for SlackBuilds.org are supplied in the directory
-<code>/etc/slackrepo/hintfiles_SBo</code>.
+<code>/etc/slackrepo/SBo/hintfiles</code>.
 The sample hintfiles are always ignored. You must review the README files of the packages you are
 building, and then edit the sample hintfiles for your own choices, and then save them (or rename them) without the
 .sample suffix.</p>
@@ -66,9 +65,8 @@ but all the hints are <strong>optional</strong>, and any unrecognised entries ar
 VERSION="newversion"
 DOWNLOAD="new urls"
 MD5SUM="new md5sums"
-DOWNLOAD_arch="new urls"
-MD5SUM_arch="new md5sums"
-REQUIRES="replacement dependencies"
+DOWNLOAD_<i>arch</i>="new urls"
+MD5SUM_<i>arch</i>="new md5sums"
 ADDREQUIRES="additional dependencies"
 OPTIONS="OPT1=yes OPT2=no ..."
 GROUPADD="gid:groupname ..."
@@ -79,16 +77,17 @@ INSTALL="yesno"
 NUMJOBS="-j1"
 ANSWERS="strings"
 CLEANUP="commands"
+SPECIAL="actions"
 </pre>
 
 <h4>VERSION="newversion"</h4>
-<p>This hint can be specified to attempt an automatic patch of the version 
+<p>This hint can be specified to attempt an automatic patch of the version
 number in both the SlackBuild and info files.  The automatic patch is done by a
-simple text substitution. This often won't work 
-(particularly if the old version number is something like '1', or if the download 
+simple text substitution. This often won't work
+(particularly if the old version number is something like '1', or if the download
 URL has not been patched correctly and you have not supplied a new download URL in the
 hint file).  The md5sum of the source archive will not be checked, unless you have also supplied a new
-md5sum in the hint file. The patched SlackBuild and info files are 
+md5sum in the hint file. The patched SlackBuild and info files are
 not kept.</p>
 
 <h4>DOWNLOAD="new urls"</h4>
@@ -109,16 +108,12 @@ reliable (for example, because of an unversioned archive) and should not be chec
 <br>MD5SUM_arch="new md5sums"</h4>
 <p>These hints redefine DOWNLOAD and MD5SUM, as above, for the specified arch.</p>
 
-<h4>REQUIRES="replacement dependencies"</h4>
-<p>This hint should define a list of dependencies, separated by spaces.
-This list will replace the REQUIRES= list defined in the .info file.
-If the .info file specifies %README%, you should set this hint (without %README%)
-to stop slackrepo displaying a warning.</p>
-
 <h4>ADDREQUIRES="additional dependencies"</h4>
 <p>This hint should define a list of dependencies, separated by spaces.
 Dependencies in this list will be added to the dependencies defined by
-REQUIRES=.</p>
+the REQUIRES= list defined in the .info file.
+If the .info file specifies %README%, you should set this hint
+to stop slackrepo displaying a warning.</p>
 
 <h4>OPTIONS="OPT1=yes OPT2=no ..."</h4>
 <p>This hint should define options described in the SlackBuild's README file. Note that
@@ -140,7 +135,7 @@ specifications can be defined. Examples:</p>
 USERADD="270:smtpd:-g0:-r:-s/bin/false:-d/var/empty 271:smtpq:-r:-s/bin/false:-d/var/empty"</pre>
 
 <h4>SKIP="yesno"</h4>
-<p>This hint can be specified if you want to skip the package when it would 
+<p>This hint can be specified if you want to skip the package when it would
 otherwise be built, rebuilt, updated or removed.  If the hint isn't specified
 as <code>SKIP="yes"</code> or <code>SKIP="no"</code>, it will be interpreted
 as "yes", and the string will be displayed when the build is skipped, so that
@@ -165,16 +160,16 @@ when multiple 'make' jobs are used, so that the build will be executed with
 MAKEFLAGS='-j1'.</p>
 
 <h4>ANSWERS="string"</h4>
-<p>This hint can be specified if the build process wants to read answers to 
+<p>This hint can be specified if the build process wants to read answers to
 its questions during execution, for example concerning a licence agreement. The
-string is piped into the SlackBuild's standard input, so it should contain whatever 
+string is piped into the SlackBuild's standard input, so it should contain whatever
 will make the build process happy. Newlines can be specified as \n, for example</p>
 <pre>ANSWERS="ok\nyes"</pre>
 
 <h4>CLEANUP="commands"</h4>
-<p><p>This hint can be specified if the package needs extra cleanup when it is 
-uninstalled (e.g. packages that replace standard Slackware packages or 
-install kernel modules). The hint should define an appropriate shell command pipeline. 
+<p>This hint can be specified if the package needs extra cleanup when it is
+uninstalled (e.g. packages that replace standard Slackware packages or
+install kernel modules). The hint should define an appropriate shell command pipeline.
 For example, to reinstall Slackware packages:</p>
 <pre>
 CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex-doc"
@@ -183,6 +178,14 @@ CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex
 <pre>
 CLEANUP="depmod -a"
 </pre>
+
+<h4>SPECIAL="actions"</h4>
+<p>This hint can be specified to perform a special action.  Only one
+special action is currently available:</p>
+<p><b>multilib_ldflags</b> &mdash; on a <a href="http://docs.slackware.com/slackware:multilib" class="ext">multilib</a> host, attempt to patch the SlackBuild
+to specify LDFLAGS, as described in
+<a href="http://slackbuilds.org/faq/#multilib" class="ext">SlackBuilds.org FAQ 18</a>.
+This is not guaranteed to work!</p>
 
 </div>
 

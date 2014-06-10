@@ -20,7 +20,6 @@
 <ul>
 <li><a href="download.html">Download</a></li>
 <li><a href="quickstart.html">Quick start</a></li>
-<li><a href="screenshots.html">Screenshots</a></li>
 <li><a href="usagenotes.html">Documentation</a></li>
 <li><a href="slackrepo.8.html">manpages</a></li>
 </ul>
@@ -32,6 +31,17 @@
 It builds packages from an input repository of SlackBuilds (for example, a clone of
 <a href="http://SlackBuilds.org" class="ext">SlackBuilds.org</a>), and then outputs
 them to a package repository.</p>
+
+<p class="scary">This is a new, experimental tool for experienced Slackware users to manage
+their own package repositories. If you don't build your own packages, you don't need slackrepo.
+Most users will find that the existing
+<a href="links.html">popular tools</a> are much better for their needs:
+<a href="http://www.sbopkg.org/" class="ext">sbopkg</a> and
+<a href="http://slackblogs.blogspot.co.uk/2014/01/managing-sbo-dependencies-easily.html" class="ext">sqg</a>,
+<a href="http://alien.slackbook.org/AST/" class="ext">AST</a>,
+<a href="http://www.src2pkg.net/start" class="ext">src2pkg</a>,
+<a href="http://www.dawoodfall.net/files/slackbuilds/noversion/mkslack/" class="ext">mkslack</a>,
+etc.</p>
 
 <p>For best results, slackrepo is intended to be run on a "clean" standard
 Slackware environment (like a "build box" or a virtual machine), with a
@@ -48,22 +58,10 @@ packages</li>
 <li>clean building - <a href="dependencies.html">dependencies</a> are built as a 'tree', not a linear 'queue', and packages that are out-of-date with respect to their dependencies are rebuilt</li>
 <li>quality assurance testing - optional <a href="tests.html">tests</a> can be performed on the SlackBuild files and built packages</li>
 <li>no interaction required - highly automated and suitable for bulk testing</li>
-
+<li>can build from <a href="http://SlackBuilds.org" class="ext">SlackBuilds.org</a> (SBo),
+<a href="https://github.com/mateslackbuilds/msb" class="ext">Mate SlackBuilds</a> (msb) and
+<a href="https://github.com/willysr/csb" class="ext">Cinnamon SlackBuilds</a> (csb)
 </ul>
-
-<p>This is a tool for experienced users to manage their package repositories.
-It is not really a tool for managing installed packages on a host;
-for that, you probably should continue to use
-<a href="http://www.slackware.com/config/packages.php" class="ext">pkgtool, installpkg, etc.</a>, or
-<a href="http://slakfinder.org/slackpkg+.html" class="ext">slackpkg+</a>.
-For package building, most users will find that the existing
-<a href="links.html">popular tools</a> are much better for their needs:
-<a href="http://www.sbopkg.org/" class="ext">sbopkg</a> and
-<a href="http://slackblogs.blogspot.co.uk/2014/01/managing-sbo-dependencies-easily.html" class="ext">sqg</a>,
-<a href="http://alien.slackbook.org/AST/" class="ext">AST</a>,
-<a href="http://www.src2pkg.net/start" class="ext">src2pkg</a>,
-<a href="http://www.dawoodfall.net/files/slackbuilds/noversion/mkslack/" class="ext">mkslack</a>,
-etc.</p>
 
 <p>Slackrepo is not affiliated with, or endorsed by, SlackBuilds.org or
 Slackware.  The author thanks the awesome people behind those projects

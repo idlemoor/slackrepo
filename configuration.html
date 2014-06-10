@@ -20,7 +20,6 @@
 <ul>
 <li><a href="download.html">Download</a></li>
 <li><a href="quickstart.html">Quick start</a></li>
-<li><a href="screenshots.html">Screenshots</a></li>
 <li><a href="usagenotes.html">Documentation</a></li>
 <li>
   <ul>
@@ -46,32 +45,33 @@ or <code>~/.slackreporc</code>.</p>
 <h4>Default repo ID</h4>
 
 <ul>
-<li><code>REPO=SBo</code> &mdash; the default repo ID.  This determines the configuration file  
-/etc/slackrepo/slackrepo_ID.conf from which other configuration variables will be read. 
-This can be set only in ~/.slackreporc, but can be overridden by the <code>REPO</code> environment 
-variable or by the command line option <code>--repo=ID</code>.</li>
+<li><code>REPO=SBo</code> &mdash; the default repo ID.  This determines the configuration file
+<code>/etc/slackrepo/slackrepo_<i>ID</i>.conf</code> from which other configuration variables will be read.
+This can be changed <b>only</b> in <code>~/.slackreporc</code>, but can be overridden by the <code>REPO</code> environment
+variable or by the command line option <code>--repo=<i>ID</i></code>.</li>
 </ul>
 
 <h4>Repository filestore locations</h4>
 
 <ul>
-<li><code>SBREPO=/var/lib/slackrepo/git_SBo</code> &mdash; location of SlackBuilds repository</li>
-<li><code>PKGREPO=/var/lib/slackrepo/pkg_SBo</code> &mdash; location of package repository</li>
-<li><code>SRCREPO=/var/lib/slackrepo/src_SBo</code> &mdash; location of downloaded source repository</li>
-<li><code>HINTS=/etc/slackrepo/hints_SBo</code> &mdash; location of 'hints' (see 'Hints' page)</li>
-<li><code>LOGDIR=/var/log/slackrepo/log_SBo</code> &mdash; location of log files</li>
+<li><code>SBREPO=/var/lib/slackrepo/SBo/slackbuilds</code> &mdash; location of SlackBuilds repository</li>
+<li><code>PKGREPO=/var/lib/slackrepo/SBo/packages</code> &mdash; location of package repository</li>
+<li><code>SRCREPO=/var/lib/slackrepo/SBo/source</code> &mdash; location of downloaded source repository</li>
+<li><code>HINTDIR=/etc/slackrepo/SBo/hintfiles</code> &mdash; location of <a href="hintfiles.html">Hintfiles</a></li>
+<li><code>QUEUEDIR=/etc/slackrepo/SBo/queuefiles</code> &mdash; location of queuefiles</li>
+<li><code>LOGDIR=/var/log/slackrepo/SBo</code> &mdash; location of log files</li>
 <li><code>TMP=/tmp/SBo</code> &mdash; temporary directory</li>
 </ul>
 
 <h4>Building packages</h4>
 
 <ul>
+<li><code>NUMJOBS=''</code> &mdash; number of make jobs to set in MAKEFLAGS (e.g., <code>NUMJOBS='-j2'</code>).
+Leave blank to have this automatically determined as one more than the number of processors on the build host.</li>
 <li><code>ARCH=''</code> &mdash; arch for built packages (normally determined from the build host)</li>
 <li><code>TAG=_SBo</code> &mdash; tag for built packages (<strong>please change this</strong>
-if your packages will be publicly available, <a href="http://slackbuilds.org/faq/#package_repos">see SlackBuilds.org FAQ 20</a>)</li>
+if your packages will be publicly available, see <a href="http://slackbuilds.org/faq/#package_repos" class="ext">SlackBuilds.org FAQ 20</a>)</li>
 <li><code>PKGTYPE=tgz</code> &mdash; package compression type. Valid values are: tgz, txz, tbz, tlz</li>
-<li><code>NUMJOBS=''</code> &mdash; number of make jobs to set in MAKEFLAGS (e.g., <code>NUMJOBS='-j2'</code>). 
-Leave blank to have this automatically determined as one more than the number of processors on the build host.</li>
 </ul>
 
 <h4>Calling gen_repos_files.sh</h4>
@@ -81,7 +81,7 @@ Leave blank to have this automatically determined as one more than the number of
 </ul>
 
 <p>If you enable gen_repos_files.sh, you <strong>must</strong> set correct values for its
-configuration options in /etc/slackrepo/slackrepo_ID.conf.  However, if
+configuration options in /etc/slackrepo/slackrepo_SBo.conf.  However, if
 you already use gen_repos_files.sh, it will still read your existing
 ~/.genreprc file.  For details, see the man page <a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>.</p>
 

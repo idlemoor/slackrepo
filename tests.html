@@ -20,7 +20,6 @@
 <ul>
 <li><a href="download.html">Download</a></li>
 <li><a href="quickstart.html">Quick start</a></li>
-<li><a href="screenshots.html">Screenshots</a></li>
 <li><a href="usagenotes.html">Documentation</a></li>
 <li>
   <ul>
@@ -38,19 +37,20 @@
 
 <div id="main">
 
-<p>The following tests are performed if the <code>--test</code> control argument is specified:</p>
+<p>The following tests are performed if the <code>--test</code> control argument is specified.
+When any tests fail, warnings are displayed and logged, but building continues.</p>
 
 <h4>prgnam.SlackBuild</h4>
 
 <ul>
-<li>Must exist</li>
+<li>Should exist</li>
 </ul>
 
 <h4>slack-desc</h4>
 
 <ul>
-<li>Must exist</li>
-<li>Must have exactly 11 lines that start with <code>prgnam:</code></li>
+<li>Should exist</li>
+<li>Should have exactly 11 lines that start with <code>prgnam:</code></li>
 <li>If the handy-ruler exists, it must be aligned correctly and have the correct format</li>
 <li>No trailing spaces on <code>prgnam:</code> lines, i.e. no lines should match <code>^prgnam:&lt;sp&gt;&lt;sp&gt;*$</code></li>
 <li>No <code>prgnam:</code> lines should have more than 73 chars of description</li>
@@ -61,8 +61,8 @@
 
 <ul>
 <li>Optional; its existence indicates an SBo-style SlackBuild</li>
-<li>Should define PRGNAM, VERSION, HOMEPAGE, DOWNLOAD(_ARCH), MD5SUM(_ARCH), REQUIRES, MAINTAINER, EMAIL</li>
-<li>Download URLs should not be 404</li>
+<li>Should define PRGNAM, VERSION, HOMEPAGE, DOWNLOAD(_arch), MD5SUM(_arch), REQUIRES, MAINTAINER, EMAIL</li>
+<li>Download URLs should work; to test this, the header is retrieved</li>
 <li>PRGNAM should be the same as the .info file's name and the .SlackBuild file's name</li>
 <li>Each item defined in REQUIRES should exist in the repo</li>
 </ul>
@@ -70,7 +70,7 @@
 <h4>README</h4>
 
 <ul>
-<li>Optional; if prgnam.info exists, README must exist</li>
+<li>Optional; if prgnam.info exists, README should exist</li>
 <li>Should not contain long lines &gt;= 80 chars</li>
 </ul>
 
@@ -78,9 +78,9 @@
 
 <ul>
 <li>Package name should be in form $PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE</li>
-<li>If the slackbuild only produces one package, $PRGNAM should be the same as the slackbuild's name and should be the same as PRGNAM in the .info file</li>
+<li>If the slackbuild produces one package, PRGNAM should be the same as the slackbuild's name and should be the same as PRGNAM in the .info file</li>
 <li>VERSION should be the same as VERSION in the .info file</li>
-<li>ARCH should be i?86 or x86_64 (optionally suffixed with _$KNLVER), or noarch</li>
+<li>ARCH should be i?86 or x86_64 (optionally suffixed with _<i>KNLVER</i>, _<i>LOCALE</i> etc), or noarch</li>
 <li>BUILD should be numeric</li>
 <li>TAG should be same as the repo's TAG</li>
 <li>PKGTYPE should be tgz, txz, tbz or tlz (and should be as set by the caller)</li>

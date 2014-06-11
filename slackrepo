@@ -254,12 +254,9 @@ if [ -z "$SR_ARCH" -o "$SR_ARCH" = '%ARCH%' ]; then
 fi
 
 # Substitute %REPO%, %SLACKVER% and %ARCH%
-for name in $varnames; do
+for name in $varnames $initnames; do
   srvar="SR_$name"
   eval $srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
-done
-for initvar in $initnames; do
-  eval $initvar=\"$(echo "${!initvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
 done
 for genrepvar in $genrepnames; do
   eval $genrepvar=\"$(echo "${!genrepvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"

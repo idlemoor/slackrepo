@@ -1,24 +1,15 @@
 TODO
 ----
 
-Multiple built packages from one SlackBuild
-
-test slackpkg+ with local directory
-
 Report fails back to SBo
 
 speed up gen_repos, check that .genreprc works
 
-sbopkg compatibility
- - custom .SlackBuild, .info
- - options
- - queuefiles
+do a FAQ
 
-progress bar/spinner
+progress bar/spinner/whatever
 
-Install accelerator
-
-hints in SlackBuild dir
+Install/uninstall acceleration
 
 Rebuilds to permit circular deps
 

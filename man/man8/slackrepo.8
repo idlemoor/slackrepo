@@ -1,7 +1,7 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO 8 "2014-06-01" slackrepo-0.2.0
+.TH SLACKREPO 8 "2014-06-01" slackrepo-0.1.0
 .
 .
 .
@@ -92,7 +92,7 @@ This option conflicts with --install.
 .TP
 .B \-\-install
 Built, rebuilt and updated packages will be installed on the host system.
-This results in a "queue" style build, and packages may not be 100% clean of
+This results in a \(dqqueue\(dq style build, and packages may not be 100% clean of
 unexpected dependencies. The default is for packages
 .B not
 to be installed. This option conflicts with --dry-run, and has no effect in
@@ -189,7 +189,7 @@ and override configuration variables set in
 see
 .BR slackrepo.conf (5).
 .TP 5
-.I /etc/slackrepo/hintfiles_SBo/
+.I /etc/slackrepo/SBo/hintfiles
 This directory contains the hintfiles for the SBo repository; see
 .BR slackrepo.hint (5).
 .

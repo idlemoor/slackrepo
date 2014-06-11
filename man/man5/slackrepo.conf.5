@@ -1,7 +1,7 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO.CONF 5 "2014-06-01" slackrepo-0.2.0
+.TH SLACKREPO.CONF 5 "2014-06-01" slackrepo-0.1.0
 .
 .
 .
@@ -96,7 +96,7 @@ or can be overridden by environment variables.
 Filestore location of the local SlackBuilds repository.
 .br
 Example:
-.B SBREPO=/var/lib/slackrepo/git_%REPO%
+.B SBREPO=/var/lib/slackrepo/%REPO%/slackbuilds
 .
 .TP
 .B PKGREPO
@@ -104,7 +104,7 @@ Filestore location of the local package repository, i.e., where to store
 built packages. (You will need plenty of space.)
 .br
 Example:
-.B PKGREPO=/var/lib/slackrepo/pkg_%REPO%
+.B PKGREPO=/var/lib/slackrepo/%REPO%/packages
 .IP
 If you intend to use the package repository with slackpkg+,
 you may wish to change this to a location accessible by a
@@ -116,21 +116,21 @@ local web server (e.g., somewhere under
 Where to store cached sources. (You will need plenty of space.)
 .br
 Example:
-.B SRCREPO=/var/lib/slackrepo/src_%REPO%
+.B SRCREPO=/var/lib/slackrepo/%REPO%/source
 .
 .TP
 .B HINTDIR
 Where to find hintfiles for this repository.
 .br
 Example:
-.B HINTDIR=/etc/slackrepo/hintfiles_%REPO%
+.B HINTDIR=/etc/slackrepo/%REPO%/hintfiles
 .
 .TP
 .B LOGDIR
 Where to store log files.
 .br
 Example:
-.B LOGDIR=/var/log/slackrepo/log_%REPO%
+.B LOGDIR=/var/log/slackrepo/%REPO%
 .
 .TP
 .B TMP

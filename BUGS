@@ -1,9 +1,11 @@
 BUGS
 ----
 
-It is possible to have multiple progs named 'x' under different categories,
-but there is currently no way of having different hints for each prog.
+This is new, experimental software, it hasn't been tested thoroughly yet,
+it runs as root so it could trash your entire system.  Please only run it on
+systems that you can reinstall or restore from backups easily, eg. a VM.
 
-Inconsistent support for SlackBuilds that create multiple packages.
+As new features are added, the man pages will often be out of date.
 
-Embedded spaces in directory names, package names, etc, will cause problems.
+Don't use the experimental queuefile support.  Currently, enumerating the fake
+dependencies causes a factorial explosion in complexity.

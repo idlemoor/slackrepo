@@ -176,8 +176,13 @@ function build_item
     echo '---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---'
     echo ''
     set -o pipefail
-    ( cd "$MYTMPIN"; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
-    buildstat=$?
+    if [ "$SYS_MULTILIB" = "y" -a "$ARCH" = 'i486' ]; then
+      ( cd "$MYTMPIN"; . /etc/profile.d/32dev.sh; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
+      buildstat=$?
+    else
+      ( cd "$MYTMPIN"; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
+      buildstat=$?
+    fi
     set +o pipefail
     echo '----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<---'
     echo ''

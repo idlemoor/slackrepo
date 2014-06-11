@@ -1,39 +1,17 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO_HINTS 5 "2014-06-01" slackrepo-0.1.0
+.TH SLACKREPO.HINT 5 "2014-06-01" slackrepo-0.1.0
 .
 .
 .
 .SH NAME
-slackrepo_hints \- hint files for slackrepo
+slackrepo.hint \- slackrepo hintfile format
 .
 .
 .
 .SH SYNOPSIS
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .options
-.br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .optdeps
-.br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .readmedeps
-.br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .uidgid
-.br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .md5ignore
-.br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .nodownload
-.br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .makej1
-.br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .skipme
-.br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .answers
-.br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .version
-.br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .cleanup
-.br
-.BI /etc/slackrepo/hints_ ID /.../ prgnam .install
+.BI /etc/slackrepo/ ID /hintfiles/ prgnam .hint
 .br
 where
 .I ID
@@ -43,166 +21,211 @@ is 'SBo' by default.
 .
 .SH DESCRIPTION
 .
-\(dqHints\(dq are small configuration files that determine the way that
-.B slackrepo
-processes each item, including options and optional dependencies.
+A \(dqhintfile\(dq is a file that supplements a SlackBuild's .info file, for
+example to specify options and additional dependencies, to override the version,
+downloads and md5sums, etc.
 .P
-Each repository ID should have its own hint directory, as configured in
-the configuration file (see
+Each repository has its own directory for hintfiles, as configured in
+the repository configuration file (see
 .BR slackrepo.conf (5)).
 By default this will be
-.IR /etc/slackrepo/hints_ID/ .
+.IR /etc/slackrepo/ID/hintfiles .
 .P
-The hints directory should contain a structure of subdirectories that is the
+The hintfiles directory should contain a structure of subdirectories that is the
 same as the subdirectories in the SlackBuilds repository.
 For example, if the SBo repository's SlackBuild file for wxPython is
 .IR libraries/wxPython/wxPython.SlackBuild ,
 then its options hint file will be
 .IR /etc/slackrepo/hints_SBo/libraries/wxPython/wxPython.options .
 .P
+Alternatively, hintfiles can be placed in the top level hintfiles directory.
+.P
 A sample set of hints for SlackBuilds.org are supplied in the directory
-.IR /etc/slackrepo/hints_SBo ,
+.IR /etc/slackrepo/SBo/hintfiles ,
 but the sample hints are ignored until you rename them without the
 .I .sample
 suffix. You are encouraged to review and modify the sample hints and to create
 more hints. In particular, you should always read the README files of the
 packages you are building for your own requirements.
-.
-.
-.SS prgnam.options
 .P
-This file should contain options described in the SlackBuild's
-README file, for example
+The format of a hintfile is based on the format of SlackBuilds.org .info files,
+but all the hints are optional, and any unrecognised entries are ignored.
+The hints that can be defined are as follows:
 .P
 .RS
 .EX
-GUI=yes
+VERSION=\(dqnewversion\(dq
+DOWNLOAD=\(dqnew urls\(dq
+MD5SUM=\(dqnew md5sums\(dq
+DOWNLOAD_arch=\(dqnew urls\(dq
+MD5SUM_arch=\(dqnew md5sums\(dq
+ADDREQUIRES=\(dqadditional dependencies\(dq
+OPTIONS=\(dqOPT1=yes OPT2=no ...\(dq
+GROUPADD=\(dqgid:groupname ...\(dq
+USERADD=\(dquid:username[:controlargs...] ...\(dq
+SKIP=\(dqyesno\(dq
+ARCH=\(dqarch\(dq
+INSTALL=\(dqyesno\(dq
+NUMJOBS=\(dq-j1\(dq
+ANSWERS=\(dqstrings\(dq
+CLEANUP=\(dqcommands\(dq
+SPECIAL=\(dqactions\(dq
 .EE
 .RE
 .
 .
-.SS prgnam.optdeps and prgnam.readmedeps
+.
+.SS VERSION=\(dqnewversion\(dq
 .P
-These files should contain a list of dependencies separated by spaces
-and/or newlines, for example
+This hint can be specified to attempt an automatic patch of the version number
+in both the SlackBuild and info files. The automatic patch is done by a simple text substitution.
+This often won't work (particularly if the old version number is something like '1', or
+if the download URL has not been patched correctly and you have not supplied a new
+download URL in the hint file). The md5sum of the source archive will not be checked,
+unless you have also supplied a new md5sum in the hint file.
+The patched SlackBuild and info files are not kept.
+.
+.
+.SS DOWNLOAD=\(dqnew urls\(dq
+.P
+This hint redefines download URLs that replace the URLs specified in the .info file,
+for example if you have also defined VERSION=, or if the upstream URL has changed.
+.P
+However, if specified as
+.BR DOWNLOAD=\(dqno\(dq ,
+this hint indicates that the source needs
+to be downloaded manually (for example, because of a licence agreement).
+If you have already downloaded the source into the source cache, and if the
+md5sum is correct, then the package will be built. Otherwise, a message will
+be displayed explaining what you should do, and the package will be skipped.
+.
+.
+.SS MD5SUM=\(dqnew md5sums\(dq
+.P
+This hint redefines md5sums that replace the md5sums specified in the .info file,
+for example if you have also redefined VERSION=, or if the upstream source
+archive has been changed.
+.P
+However, if specified as
+.BR MD5SUM=\(dqno\(dq ,
+this hint indicates that the source md5sums are not reliable
+(for example, because of an unversioned archive) and should not be checked.
+.
+.
+.SS DOWNLOAD_arch=\(dqnew urls\(dq and MD5SUM_arch=\(dqnew md5sums\(dq
+.P
+These hints redefine DOWNLOAD and MD5SUM, as above, for the specified arch.
+.
+.
+.SS ADDREQUIRES=\(dqadditional dependencies\(dq
+.P
+This hint should define a list of dependencies, separated by spaces.
+Dependencies in this list will be added to the dependencies defined by the
+REQUIRES= list defined in the .info file. If the .info file specifies %README%,
+you should set this hint to stop slackrepo displaying a warning.
+.
+.
+.SS OPTIONS=\(dqOPT1=yes OPT2=no ...\(dq
+.P
+This hint should define options described in the SlackBuild's README file.
+Note that this is the only way in slackrepo that you can define SlackBuild options.
+.
+.
+.SS GROUPADD=\(dqgid:groupname ...\(dq
+.P
+This hint defines groups to be added on the host system.
+If a group already exists, nothing will be done.
+If more than one group is to be added, a space-separated list can be specified.
+Example:
 .P
 .RS
 .EX
-a52dec faac libdv libmpeg2 mjpegtools libquicktime x264 xvidcore
+GROUPADD=\(dq209:postgres\(dq
+.EE
+.RE
+.
+.
+.SS USERADD=\(dquid:username[:controlargs...] ...\(dq
+.P
+This hint defines usernames to be added on the host system.
+If a username already exists, nothing will be done.
+Optionally, additional control arguments of the useradd command can be
+specified, separated by colons, with the space between the control argument
+and its argument omitted. If more than one username is required, a
+space-separated list of specifications can be defined.
+Examples:
+.P
+.RS
+.EX
+USERADD=\(dq209:postgres:-d/var/lib/pgsql\(dq
+USERADD=\(dq270:smtpd:-g0:-r:-s/bin/false:-d/var/empty 271:smtpq:-r:-s/bin/false:-d/var/empty\(dq
 .EE
 .RE
 .P
-The
-.IB prgnam .optdeps
-file should be used for optional dependencies
-listed in the SlackBuild's README file.
-.P
-The
-.IB prgnam .readmedeps
-file should be used where the REQUIRES=\(dq...\(dq list in
-.IB prgnam .info
-contains %README%; the contents will be substituted for %README%, but if you don't
-need any dependencies to be substituted for %README%, you should create
-an empty
-.IB prgnam .readmedeps
-file. (A warning will be printed if %README% is found without a
-.IB prgnam .readmedeps
-file.)
 .
 .
-.SS prgnam.uidgid
+.SS SKIP=\(dqyesno\(dq
 .P
-This file contains instructions for creating groups and usernames.
-In many cases you will want a username and group with the same number
-and name, in which case the file can contain a set of variable assignments
-like this example:
+This hint can be specified if you want to skip the package when it
+would otherwise be built, rebuilt, updated or removed.
+If the hint isn't specified as SKIP=\(dqyes\(dq or SKIP=\(dqno\(dq, it will be interpreted
+as \(dqyes\(dq, and the string will be displayed when the build is skipped, so that
+you can put a helpful message into it, for example:
 .P
 .RS
 .EX
-UIDGIDNUMBER=216
-UIDGIDNAME=pulse
-UIDGIDCOMMENT=
-UIDGIDDIR=/var/lib/pulse
-UIDGIDSHELL=
-.EE
-.RE
-.P
-but if necessary for more complicated setup,
-the file can contain a small shell script, like this:
-.P
-.RS
-.EX
-if ! getent group etherpad | grep -q ^etherpad: 2>/dev/null ; then
-  groupadd -g 264 etherpad
-fi
-if ! getent passwd etherpad | grep -q ^etherpad: 2>/dev/null ; then
-  useradd -u 264 -g etherpad -c \(dqEtherpad lite\(dq -m etherpad
-fi
-.fi
+SKIP=\(dqPlease remove the Slackware nc package before you build netcat-openbsd\(dq
 .EE
 .RE
 .
 .
-.SS prgnam.md5ignore
+.SS ARCH=\(dqarch\(dq
 .P
-This file can be created if the source archive is known to change
-sometimes without the version number being changed, so that the source
-archive's md5sum will not be checked. Just create an empty file; its
-contents are not read.
+This hint temporarily overrides the value of ARCH given in the configuration
+file or environment.
+This hint is most useful for SlackBuilds that repackage binaries.
 .
 .
-.SS prgnam.makej1
+.SS INSTALL=\(dqyesno\(dq
 .P
-This file can be created if the build process fails when multiple 'make'
-jobs are used. The build process will then be executed with MAKEFLAGS='-j1'.
-Just create an empty file; its contents are not read.
+This hint temporarily overrides the value of INSTALL given in the configuration
+file or on the command line. Use this hint if you want a specific package to be 
+installed after it has been built (e.g. nvidia-driver). Note that if the control 
+argument --dry-run is specified, this hint will be ignored.
 .
 .
-.SS prgnam.skipme
+.SS NUMJOBS=\(dq-j1\(dq
 .P
-This file can be created if you want to skip the package when it would
-otherwise be added, rebuilt, tested or updated. If the file isn't empty,
-its contents will be displayed when the build is skipped, so you can put some
-helpful reminder text into it.
+This hint temporarily overrides the value of NUMJOBS given in the configuration 
+file or environment. Use this hint if the build process fails when multiple 
+'make' jobs are used, so that the build will be executed with MAKEFLAGS='-j1'.
 .
 .
-.SS prgnam.answers
+.SS ANSWERS=\(dqstring\(dq
 .P
-This file can be created if the build process wants to read answers
-to its questions during the build process, for example about licence agreements.
-The file is piped into the SlackBuild's standard input, so it should
-contain whatever will make the build process happy.
-.
-.
-.SS prgnam.version
-.P
-This file can be created to attempt an automatic patch of the version
-number in both the SlackBuild and info files. The file should contain
-just the new version number, for example
+This hint can be specified if the build process wants to read answers to its 
+questions during execution, for example concerning a licence agreement. 
+The string is piped into the SlackBuild's standard input, so it should contain 
+whatever will make the build process happy. Newlines can be specified as \\n, 
+for example
 .P
 .RS
 .EX
-2.8.2
+ANSWERS=\(dqok\\nyes\(dq
 .EE
 .RE
-.P
-The automatic patch is done by a simple text substitution. It often won't
-work (particularly if the old version number is something like '1', or if
-the download URL cannot be guessed correctly) but sometimes it's worth a try.
-The md5sum of the source archive will not be checked. The patched SlackBuild
-and info files are not kept.
 .
 .
-.SS prgnam.cleanup
-.P
-This file can be created if the package needs extra cleanup when it
-is uninstalled, for example packages that replace standard Slackware packages,
-or install kernel modules. The file should contain appropriate shell
-commands. For example, to reinstall Slackware packages:
+.SS CLEANUP=\(dqcommands\(dq
+.P 
+This hint can be specified if the package needs extra cleanup when it is uninstalled
+(e.g. packages that replace standard Slackware packages or install kernel modules).
+The hint should define an appropriate shell command pipeline. For example, to
+reinstall Slackware packages:
 .P
 .RS
 .EX
-echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex-doc
+CLEANUP=\(dqecho y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex-doc\(dq
 .EE
 .RE
 .P
@@ -210,32 +233,19 @@ or to clean up after a kernel module is uninstalled:
 .P
 .RS
 .EX
-depmod -a
+CLEANUP=\(dqdepmod -a\(dq
 .EE
 .RE
 .
 .
-.SS prgnam.no_uninstall
+.SS SPECIAL=\(dqactions\(dq
+This hint can be specified to perform a special action. Only one special action
+is currently available:
 .P
-After slackrepo builds or tests a package, it uninstalls the package and
-all its dependencies, and it aggressively removes files from
-.I /etc
-that
-Slackware's own tools would normally leave in place. This will cause
-serious damage if you attempt to rebuild a package that is already
-installed and in active use (for example, if you use
-.B slackrepo
-to rebuild
-.BR slackrepo ,
-or if you rebuild
-.B nvidia-driver
-on a system that uses
-.BR nvidia-driver ).
-You can avoid this by creating a
-.IB prgnam .no_uninstall
-file, and then the package will not be uninstalled. Just create an
-empty file; its contents are not read.
-.
+.B multilib_ldflags
+.P
+On a multilib host, attempt to patch the SlackBuild to specify LDFLAGS,
+as described in SlackBuilds.org FAQ 18. This is not guaranteed to work!
 .
 .
 .SH SEE ALSO

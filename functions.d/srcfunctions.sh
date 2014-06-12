@@ -123,9 +123,9 @@ function download_src
     done
     echo "$VERSION" > "$DOWNDIR"/.version
     # curl content-disposition can't undo %-encoding.
-    # %20 -> space seems to be the most common problem:
-    for spacetrouble in $(ls *%20* 2>/dev/null); do
-      mv "$spacetrouble" "$(echo "$spacetrouble" | sed 's/\%20/ /g')"
+    # If it's too hard for curl, we'll just zap the obvious ones:
+    for urltrouble in $(ls *%* 2>/dev/null); do
+      mv "$urltrouble" "$(echo "$urltrouble" | sed -e 's/\%20/ /g' -e 's/\%7E/~/g' )"
     done
   )
   return 0

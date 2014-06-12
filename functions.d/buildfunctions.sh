@@ -324,7 +324,7 @@ function build_failed
   else
     errorscan_itemlog >> "$MAINLOG"
   fi
-  log_error -n "See $ITEMLOG"
+  log_error -n "  see $ITEMLOG"
   FAILEDLIST+=( "$itemid" )
 
   if [ "${HINT_INSTALL[$itemid]}" = 'n' ] || [ "$OPT_INSTALL" != 'y' -a "${HINT_INSTALL[$itemid]}" != 'y' ]; then

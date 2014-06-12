@@ -133,7 +133,7 @@ VERBOSE='n'
 VERY_VERBOSE='n'
 TEST='n'
 DRY_RUN='n'
-INSTALL='y'
+INSTALL='n'
 KEEP_TMP='n'
 
 #-------------------------------------------------------------------------------

@@ -117,7 +117,7 @@ function download_src
         curlstat=$?
       fi
       if [ $curlstat != 0 ]; then
-        log_error -a "Download failed: $(print_curl_status $curlstat). $url"
+        log_error -a "Download failed: $(print_curl_status $curlstat).\n  $url"
         return 1
       fi
     done

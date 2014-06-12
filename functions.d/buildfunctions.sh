@@ -135,13 +135,13 @@ function build_item
     case "$special" in
     'multilib_ldflags' )
       if [ "$SYS_MULTILIB" = 'y' ]; then
-        log_verbose "Attempting multilib LDFLAGS patch"
+        log_verbose "Special action: attempting multilib LDFLAGS patch"
         sed -i -e 's;^\./configure ;LDFLAGS="-L/usr/lib64" &;' "$MYTMPIN/$itemfile"
       fi
       ;;
     'stubs-32' )
       if [ "$SYS_ARCH" = 'x86_64' -a "$SYS_MULTILIB" = 'n' -a ! -e /usr/include/gnu/stubs-32.h ]; then
-        log_verbose "Symlinking /usr/include/gnu/stubs-32.h"
+        log_verbose "Special action: symlinking /usr/include/gnu/stubs-32.h"
         ln -s /usr/include/gnu/stubs-64.h /usr/include/gnu/stubs-32.h
         if [ -z "${HINT_CLEANUP[$itemid]}" ]; then
           HINT_CLEANUP[$itemid]="rm /usr/include/gnu/stubs-32.h"
@@ -149,6 +149,18 @@ function build_item
           HINT_CLEANUP[$itemid]="${HINT_CLEANUP[$itemid]}; rm /usr/include/gnu/stubs-32.h"
         fi
       fi
+      ;;
+    'download_basename' )
+      log_verbose "Special action: symlinking download URL basename"
+      # We're going to guess that the timestamps in the source repo indicate the
+      # order in which files were downloaded and therefore the order in INFODOWNLIST.
+      # 100% of current bozo downloaders only download one file anyway :-)
+      tempdownlist=( ${INFODOWNLIST[$itemid]} )
+      count=0
+      for sourcefile in $(ls -rt "$SR_SRCREPO"/"$itemdir" 2>/dev/null); do
+        ( cd "$MYTMPIN"; ln -s $(basename "$sourcefile") $(basename "${tempdownlist[$count]}") )
+        count=$(( $count + 1 ))
+      done
       ;;
     * )
       log_warning "Hint SPECIAL=\"$special\" not recognised"

@@ -83,11 +83,11 @@ function log_verbose
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
   if [ "$OPT_VERBOSE" = 'y' ]; then
-    echo "$@"
+    echo -e "$@"
   fi
-  echo "$@" >> "$MAINLOG"
+  echo -e "$@" >> "$MAINLOG"
   [ "$A" = 'y' ] && \
-  echo "$@" >> "$ITEMLOG"
+  echo -e "$@" >> "$ITEMLOG"
   return 0
 }
 
@@ -102,11 +102,11 @@ function log_normal
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
   if [ "$OPT_QUIET" != 'y' ]; then
-    echo "$@"
+    echo -e "$@"
   fi
-  echo "$@" >> "$MAINLOG"
+  echo -e "$@" >> "$MAINLOG"
   [ "$A" = 'y' ] && \
-  echo "$@" >> "$ITEMLOG"
+  echo -e "$@" >> "$ITEMLOG"
   return 0
 }
 
@@ -120,10 +120,10 @@ function log_always
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  echo "$@"
-  echo "$@" >> "$MAINLOG"
+  echo -e "$@"
+  echo -e "$@" >> "$MAINLOG"
   [ "$A" = 'y' ] && \
-  echo "$@" >> "$ITEMLOG"
+  echo -e "$@" >> "$ITEMLOG"
   return 0
 }
 
@@ -138,11 +138,11 @@ function log_important
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
   tput bold; tput setaf 7
-  echo "$@"
+  echo -e "$@"
   tput sgr0
-  echo "$@" >> "$MAINLOG"
+  echo -e "$@" >> "$MAINLOG"
   [ "$A" = 'y' ] && \
-  echo "$@" >> "$ITEMLOG"
+  echo -e "$@" >> "$ITEMLOG"
   return 0
 }
 
@@ -157,11 +157,11 @@ function log_success
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
   tput bold; tput setaf 2
-  echo "$@"
+  echo -e "$@"
   tput sgr0
-  echo "$@" >> "$MAINLOG"
+  echo -e "$@" >> "$MAINLOG"
   [ "$A" = 'y' ] && \
-  echo "$@" >> "$ITEMLOG"
+  echo -e "$@" >> "$ITEMLOG"
   return 0
 }
 
@@ -184,11 +184,11 @@ function log_warning
     esac
   done
   tput bold; tput setaf 3
-  echo "${W}$@"
+  echo -e "${W}$@"
   tput sgr0
-  echo "${W}$@" >> "$MAINLOG"
+  echo -e "${W}$@" >> "$MAINLOG"
   [ "$A" = 'y' ] && \
-  echo "${W}$@" >> "$ITEMLOG"
+  echo -e "${W}$@" >> "$ITEMLOG"
   return 0
 }
 
@@ -211,13 +211,13 @@ function log_error
     esac
   done
   tput bold; tput setaf 1
-  echo "${E}$@"
+  echo -e "${E}$@"
   tput sgr0
   # In case we are called before MAINLOG is set:
   [ -z "$MAINLOG" ] && return 0
-  echo "${E}$@" >> "$MAINLOG"
+  echo -e "${E}$@" >> "$MAINLOG"
   [ "$A" = 'y' ] && \
-  echo "${E}$@" >> "$ITEMLOG"
+  echo -e "${E}$@" >> "$ITEMLOG"
   return 0
 }
 

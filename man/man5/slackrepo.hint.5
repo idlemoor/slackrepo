@@ -25,8 +25,8 @@ A \(dqhintfile\(dq is a file that supplements a SlackBuild's .info file, for
 example to specify options and additional dependencies, to override the version,
 downloads and md5sums, etc.
 .P
-Each repository has its own directory for hintfiles, as configured in
-the repository configuration file (see
+Each repository ID should have its own hint directory, as configured in the
+configuration file (see
 .BR slackrepo.conf (5)).
 By default this will be
 .IR /etc/slackrepo/ID/hintfiles .
@@ -35,22 +35,22 @@ The hintfiles directory should contain a structure of subdirectories that is the
 same as the subdirectories in the SlackBuilds repository.
 For example, if the SBo repository's SlackBuild file for wxPython is
 .IR libraries/wxPython/wxPython.SlackBuild ,
-then its options hint file will be
-.IR /etc/slackrepo/hints_SBo/libraries/wxPython/wxPython.options .
+then its hintfile will be
+.IR /etc/slackrepo/hints_SBo/libraries/wxPython/wxPython.hint .
 .P
 Alternatively, hintfiles can be placed in the top level hintfiles directory.
 .P
-A sample set of hints for SlackBuilds.org are supplied in the directory
+A sample set of hintfiles for SlackBuilds.org are supplied in the directory
 .IR /etc/slackrepo/SBo/hintfiles ,
-but the sample hints are ignored until you rename them without the
+but the sample hintfiles are ignored until you rename them without the
 .I .sample
-suffix. You are encouraged to review and modify the sample hints and to create
-more hints. In particular, you should always read the README files of the
-packages you are building for your own requirements.
+suffix. You are encouraged to review and modify the sample hintfiles and to create
+more hintfiles. In particular, you should always read the README files of the
+packages you are building and then edit the hintfile for your own requirements.
 .P
 The format of a hintfile is based on the format of SlackBuilds.org .info files,
-but all the hints are optional, and any unrecognised entries are ignored.
-The hints that can be defined are as follows:
+but all the entries are optional, and any unrecognised entries are ignored.
+The entries that can be defined are as follows:
 .P
 .RS
 .EX
@@ -239,13 +239,18 @@ CLEANUP=\(dqdepmod -a\(dq
 .
 .
 .SS SPECIAL=\(dqactions\(dq
-This hint can be specified to perform a special action. Only one special action
-is currently available:
+This hint can be specified to perform a special action.
+The following special actions are available:
 .P
 .B multilib_ldflags
 .P
 On a multilib host, attempt to patch the SlackBuild to specify LDFLAGS,
 as described in SlackBuilds.org FAQ 18. This is not guaranteed to work!
+.P
+.B download_basename
+.P
+Provide a symlink for source downloads using the URL's basename,
+for the benefit of SlackBuilds that don't expect content-disposition to be respected. 
 .
 .
 .SH SEE ALSO

@@ -482,11 +482,13 @@ function parse_info_and_hints
     fi
     if [ -z "${INFODOWNLIST[$itemid]}" ]; then
       # Another sneaky slackbuild snarf ;-)
-      # The url might contain $PRGNAM and $VERSION, or even SRCNAM :-(
+      # Lots of SlackBuilds use 'wget -c' to download the source.
+      # But the url(s) might contain $PRGNAM and $VERSION, or even $SRCNAM,
+      # and might be on continuation lines.
       local PRGNAM SRCNAM
       eval $(grep 'PRGNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")
       eval $(grep 'SRCNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")
-      eval INFODOWNLIST[$itemid]="$(grep 'wget -c ' "$SR_SBREPO"/"$itemdir"/"$itemfile" | sed 's/^.* //')"
+      eval INFODOWNLIST[$itemid]="$(sed ':x; /\\$/ { N; s/\\\n//; tx }' <"$SR_SBREPO"/"$itemdir"/"$itemfile" | grep 'wget -c ' | sed 's/wget -c //')"
       HINT_MD5IGNORE[$itemid]='y'
     fi
     unset DOWNLOAD MD5SUM PRGNAM SRCNAM VERSION

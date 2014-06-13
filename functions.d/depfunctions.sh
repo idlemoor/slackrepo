@@ -42,6 +42,8 @@ function calculate_deps
   for dep in ${INFOREQUIRES[$itemid]}; do
     if [ $dep = '%README%' ]; then
       log_warning "${itemid}: Unhandled %README% in $itemprgnam.info"
+    elif [ $dep = "$itemprgnam" ]; then
+      log_warning "${itemid}: Ignoring dependency of $itemprgnam on itself"
     else
       find_slackbuild "$dep"
       fstat=$?

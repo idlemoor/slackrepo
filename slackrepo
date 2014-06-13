@@ -382,7 +382,7 @@ if [ -d "$SR_SBREPO"/.git ]; then
 fi
 
 # Warn about already installed packages (using package tag)
-if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' ]; then
+if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' -a "$PROCMODE" != 'remove' ]; then
   installed=$(ls /var/log/packages/*"$SR_TAG" 2>/dev/null)
   if [ -n "$installed" ]; then
     for pkg in $installed; do
@@ -456,7 +456,6 @@ log_always "Logfile:    $MAINLOG"
 secs=$(( $(date +%s) - $starttime ))
 h=$(( $secs / 3600 )); m=$(( ( $secs / 60) % 60 )); s=$(( $secs % 60 ))
 log_normal "Runtime:    ${h}h ${m}m ${s}s"
-log_always "Processed:  ${#ITEMPRGNAM[@]}"
 
 if [ "$OPT_DRY_RUN" = 'y' ]; then
   OKLIST=( $(printf '%s\n' "${OKLIST[@]}" | sort -u) )

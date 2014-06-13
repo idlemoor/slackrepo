@@ -175,12 +175,33 @@ has subdirectories.  For example, the log file for the SBo item 'graphics/shotwe
 
 <h3><a name="screenshots"></a>Screenshots</h3>
 
+<p>Building the package 'academic/engauge' from SlackBuilds.org is as simple as
+typing <code>slackrepo build engauge</code>. Note that detailed build output is only
+shown when --very-verbose (-vv) is specified. Built packages are only installed if
+--install is specified (not recommended). When it has finished, slackrepo
+shows a summary of what was done.</p>
+<img src="screenbuild.png" alt="screenshot of 'slackrepo build engauge'" title="slackrepo build engauge">
+
+<p>Dependencies are automatically built. In this case, scons is already up-to-date in the package repo, but gpsd needs to be added.</p>
+<img src="screendeps.png" alt="screenshot of a build with dependencies: 'slackrepo build viking'" title="slackrepo build viking">
+
 <p>When a build fails, slackrepo attempts to show errors from the item-specific log file,
 using an awesome regular expression devised by Eric Hameleers for his
 <a href="http://www.slackware.com/~alien/tools/checkpkg" class="ext">checkpkg</a>
-script. The selected errors are not always complete or relevant,
-but the item-specific log file will always contain full details.</p>
-<img src="screenfail.png" alt="build fails" title="build fails">
+script. As shown below, the selected errors are not always complete or relevant,
+but will usually help to locate the problem.  The item-specific log file will always
+contain full details.</p>
+<img src="screenfail.png" alt="screenshot of a build failure: 'slackrepo build facile'" title="slackrepo build facile">
+
+<p>When any of your packages in your package repository has been updated in the
+upstream SlackBuild repository, <code>slackrepo update</code>
+will apply the updates.  This is what happened when the build failure shown
+above was fixed:</p>
+<img src="screenupdate.png" alt="screenshot of an update: 'slackrepo update -v facile'" title="slackrepo update -v facile">
+
+<p>A package will automatically be rebuilt if any of its dependencies have been
+updated:</p>
+<img src="screenrebuild.png" alt="screenshot of updated dependency and rebuild: 'slackrepo update -v THE'" title="slackrepo update -v THE">
 
 </div>
 

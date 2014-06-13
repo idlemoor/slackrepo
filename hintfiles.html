@@ -43,7 +43,7 @@ A hintfile is a file that supplements a SlackBuild's
 .info file, for example to specify options and additional dependencies,
 to override the version, downloads and md5sums, etc.</p>
 
-<p>Each repository has its own directory for hintfiles.  The hint directory contains a structure of
+<p>Each repository has its own directory for hintfiles.  The hintfiles directory contains a structure of
 subdirectories that is the same as the subdirectories in the SlackBuilds repository.
 For example, if the SBo repository's SlackBuild file for wxPython is
 <code>libraries/wxPython/wxPython.SlackBuild</code>, then its hintfile will be
@@ -58,8 +58,8 @@ building, and then edit the sample hintfiles for your own choices, and then save
 .sample suffix.</p>
 
 <p>The format of a hintfile is based on the format of SlackBuilds.org .info files,
-but all the hints are <strong>optional</strong>, and any unrecognised entries are
-<strong>ignored</strong>. The hints that can be defined are as follows:</p>
+but all the entries are <strong>optional</strong>, and any unrecognised entries are
+<strong>ignored</strong>. The entries that can be defined are as follows:</p>
 
 <pre>
 VERSION="newversion"
@@ -144,8 +144,8 @@ you can put a helpful message into it, for example:</p>
 
 <h4>ARCH="arch"</h4>
 <p>This hint temporarily overrides the value of ARCH given in the
-configuration file or environment.  Use this hint if ... <i>(check multilib
-situation)</i>.</p>
+configuration file or environment.  This hint is most useful for
+SlackBuilds that repackage binaries.</p>
 
 <h4>INSTALL="yesno"</h4>
 <p>This hint temporarily overrides the value of INSTALL given in the
@@ -180,13 +180,14 @@ CLEANUP="depmod -a"
 </pre>
 
 <h4>SPECIAL="actions"</h4>
-<p>This hint can be specified to perform a special action.  Only one
-special action is currently available:</p>
+<p>This hint can be specified to perform a special action.
+The following special actions are available:</p>
 <p><b>multilib_ldflags</b> &mdash; on a <a href="http://docs.slackware.com/slackware:multilib" class="ext">multilib</a> host, attempt to patch the SlackBuild
 to specify LDFLAGS, as described in
 <a href="http://slackbuilds.org/faq/#multilib" class="ext">SlackBuilds.org FAQ 18</a>.
 This is not guaranteed to work!</p>
-
+<p><b>download_basename</b> &mdash; provide a symlink for source downloads using the URL's basename,
+for the benefit of SlackBuilds that don't expect content-disposition to be respected.</p>
 </div>
 
 </body>

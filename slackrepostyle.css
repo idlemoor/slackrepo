@@ -40,6 +40,7 @@ nav li a:hover { background-color: #ffffff; }
 #man p      { font-family: 'Source Sans Pro',sans-serif; margin-bottom: 10px; }
 #man ul     { margin: 0; }
 #man li     { margin-bottom: 10px; }
+#man pre    { font-family: 'Droid Sans Mono',monospace; font-size: 12px; padding: 0; border: 0; }
 
 a.ext       { background: url("exticon.png") no-repeat right center; padding-right: 12px; }
 pre.lic     { font-family: 'Source Sans Pro',sans-serif; font-size: 12px; font-weight: normal; padding: 0; border: 0; }

@@ -1,1 +1,2 @@
 ADDREQUIRES="cinnamon-desktop clutter gnome-common zenity"
+SPECIAL="download_basename"

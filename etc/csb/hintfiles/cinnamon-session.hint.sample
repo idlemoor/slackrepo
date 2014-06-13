@@ -1,1 +1,2 @@
 ADDREQUIRES="cinnamon-desktop gnome-common json-glib"
+SPECIAL="download_basename"

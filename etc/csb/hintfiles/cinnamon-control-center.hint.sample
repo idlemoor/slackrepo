@@ -1,1 +1,2 @@
 ADDREQUIRES="cinnamon-settings-daemon colord gnome-common gnome-menus krb5 libgnomekbd pulseaudio"
+SPECIAL="download_basename"

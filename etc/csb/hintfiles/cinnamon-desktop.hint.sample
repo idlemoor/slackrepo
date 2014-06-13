@@ -1,1 +1,2 @@
 ADDREQUIRES="gnome-common"
+SPECIAL="download_basename"

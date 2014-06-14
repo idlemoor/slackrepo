@@ -65,9 +65,16 @@ cp -a \
   $PKG/usr/libexec/$PRGNAM
 
 mkdir -p $PKG/etc/$PRGNAM
+for conffile in etc/slackrepo_*.conf; do
+  cp -a $conffile $PKG/etc/$PRGNAM/$(basename $conffile).new
+  repo=$(basename $conffile .conf | sed 's/slackrepo_//')
+  mkdir -p $PKG/etc/$PRGNAM/$repo/{hintfiles,queuefiles}
+done
+
+mkdir -p $PKG/usr/share/$PRGNAM
 cp -a \
-  etc/* \
-  $PKG/etc/$PRGNAM
+  share/* \
+  $PKG/usr/share/$PRGNAM
 
 mkdir -p $PKG/var/log/$PRGNAM
 mkdir -p $PKG/var/lib/$PRGNAM

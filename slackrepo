@@ -286,7 +286,7 @@ fi
 [ "$OPT_TRACE" = 'y'    ] && log_verbose "  --trace"
 for name in $varnames; do
   srvar="SR_$name"
-  log_verbose "  $name='${!srvar}'"
+  log_verbose "  $name=\"${!srvar}\""
 done
 [ "$OPT_VERBOSE" = 'y' ] && echo ""
 

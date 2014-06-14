@@ -118,12 +118,27 @@ function build_item
     fi
   fi
 
+  # Setup MYTMPOUT
+  MYTMPOUT="$MYTMPDIR/packages_$itemprgnam"
+  # initial wipe of $MYTMPOUT, even if $OPT_KEEP_TMP is set
+  rm -rf "$MYTMPOUT"
+  mkdir -p "$MYTMPOUT"
+
+  export \
+    ARCH="$SR_ARCH" \
+    BUILD="$SR_BUILD" \
+    TAG="$SR_TAG" \
+    TMP="$SR_TMP" \
+    OUTPUT="$MYTMPOUT" \
+    PKGTYPE="$SR_PKGTYPE" \
+    NUMJOBS="$SR_NUMJOBS"
+
   # Process other hints for the build:
   # GROUPADD and USERADD ...
   do_groupadd_useradd "$itemid"
   # ... NUMJOBS (with MAKEFLAGS and NUMJOBS env vars) ...
+  NUMJOBS=" ${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS} "
   tempmakeflags="MAKEFLAGS='${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS}'"
-  tempnumjobs=" ${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS} "
   # ... OPTIONS ...
   options="${HINT_OPTIONS[$itemid]}"
   SLACKBUILDCMD="sh ./$itemfile"
@@ -135,13 +150,13 @@ function build_item
     case "$special" in
     'multilib_ldflags' )
       if [ "$SYS_MULTILIB" = 'y' ]; then
-        log_verbose "Special action: attempting multilib LDFLAGS patch"
+        log_verbose "Special action: multilib_ldflags"
         sed -i -e 's;^\./configure ;LDFLAGS="-L/usr/lib64" &;' "$MYTMPIN/$itemfile"
       fi
       ;;
     'stubs-32' )
       if [ "$SYS_ARCH" = 'x86_64' -a "$SYS_MULTILIB" = 'n' -a ! -e /usr/include/gnu/stubs-32.h ]; then
-        log_verbose "Special action: symlinking /usr/include/gnu/stubs-32.h"
+        log_verbose "Special action: stubs-32"
         ln -s /usr/include/gnu/stubs-64.h /usr/include/gnu/stubs-32.h
         if [ -z "${HINT_CLEANUP[$itemid]}" ]; then
           HINT_CLEANUP[$itemid]="rm /usr/include/gnu/stubs-32.h"
@@ -151,7 +166,7 @@ function build_item
       fi
       ;;
     'download_basename' )
-      log_verbose "Special action: symlinking download URL basename"
+      log_verbose "Special action: download_basename"
       # We're going to guess that the timestamps in the source repo indicate the
       # order in which files were downloaded and therefore the order in INFODOWNLIST.
       # most of the current bozo downloaders only download one file anyway :-)
@@ -163,6 +178,11 @@ function build_item
         count=$(( $count + 1 ))
       done
       ;;
+    'noexport_BUILD' )
+      log_verbose "Special action: noexport_BUILD"
+      sed -i -e "s/^BUILD=.*/BUILD='$BUILD'/" "$MYTMPIN"/"$itemfile"
+      unset BUILD
+      ;;
     * )
       log_warning "Hint SPECIAL=\"$special\" not recognised"
       ;;
@@ -170,18 +190,6 @@ function build_item
   done
 
   # Build it
-  MYTMPOUT="$MYTMPDIR/packages_$itemprgnam"
-  # initial wipe of $MYTMPOUT, even if $OPT_KEEP_TMP is set
-  rm -rf "$MYTMPOUT"
-  mkdir -p "$MYTMPOUT"
-  export \
-    ARCH="$SR_ARCH" \
-    BUILD="$SR_BUILD" \
-    TAG="$SR_TAG" \
-    TMP="$SR_TMP" \
-    OUTPUT="$MYTMPOUT" \
-    PKGTYPE="$SR_PKGTYPE" \
-    NUMJOBS="$tempnumjobs"
   log_normal -a "Running $itemfile ..."
   log_verbose -a "$SLACKBUILDCMD"
   if [ "$OPT_VERY_VERBOSE" = 'y' ]; then

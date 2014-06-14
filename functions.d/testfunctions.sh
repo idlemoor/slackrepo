@@ -86,6 +86,8 @@ function test_slackbuild
       log_warning -a "${itemid}: DOWNLOAD not set in $itemprgnam.info"
     [ -v MD5SUM ] || \
       log_warning -a "${itemid}: MD5SUM not set in $itemprgnam.info"
+    #### check it's valid hex md5sum, same number of sums as downloads
+    #### check DOWNLOAD_arch & MD5SUM_arch
     [ -v REQUIRES ] || \
       log_warning -a "${itemid}: REQUIRES not set in $itemprgnam.info"
     [ -v MAINTAINER ] || \
@@ -136,14 +138,14 @@ function test_download
         # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
         # https://code.google.com/p/support/issues/detail?id=660
         # "Don't be evil, but totally lame is fine"
-        curl -q -f -s -k --connect-timeout 60 --retry 5 -J -L -A SlackZilla -o /dev/null "$url" >> "$ITEMLOG" 2>&1
+        curl -q -f -s -k --connect-timeout 30 --retry 4 -J -L -A SlackZilla -o /dev/null "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
           log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat). $url"
         fi
         ;;
       *)
-        curl -q -f -s -k --connect-timeout 60 --retry 5 -J -L -A SlackZilla -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
+        curl -q -f -s -k --connect-timeout 30 --retry 4 -J -L -A SlackZilla -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
           log_warning -a "${itemid}: Header test failed: $(print_curl_status $curlstat). $url"

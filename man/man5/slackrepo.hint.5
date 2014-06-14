@@ -40,13 +40,15 @@ then its hintfile will be
 .P
 Alternatively, hintfiles can be placed in the top level hintfiles directory.
 .P
-A sample set of hintfiles for SlackBuilds.org are supplied in the directory
+A set of example hintfiles for SlackBuilds.org are supplied in the directory
+.IR /usr/share/slackrepo/SBo/hintfiles .
+.B The example hintfiles are ignored.
+You must copy the example hintfiles to
 .IR /etc/slackrepo/SBo/hintfiles ,
-but the sample hintfiles are ignored until you rename them without the
-.I .sample
-suffix. You are encouraged to review and modify the sample hintfiles and to create
-more hintfiles. In particular, you should always read the README files of the
-packages you are building and then edit the hintfile for your own requirements.
+then review the README files of the packages you are
+building, and then edit the hintfiles in 
+.I /etc/slackrepo/SBo/hintfiles
+for your own choices.
 .P
 The format of a hintfile is based on the format of SlackBuilds.org .info files,
 but all the entries are optional, and any unrecognised entries are ignored.

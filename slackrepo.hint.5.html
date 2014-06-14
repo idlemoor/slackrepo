@@ -113,14 +113,16 @@ For example, if the SBo repository's SlackBuild file for wxPython is
 <!-- .IR /etc/slackrepo/SBo/hintfiles/libraries/wxPython.hint . -->
 <i>/etc/slackrepo/SBo/hintfiles/libraries/wxPython/wxPython.hint</i>. <!-- .P -->
 </p><p>
-A sample set of hintfiles for SlackBuilds.org are supplied in the directory
-<!-- .IR /etc/slackrepo/SBo/hintfiles , -->
-<i>/etc/slackrepo/SBo/hintfiles</i>, but the sample hintfiles are ignored until you rename them without the
-<!-- .I .sample -->
-<i>.sample</i> suffix. You are encouraged to review and modify the sample hintfiles
-and to create
-more hintfiles. In particular, you should always read the README files of the
-packages you are building and then edit the hintfile for your own requirements.
+A set of example hintfiles for SlackBuilds.org are supplied in the directory
+<!-- .IR /usr/share/slackrepo/SBo/hintfiles , -->
+<i>/usr/share/slackrepo/SBo/hintfiles</i>.
+<strong>The example hintfiles are ignored.</strong>
+You must copy the example hintfiles to
+<i>/etc/slackrepo/SBo/hintfiles</i>,
+then review the README files of the packages you are
+building, and then edit the hintfiles in 
+<i>/etc/slackrepo/SBo/hintfiles</i>
+for your own choices.
 </p><p>
 The format of a hintfile is based on the format of SlackBuilds.org .info files,
 but all the entries are optional, and any unrecognised entries are ignored.

@@ -51,11 +51,12 @@ For example, if the SBo repository's SlackBuild file for wxPython is
 can just put them in <code>/etc/slackrepo/SBo/hintfiles/</code>.</p>
 
 <p class="scary">
-A sample set of hintfiles for SlackBuilds.org are supplied in the directory
-<code>/etc/slackrepo/SBo/hintfiles</code>.
-The sample hintfiles are always ignored. You must review the README files of the packages you are
-building, and then edit the sample hintfiles for your own choices, and then save them (or rename them) without the
-.sample suffix.</p>
+A set of example hintfiles for SlackBuilds.org are supplied in the directory
+<code>/usr/share/slackrepo/SBo/hintfiles</code>.
+<strong>The example hintfiles are ignored.</strong> You must copy the example hintfiles to
+<code>/etc/slackrepo/SBo/hintfiles</code>, then review the README files of the packages you are
+building, and then edit the hintfiles in <code>/etc/slackrepo/SBo/hintfiles</code> for your
+own choices.</p>
 
 <p>The format of a hintfile is based on the format of SlackBuilds.org .info files,
 but all the entries are <strong>optional</strong>, and any unrecognised entries are

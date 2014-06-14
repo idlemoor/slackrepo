@@ -63,8 +63,8 @@ function log_itemstart
     echo "$@ ${line:0:$pad}"
   fi
   tput sgr0
-  echo "$line"                 >> "$MAINLOG"
-  echo "$@ $(date '+%F %T')"   >> "$MAINLOG"
+  echo "${line:0:57} $(date '+%F %T') -" >> "$MAINLOG"
+  echo "$@"                              >> "$MAINLOG"
   if [ -n "$itemid" ]; then
     mkdir -p "$SR_LOGDIR"/"$itemdir"
     ITEMLOG="$SR_LOGDIR"/"$itemdir"/"$itemprgnam".log

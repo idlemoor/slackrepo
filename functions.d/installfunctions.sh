@@ -128,6 +128,7 @@ function uninstall_packages
         etcdirs=$(grep '^etc/.*/$' /var/log/packages/"$R_INSTALLED")
         # Run removepkg
         log_verbose -a "Uninstalling $R_INSTALLED ..."
+        #### if very verbose, we should really splurge this
         /sbin/removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
         # Remove any surviving detritus
         for etcfile in $etcnewfiles; do

@@ -540,7 +540,7 @@ function parse_info_and_hints
     # Process hint file's SKIP first.
     if [ -n "$SKIP" ]; then
       if [ "$SKIP" != 'no' ]; then
-        log_warning -n ":-/ SKIPPED $itemid due to hint /-:"
+        log_warning -n ":-/ $itemid SKIPPED due to hint /-:"
         [ "$SKIP" != 'yes' ] && echo -e "$SKIP"
         SKIPPEDLIST+=( "$itemid" )
         if [ "$itemid" != "$ITEMID" ]; then

@@ -178,6 +178,10 @@ function build_item
         count=$(( $count + 1 ))
       done
       ;;
+    'noexport_ARCH' )
+      log_verbose "Special action: noexport_ARCH"
+      unset ARCH
+      ;;
     'noexport_BUILD' )
       log_verbose "Special action: noexport_BUILD"
       sed -i -e "s/^BUILD=.*/BUILD='$BUILD'/" "$MYTMPIN"/"$itemfile"

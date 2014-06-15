@@ -109,11 +109,11 @@ function download_src
     for url in $DOWNLIST; do
       if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
         set -o pipefail
-        curl -q -f '-#' -k --connect-timeout 30 --retry 4 -J -L -A SlackZilla -O $url 2>&1 | tee -a "$ITEMLOG"
+        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A SlackZilla -O $url 2>&1 | tee -a "$ITEMLOG"
         curlstat=$?
         set +o pipefail
       else
-        curl -q -f '-#' -k --connect-timeout 30 --retry 4 -J -L -A SlackZilla -O $url >> "$ITEMLOG" 2>&1
+        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A SlackZilla -O $url >> "$ITEMLOG" 2>&1
         curlstat=$?
       fi
       if [ $curlstat != 0 ]; then

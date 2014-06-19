@@ -138,14 +138,14 @@ function test_download
         # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
         # https://code.google.com/p/support/issues/detail?id=660
         # "Don't be evil, but totally lame is fine"
-        curl -q -f -s -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A SlackZilla -o /dev/null "$url" >> "$ITEMLOG" 2>&1
+        curl -q -f -s -k --connect-timeout 10 --retry 2 --ciphers ALL -J -L -A SlackZilla -o /dev/null "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
           log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat). $url"
         fi
         ;;
       *)
-        curl -q -f -s -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A SlackZilla -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
+        curl -q -f -s -k --connect-timeout 10 --retry 2 --ciphers ALL -J -L -A SlackZilla -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
           log_warning -a "${itemid}: Header test failed: $(print_curl_status $curlstat). $url"
@@ -154,11 +154,11 @@ function test_download
             cat "$TMP_HEADER" >> "$ITEMLOG"
           fi
         else
-          remotelength=$(grep 'Content-Length: ' "$TMP_HEADER" | tail -n 1 | fromdos | sed 's/^.* //')
+          remotelength=$(fromdos <"$TMP_HEADER" | grep 'Content-[Ll]ength: ' | tail -n 1 | sed 's/^.* //')
           # Proceed only if we seem to have extracted a valid content-length.
           if [ -n "$remotelength" ]; then
             # Filenames that have %nn encodings won't get checked.
-            filename=$(grep 'Content-Disposition: ' "$TMP_HEADER" | sed -e 's/^.*filename="//' -e 's/".*//')
+            filename=$(fromdos <"$TMP_HEADER" | grep 'Content-[Dd]isposition:.*filename=' | sed -e 's/^.*filename=//' -e 's/^"//' -e 's/"$//' -e 's/\%20/ /g' -e 's/\%7E/~/g')
             # If no Content-Disposition, we'll have to guess:
             [ -z "$filename" ] && filename="$(basename "$url")"
             if [ -f "${SRCDIR[$itemid]}"/"$filename" ]; then

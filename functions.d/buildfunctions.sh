@@ -180,6 +180,7 @@ function build_item
       ;;
     'noexport_ARCH' )
       log_verbose "Special action: noexport_ARCH"
+      sed -i -e "s/^PRGNAM=.*/&; ARCH='$SR_ARCH'/" "$MYTMPIN"/"$itemfile"
       unset ARCH
       ;;
     'noexport_BUILD' )

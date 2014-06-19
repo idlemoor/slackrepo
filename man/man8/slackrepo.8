@@ -109,8 +109,18 @@ This option conflicts with --quiet.
 Print
 .B all
 messages on the console during execution, including
-output from invoked SlackBuilds (e.g. compilation).
+output from running SlackBuilds (e.g. compilation).
 This option conflicts with --quiet.
+.
+.TP
+.B \-\-make-verbose
+Forces
+.B make
+to produce verbose compilation output when it is called by a SlackBuild.
+.
+.TP
+.B \-vvv
+Selects both --very-verbose and --make-verbose. This option conflicts with --quiet.
 .
 .TP
 .BR \-q ", " \-\-quiet
@@ -162,7 +172,7 @@ For details, see
 .P
 .B MAKEFLAGS
 .P
-The MAKEFLAGS variable is passed to each invoked SlackBuild.  Its value will
+The MAKEFLAGS variable is passed to each SlackBuild.  Its value will
 be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLAGS.
 .P
 .B TMPDIR
@@ -171,7 +181,7 @@ be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLA
 uses the directory specified by TMPDIR (default
 .IR /tmp )
 for its own temporary files.
-(However, each invoked SlackBuild uses the directory specified by TMP, not TMPDIR.)
+(However, SlackBuilds use the directory specified by TMP, not TMPDIR.)
 .
 .
 .

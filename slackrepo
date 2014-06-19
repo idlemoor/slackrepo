@@ -62,7 +62,7 @@ starttime=$(date +%s)
 # OPT_XXXX represents command line option XXXX
 # SR_XXXX represents config file variable XXXX
 
-optnames="REPO QUIET VERBOSE VERY_VERBOSE TEST DRY_RUN INSTALL KEEP_TMP TRACE"
+optnames="REPO QUIET VERBOSE VERY_VERBOSE MAKE_VERBOSE TEST DRY_RUN INSTALL KEEP_TMP TRACE"
 # Initialise them all to null, set -u friendly ;-)
 for opt in $optnames ; do
   eval OPT_$opt=''
@@ -103,6 +103,10 @@ while [ $# != 0 ]; do
       shift; continue ;;
     --very-verbose | -vv )
       OPT_VERY_VERBOSE='y'
+      shift; continue ;;
+    -vvv )
+      OPT_VERY_VERBOSE='y'
+      OPT_MAKE_VERBOSE='y'
       shift; continue ;;
     --* )
       found='n'
@@ -239,6 +243,8 @@ done
 [ "$OPT_VERBOSE" = 'y' ] && OPT_QUIET='n'
 # --dry-run overrides --install
 [ "$OPT_DRY_RUN" = 'y' ] && OPT_INSTALL='n'
+# lazy implementation of --make-verbose ;-)
+[ "$OPT_MAKE_VERBOSE" = 'y' ] && export VERBOSE=1 V=1
 
 # If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly
 if [ -z "$SR_NUMJOBS" ]; then
@@ -279,11 +285,12 @@ elif [ "$OPT_VERBOSE" = 'y' ]; then
 elif [ "$OPT_QUIET" = 'y' ]; then
   log_verbose "  --quiet"
 fi
-[ "$OPT_DRY_RUN" = 'y'  ] && log_verbose "  --dry-run"
-[ "$OPT_INSTALL" = 'y'  ] && log_verbose "  --install"
-[ "$OPT_TEST" = 'y'     ] && log_verbose "  --test"
-[ "$OPT_KEEP_TMP" = 'y' ] && log_verbose "  --keep-tmp"
-[ "$OPT_TRACE" = 'y'    ] && log_verbose "  --trace"
+[ "$OPT_MAKE_VERBOSE" = 'y' ] && log_verbose "  --make-verbose"
+[      "$OPT_DRY_RUN" = 'y' ] && log_verbose "  --dry-run"
+[      "$OPT_INSTALL" = 'y' ] && log_verbose "  --install"
+[         "$OPT_TEST" = 'y' ] && log_verbose "  --test"
+[     "$OPT_KEEP_TMP" = 'y' ] && log_verbose "  --keep-tmp"
+[        "$OPT_TRACE" = 'y' ] && log_verbose "  --trace"
 for name in $varnames; do
   srvar="SR_$name"
   log_verbose "  $name=\"${!srvar}\""
@@ -308,6 +315,7 @@ else
 fi
 # We also need a slackrepo-specific temporary directory
 MYTMPDIR=$(mktemp -t -d slackrepo.XXXXXX) || { exit_cleanup; exit 4; }
+#### Probably should make --keep-tmp force $TMP into $MYTMPDIR
 
 # Disposable package repository for dry run:
 if [ "$OPT_DRY_RUN" = 'y' ]; then

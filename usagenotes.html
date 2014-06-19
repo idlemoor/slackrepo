@@ -123,22 +123,23 @@ gpg-agent &mdash; see <a href="slackrepo.conf.5.html">slackrepo.conf(5)</a> for 
 
 <h3><a name="slackpkgplus"></a>slackpkg+</h3>
 
-<p>The repositories created by slackrepo are suitable for use with
+<p>The repositories created by slackrepo and gen_repos_files.sh are suitable for use with Matteo Rossini's
 <a href="http://slakfinder.org/slackpkg+.html" class="ext">slackpkg+</a>, which is a plugin for slackpkg
 that allows you to use slackpkg to manage packages from third party
 repositories.  Thanks, Matteo!</p>
 
-<p>To make your slackrepo package repositories accessible, you will need to
-export them as a shared directory (e.g. NFS or a Virtualbox shared folder),
-or perhaps serve them via a local webserver on the build host (e.g. by
+<p>To make your slackrepo package repository accessible outside the build host, you will need to
+export it as a shared directory (e.g. NFS or a Virtualbox shared folder),
+or perhaps serve it via a local webserver on the build host (e.g. by
 setting <code>PKGREPO=/var/www/htdocs/pkgrepo</code> in <code>/etc/slackrepo/slackrepo_SBo.conf</code>).</p>
 
 <p>For example, on a client system, to configure slackpkg+ to use a shared
-directory, <code>/etc/slackpkg/slackpkgplus.conf</code> would have something like this:</p>
+directory, you can define a slackpkgplus "local mirror" with <code>file://</code>
+<i>(do not use <code>dir://</code>)</i>, and so <code>/etc/slackpkg/slackpkgplus.conf</code> would have something like this:</p>
 
 <pre>
 REPOPLUS=( SBo slackpkgplus restricted alienbob )
-MIRRORPLUS['SBo']=dir://repositories/pkg_SBo/
+MIRRORPLUS['SBo']=file://sharedfolder/
 </pre>
 
 <p>Or to configure slackpkg+ to use a web-served repository on the build
@@ -146,7 +147,7 @@ host, you would have something like this:</p>
 
 <pre>
 REPOPLUS=( SBo slackpkgplus restricted alienbob )
-MIRRORPLUS['SBo']=http://buildhost/pkg_SBo/
+MIRRORPLUS['SBo']=http://buildhost/pkgrepo/
 </pre>
 
 <p>If you choose not to sign your packages with gen_repos_files.sh, you will

@@ -189,15 +189,17 @@ genrepnames="USE_GENREPOS REPOSROOT REPOSOWNER REPOSOWNERGPG DL_URL \
              RSS_TITLE RSS_ICON RSS_LINK RSS_CLURL RSS_DESCRIPTION RSS_FEEDMAX RSS_UUID \
              GPGBIN USE_GPGAGENT FOR_SLAPTGET FOLLOW_SYMLINKS REPO_SUBDIRS REPO_EXCLUDES"
 initnames="INIT_GITCLONE INIT_GITBRANCH"
+# Per-user config files:
+userconf="~/.slackreporc"
+genrepconf="~/.genreprc"
 
 # Initialise the SR_variables from the environment:
-for envvar in $varnames $initnames $optnames ; do
+for envvar in $varnames $genrepnames $initnames $optnames ; do
   srvar="SR_$envvar"
   eval $srvar="${!envvar}"
 done
 
 # Read the user config file to get $REPO:
-userconf="~/.slackreporc"
 if [ -f "$userconf" ]; then
   . "$userconf"
 fi
@@ -210,15 +212,17 @@ if [ -f "$repoconf" ]; then
 else
   echo "Error: repo configuration file not found: $repoconf"; exit_cleanup; exit 2
 fi
-# Read the user config file again to override everything in the main repo config file.
-# (Yes, we're reading it twice, but that's a lot easier than a proper solution)
-if [ -f "$userconf" ]; then
-  . "$userconf"
-fi
+# Read the user config files to override everything in the main repo config file.
+# (Yes, we're reading ~/.slackreporc twice, but that's a lot easier than a proper solution)
+for conf in "$userconf" "$genrepconf"; do
+  if [ -f "$conf" ]; then
+    . "$conf"
+  fi
+done
 
 # Backfill the SR_ variables from config file variables,
 # and unset the config file variables to prevent SlackBuilds from seeing them:
-for name in $varnames $initnames ; do
+for name in $varnames $genrepnames $initnames; do
   srvar="SR_$name"
   [ -z "${!srvar}" ] && eval $srvar=\"${!name}\"
   eval unset $name
@@ -260,12 +264,9 @@ if [ -z "$SR_ARCH" -o "$SR_ARCH" = '%ARCH%' ]; then
 fi
 
 # Substitute %REPO%, %SLACKVER% and %ARCH%
-for name in $varnames $initnames; do
+for name in $varnames $genrepnames $initnames; do
   srvar="SR_$name"
   eval $srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
-done
-for genrepvar in $genrepnames; do
-  eval $genrepvar=\"$(echo "${!genrepvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
 done
 
 # Do this now so we can log the config:
@@ -291,10 +292,20 @@ fi
 [         "$OPT_TEST" = 'y' ] && log_verbose "  --test"
 [     "$OPT_KEEP_TMP" = 'y' ] && log_verbose "  --keep-tmp"
 [        "$OPT_TRACE" = 'y' ] && log_verbose "  --trace"
+
 for name in $varnames; do
   srvar="SR_$name"
   log_verbose "  $name=\"${!srvar}\""
 done
+if [ "$SR_USE_GENREPOS" = 1 ]; then
+  for name in $genrepnames; do
+    srvar="SR_$name"
+    [ -n "${!srvar}" ] && log_verbose "  $name=\"${!srvar}\""
+  done
+else
+  log_verbose "  SR_USE_GENREPOS=\"$SR_USE_GENREPOS\""
+fi
+
 [ "$OPT_VERBOSE" = 'y' ] && echo ""
 
 #-------------------------------------------------------------------------------
@@ -506,24 +517,22 @@ log_always "Warnings:   $warningcount"
 
 genrepstat=0
 if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
-  rcfile=~/.genreprc
-  [ -f "$rcfile" ] && { set -e; . "$rcfile"; set +e; }
-  if [ "$USE_GENREPOS" = 1 ]; then
+  if [ "$SR_USE_GENREPOS" = 1 ]; then
     log_start "gen_repos_files.sh"
     # 'man sort' says an in-place sort is ok, so let's be lazy :-)
     sort -o "$CHANGELOG" "$CHANGELOG"
-    if [ "$RSS_UUID" = '' ]; then
+    if [ -z "$SR_RSS_UUID" ]; then
       setrssuuid="RSS_UUID=\"$(uuidgen -t)\""
       log_normal "Note: setting $setrssuuid in $rcfile"
       echo "$setrssuuid" >> "$rcfile"
-      eval $setrssuuid
+      eval SR_$setrssuuid
     fi
     set -o pipefail
-    REPOSROOT="$REPOSROOT" REPOSOWNER="$REPOSOWNER" REPOSOWNERGPG="$REPOSOWNERGPG" DL_URL="$DL_URL" \
-    RSS_TITLE="$RSS_TITLE" RSS_ICON="$RSS_ICON" RSS_LINK="$RSS_LINK" RSS_CLURL="$RSS_CLURL" \
-    RSS_DESCRIPTION="$RSS_DESCRIPTION" RSS_FEEDMAX="$RSS_FEEDMAX" RSS_UUID="$RSS_UUID" \
-    GPGBIN="$GPGBIN" USE_GPGAGENT="$USE_GPGAGENT" FOR_SLAPTGET="$FOR_SLAPTGET" \
-    FOLLOW_SYMLINKS="$FOLLOW_SYMLINKS" REPO_SUBDIRS="$REPO_SUBDIRS" \
+    REPOSROOT="$SR_REPOSROOT" REPOSOWNER="$SR_REPOSOWNER" REPOSOWNERGPG="$SR_REPOSOWNERGPG" DL_URL="$SR_DL_URL" \
+    RSS_TITLE="$SR_RSS_TITLE" RSS_ICON="$SR_RSS_ICON" RSS_LINK="$SR_RSS_LINK" RSS_CLURL="$SR_RSS_CLURL" \
+    RSS_DESCRIPTION="$SR_RSS_DESCRIPTION" RSS_FEEDMAX="$SR_RSS_FEEDMAX" RSS_UUID="$SR_RSS_UUID" \
+    GPGBIN="$SR_GPGBIN" USE_GPGAGENT="$SR_USE_GPGAGENT" FOR_SLAPTGET="$SR_FOR_SLAPTGET" \
+    FOLLOW_SYMLINKS="$SR_FOLLOW_SYMLINKS" REPO_SUBDIRS="$SR_REPO_SUBDIRS" \
     sh /usr/libexec/$(basename $0)/gen_repos_files.sh -l "$CHANGELOG" | tee -a "$MAINLOG"
     genrepstat=$?
     set +o pipefail

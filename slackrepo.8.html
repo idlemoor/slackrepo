@@ -226,7 +226,23 @@ This option conflicts with --quiet.
 <!-- .BR \-vv ", " \-\-very\-verbose -->
 <b>-vv</b>, <b>--very-verbose</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
 Print <strong>all</strong> messages on the console during execution, including
-output from invoked SlackBuilds (e.g. compilation).
+output from running SlackBuilds (e.g. compilation).
+This option conflicts with --quiet.
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td colspan="2">
+<!-- .B \-\-make\-verbose -->
+<b>--make-verbose</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
+Forces <b>make</b> to produce verbose compilation output when it is called by a
+SlackBuild.
+<!-- . -->
+<!-- .TP -->
+</td></tr>
+<tr valign="top"><td colspan="2">
+<!-- .BR \-vvv ", " \-\-very\-verbose -->
+<b>-vvv</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
+Selects both --very-verbose and --make-verbose.
 This option conflicts with --quiet.
 <!-- . -->
 <!-- .TP -->
@@ -309,7 +325,7 @@ variable in the file
 <!-- .B MAKEFLAGS -->
 <b>MAKEFLAGS</b> <!-- .P -->
 </p><p>
-The MAKEFLAGS variable is passed to each invoked SlackBuild.  Its value will
+The MAKEFLAGS variable is passed to each SlackBuild.  Its value will
 be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLAGS.
 <!-- .P -->
 </p><p>
@@ -320,7 +336,7 @@ be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLA
 <b>slackrepo</b> uses the directory specified by TMPDIR (default
 <!-- .IR /tmp ) -->
 <i>/tmp</i>) for its own temporary files.
-(However, each invoked SlackBuild uses the directory specified by TMP, not TMPDIR.)
+(However, SlackBuilds use the directory specified by TMP, not TMPDIR.)
 <!-- . -->
 <!-- . -->
 <!-- . -->

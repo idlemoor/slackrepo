@@ -1,1 +1,1 @@
-ADDREQUIRES="celt libffado opus"
+ADDREQUIRES="celt libffado"

@@ -521,7 +521,7 @@ function parse_info_and_hints
 
   if [ "${HINTFILE[$itemid]+yesitisset}" != 'yesitisset' ]; then
     hintfile=''
-    hintsearch=( "$SR_HINTDIR"/"$itemdir" "$SR_HINTDIR" "$SR_SBREPO"/"$itemdir" )
+    hintsearch=( "$SR_SBREPO"/"$itemdir" "$SR_HINTDIR" "$SR_HINTDIR"/"$itemdir" )
     for trydir in "${hintsearch[@]}"; do
       if [ -f "$trydir"/"$itemprgnam".hint ]; then
         hintfile="$trydir"/"$itemprgnam".hint

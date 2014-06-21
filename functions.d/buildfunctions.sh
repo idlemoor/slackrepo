@@ -470,13 +470,13 @@ EOF
     # this uncompressed size is approx, but hopefully good enough ;-)
     uncsize=$(awk '{t+=int($3/1024)+1} END {print t}' "$TMP_PKGCONTENTS")
     echo "PACKAGE NAME:  $pkgbase" > "$dotmeta"
-    if [ -n "$DL_URL" ]; then
-      echo "PACKAGE MIRROR:  $DL_URL" >> "$dotmeta"
+    if [ -n "$SR_DL_URL" ]; then
+      echo "PACKAGE MIRROR:  $SR_DL_URL" >> "$dotmeta"
     fi
     echo "PACKAGE LOCATION:  ./$itemdir" >> "$dotmeta"
     echo "PACKAGE SIZE (compressed):  ${pkgsize} K" >> "$dotmeta"
     echo "PACKAGE SIZE (uncompressed):  ${uncsize} K" >> "$dotmeta"
-    if [ $FOR_SLAPTGET -eq 1 ]; then
+    if [ "$SR_FOR_SLAPTGET" -eq 1 ]; then
       # Fish them out of the packaging directory. If they're not there, sod 'em.
       REQUIRED=$(cat "$TMP"/package-"$itemprgnam"/install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
       echo "PACKAGE REQUIRED:  $REQUIRED" >> "$dotmeta"

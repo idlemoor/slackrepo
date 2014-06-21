@@ -546,7 +546,7 @@ fi
 
 echo ""
 
-[ "$genrepstat" = 0 -a "$OPT_KEEP_TMP" != 'y' ] && rm -f "$CHANGELOG"
+[ "$genrepstat" = 0 ] && rm -f "$CHANGELOG"
 [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$DRYREPO"
 exit_cleanup
 

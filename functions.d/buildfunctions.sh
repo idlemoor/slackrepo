@@ -150,8 +150,11 @@ function build_item
     case "$special" in
     'multilib_ldflags' )
       if [ "$SYS_MULTILIB" = 'y' ]; then
+        # This includes the rare case when an i486 cross-compile on x86_64 needs -L/usr/lib
         log_verbose "Special action: multilib_ldflags"
-        sed -i -e 's;^\./configure ;LDFLAGS="-L/usr/lib64" &;' "$MYTMPIN/$itemfile"
+        libdirsuffix=''
+        [ "$SR_ARCH" = 'x86_64' ] && libdirsuffix='64'
+        sed -i -e "s;^\./configure ;LDFLAGS=\"-L/usr/lib$libdirsuffix\" &;" "$MYTMPIN/$itemfile"
       fi
       ;;
     'stubs-32' )
@@ -213,8 +216,13 @@ function build_item
     echo '----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<---'
     echo ''
   else
-    ( cd "$MYTMPIN"; eval $SLACKBUILDCMD ) >> "$ITEMLOG" 2>&1
-    buildstat=$?
+    if [ "$SYS_MULTILIB" = "y" -a "$ARCH" = 'i486' ]; then
+      ( cd "$MYTMPIN"; . /etc/profile.d/32dev.sh; eval $SLACKBUILDCMD ) >> "$ITEMLOG" 2>&1
+      buildstat=$?
+    else
+      ( cd "$MYTMPIN"; eval $SLACKBUILDCMD ) >> "$ITEMLOG" 2>&1
+      buildstat=$?
+    fi
   fi
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
 
@@ -428,7 +436,9 @@ function create_pkg_metadata
     if [ -z "${FULLDEPS[$itemid]}" ]; then
       rm -f "$dotdep"
     else
-      printf "%s\n" ${FULLDEPS[$itemid]} > "$dotdep"
+      for dep in ${FULLDEPS[$itemid]}; do
+        printf "%s\n" $(basename $dep) > "$dotdep"
+      done
     fi
 
     #-----------------------------#

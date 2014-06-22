@@ -181,14 +181,15 @@ CLEANUP="depmod -a"
 </pre>
 
 <h4>SPECIAL="actions"</h4>
-<p>This hint can be specified to perform a special action.
+<p>This hint can be specified to perform one or more special actions.  <strong>Special actions are not guaranteed to work!</strong>
 The following special actions are available:</p>
 <p><b>multilib_ldflags</b> &mdash; on a <a href="http://docs.slackware.com/slackware:multilib" class="ext">multilib</a> host, attempt to patch the SlackBuild
 to specify LDFLAGS, as described in
-<a href="http://slackbuilds.org/faq/#multilib" class="ext">SlackBuilds.org FAQ 18</a>.
-This is not guaranteed to work!</p>
+<a href="http://slackbuilds.org/faq/#multilib" class="ext">SlackBuilds.org FAQ 18</a>.</p>
 <p><b>download_basename</b> &mdash; provide a symlink for source downloads using the URL's basename,
 for the benefit of SlackBuilds that don't expect content-disposition to be respected.</p>
+<p><b>noexport_ARCH</b> and <b>noexport_BUILD</b> &mdash; Set ARCH or BUILD by
+patching the SlackBuild instead of exporting it to the environment.</p>
 </div>
 
 </body>

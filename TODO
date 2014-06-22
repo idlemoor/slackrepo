@@ -1,22 +1,40 @@
 TODO
 ----
 
-Report fails back to SBo
+Report fails back to SBo maintainers
 
-speed up gen_repos, check that .genreprc works
+Fix 'remove' argument parsing (no pkg, sb exists)
+
+After building, don't remove deps that were already installed
+
+Test already-built packages
+
+Install already-built packages
+
+get deps from other repos (using slackpkg?)
+
+Queuefiles (factorial deps)
+
+More testing for multilib cross-compiles
+
+ARM support
+
+Archive/restore upgraded/removed packages and source
+
+speed up gen_repos
 
 do a FAQ
 
-progress bar/spinner/whatever
+progress bar/spinner/'ok'/whatever
 
 Install/uninstall acceleration
 
 Rebuilds to permit circular deps
 
-Multilib support
-
-ARM support
-
 logrotate
 
-sqlite database?
+share package dirs
+
+sqlite database for package revisions?
+
+sqlite database for expected build times?

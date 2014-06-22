@@ -2,7 +2,9 @@
 
 p           { font-size: 14px; }
 li          { font-size: 14px; }
+th          { font-size: 14px; font-style: italic; }
 td          { font-size: 14px; }
+
 blockquote  { font-size: 14px; }
 pre         { font-family: 'Droid Sans Mono',monospace; font-size: 12px; padding: 8px 8px 8px 8px; border: 1px solid black; }
 code        { font-family: 'Droid Sans Mono',monospace; font-size: 12px; }
@@ -31,8 +33,8 @@ nav li a:hover { background-color: #ffffff; }
 #main ul    { margin: 0; }
 #main li    { margin-bottom: 10px; }
 #main table { border-collapse: collapse; }
-#main th    { border: 1px solid black; padding: 4px; font-style: italic; }
-#main td    { border: 1px solid black; padding: 4px; }
+#main th    { border: 0; padding: 0 1em 0 0; }
+#main td    { border: 0; padding: 0 1em 0 0; }
 
 #man        { float: right; width: 75%; margin: 10px; text-align: left; font-family: 'Source Sans Pro',sans-serif; }
 #man h2     { font-family: 'Source Sans Pro',sans-serif; background-color: #c0c0ff; padding: 8px; }

@@ -343,6 +343,9 @@ fi
 [ -d "$SR_QUEUEDIR" ] || { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR" ; }
 [ -d "$SR_LOGDIR" ]   || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"   ; }
 
+# We will use $SR_SBREPO as the working directory; it simplifies lots of git stuff.
+cd "$SR_SBREPO"
+
 # Changelog:
 CHANGELOG="$SR_PKGREPO"/.changelog
 if [ -s "$CHANGELOG" ]; then
@@ -351,12 +354,11 @@ else
   > "$CHANGELOG"
 fi
 
-# git stuff for the SlackBuilds repo:
+# git: initialise, or check and update
 if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
   if [ -n "${SR_INIT_GITCLONE}" ]; then
     log_normal "Cloning SlackBuilds repository $SR_SBREPO from ${SR_INIT_GITCLONE} ..."
     git clone "${SR_INIT_GITCLONE}" "$SR_SBREPO"
-    cd "$SR_SBREPO"
     git fetch -a
     git remote update
     mybranch="${SR_INIT_GITBRANCH:-$SYS_SLACKVER}"
@@ -365,8 +367,7 @@ if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
     fi
     log_normal "Finished cloning SlackBuilds repository."
   fi
-elif [ -d $SR_SBREPO/.git ]; then
-  cd $SR_SBREPO
+elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
   # Is git clean, and is the current branch SBo's stable branch?
   log_normal "Checking git ..."
   muck="$(git status -s .)"
@@ -388,9 +389,9 @@ fi
 
 # git: log a summary
 GOTGIT='n'
-if [ -d "$SR_SBREPO"/.git ]; then
+if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
   GOTGIT='y'
-  [ -n "$(cd $SR_SBREPO; git status -s .)" ] && dirty=' (DIRTY)'
+  [ -n "$(git status -s .)" ] && dirty=' (DIRTY)'
   [ "$OPT_VERBOSE" = 'y' ] && echo ""
   log_verbose "Git repo:   $SR_SBREPO"
   log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"

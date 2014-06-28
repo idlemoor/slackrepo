@@ -518,27 +518,26 @@ log_always "Warnings:   $warningcount"
 genrepstat=0
 if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
   if [ "$SR_USE_GENREPOS" = 1 ]; then
-    log_start "gen_repos_files.sh"
-    # 'man sort' says an in-place sort is ok, so let's be lazy :-)
-    sort -o "$CHANGELOG" "$CHANGELOG"
     if [ -z "$SR_RSS_UUID" ]; then
-      setrssuuid="RSS_UUID=\"$(uuidgen -t)\""
-      log_normal "Note: setting $setrssuuid in $rcfile"
-      echo "$setrssuuid" >> "$rcfile"
-      eval SR_$setrssuuid
+      log_error "Please set RSS_UUID in $repoconf"
+      genrepstat=9
+    else
+      log_start "gen_repos_files.sh"
+      # 'man sort' says an in-place sort is ok, so let's be lazy :-)
+      sort -o "$CHANGELOG" "$CHANGELOG"
+      set -o pipefail
+      REPOSROOT="$SR_REPOSROOT" REPOSOWNER="$SR_REPOSOWNER" REPOSOWNERGPG="$SR_REPOSOWNERGPG" DL_URL="$SR_DL_URL" \
+      RSS_TITLE="$SR_RSS_TITLE" RSS_ICON="$SR_RSS_ICON" RSS_LINK="$SR_RSS_LINK" RSS_CLURL="$SR_RSS_CLURL" \
+      RSS_DESCRIPTION="$SR_RSS_DESCRIPTION" RSS_FEEDMAX="$SR_RSS_FEEDMAX" RSS_UUID="$SR_RSS_UUID" \
+      GPGBIN="$SR_GPGBIN" USE_GPGAGENT="$SR_USE_GPGAGENT" FOR_SLAPTGET="$SR_FOR_SLAPTGET" \
+      FOLLOW_SYMLINKS="$SR_FOLLOW_SYMLINKS" REPO_SUBDIRS="$SR_REPO_SUBDIRS" \
+      sh /usr/libexec/$(basename $0)/gen_repos_files.sh -l "$CHANGELOG" | tee -a "$MAINLOG"
+      genrepstat=$?
+      set +o pipefail
+      [ "$genrepstat" != 0 ] && log_error "gen_repos_files.sh failed -- changelog retained"
+      echo ""
+      log_important "Finished gen_repos_files.sh at $(date +%T)"
     fi
-    set -o pipefail
-    REPOSROOT="$SR_REPOSROOT" REPOSOWNER="$SR_REPOSOWNER" REPOSOWNERGPG="$SR_REPOSOWNERGPG" DL_URL="$SR_DL_URL" \
-    RSS_TITLE="$SR_RSS_TITLE" RSS_ICON="$SR_RSS_ICON" RSS_LINK="$SR_RSS_LINK" RSS_CLURL="$SR_RSS_CLURL" \
-    RSS_DESCRIPTION="$SR_RSS_DESCRIPTION" RSS_FEEDMAX="$SR_RSS_FEEDMAX" RSS_UUID="$SR_RSS_UUID" \
-    GPGBIN="$SR_GPGBIN" USE_GPGAGENT="$SR_USE_GPGAGENT" FOR_SLAPTGET="$SR_FOR_SLAPTGET" \
-    FOLLOW_SYMLINKS="$SR_FOLLOW_SYMLINKS" REPO_SUBDIRS="$SR_REPO_SUBDIRS" \
-    sh /usr/libexec/$(basename $0)/gen_repos_files.sh -l "$CHANGELOG" | tee -a "$MAINLOG"
-    genrepstat=$?
-    set +o pipefail
-    [ "$genrepstat" != 0 ] && log_error "gen_repos_files.sh failed -- changelog retained"
-    echo ""
-    log_important "Finished gen_repos_files.sh at $(date +%T)"
   fi
 fi
 

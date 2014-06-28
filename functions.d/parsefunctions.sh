@@ -463,7 +463,11 @@ function parse_info_and_hints
       cd - >/dev/null
       unset PKGNAM SRCNAM
     fi
-    # Save $VERSION.  If it is null, the Fixup department below will invent something.
+    # Save $VERSION.
+    # If it is '*', this is a Slackware SlackBuild that gets the version from the
+    # source tarball name, but there is no source tarball present.  Set it null.
+    [ "$VERSION" = '*' ] && VERSION=''
+    # If it is null, the Fixup department below will invent something.
     INFOVERSION[$itemid]="$VERSION"
     # but don't unset $VERSION yet, it'll be needed when we snarf from the SlackBuild below
 
@@ -488,8 +492,8 @@ function parse_info_and_hints
       local PRGNAM SRCNAM
       eval $(grep 'PRGNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")
       eval $(grep 'SRCNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")
-      eval INFODOWNLIST[$itemid]="$(sed ':x; /\\$/ { N; s/\\\n//; tx }' <"$SR_SBREPO"/"$itemdir"/"$itemfile" | grep 'wget -c ' | sed 's/wget -c //')"
-      HINT_MD5IGNORE[$itemid]='y'
+      eval INFODOWNLIST["$itemid"]="$(sed ':x; /\\$/ { N; s/\\\n//; tx }' <"$SR_SBREPO"/"$itemdir"/"$itemfile" | grep 'wget -c ' | sed 's/wget -c //')"
+      HINT_MD5IGNORE["$itemid"]='y'
     fi
     unset DOWNLOAD MD5SUM PRGNAM SRCNAM VERSION
     eval unset DOWNLOAD_"$SR_ARCH" MD5SUM_"$SR_ARCH"
@@ -569,17 +573,17 @@ function parse_info_and_hints
     fi
 
     # Process hint file's VERSION, ARCH, DOWNLOAD[_ARCH] and MD5SUM[_ARCH] together:
-    if [ -n "$VERSION" ]; then
-      HINT_VERSION[$itemid]="$VERSION"
-      [ -z "$MD5SUM" ] && MD5SUM='no'
-    fi
-    [ -v ARCH ] && HINT_ARCH[$itemid]="$ARCH"
     if [ -n "$ARCH" ]; then
       dlvar="DOWNLOAD_$ARCH"
       [ -n "${!dlvar}" ] && DOWNLOAD="${!dlvar}"
       md5var="MD5SUM_$ARCH"
       [ -n "${!md5var}" ] && MD5SUM="${!md5var}"
     fi
+    if [ -n "$VERSION" ]; then
+      HINT_VERSION[$itemid]="$VERSION"
+      [ -z "$MD5SUM" ] && MD5SUM='no'
+    fi
+    [ -v ARCH ] && HINT_ARCH[$itemid]="$ARCH"
     if [ "$DOWNLOAD" = 'no' ]; then
       HINT_NODOWNLOAD["$itemid"]='y'
     elif [ -n "$DOWNLOAD" ]; then
@@ -589,6 +593,7 @@ function parse_info_and_hints
       HINT_MD5IGNORE["$itemid"]='y'
     elif [ -n "$MD5SUM" ]; then
       INFOMD5LIST["$itemid"]="$MD5SUM"
+      HINT_MD5IGNORE["$itemid"]=''
     fi
 
     # Process ADDREQUIRES in the Fixup department below.
@@ -633,9 +638,10 @@ function parse_info_and_hints
     fi
   fi
 
-  # Fix INFOVERSION from hint file's VERSION, or git, or SlackBuild's modification time
+  # Fix INFOVERSION from hint file's VERSION, or DOWNLOAD, or git, or SlackBuild's modification time
   ver="${INFOVERSION[$itemid]}"
   [ -z "$ver" ] && ver="${HINT_VERSION[$itemid]}"
+  [ -z "$ver" ] && ver="$(basename $(echo "${INFODOWNLIST[$itemid]}" | sed 's/ .*//') | rev | cut -f 3- -d . | cut -f 1 -d - | rev)"
   [ -z "$ver" -a "$GOTGIT" = 'y' ] && ver="${GITREV[$itemid]:0:7}"
   [ -z "$ver" ] && ver="$(date --date=@$(stat --format-='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile") '+%Y%m%d')"
   INFOVERSION[$itemid]="$ver"

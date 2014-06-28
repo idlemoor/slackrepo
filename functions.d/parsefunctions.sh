@@ -553,7 +553,6 @@ function parse_info_and_hints
 
     # Process the hint file's variables individually (looping for each variable would need
     # 'eval', which would mess up the payload, so we don't do that).
-    [ -n "$VERSION"  ] &&  HINT_VERSION[$itemid]="$VERSION"
     [ -n "$OPTIONS"  ] &&  HINT_OPTIONS[$itemid]="$OPTIONS"
     [ -n "$GROUPADD" ] && HINT_GROUPADD[$itemid]="$GROUPADD"
     [ -n "$USERADD"  ] &&  HINT_USERADD[$itemid]="$USERADD"
@@ -569,7 +568,11 @@ function parse_info_and_hints
       [ "${INSTALL:0:1}" = 'N' -o "${INSTALL:0:1}" = 'n' -o "${INSTALL:0:1}" = '0' ] && HINT_INSTALL[$itemid]="n"
     fi
 
-    # Process hint file's ARCH, DOWNLOAD[_ARCH] and MD5SUM[_ARCH] together:
+    # Process hint file's VERSION, ARCH, DOWNLOAD[_ARCH] and MD5SUM[_ARCH] together:
+    if [ -n "$VERSION" ]; then
+      HINT_VERSION[$itemid]="$VERSION"
+      [ -z "$MD5SUM" ] && MD5SUM='no'
+    fi
     [ -v ARCH ] && HINT_ARCH[$itemid]="$ARCH"
     if [ -n "$ARCH" ]; then
       dlvar="DOWNLOAD_$ARCH"

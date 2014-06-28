@@ -47,11 +47,10 @@ function build_item
   NEWVERSION="${HINT_VERSION[$itemid]}"
   if [ -n "$NEWVERSION" -a "${INFOVERSION[$itemid]}" != "$NEWVERSION" ]; then
     # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
-    log_verbose -a "Note: $itemid: setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]}) and ignoring md5sums"
+    log_verbose -a "Note: $itemid: setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]})"
     sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$MYTMPIN/$itemfile"
     verpat="$(echo ${INFOVERSION[$itemid]} | sed 's/\./\\\./g')"
     INFODOWNLIST[$itemid]="$(echo "${INFODOWNLIST[$itemid]}" | sed "s/$verpat/$NEWVERSION/g")"
-    HINT_MD5IGNORE[$itemid]='y'
     INFOVERSION[$itemid]="$NEWVERSION"
   fi
 

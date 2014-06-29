@@ -405,8 +405,6 @@ function create_pkg_metadata
   fi
   if [ "$OPT_DRY_RUN" != 'y' ]; then
     echo "$changelogentry" >> "$CHANGELOG"
-  else
-    CHANGEMSG="$CHANGEMSG --dry-run"
   fi
 
   #-----------------------------#
@@ -645,7 +643,7 @@ function remove_item
     echo "$itemid: Removed. NEWLINE" >> "$CHANGELOG"
     log_success ":-) $itemid: Removed (-:"
   else
-    log_success ":-) $itemid would be removed (--dry-run) (-:"
+    log_success ":-) $itemid would be removed [dry run] (-:"
   fi
   OKLIST+=( "$itemid" )
 

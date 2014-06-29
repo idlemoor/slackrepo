@@ -29,10 +29,10 @@
 
 <h4>Prebuilt package</h4>
 <table>
-<tr><td>version:</td><td>0.1.0</td></tr>
-<tr><td>date:</td><td>2014-06-22</td></tr>
-<tr><td>download:</td><td><code><a href="https://dl.dropboxusercontent.com/u/26560685/slackrepo-0.1.0-noarch-1_dbs.txz">slackrepo-0.1.0-noarch-1_dbs.txz</a></code></td></tr>
-<tr><td>md5sum:</td><td><code>ae4a4480c14c05e578a8375c368c2b60</code></td></tr>
+<tr><td>version:</td><td>0.1.1</td></tr>
+<tr><td>date:</td><td>2014-06-30</td></tr>
+<tr><td>download:</td><td><code><a href="https://dl.dropboxusercontent.com/u/26560685/slackrepo-0.1.1-noarch-1_dbs.txz">slackrepo-0.1.1-noarch-1_dbs.txz</a></code></td></tr>
+<tr><td>md5sum:</td><td><code>7103f1f02f5903e0d13af36580b7538a</code></td></tr>
 <tr><td>size:</td><td>60kB</td></tr>
 </table>
 
@@ -43,7 +43,7 @@ SlackBuild to create a package that you can install:</p>
 <pre>
 git clone git@github.com:idlemoor/slackrepo.git
 cd slackrepo
-gitrev=git$(git log -n 1 --format=format:%H .)
+gitrev=git$(git log -n 1 --format=format:%h .)
 git archive --format=tar --prefix=slackrepo-$gitrev/ HEAD | gzip > SlackBuild/slackrepo-$gitrev.tar.gz
 cd SlackBuild
 VERSION=$gitrev TAG=_github sh ./slackrepo.SlackBuild

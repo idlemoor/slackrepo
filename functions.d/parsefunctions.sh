@@ -113,7 +113,7 @@ function parse_args
     fi
 
     # Search for anything with the right name
-    gotitems=( $(find . -name "$item" -print | sed 's:^\./::') )
+    gotitems=( $(find -L . -name "$item" -print | sed 's:^\./::') )
     if [ "${#gotitems}" = 0 ]; then
       log_error "${blamemsg}Item $item not found"
       errstat=1
@@ -198,7 +198,7 @@ function find_slackbuild
   local prgnam="$1"
   local file="${prgnam}.SlackBuild"
 
-  sblist=( $(find "$SR_SBREPO" -name "$file" 2>/dev/null) )
+  sblist=( $(find -L "$SR_SBREPO" -name "$file" 2>/dev/null) )
   if [ "${#sblist[@]}" = 0 ]; then
     return 1
   elif [ "${#sblist[@]}" != 1 ]; then
@@ -243,7 +243,7 @@ function find_queuefile
   local qfound=''
   local -a qsearch=( "$SR_QUEUEDIR" "$SR_HINTDIR" "$SR_SBREPO" )
   for trydir in $qsearch; do
-    qlist=( $(find "$trydir" -name "$qbase" 2>/dev/null) )
+    qlist=( $(find -L "$trydir" -name "$qbase" 2>/dev/null) )
     if [ "${#qlist[@]}" = 0 ]; then
       continue
     elif [ "${#qlist[@]}" = 1 ]; then
@@ -353,7 +353,7 @@ function scan_dir
   fi
   # Descend one level only - some SlackBuilds have subdirectories
   # (eg. for patches) that need to be ignored
-  subdirlist=( $(find "$dir" -mindepth 1 -maxdepth 1 -type d -not -name '.*' | sort | sed 's:^\./::') )
+  subdirlist=( $(find -L "$dir" -mindepth 1 -maxdepth 1 -type d -not -name '.*' | sort | sed 's:^\./::') )
   if [ "${#subdirlist[@]}" = 0 ]; then
     log_normal "${blamemsg}${dir} does not contain a SlackBuild"
     return 0

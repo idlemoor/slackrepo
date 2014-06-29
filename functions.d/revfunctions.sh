@@ -142,7 +142,7 @@ function needs_build
     return 0
   fi
 
-  modifilelist=( $(find "$SR_SBREPO"/"$itemdir" -newermt @"$pkgblt" 2>/dev/null) )
+  modifilelist=( $(find -L "$SR_SBREPO"/"$itemdir" -newermt @"$pkgblt" 2>/dev/null) )
 
   # If this isn't a git repo, and any of the files have been modified since the package was built => update
   if [ "$GOTGIT" = 'n' -a ${#modifilelist[@]} != 0 ]; then

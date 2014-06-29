@@ -146,20 +146,24 @@ function needs_build
     return 0
   fi
 
+  dirtymark=''
+  [ "${GITDIRTY[$itemid]}" = 'y' ] && dirtymark='+dirty'
+  currrev="${GITREV[$itemid]}$dirtymark"
+  shortcurrrev="${currrev:0:7}$dirtymark"
+
+  # Has the build revision (e.g. SlackBuild git rev) changed => update
+  if [ "$pkgrev" != "$currrev" ]; then
+    BUILDINFO="update for git $shortcurrrev"
+    return 0
+  fi
+
   # If git is dirty, and any of the files have been modified since the package was built => update
   if [ "${GITDIRTY[$itemid]}" = 'y' -a ${#modifilelist[@]} != 0 ]; then
-    BUILDINFO="update for git ${GITREV[$itemid]:0:7}+dirty"
+    BUILDINFO="update for git $shortcurrrev"
     return 0
   fi
 
-  # has the build revision (e.g. SlackBuild git rev) changed => update
-  currrev="${GITREV[$itemid]}"
-  if [ "$pkgrev" != "$currrev" ]; then
-    BUILDINFO="update for git ${GITREV[$itemid]:0:7}"
-    return 0
-  fi
-
-  # is this the top-level item and are we in rebuild mode
+  # Is this the top-level item and are we in rebuild mode
   #   => rebuild if it hasn't previously been rebuilt (as a dep of something else)
   if [ "$itemid" = "$ITEMID" -a "$PROCMODE" = 'rebuild' ]; then
     found='n'
@@ -172,14 +176,14 @@ function needs_build
     fi
   fi
 
-  # has the list of deps changed => rebuild
+  # Has the list of deps changed => rebuild
   currdep=$(echo "${DIRECTDEPS[$itemid]}" | sed 's/ /:/g')
   if [ "$pkgdep" != "$currdep" ]; then
     BUILDINFO="rebuild for added/removed deps"
     return 0
   fi
 
-  # have any of the deps been updated => rebuild
+  # Have any of the deps been updated => rebuild
   local -a updeps
   for dep in ${DIRECTDEPS[$itemid]}; do
     # ignore built= (merely rebuilt deps don't matter) and hintfile= (significant
@@ -199,14 +203,14 @@ function needs_build
     return 0
   fi
 
-  # has Slackware changed => rebuild
+  # Has Slackware changed => rebuild
   currslk="$SYS_SLACKVER"
   if [ "$pkgslk" != "$currslk" ]; then
     BUILDINFO="rebuild for upgraded Slackware"
     return 0
   fi
 
-  # has the hintfile changed => rebuild
+  # Has the hintfile changed => rebuild
   currhnt=''
   if [ -n "${HINTFILE[$itemdir]}" ]; then
     currhnt="$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//')"

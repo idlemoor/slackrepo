@@ -124,7 +124,10 @@ function build_with_deps
 
   needs_build "$itemid" || return 0
 
-  log_itemstart "Starting $itemid ($BUILDINFO)"
+  buildopt=''
+  [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
+  [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
+  log_itemstart "Starting $itemid ($BUILDINFO)$buildopt"
 
   build_item "$itemid"
   myresult=$?

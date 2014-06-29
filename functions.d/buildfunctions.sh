@@ -311,7 +311,10 @@ function build_ok
   # This won't always kill everything, but it's good enough for saving space
   [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
 
-  log_success ":-) ${itemid}: $CHANGEMSG (-:"
+  buildopt=''
+  [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
+  [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
+  log_success ":-) ${itemid}: $CHANGEMSG$buildopt (-:"
   OKLIST+=( "$itemid" )
 
   return 0

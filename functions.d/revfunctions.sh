@@ -102,10 +102,6 @@ function needs_build
   local -a pkglist modifilelist
   local prgnam version built revision depends slackware hintfile
 
-  # Tweak BUILDINFO for control args
-  [ "$OPT_DRY_RUN" = 'y' ] && TWEAKINFO=' --dry-run'
-  [ "$OPT_INSTALL" = 'y' ] && TWEAKINFO=' --install'
-
   if [ "$OPT_DRY_RUN" = 'y' ]; then
     pkglist=( $(ls "$DRYREPO"/"$itemdir"/*.t?z 2>/dev/null) )
     [ "${#pkglist[@]}" = 0 ] && \
@@ -116,14 +112,14 @@ function needs_build
 
   # Package dir not found or has no packages => add
   if [ "${#pkglist[@]}" = 0 ]; then
-    BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}$TWEAKINFO"
+    BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
     return 0
   fi
 
   # Is the .revision file missing => add
   PKGREVFILE=$(dirname "${pkglist[0]}")/.revision
   if [ ! -f "$PKGREVFILE" ]; then
-    BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}$TWEAKINFO"
+    BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
     return 0
   fi
 
@@ -138,7 +134,7 @@ function needs_build
   # Are we upversioning => update
   currver="${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
   if [ "$pkgver" != "$currver" ]; then
-    BUILDINFO="update for version $currver$TWEAKINFO"
+    BUILDINFO="update for version $currver"
     return 0
   fi
 
@@ -146,20 +142,20 @@ function needs_build
 
   # If this isn't a git repo, and any of the files have been modified since the package was built => update
   if [ "$GOTGIT" = 'n' -a ${#modifilelist[@]} != 0 ]; then
-    BUILDINFO="update for modified files$TWEAKINFO"
+    BUILDINFO="update for modified files"
     return 0
   fi
 
   # If git is dirty, and any of the files have been modified since the package was built => update
   if [ "${GITDIRTY[$itemid]}" = 'y' -a ${#modifilelist[@]} != 0 ]; then
-    BUILDINFO="update for git ${GITREV[$itemid]:0:7}+dirty$TWEAKINFO"
+    BUILDINFO="update for git ${GITREV[$itemid]:0:7}+dirty"
     return 0
   fi
 
   # has the build revision (e.g. SlackBuild git rev) changed => update
   currrev="${GITREV[$itemid]}"
   if [ "$pkgrev" != "$currrev" ]; then
-    BUILDINFO="update for git ${GITREV[$itemid]:0:7}$TWEAKINFO"
+    BUILDINFO="update for git ${GITREV[$itemid]:0:7}"
     return 0
   fi
 
@@ -171,7 +167,7 @@ function needs_build
       if [ "$previously" = "$ITEMID" ]; then found='y'; break; fi
     done
     if [ "$found" = 'n' ]; then
-      BUILDINFO="rebuild$TWEAKINFO"
+      BUILDINFO="rebuild"
       return 0
     fi
   fi
@@ -179,7 +175,7 @@ function needs_build
   # has the list of deps changed => rebuild
   currdep=$(echo "${DIRECTDEPS[$itemid]}" | sed 's/ /:/g')
   if [ "$pkgdep" != "$currdep" ]; then
-    BUILDINFO="rebuild for added/removed deps$TWEAKINFO"
+    BUILDINFO="rebuild for added/removed deps"
     return 0
   fi
 
@@ -199,14 +195,14 @@ function needs_build
   if [ "${#updeps}" != 0 ]; then
     log_verbose "Updated dependencies of ${itemid}:"
     log_verbose "$(printf '  %s\n' "${updeps[@]}")"
-    BUILDINFO="rebuild for updated deps$TWEAKINFO"
+    BUILDINFO="rebuild for updated deps"
     return 0
   fi
 
   # has Slackware changed => rebuild
   currslk="$SYS_SLACKVER"
   if [ "$pkgslk" != "$currslk" ]; then
-    BUILDINFO="rebuild for upgraded Slackware$TWEAKINFO"
+    BUILDINFO="rebuild for upgraded Slackware"
     return 0
   fi
 
@@ -216,7 +212,7 @@ function needs_build
     currhnt="$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//')"
   fi
   if [ "$pkghnt" != "$currhnt" ]; then
-    BUILDINFO="rebuild for hintfile changes$TWEAKINFO"
+    BUILDINFO="rebuild for hintfile changes"
     return 0
   fi
 

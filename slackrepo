@@ -189,20 +189,20 @@ genrepnames="USE_GENREPOS REPOSROOT REPOSOWNER REPOSOWNERGPG DL_URL \
              RSS_TITLE RSS_ICON RSS_LINK RSS_CLURL RSS_DESCRIPTION RSS_FEEDMAX RSS_UUID \
              GPGBIN USE_GPGAGENT FOR_SLAPTGET FOLLOW_SYMLINKS REPO_SUBDIRS REPO_EXCLUDES"
 initnames="INIT_GITCLONE INIT_GITBRANCH"
-# Per-user config files:
-userconf="~/.slackreporc"
-genrepconf="~/.genreprc"
-
 # Initialise the SR_variables from the environment:
 for envvar in $varnames $genrepnames $initnames $optnames ; do
   srvar="SR_$envvar"
   eval $srvar="${!envvar}"
 done
 
+# Per-user config files:
+userconf=~/.slackreporc
+genrepconf=~/.genreprc
 # Read the user config file to get $REPO:
 if [ -f "$userconf" ]; then
   . "$userconf"
 fi
+
 # If we didn't get a repo id from env or cmd line, drop $REPO from the user config file into $OPT_REPO:
 [ -z "$OPT_REPO" ] && OPT_REPO="${REPO:-SBo}"
 # Read the main repo config file, overriding anything that came from the user config file:
@@ -303,7 +303,7 @@ if [ "$SR_USE_GENREPOS" = 1 ]; then
     [ -n "${!srvar}" ] && log_verbose "  $name=\"${!srvar}\""
   done
 else
-  log_verbose "  SR_USE_GENREPOS=\"$SR_USE_GENREPOS\""
+  log_verbose "  USE_GENREPOS=\"$SR_USE_GENREPOS\""
 fi
 
 [ "$OPT_VERBOSE" = 'y' ] && echo ""

@@ -373,7 +373,7 @@ elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
   muck="$(git status -s .)"
   currbranch=$(git rev-parse --abbrev-ref HEAD)
   if [ -z "$muck" -a "$currbranch" = "$SYS_SLACKVER" ]; then
-    if [ -n "$(find "$SR_SBREPO"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
+    if [ -n "$(find "$(git rev-parse --show-toplevel)"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
       log_normal "Updating git ..."
       if [ "$OPT_QUIET" = 'y' ]; then
         git fetch -a                             >> "$MAINLOG" 2>&1

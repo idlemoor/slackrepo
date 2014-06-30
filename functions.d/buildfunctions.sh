@@ -433,11 +433,10 @@ function create_pkg_metadata
     #-----------------------------#
     # .dep file (no deps => no file)
     #-----------------------------#
-    if [ -z "${FULLDEPS[$itemid]}" ]; then
-      rm -f "$dotdep"
-    else
+    rm -f "$dotdep"
+    if [ -n "${FULLDEPS[$itemid]}" ]; then
       for dep in ${FULLDEPS[$itemid]}; do
-        printf "%s\n" $(basename $dep) > "$dotdep"
+        printf "%s\n" $(basename $dep) >> "$dotdep"
       done
     fi
 

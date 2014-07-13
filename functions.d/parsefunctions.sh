@@ -627,7 +627,7 @@ function parse_info_and_hints
     if [ -v ADDREQUIRES ]; then
       INFOREQUIRES[$itemid]="$ADDREQUIRES"
     else
-      log_normal "Dependencies of $itemid could not be determined."
+      log_normal "Dependencies of $itemid can not be determined."
       INFOREQUIRES[$itemid]=""
     fi
   else
@@ -641,9 +641,10 @@ function parse_info_and_hints
   # Fix INFOVERSION from hint file's VERSION, or DOWNLOAD, or git, or SlackBuild's modification time
   ver="${INFOVERSION[$itemid]}"
   [ -z "$ver" ] && ver="${HINT_VERSION[$itemid]}"
-  [ -z "$ver" ] && ver="$(basename $(echo "${INFODOWNLIST[$itemid]}" | sed 's/ .*//') | rev | cut -f 3- -d . | cut -f 1 -d - | rev)"
+  [ -z "$ver" ] && ver="$(basename $(echo "${INFODOWNLIST[$itemid]}" | sed 's/ .*//') 2>/dev/null | rev | cut -f 3- -d . | cut -f 1 -d - | rev)"
+  [ -z "$ver" ] && log_normal "Version of $itemid can not be determined."
   [ -z "$ver" -a "$GOTGIT" = 'y' ] && ver="${GITREV[$itemid]:0:7}"
-  [ -z "$ver" ] && ver="$(date --date=@$(stat --format-='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile") '+%Y%m%d')"
+  [ -z "$ver" ] && ver="$(date --date=@$(stat --format='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile") '+%Y%m%d')"
   INFOVERSION[$itemid]="$ver"
 
   return 0

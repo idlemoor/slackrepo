@@ -88,10 +88,6 @@ function build_item
   # Get all dependencies installed
   install_deps "$itemid" || { uninstall_deps "$itemid"; return 1; }
 
-  # Remove any existing packages (some builds fail if already installed)
-  # (... this might not be entirely appropriate for gcc or glibc ...)
-  uninstall_packages "$itemid"
-
   # Work out BUILD
   # Get the value from the SlackBuild
   unset BUILD
@@ -133,18 +129,24 @@ function build_item
     NUMJOBS="$SR_NUMJOBS"
 
   # Process other hints for the build:
+
   # GROUPADD and USERADD ...
   do_groupadd_useradd "$itemid"
+
   # ... NUMJOBS (with MAKEFLAGS and NUMJOBS env vars) ...
   NUMJOBS=" ${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS} "
   tempmakeflags="MAKEFLAGS='${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS}'"
+
   # ... OPTIONS ...
   options="${HINT_OPTIONS[$itemid]}"
   SLACKBUILDCMD="sh ./$itemfile"
   [ -n "$tempmakeflags" -o -n "$options" ] && SLACKBUILDCMD="env $tempmakeflags $options $SLACKBUILDCMD"
+
   # ... ANSWER ...
   [ -n "${HINT_ANSWER[$itemid]}" ] && SLACKBUILDCMD="echo -e '${HINT_ANSWER[$itemid]}' | $SLACKBUILDCMD"
+
   # ... and SPECIAL.
+  noremove='n'
   for special in ${HINT_SPECIAL[$itemid]}; do
     case "$special" in
     'multilib_ldflags' )
@@ -190,11 +192,21 @@ function build_item
       sed -i -e "s/^BUILD=.*/BUILD='$BUILD'/" "$MYTMPIN"/"$itemfile"
       unset BUILD
       ;;
+    'noremove' )
+      log_verbose "Special action: noremove"
+      noremove='y'
+      ;;
     * )
       log_warning "Hint SPECIAL=\"$special\" not recognised"
       ;;
     esac
   done
+
+  # Remove any existing packages (some builds fail if already installed)
+  # (... this might not be entirely appropriate for gcc or glibc ...)
+  if [ "$noremove" != 'y' ]; then
+    uninstall_packages "$itemid"
+  fi
 
   # Build it
   log_normal -a "Running $itemfile ..."

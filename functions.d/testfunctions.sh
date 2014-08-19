@@ -57,8 +57,8 @@ function test_slackbuild
     elif [ $(grep "^ *$hr\$" "$slackdesc" | sed "s/|.*|//" | wc -c) -ne $(( ${#itemprgnam} + 1 )) ]; then
       log_warning -a "${itemid}: slack-desc: handy-ruler is misaligned"
     fi
-    # check line length <= 73
-    [ $(grep "^${itemprgnam}:" "$slackdesc" | sed "s/^${itemprgnam}://" | wc -L) -gt 73 ] && \
+    # check line length <= 80
+    [ $(grep "^${itemprgnam}:" "$slackdesc" | sed "s/^${itemprgnam}://" | wc -L) -gt 80 ] && \
       log_warning -a "${itemid}: slack-desc: description lines too long"
     # check appname (i.e. $itemprgnam)
     grep -q -v -e '^#' -e "^${itemprgnam}:" -e '^$' -e '^ *|-.*-|$' "$slackdesc" && \

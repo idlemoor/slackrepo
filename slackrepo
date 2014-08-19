@@ -182,7 +182,7 @@ SYS_NPROC=$(nproc)
 # These config vars are prefixed with SR_ to stop SlackBuilds picking them up.
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO PKGREPO SRCREPO \
-          HINTDIR QUEUEDIR LOGDIR TMP \
+          HINTDIR QUEUEDIR LOGDIR DATABASE TMP \
           ARCH TAG PKGTYPE NUMJOBS"
 # These config vars don't need to be obfuscated:
 genrepnames="USE_GENREPOS REPOSROOT REPOSOWNER REPOSOWNERGPG DL_URL \
@@ -342,6 +342,9 @@ fi
 [ -d "$SR_HINTDIR" ]  || { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"  ; }
 [ -d "$SR_QUEUEDIR" ] || { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR" ; }
 [ -d "$SR_LOGDIR" ]   || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"   ; }
+
+# Experimental sqlite database for build times
+db_init
 
 # We will use $SR_SBREPO as the working directory; it simplifies lots of git stuff.
 cd "$SR_SBREPO"

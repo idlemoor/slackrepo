@@ -209,7 +209,11 @@ function build_item
   fi
 
   # Build it
-  log_normal -a "Running $itemfile ..."
+  buildstarttime="$(date '+%s')"
+  prevbuildsecs="$(db_get_buildsecs "$itemid")"
+  eta=""
+  [ ${prevbuildsecs:-0} -gt 120 ] && eta=" ETA $(date --date=@"$(( $buildstarttime + $prevbuildsecs ))" '+%T')"
+  log_normal -a "Running $itemfile ...$eta"
   log_verbose -a "$SLACKBUILDCMD"
   if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
     echo ''
@@ -235,6 +239,7 @@ function build_item
       buildstat=$?
     fi
   fi
+  buildfinishtime="$(date '+%s')"
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
 
   if [ "$buildstat" != 0 ]; then
@@ -273,6 +278,8 @@ function build_item
       return 6
     fi
   fi
+
+  db_set_buildsecs "$itemid" $(( $buildfinishtime - $buildstarttime ))
 
   if [ "$OPT_TEST" = 'y' ]; then
     test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
@@ -374,7 +381,7 @@ function build_failed
 
 function create_pkg_metadata
 # Create metadata files in package dir, and changelog entry
-# $1    = itemid
+# $1 = itemid
 # Return status:
 # 9 = bizarre existential error, otherwise 0
 {

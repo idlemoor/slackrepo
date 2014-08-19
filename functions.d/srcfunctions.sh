@@ -74,7 +74,7 @@ function verify_src
       ok='n'
       # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
       for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
-      [ "$ok" = 'y' ] || { log_error -a "Failed md5sum: $f"; log_verbose -a "  actual md5sum is $mf"; allok='n'; }
+      [ "$ok" = 'y' ] || { log_important -a "Failed md5sum: $f"; log_verbose -a "  actual md5sum is $mf"; allok='n'; }
     done
     [ "$allok" = 'y' ] || { if [ -n "${HINT_NODOWNLOAD[$itemid]}" ]; then return 6; else return 1; fi; }
   )

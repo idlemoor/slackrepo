@@ -28,7 +28,7 @@
 # ---------------------------------------------------------------------------
 cat <<"EOT"
 # -------------------------------------------------------------------#
-# $Id: gen_repos_files.sh,v 1.91 2014/04/27 12:58:34 root Exp root $ #
+# $Id: gen_repos_files.sh,v 1.92 2014/07/31 20:27:53 root Exp root $ #
 # -------------------------------------------------------------------#
 EOT
 
@@ -36,7 +36,7 @@ EOT
 BASENAME=$( basename $0 )
 
 # The script'""s revision number will be displayed in the RSS feed:
-REV=$( echo "$Revision: 1.91 $" | cut -d' '  -f2 )
+REV=$( echo "$Revision: 1.92 $" | cut -d' '  -f2 )
 
 # The repository owner's defaults file;
 # you can override any of the default values in this file:
@@ -553,9 +553,9 @@ function gpg_sign {
   # Create a gpg signature for a file. Use either gpg or gpg2 and optionally
   # let gpg-agent provide the passphrase.
   if [ $USE_GPGAGENT -eq 1 ]; then
-    $GPGBIN --use-agent -bas --batch --quiet $1
+    $GPGBIN --use-agent -bas -u "$REPOSOWNERGPG" --batch --quiet $1
   else
-    echo $TRASK | $GPGBIN -bas --passphrase-fd 0 --batch --quiet $1
+    echo $TRASK | $GPGBIN -bas -u "$REPOSOWNERGPG" --passphrase-fd 0 --batch --quiet $1
   fi
   return $?
 }
@@ -825,7 +825,7 @@ echo ""
 #  you want to use for the repository owner, set the REPOSOWNERGPG variable.
 # If $REPOSOWNERGPG has an empty value we will use the value of $REPOSOWNER
 #  to search the GPG keyring.
-if [ "${REPOSOWNERGPG}" == "" ]; then
+if [ "x${REPOSOWNERGPG}" == "x" ]; then
   REPOSOWNERGPG="${REPOSOWNER}"
 fi
 

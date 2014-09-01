@@ -436,6 +436,7 @@ function create_pkg_metadata
   for pkgpath in "${pkglist[@]}"; do
 
     pkgbasename=$(basename "$pkgpath")
+    pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
     nosuffix=$(echo "$pkgpath" | sed 's/\.t.z$//')
     dotdep="$nosuffix".dep
     dottxt="$nosuffix".txt
@@ -457,6 +458,20 @@ function create_pkg_metadata
       for dep in ${FULLDEPS[$itemid]}; do
         printf "%s\n" $(basename $dep) >> "$dotdep"
       done
+    fi
+
+    #-----------------------------#
+    # slack-required
+    #-----------------------------#
+    if [ "$SR_FOR_SLAPTGET" -eq 1 ]; then
+      if [ -n "${DIRECTDEPS[$itemid]}" ]; then
+        if [ -d "$TMP"/package-"$pkgnam"/install -a ! -f "$TMP"/package-"$pkgnam"/install/slack-required ]; then
+          for dep in ${DIRECTDEPS[$itemid]}; do
+            printf "%s\n" $(basename $dep) >> "$TMP"/package-"$pkgnam"/install/slack-required
+          done
+          ( cd "$TMP"/package-"$itemprgnam"; tar-1.13 r "$pkgpath" install/slack-required )
+        fi
+      fi
     fi
 
     #-----------------------------#
@@ -505,12 +520,12 @@ EOF
     echo "PACKAGE SIZE (compressed):  ${pkgsize} K" >> "$dotmeta"
     echo "PACKAGE SIZE (uncompressed):  ${uncsize} K" >> "$dotmeta"
     if [ "$SR_FOR_SLAPTGET" -eq 1 ]; then
-      # Fish them out of the packaging directory. If they're not there, sod 'em.
-      REQUIRED=$(cat "$TMP"/package-"$itemprgnam"/install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+      # Fish them out of the packaging directory.
+      REQUIRED=$(cat "$TMP"/package-"$pkgnam"/install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
       echo "PACKAGE REQUIRED:  $REQUIRED" >> "$dotmeta"
-      CONFLICTS=$(cat "$TMP"/package-"$itemprgnam"/install/slack-conflicts 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+      CONFLICTS=$(cat "$TMP"/package-"$pkgnam"/install/slack-conflicts 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
       echo "PACKAGE CONFLICTS:  $CONFLICTS" >> "$dotmeta"
-      SUGGESTS=$(cat "$TMP"/package-"$itemprgnam"/install/slack-suggests 2>/dev/null | xargs -r)
+      SUGGESTS=$(cat "$TMP"/package-"$pkgnam"/install/slack-suggests 2>/dev/null | xargs -r)
       echo "PACKAGE SUGGESTS:  $SUGGESTS" >> "$dotmeta"
     fi
     echo "PACKAGE DESCRIPTION:" >> "$dotmeta"

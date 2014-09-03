@@ -395,6 +395,7 @@ declare -A SRCDIR GITREV GITDIRTY
 declare -A \
   HINT_SKIP HINT_MD5IGNORE HINT_NUMJOBS HINT_INSTALL HINT_SPECIAL HINT_ARCH \
   HINT_CLEANUP HINT_USERADD HINT_GROUPADD HINT_ANSWER HINT_NODOWNLOAD \
+  HINT_PREREMOVE HINT_CONFLICTS \
   HINT_OPTIONS HINT_VERSION HINT_SUMMARY HINTFILE
 
 #-------------------------------------------------------------------------------
@@ -537,7 +538,7 @@ function parse_info_and_hints
 
   if [ -n "${HINTFILE[$itemid]}" ]; then
     local SKIP \
-          VERSION ADDREQUIRES OPTIONS GROUPADD USERADD INSTALL NUMJOBS ANSWER CLEANUP \
+          VERSION ADDREQUIRES OPTIONS GROUPADD USERADD PREREMOVE CONFLICTS INSTALL NUMJOBS ANSWER CLEANUP \
           SPECIAL ARCH DOWNLOAD MD5SUM
     . "${HINTFILE[$itemid]}"
 
@@ -557,13 +558,15 @@ function parse_info_and_hints
 
     # Process the hint file's variables individually (looping for each variable would need
     # 'eval', which would mess up the payload, so we don't do that).
-    [ -n "$OPTIONS"  ] &&  HINT_OPTIONS[$itemid]="$OPTIONS"
-    [ -n "$GROUPADD" ] && HINT_GROUPADD[$itemid]="$GROUPADD"
-    [ -n "$USERADD"  ] &&  HINT_USERADD[$itemid]="$USERADD"
-    [ -n "$NUMJOBS"  ] &&  HINT_NUMJOBS[$itemid]="$NUMJOBS"
-    [ -n "$ANSWER"   ] &&   HINT_ANSWER[$itemid]="$ANSWER"
-    [ -n "$CLEANUP"  ] &&  HINT_CLEANUP[$itemid]="$CLEANUP"
-    [ -n "$SPECIAL"  ] &&  HINT_SPECIAL[$itemid]="$SPECIAL"
+    [ -n "$OPTIONS"   ] &&   HINT_OPTIONS[$itemid]="$OPTIONS"
+    [ -n "$GROUPADD"  ] &&  HINT_GROUPADD[$itemid]="$GROUPADD"
+    [ -n "$USERADD"   ] &&   HINT_USERADD[$itemid]="$USERADD"
+    [ -n "$PREREMOVE" ] && HINT_PREREMOVE[$itemid]="$PREREMOVE"
+    [ -n "$CONFLICTS" ] && HINT_CONFLICTS[$itemid]="$CONFLICTS"
+    [ -n "$NUMJOBS"   ] &&   HINT_NUMJOBS[$itemid]="$NUMJOBS"
+    [ -n "$ANSWER"    ] &&    HINT_ANSWER[$itemid]="$ANSWER"
+    [ -n "$CLEANUP"   ] &&   HINT_CLEANUP[$itemid]="$CLEANUP"
+    [ -n "$SPECIAL"   ] &&   HINT_SPECIAL[$itemid]="$SPECIAL"
 
     # Process hint file's INSTALL
     if [ -n "$INSTALL" ]; then
@@ -604,6 +607,8 @@ function parse_info_and_hints
       ${OPTIONS+"OPTIONS=\"$OPTIONS\""} \
       ${GROUPADD+"GROUPADD=\"$GROUPADD\""} \
       ${USERADD+"USERADD=\"$USERADD\""} \
+      ${PREREMOVE+"PREREMOVE=\"$PREREMOVE\""} \
+      ${CONFLICTS+"CONFLICTS=\"$CONFLICTS\""} \
       ${INSTALL+"INSTALL=\"$INSTALL\""} \
       ${NUMJOBS+"NUMJOBS=\"$NUMJOBS\""} \
       ${ANSWER+"ANSWER=\"$ANSWER\""} \
@@ -614,7 +619,9 @@ function parse_info_and_hints
       ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
       ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )"
     unset SKIP \
-          VERSION OPTIONS GROUPADD USERADD INSTALL NUMJOBS ANSWER CLEANUP \
+          VERSION OPTIONS GROUPADD USERADD \
+          PREREMOVE CONFLICTS \
+          INSTALL NUMJOBS ANSWER CLEANUP \
           SPECIAL ARCH DOWNLOAD MD5SUM
 
   fi

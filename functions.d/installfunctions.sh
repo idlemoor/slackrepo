@@ -78,12 +78,19 @@ function install_packages
 
 function uninstall_packages
 # Run removepkg, and do extra cleanup
-# NOTE: If OPT_INSTALL is set, this function will still uninstall the package,
-# but it won't shit down its neck :-)
-# $1 = itemid
+# Usage: uninstall_packages [-f] itemid
+#   -f = (optionally) force uninstall
 # Return status: always 0
+# If there is an install hint, the packages WILL NOT be removed UNLESS -f is specified.
+# If OPT_INSTALL is set, the packages WILL be removed, but extra cleanup won't be performed.
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+
+  local force='n'
+  if [ "$1" = '-f' ]; then
+    force='y'
+    shift
+  fi
 
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
@@ -92,8 +99,8 @@ function uninstall_packages
   local pkgpath
   local etcnewfiles etcdirs etcfile etcdir
 
-  # Never remove a package that has an install hint.
-  [ "${HINT_INSTALL[$itemid]}" = 'y' ] && return 0
+  # Don't remove a package that has an install hint, unless -f was specified.
+  [ "${HINT_INSTALL[$itemid]}" = 'y' -a "$force" != 'y' ] && return 0
 
   # Look for the package(s).
   # Start with the temp output dir

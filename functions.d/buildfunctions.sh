@@ -205,7 +205,7 @@ function build_item
   # Remove any existing packages (some builds fail if already installed)
   # (... this might not be entirely appropriate for gcc or glibc ...)
   if [ "$noremove" != 'y' ]; then
-    uninstall_packages "$itemid"
+    uninstall_packages -f "$itemid"
   fi
 
   # Build it

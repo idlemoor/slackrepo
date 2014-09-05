@@ -156,7 +156,7 @@ function test_download
         else
           remotelength=$(fromdos <"$TMP_HEADER" | grep 'Content-[Ll]ength: ' | tail -n 1 | sed 's/^.* //')
           # Proceed only if we seem to have extracted a valid content-length.
-          if [ -n "$remotelength" ]; then
+          if [ -n "$remotelength" ] && [ "$remotelength" != 0 ]; then
             # Filenames that have %nn encodings won't get checked.
             filename=$(fromdos <"$TMP_HEADER" | grep 'Content-[Dd]isposition:.*filename=' | sed -e 's/^.*filename=//' -e 's/^"//' -e 's/"$//' -e 's/\%20/ /g' -e 's/\%7E/~/g')
             # If no Content-Disposition, we'll have to guess:

@@ -19,6 +19,7 @@
 #   log_warning
 #   log_error
 #   errorscan_itemlog
+#   format_left_right
 #-------------------------------------------------------------------------------
 
 function log_start
@@ -232,5 +233,45 @@ function errorscan_itemlog
   grep -E \
     "FAIL| hunk ignored|[^A-Z]Error |[^A-Z]ERROR |Error:|error:|errors occurred|ved symbol|ndefined reference to|ost recent call first|ot found|cannot operate on dangling|ot supported|annot find -l|make: \*\*\* No |kipping patch|t seem to find a patch|^Usage: |option requires |o such file or dir|SlackBuild: line" \
     "$ITEMLOG"
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function format_left_right
+# Format a two-part message, with the first part right justified, and the second
+# part left justified.  The formatted string is printed on standard output.
+# $1 = first part
+# $2 = second part (optional)
+# Return status: always 0
+{
+  if [ -z "$2" ]; then
+    # Don't muck about, just print $1:
+    echo "$1"
+    return 0
+  fi
+
+  lmsg="${1}"
+  rmsg="${2}"
+  pad="                                                                                "
+  # Line width is hardcoded here:
+  width=80
+  # Minimum width of left part:
+  lmin=1
+  # Minimum amount of padding:
+  pmin=1
+
+  rlen=${#rmsg}
+  llen=${#lmsg}
+  plen=$pmin
+
+  # If rlen is too long, reduce it:
+  [ $rlen -gt $(( $width - $lmin - $pmin )) ] && rlen=$(( $width - $lmin - $pmin ))
+  # If llen is too long, reduce it:
+  [ $llen -gt $(( $width - $pmin - $rlen )) ] && llen=$(( $width - $pmin - $rlen ))
+  # If llen is too short, increase the padding:
+  [ $(( $llen + $plen + $rlen )) -lt $width ] && plen=$(( $width - $llen - $rlen ))
+  # Ok, print it:
+  echo "${lmsg:0:llen}${pad:0:plen}${rmsg:0:rlen}"
   return 0
 }

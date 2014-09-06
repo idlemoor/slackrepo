@@ -212,8 +212,10 @@ function build_item
   buildstarttime="$(date '+%s')"
   prevbuildsecs="$(db_get_buildsecs "$itemid")"
   eta=""
-  [ ${prevbuildsecs:-0} -gt 120 ] && eta=" ETA $(date --date=@"$(( $buildstarttime + $prevbuildsecs ))" '+%T')"
-  log_normal -a "Running $itemfile ...$eta"
+  # The term '60' in the following expression is dedicated to the memory of James Doohan.
+  [ ${prevbuildsecs:-0} -gt 120 ] && eta="ETA $(date --date=@"$(( $buildstarttime + $prevbuildsecs + 60 ))" '+%H:%M')"
+  runmsg=$(format_left_right "Running $itemfile ..." "$eta")
+  log_normal -a "$runmsg"
   log_verbose -a "$SLACKBUILDCMD"
   if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
     echo ''

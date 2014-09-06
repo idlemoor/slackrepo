@@ -12,9 +12,9 @@ function verify_src
 # Verify item's source files in the source cache
 # $1 = itemid
 # Return status:
-# 0 - all files passed, or md5sum check suppressed, or DOWNLIST is empty
-# 1 - one or more files had a bad md5sum
-# 2 - no. of files != no. of md5sums
+# 0 - all files passed, or md5/sha256sum check suppressed, or DOWNLIST is empty
+# 1 - one or more files had a bad md5sum or sha256sum
+# 2 - no. of files != no. of md5sums or sha256sums
 # 3 - directory not found or empty => not in source cache, need to download
 # 4 - version mismatch, need to download new version
 # 5 - .info says item is unsupported/untested on this arch
@@ -28,6 +28,7 @@ function verify_src
   VERSION="${INFOVERSION[$itemid]}"
   DOWNLIST="${INFODOWNLIST[$itemid]}"
   MD5LIST="${INFOMD5LIST[$itemid]}"
+  SHA256LIST="${INFOSHA256LIST[$itemid]}"
   DOWNDIR="${SRCDIR[$itemid]}"
 
   # Quick checks:
@@ -42,6 +43,7 @@ function verify_src
 
   # More complex checks:
   ( cd "$DOWNDIR"
+
     # if wrong version, return 6 (nodownload hint) or 4 (version mismatch)
     if [ -f .version ]; then
       if [ "$VERSION" != "$(cat .version)" ]; then
@@ -51,6 +53,7 @@ function verify_src
         return 4
       fi
     fi
+
     # check files in this dir only (arch-specific subdirectories may exist, ignore them)
     IFS=$'\n'; srcfilelist=( $(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$' | sed 's:^\./::') ); unset IFS
     numgot=${#srcfilelist[@]}
@@ -64,18 +67,31 @@ function verify_src
       [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
       return 2
     fi
-    # if we're ignoring the md5sums, we've finished! => return 0
-    [ "${HINT_MD5IGNORE[$itemid]}" = 'y' ] && return 0
-    # run the md5 check on all the files (don't give up at the first error)
+
+    # if we're ignoring the md5sums and sha256sums, we've finished! => return 0
+    [ "${HINT_MD5IGNORE[$itemid]}" = 'y' -a "${HINT_SHA256IGNORE[$itemid]}" = 'y' ] && return 0
+
+    # run the md5 and/or sha256 check on all the files (don't give up at the first error)
     log_normal -a "Verifying source files ..."
     allok='y'
-    for f in "${srcfilelist[@]}"; do
-      mf=$(md5sum "$f" | sed 's/ .*//')
-      ok='n'
-      # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
-      for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
-      [ "$ok" = 'y' ] || { log_important -a "Failed md5sum: $f"; log_verbose -a "  actual md5sum is $mf"; allok='n'; }
-    done
+    if [ "${HINT_MD5IGNORE[$itemid]}" != 'y' ]; then
+      for f in "${srcfilelist[@]}"; do
+        mf=$(md5sum "$f" | sed 's/ .*//')
+        ok='n'
+        # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
+        for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
+        [ "$ok" = 'y' ] || { log_important -a "Failed md5sum: $f"; log_verbose -a "  actual md5sum is $mf"; allok='n'; }
+      done
+    fi
+    if [ "${HINT_SHA256IGNORE[$itemid]}" != 'y' ]; then
+      for f in "${srcfilelist[@]}"; do
+        sf=$(sha256sum "$f" | sed 's/ .*//')
+        ok='n'
+        # The next bit checks all files have a good sha256sum, but not vice versa, so it's not perfect :-/
+        for sinfo in $SHA256LIST; do if [ "$sf" = "$sinfo" ]; then ok='y'; break; fi; done
+        [ "$ok" = 'y' ] || { log_important -a "Failed sha256sum: $f"; log_verbose -a "  actual sha256sum is $sf"; allok='n'; }
+      done
+    fi
     [ "$allok" = 'y' ] || { if [ -n "${HINT_NODOWNLOAD[$itemid]}" ]; then return 6; else return 1; fi; }
   )
   return $?  # status comes directly from subshell

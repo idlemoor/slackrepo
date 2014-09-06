@@ -388,13 +388,13 @@ function parse_package_name
 #-------------------------------------------------------------------------------
 
 # Associative arrays to store stuff from .info files:
-declare -A INFOVERSION INFOREQUIRES INFODOWNLIST INFOMD5LIST
+declare -A INFOVERSION INFOREQUIRES INFODOWNLIST INFOMD5LIST INFOSHA256LIST
 # and to store source cache and revision info:
 declare -A SRCDIR GITREV GITDIRTY
 # and to store hints:
 declare -A \
-  HINT_SKIP HINT_MD5IGNORE HINT_NUMJOBS HINT_INSTALL HINT_SPECIAL HINT_ARCH \
-  HINT_CLEANUP HINT_USERADD HINT_GROUPADD HINT_ANSWER HINT_NODOWNLOAD \
+  HINT_SKIP HINT_MD5IGNORE HINT_SHA256IGNORE HINT_NUMJOBS HINT_INSTALL HINT_SPECIAL \
+  HINT_ARCH HINT_CLEANUP HINT_USERADD HINT_GROUPADD HINT_ANSWER HINT_NODOWNLOAD \
   HINT_PREREMOVE HINT_CONFLICTS \
   HINT_OPTIONS HINT_VERSION HINT_SUMMARY HINTFILE
 
@@ -442,7 +442,8 @@ function parse_info_and_hints
     fi
 
     # These are the variables we want:
-    local VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH} REQUIRES
+    local VERSION DOWNLOAD DOWNLOAD_${SR_ARCH} REQUIRES
+    local MD5SUM MD5SUM_${SR_ARCH} SHA256SUM SHA256SUM_${SR_ARCH}
     # Preferably, get them from the info file:
     if [ -f "$SR_SBREPO/$itemdir/$itemprgnam.info" ]; then
       # is prgnam.info plausibly in SBo format?
@@ -472,17 +473,19 @@ function parse_info_and_hints
     INFOVERSION[$itemid]="$VERSION"
     # but don't unset $VERSION yet, it'll be needed when we snarf from the SlackBuild below
 
-    # Process DOWNLOAD[_ARCH] and MD5SUM[_ARCH] from info file
+    # Process DOWNLOAD[_ARCH] and MD5SUM[_ARCH]/SHA256SUM[_ARCH] from info file
     # Don't bother checking if they are improperly paired (it'll become apparent later).
-    # If they are unset, set empty strings in INFODOWNLIST / INFOMD5LIST.
+    # If they are unset, set empty strings in INFODOWNLIST / INFOMD5LIST / INFOSHA256LIST.
     # Also set SRCDIR (even if there is no source, SRCDIR is needed to hold .version)
     if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
       INFODOWNLIST[$itemid]="$(eval echo \$DOWNLOAD_$SR_ARCH)"
       INFOMD5LIST[$itemid]="$(eval echo \$MD5SUM_$SR_ARCH)"
+      INFOSHA256LIST[$itemid]="$(eval echo \$SHA256SUM_$SR_ARCH)"
       SRCDIR[$itemid]="$SR_SRCREPO/$itemdir/$SR_ARCH"
     else
       INFODOWNLIST[$itemid]="${DOWNLOAD:-}"
       INFOMD5LIST[$itemid]="${MD5SUM:-}"
+      INFOSHA256LIST[$itemid]="${SHA256SUM:-}"
       SRCDIR[$itemid]="$SR_SRCREPO/$itemdir"
     fi
     if [ -z "${INFODOWNLIST[$itemid]}" ]; then
@@ -495,9 +498,10 @@ function parse_info_and_hints
       eval $(grep 'SRCNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")
       eval INFODOWNLIST["$itemid"]="$(sed ':x; /\\$/ { N; s/\\\n//; tx }' <"$SR_SBREPO"/"$itemdir"/"$itemfile" | grep 'wget -c ' | sed 's/wget -c //')"
       HINT_MD5IGNORE["$itemid"]='y'
+      HINT_SHA256IGNORE["$itemid"]='y'
     fi
-    unset DOWNLOAD MD5SUM PRGNAM SRCNAM VERSION
-    eval unset DOWNLOAD_"$SR_ARCH" MD5SUM_"$SR_ARCH"
+    unset DOWNLOAD MD5SUM SHA256SUM PRGNAM SRCNAM VERSION
+    eval unset DOWNLOAD_"$SR_ARCH" MD5SUM_"$SR_ARCH" SHA256SUM_"$SR_ARCH"
 
     # Conditionally save REQUIRES from info file into INFOREQUIRES
     # (which will be processed in the Fixup department below).
@@ -539,7 +543,7 @@ function parse_info_and_hints
   if [ -n "${HINTFILE[$itemid]}" ]; then
     local SKIP \
           VERSION ADDREQUIRES OPTIONS GROUPADD USERADD PREREMOVE CONFLICTS INSTALL NUMJOBS ANSWER CLEANUP \
-          SPECIAL ARCH DOWNLOAD MD5SUM
+          SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
     . "${HINTFILE[$itemid]}"
 
     # Process hint file's SKIP first.
@@ -575,16 +579,19 @@ function parse_info_and_hints
       [ "${INSTALL:0:1}" = 'N' -o "${INSTALL:0:1}" = 'n' -o "${INSTALL:0:1}" = '0' ] && HINT_INSTALL[$itemid]="n"
     fi
 
-    # Process hint file's VERSION, ARCH, DOWNLOAD[_ARCH] and MD5SUM[_ARCH] together:
+    # Process hint file's VERSION, ARCH, DOWNLOAD[_ARCH] and [MD5|SHA256]SUM[_ARCH] together:
     if [ -n "$ARCH" ]; then
       dlvar="DOWNLOAD_$ARCH"
       [ -n "${!dlvar}" ] && DOWNLOAD="${!dlvar}"
       md5var="MD5SUM_$ARCH"
       [ -n "${!md5var}" ] && MD5SUM="${!md5var}"
+      sha256var="SHA256SUM_$ARCH"
+      [ -n "${!sha256var}" ] && SHA256SUM="${!sha256var}"
     fi
     if [ -n "$VERSION" ]; then
       HINT_VERSION[$itemid]="$VERSION"
       [ -z "$MD5SUM" ] && MD5SUM='no'
+      [ -z "$SHA256SUM" ] && SHA256SUM='no'
     fi
     [ -v ARCH ] && HINT_ARCH[$itemid]="$ARCH"
     if [ "$DOWNLOAD" = 'no' ]; then
@@ -597,6 +604,12 @@ function parse_info_and_hints
     elif [ -n "$MD5SUM" ]; then
       INFOMD5LIST["$itemid"]="$MD5SUM"
       HINT_MD5IGNORE["$itemid"]=''
+    fi
+    if [ "$SHA256SUM" = 'no' ]; then
+      HINT_SHA256IGNORE["$itemid"]='y'
+    elif [ -n "$SHA256SUM" ]; then
+      INFOSHA256LIST["$itemid"]="$SHA256SUM"
+      HINT_SHA256IGNORE["$itemid"]=''
     fi
 
     # Process ADDREQUIRES in the Fixup department below.
@@ -617,12 +630,13 @@ function parse_info_and_hints
       ${ARCH+"ARCH=\"$ARCH\""} \
       ${DOWNLOAD+"DOWNLOAD=\"$DOWNLOAD\""} \
       ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
+      ${SHA256SUM+"SHA256SUM=\"$SHA256SUM\""} \
       ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )"
     unset SKIP \
           VERSION OPTIONS GROUPADD USERADD \
           PREREMOVE CONFLICTS \
           INSTALL NUMJOBS ANSWER CLEANUP \
-          SPECIAL ARCH DOWNLOAD MD5SUM
+          SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
 
   fi
 

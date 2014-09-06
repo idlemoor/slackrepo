@@ -442,8 +442,9 @@ function create_pkg_metadata
     dottxt="$nosuffix".txt
     dotlst="$nosuffix".lst
     dotmeta="$nosuffix".meta
-    # but the .md5 filename includes the suffix:
+    # but the .md5 and .sha256 filenames includes the suffix:
     dotmd5="$pkgpath".md5
+    dotsha256="$pkgpath".sha256
 
     # Although gen_repos_files.sh can create most of the following files, it's
     # quicker to create them here (we don't have to extract the slack-desc from
@@ -487,6 +488,11 @@ function create_pkg_metadata
     # .md5 file
     #-----------------------------#
     ( cd "$MYREPO"/"$itemdir"/; md5sum "$pkgbasename" > "$dotmd5" )
+
+    #-----------------------------#
+    # .sha256 file
+    #-----------------------------#
+    ( cd "$MYREPO"/"$itemdir"/; sha256sum "$pkgbasename" > "$dotsha256" )
 
     #-----------------------------#
     # .lst file

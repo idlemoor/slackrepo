@@ -23,7 +23,8 @@ function test_slackbuild
   local itemfile="${ITEMFILE[$itemid]}"
 
   local PRGNAM VERSION HOMEPAGE
-  local DOWNLOAD DOWNLOAD_${SR_ARCH} MD5SUM MD5SUM_${SR_ARCH}
+  local DOWNLOAD DOWNLOAD_${SR_ARCH}
+  local MD5SUM MD5SUM_${SR_ARCH} SHA256SUM SHA256SUM_${SR_ARCH}
   local REQUIRES MAINTAINER EMAIL
 
   local slackdesc hr linecount
@@ -73,7 +74,7 @@ function test_slackbuild
   #-----------------------------#
 
   if [ -f "$SR_SBREPO"/"$itemdir"/"$itemprgnam".info ]; then
-    unset PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM REQUIRES MAINTAINER EMAIL
+    unset PRGNAM VERSION HOMEPAGE DOWNLOAD MD5SUM SHA256SUM REQUIRES MAINTAINER EMAIL
     . "$SR_SBREPO"/"$itemdir"/"$itemprgnam".info
     [ "$PRGNAM" = "$itemprgnam" ] || \
       log_warning -a "${itemid}: PRGNAM in $itemprgnam.info is '$PRGNAM' (expected $itemprgnam)"
@@ -88,6 +89,7 @@ function test_slackbuild
       log_warning -a "${itemid}: MD5SUM not set in $itemprgnam.info"
     #### check it's valid hex md5sum, same number of sums as downloads
     #### check DOWNLOAD_arch & MD5SUM_arch
+    #### don't do checks on unofficial SHA256SUM at the moment
     [ -v REQUIRES ] || \
       log_warning -a "${itemid}: REQUIRES not set in $itemprgnam.info"
     [ -v MAINTAINER ] || \

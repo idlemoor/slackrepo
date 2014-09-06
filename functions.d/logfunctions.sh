@@ -255,7 +255,7 @@ function format_left_right
   rmsg="${2}"
   pad="                                                                                "
   # Line width is hardcoded here:
-  width=80
+  width=79
   # Minimum width of left part:
   lmin=1
   # Minimum amount of padding:

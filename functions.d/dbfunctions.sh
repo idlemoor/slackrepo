@@ -6,6 +6,7 @@
 #   db_init
 #   db_set_buildsecs
 #   db_get_buildsecs
+#   db_del_buildsecs
 #-------------------------------------------------------------------------------
 
 function db_init
@@ -47,6 +48,20 @@ function db_get_buildsecs
   [ -n "$SR_DATABASE" ] || { echo "0"; return 0; }
 
   echo "select secs from buildsecs where itemid='$itemid';" \
+  | sqlite3 "$SR_DATABASE"
+  return $?
+}
+
+#-------------------------------------------------------------------------------
+
+function db_del_buildsecs
+# Delete a build time
+# $1 = itemid
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ -n "$SR_DATABASE" ] || return 0
+
+  echo "delete from buildsecs where itemid='$1';" \
   | sqlite3 "$SR_DATABASE"
   return $?
 }

@@ -639,6 +639,7 @@ function remove_item
         if [ "$OPT_DRY_RUN" != 'y' ]; then
           log_normal "Removing package $pkgbase"
           rm "$pkg"
+          db_del_buildsecs "$itemid"
         else
           log_normal "Would remove package $pkgbase"
         fi

@@ -74,7 +74,7 @@ function verify_src
     # run the md5 and/or sha256 check on all the files (don't give up at the first error)
     log_normal -a "Verifying source files ..."
     allok='y'
-    if [ "${HINT_MD5IGNORE[$itemid]}" != 'y' ]; then
+    if [ "${HINT_MD5IGNORE[$itemid]}" != 'y' -a -n "$MD5LIST" ]; then
       for f in "${srcfilelist[@]}"; do
         mf=$(md5sum "$f" | sed 's/ .*//')
         ok='n'
@@ -83,7 +83,7 @@ function verify_src
         [ "$ok" = 'y' ] || { log_important -a "Failed md5sum: $f"; log_verbose -a "  actual md5sum is $mf"; allok='n'; }
       done
     fi
-    if [ "${HINT_SHA256IGNORE[$itemid]}" != 'y' ]; then
+    if [ "${HINT_SHA256IGNORE[$itemid]}" != 'y' -a -n "$SHA256LIST" ]; then
       for f in "${srcfilelist[@]}"; do
         sf=$(sha256sum "$f" | sed 's/ .*//')
         ok='n'

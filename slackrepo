@@ -31,6 +31,7 @@ function print_usage
   echo "  $(basename $0) rebuild [--control_args] [item...]"
   echo "  $(basename $0) update  [--control_args] [item...]"
   echo "  $(basename $0) remove  [--control_args] item..."
+  echo "  $(basename $0) restore [--control_args] item..."
   echo 'Control args:'
   echo '  --repo=ID'
   echo '  --quiet | --verbose | --very-verbose'
@@ -70,26 +71,30 @@ done
 # Initialise OPT_REPO from env var $REPO:
 OPT_REPO="$REPO"
 # No default for the processing mode (build/rebuild/update/remove):
-PROCMODE=''
+CMD=''
 
 while [ $# != 0 ]; do
   case "$1" in
     # we'll accept build/rebuild/update/remove with or without '--'
     build | --build )
-      [ -n "$PROCMODE" ] && { print_usage; exit_cleanup; exit 3; }
-      PROCMODE='build'
+      [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+      CMD='build'
       shift; continue ;;
     rebuild | --rebuild )
-      [ -n "$PROCMODE" ] && { print_usage; exit_cleanup; exit 3; }
-      PROCMODE='rebuild'
+      [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+      CMD='rebuild'
       shift; continue ;;
     update | --update )
-      [ -n "$PROCMODE" ] && { print_usage; exit_cleanup; exit 3; }
-      PROCMODE='update'
+      [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+      CMD='update'
       shift; continue ;;
     remove | --remove )
-      [ -n "$PROCMODE" ] && { print_usage; exit_cleanup; exit 3; }
-      PROCMODE='remove'
+      [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+      CMD='remove'
+      shift; continue ;;
+    restore | --restore )
+      [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+      CMD='restore'
       shift; continue ;;
     --repo=* )
       OPT_REPO=$(echo "$1" | sed 's/^--repo=//')
@@ -127,14 +132,14 @@ while [ $# != 0 ]; do
   esac
 done
 
-if [ -z "$PROCMODE" ]; then
+if [ -z "$CMD" ]; then
   print_usage
   exit_cleanup
   exit 3
-elif [ "$PROCMODE" = 'remove' -a $# = 0 ]; then
-  # remove mode with no args => do nothing
-  echo "Usage: $(basename $0) remove [--repo=ID] item..."
-  echo "In remove mode, you *must* specify the items to be removed."
+elif [ $# = 0 ] && [ "$CMD" = 'remove' -o "$CMD" = 'restore' ] ; then
+  # remove or restore mode with no args => do nothing
+  echo "Usage: $(basename $0) $CMD [--repo=ID] item..."
+  echo "In $CMD mode, you *must* specify the items to be removed."
   exit_cleanup
   exit 3
 fi
@@ -181,7 +186,7 @@ SYS_NPROC=$(nproc)
 
 # These config vars are prefixed with SR_ to stop SlackBuilds picking them up.
 # However, they do NOT have the SR_ prefix in the config files or environment.
-varnames="SBREPO PKGREPO SRCREPO \
+varnames="SBREPO SRCREPO PKGREPO PKGBACKUP \
           HINTDIR QUEUEDIR LOGDIR TMP DATABASE \
           ARCH TAG PKGTYPE NUMJOBS"
 # These config vars don't need to be obfuscated:
@@ -277,7 +282,7 @@ MAINLOG="$SR_LOGDIR"/$(basename $0)_$(date '+%F_%T').log
 # Log the config
 [ "$OPT_VERBOSE" = 'y' ] && echo ""
 log_verbose "Configuration:"
-log_verbose "  $PROCMODE"
+log_verbose "  $CMD"
 log_verbose "  --repo=$OPT_REPO"
 if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
   log_verbose "  --very-verbose"
@@ -339,6 +344,8 @@ fi
 [ -d "$SR_SBREPO" ]   || { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"   ; }
 [ -d "$SR_SRCREPO" ]  || { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO"  ; }
 [ -d "$SR_PKGREPO" ]  || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO"  ; }
+[ -n "$SR_PKGBACKUP" ] && [ -d "$SR_PKGBACKUP" ] || \
+                         { log_normal "Creating backup repository: $SR_PKGBACKUP"  ; mkdir -p "$SR_PKGBACKUP"; }
 [ -d "$SR_HINTDIR" ]  || { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"  ; }
 [ -d "$SR_QUEUEDIR" ] || { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR" ; }
 [ -d "$SR_LOGDIR" ]   || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"   ; }
@@ -405,7 +412,7 @@ if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
 fi
 
 # Warn about already installed packages (using package tag)
-if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' -a "$PROCMODE" != 'remove' ]; then
+if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' -a "$CMD" != 'remove' ]; then
   installed=$(ls /var/log/packages/*"$SR_TAG" 2>/dev/null)
   if [ -n "$installed" ]; then
     for pkg in $installed; do
@@ -420,7 +427,7 @@ fi
 #-------------------------------------------------------------------------------
 
 if [ $# = 0 ]; then
-  if [ "$PROCMODE" = 'update' ]; then
+  if [ "$CMD" = 'update' ]; then
     # update mode with no args => process everything in the package repo
     set -- "$SR_PKGREPO"
   else
@@ -434,7 +441,7 @@ while [ $# != 0 ]; do
   arg="$1"
   shift
   unset PARSEDLIST UNPARSEDLIST
-  if [ "$PROCMODE" = 'build' -o "$PROCMODE" = 'rebuild' ]; then
+  if [ "$CMD" = 'build' -o "$CMD" = 'rebuild' -o  "$CMD" = 'restore']; then
     parse_args -s "$arg"
     [ $? != 0 ] && continue
   else # 'update' or 'remove'
@@ -447,7 +454,7 @@ while [ $# != 0 ]; do
   # are dealing with the top level item.
   for ITEMID in "${PARSEDLIST[@]}"; do
     log_start "$ITEMID"
-    case "$PROCMODE" in
+    case "$CMD" in
     'build' | 'rebuild' )
       build_with_deps "$ITEMID"
       ;;
@@ -459,11 +466,14 @@ while [ $# != 0 ]; do
         remove_item "$ITEMID"
       fi
       ;;
+    'restore' )
+      restore_item "$ITEMID"
+      ;;
     'remove' )
       remove_item "$ITEMID"
       ;;
     *)
-      log_error "$(basename $0): Unrecognised PROCMODE = $PROCMODE"
+      log_error "$(basename $0): Unrecognised CMD = $CMD"
       exit 4
       ;;
     esac

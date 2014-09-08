@@ -165,7 +165,7 @@ function needs_build
 
   # Is this the top-level item and are we in rebuild mode
   #   => rebuild if it hasn't previously been rebuilt (as a dep of something else)
-  if [ "$itemid" = "$ITEMID" -a "$PROCMODE" = 'rebuild' ]; then
+  if [ "$itemid" = "$ITEMID" -a "$CMD" = 'rebuild' ]; then
     found='n'
     for previously in "${OKLIST[@]}"; do
       if [ "$previously" = "$ITEMID" ]; then found='y'; break; fi

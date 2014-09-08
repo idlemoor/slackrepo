@@ -15,9 +15,10 @@ function db_init
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 0
 
-  echo "create table if not exists \
-        buildsecs ( itemid text primary key, secs text );" \
-  | sqlite3 "$SR_DATABASE"
+  sqlite3 "$SR_DATABASE" << ++++
+create table if not exists buildsecs ( itemid text primary key, secs text );
+create table if not exists packages ( pkgnam text primary key, itemid text );
+++++
   return $?
 }
 
@@ -31,10 +32,8 @@ function db_set_buildsecs
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 0
 
-  echo "insert or replace into \
-        buildsecs ( itemid, secs ) \
-        values ( '$1', '$2' );" \
-  | sqlite3 "$SR_DATABASE"
+  sqlite3 "$SR_DATABASE" \
+    "insert or replace into buildsecs ( itemid, secs ) values ( '$1', '$2' );" \
   return $?
 }
 
@@ -47,8 +46,8 @@ function db_get_buildsecs
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 0
 
-  echo "select secs from buildsecs where itemid='$itemid';" \
-  | sqlite3 "$SR_DATABASE"
+  sqlite3 "$SR_DATABASE" \
+    "select secs from buildsecs where itemid='$1';"
   return $?
 }
 
@@ -61,7 +60,50 @@ function db_del_buildsecs
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 0
 
-  echo "delete from buildsecs where itemid='$1';" \
-  | sqlite3 "$SR_DATABASE"
+  sqlite3 "$SR_DATABASE" \
+    "delete from buildsecs where itemid='$1';"
+  return $?
+}
+
+#-------------------------------------------------------------------------------
+
+function db_set_pkgnam_itemid
+# Record a package name and its corresponding itemid
+# $1 = pkgnam
+# $2 = itemid
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ -n "$SR_DATABASE" ] || return 0
+
+  sqlite3 "$SR_DATABASE" \
+    "insert or replace into packages ( pkgnam, itemid ) values ( '$1', '$2' );"
+  return $?
+}
+
+#-------------------------------------------------------------------------------
+
+function db_get_pkgnam_itemid
+# Get the itemid for a given pkgnam
+# $1 = pkgnam
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ -n "$SR_DATABASE" ] || return 0
+
+  sqlite3 "$SR_DATABASE" \
+    "select itemid from packages where pkgnam='$1';"
+  return $?
+}
+
+#-------------------------------------------------------------------------------
+
+function db_del_pkgnam_itemid
+# Delete a package name and its corresponding itemid
+# $1 = pkgnam
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ -n "$SR_DATABASE" ] || return 0
+
+  sqlite3 "$SR_DATABASE" \
+    "delete from packages where pkgnam='$1';"
   return $?
 }

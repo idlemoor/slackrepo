@@ -33,7 +33,7 @@ function db_set_buildsecs
   [ -n "$SR_DATABASE" ] || return 0
 
   sqlite3 "$SR_DATABASE" \
-    "insert or replace into buildsecs ( itemid, secs ) values ( '$1', '$2' );" \
+    "insert or replace into buildsecs ( itemid, secs ) values ( '$1', '$2' );"
   return $?
 }
 

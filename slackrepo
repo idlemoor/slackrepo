@@ -441,7 +441,7 @@ while [ $# != 0 ]; do
   arg="$1"
   shift
   unset PARSEDLIST UNPARSEDLIST
-  if [ "$CMD" = 'build' -o "$CMD" = 'rebuild' -o  "$CMD" = 'restore']; then
+  if [ "$CMD" = 'build' -o "$CMD" = 'rebuild' -o "$CMD" = 'restore' ]; then
     parse_args -s "$arg"
     [ $? != 0 ] && continue
   else # 'update' or 'remove'

@@ -41,11 +41,11 @@ function db_set_buildsecs
 #-------------------------------------------------------------------------------
 
 function db_get_buildsecs
-# Retrieve a build time
+# Retrieve a build time (if no database, do not print anything)
 # $1 = itemid
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
-  [ -n "$SR_DATABASE" ] || { echo "0"; return 0; }
+  [ -n "$SR_DATABASE" ] || return 0
 
   echo "select secs from buildsecs where itemid='$itemid';" \
   | sqlite3 "$SR_DATABASE"

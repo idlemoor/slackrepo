@@ -212,8 +212,8 @@ function build_item
   buildstarttime="$(date '+%s')"
   prevbuildsecs="$(db_get_buildsecs "$itemid")"
   eta=""
-  # The term '60' in the following expression is dedicated to the memory of James Doohan.
-  [ ${prevbuildsecs:-0} -gt 120 ] && eta="ETA $(date --date=@"$(( $buildstarttime + $prevbuildsecs + 60 ))" '+%H:%M')"
+  # The term '30' in the following expression is dedicated to the memory of James Doohan.
+  [ -n "$prevbuildsecs" ] && eta="ETA $(date --date=@"$(( $buildstarttime + $prevbuildsecs + 30 ))" '+%H:%M')"
   runmsg=$(format_left_right "Running $itemfile ..." "$eta")
   log_normal -a "$runmsg"
   log_verbose -a "$SLACKBUILDCMD"

@@ -381,7 +381,7 @@ function build_failed
 #-------------------------------------------------------------------------------
 
 function create_pkg_metadata
-# Create metadata files in package dir, and changelog entry
+# Create metadata files in package dir, and changelog entries
 # $1 = itemid
 # Return status:
 # 9 = bizarre existential error, otherwise 0
@@ -396,36 +396,6 @@ function create_pkg_metadata
 
   MYREPO="$SR_PKGREPO"
   [ "$OPT_DRY_RUN" = 'y' ] && MYREPO="$DRYREPO"
-
-  #-----------------------------#
-  # changelog entry: needlessly elaborate :-)
-  #-----------------------------#
-
-  OPERATION="$(echo $BUILDINFO | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/')"
-  extrastuff=''
-  case "$BUILDINFO" in
-  add*)
-      # add short description from slack-desc (if there's no slack-desc, this should be null)
-      extrastuff="($(grep "^${itemprgnam}: " "$SR_SBREPO"/"$itemdir"/slack-desc 2>/dev/null| head -n 1 | sed -e 's/.*(//' -e 's/).*//'))"
-      ;;
-  'update for git'*)
-      # add title of the latest commit message
-      extrastuff="($(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //' -e 's/\.$//'))"
-      ;;
-  *)  :
-      ;;
-  esac
-  # Set $changelogentry for the ChangeLog, and $CHANGEMSG for build_ok()
-  if [ -z "$extrastuff" ]; then
-    changelogentry="${itemid}: ${OPERATION}. NEWLINE"
-    CHANGEMSG="${OPERATION}"
-  else
-    changelogentry="${itemid}: ${OPERATION}. LINEFEED $extrastuff NEWLINE"
-    CHANGEMSG="${OPERATION} ${extrastuff}"
-  fi
-  if [ "$OPT_DRY_RUN" != 'y' ]; then
-    echo "$changelogentry" >> "$CHANGELOG"
-  fi
 
   #-----------------------------#
   # .revision file
@@ -446,6 +416,36 @@ function create_pkg_metadata
     # but the .md5 and .sha256 filenames includes the suffix:
     dotmd5="$pkgpath".md5
     dotsha256="$pkgpath".sha256
+
+    #-----------------------------#
+    # changelog entry: needlessly elaborate :-)
+    #-----------------------------#
+
+    OPERATION="$(echo $BUILDINFO | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/')"
+    extrastuff=''
+    case "$BUILDINFO" in
+    add*)
+        # add short description from slack-desc (if there's no slack-desc, this should be null)
+        extrastuff="($(grep "^${pkgnam}: " "$SR_SBREPO"/"$itemdir"/slack-desc 2>/dev/null| head -n 1 | sed -e 's/.*(//' -e 's/).*//'))"
+        ;;
+    'update for git'*)
+        # add title of the latest commit message
+        extrastuff="($(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //' -e 's/\.$//'))"
+        ;;
+    *)  :
+        ;;
+    esac
+    # Set $changelogentry for the ChangeLog, and $CHANGEMSG for build_ok()
+    if [ -z "$extrastuff" ]; then
+      changelogentry="${pkgbasename}:  ${OPERATION}. NEWLINE"
+      CHANGEMSG="${OPERATION}"
+    else
+      changelogentry="${pkgbasename}:  ${OPERATION}. LINEFEED $extrastuff NEWLINE"
+      CHANGEMSG="${OPERATION} ${extrastuff}"
+    fi
+    if [ "$OPT_DRY_RUN" != 'y' ]; then
+      echo "$changelogentry" >> "$CHANGELOG"
+    fi
 
     # Although gen_repos_files.sh can create most of the following files, it's
     # quicker to create them here (we don't have to extract the slack-desc from

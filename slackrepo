@@ -31,7 +31,7 @@ function print_usage
   echo "  $(basename $0) rebuild [--control_args] [item...]"
   echo "  $(basename $0) update  [--control_args] [item...]"
   echo "  $(basename $0) remove  [--control_args] item..."
-  echo "  $(basename $0) restore [--control_args] item..."
+  echo "  $(basename $0) revert  [--control_args] item..."
   echo 'Control args:'
   echo '  --repo=ID'
   echo '  --quiet | --verbose | --very-verbose'
@@ -92,9 +92,9 @@ while [ $# != 0 ]; do
       [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
       CMD='remove'
       shift; continue ;;
-    restore | --restore )
+    revert | --revert )
       [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
-      CMD='restore'
+      CMD='revert'
       shift; continue ;;
     --repo=* )
       OPT_REPO=$(echo "$1" | sed 's/^--repo=//')
@@ -136,8 +136,8 @@ if [ -z "$CMD" ]; then
   print_usage
   exit_cleanup
   exit 3
-elif [ $# = 0 ] && [ "$CMD" = 'remove' -o "$CMD" = 'restore' ] ; then
-  # remove or restore mode with no args => do nothing
+elif [ $# = 0 ] && [ "$CMD" = 'remove' -o "$CMD" = 'revert' ] ; then
+  # remove or revert mode with no args => do nothing
   echo "Usage: $(basename $0) $CMD [--repo=ID] item..."
   echo "In $CMD mode, you *must* specify the items to be removed."
   exit_cleanup
@@ -441,7 +441,7 @@ while [ $# != 0 ]; do
   arg="$1"
   shift
   unset PARSEDLIST UNPARSEDLIST
-  if [ "$CMD" = 'build' -o "$CMD" = 'rebuild' -o "$CMD" = 'restore' ]; then
+  if [ "$CMD" = 'build' -o "$CMD" = 'rebuild' -o "$CMD" = 'revert' ]; then
     parse_args -s "$arg"
     [ $? != 0 ] && continue
   else # 'update' or 'remove'
@@ -466,8 +466,8 @@ while [ $# != 0 ]; do
         remove_item "$ITEMID"
       fi
       ;;
-    'restore' )
-      restore_item "$ITEMID"
+    'revert' )
+      revert_item "$ITEMID"
       ;;
     'remove' )
       remove_item "$ITEMID"

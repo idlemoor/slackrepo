@@ -3,12 +3,12 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # cmdfunctions.sh - command functions for slackrepo
-#   restore_item
+#   revert_item
 #   remove_item
 #-------------------------------------------------------------------------------
 
-function restore_item
-# Restore an item's package(s) from the backup repository
+function revert_item
+# Revert an item's package(s) from the backup repository
 # $1 = itemid
 # Return status:
 # 0 = ok
@@ -20,18 +20,57 @@ function restore_item
   local itemdir="${ITEMDIR[$itemid]}"
 
   if [ -z "$SR_PKGBACKUP" ]; then
-    log_error ":-/ No backups! Please set PKGBACKUP in your config file /-:"
+    log_error ":-( No backup repository configured -- please set PKGBACKUP in your config file )-:"
+    return 1
+  elif [ ! -d "$SR_PKGBACKUP"/"$itemid" ]; then
+    log_error ":-( There is no backup copy of $itemid in $SR_PKGBACKUP )-:"
     return 1
   fi
 
-  log_warning ":-/ $itemid would be restored [not yet implemented] /-:"
+  # save any existing packages to the backup repo with a temporary name
+  if [ -d "$SR_PKGREPO"/"$itemdir" ]; then
+    if [ "$OPT_DRY_RUN" != 'y' ]; then
+      mv "$SR_PKGREPO"/"$itemdir" "$SR_PKGBACKUP"/"$itemdir".temp
+      log_normal "These packages have been backed up:"
+      log_normal "$(printf '  %s\n' $(cd "$SR_PKGBACKUP"/"$itemdir".temp; ls *.t?z))"
+    else
+      log_normal "These packages would be backed up:"
+      log_normal "$(printf '  %s\n' $(cd "$SR_PKGREPO"/"$itemdir"; ls *.t?z))"
+    fi
+  fi
+  # move the backup to the package repo
+  if [ -d "$SR_PKGBACKUP"/"$itemdir" ]; then
+    if [ "$OPT_DRY_RUN" != 'y' ]; then
+      mv "$SR_PKGBACKUP"/"$itemdir" "$SR_PKGREPO"/"$itemdir"
+      log_normal "These packages have been reverted:"
+      log_normal "$(printf '  %s\n' $(cd "$SR_PKGREPO"/"$itemdir"; ls *.t?z))"
+    else
+      log_normal "These packages would be reverted:"
+      log_normal "$(printf '  %s\n' $(cd "$SR_PKGBACKUP"/"$itemdir"; ls *.t?z))"
+    fi
+  fi
+  # give the new backup its proper name
+  if [ -d "$SR_PKGBACKUP"/"$itemdir".temp ]; then
+    mv "$SR_PKGBACKUP"/"$itemdir".temp "$SR_PKGBACKUP"/"$itemdir"
+  fi
+
+  BUILDINFO='revert'
+  create_pkg_metadata "$itemid"
+
+  if [ "$OPT_DRY_RUN" != 'y' ]; then
+    log_success ":-) $itemid: Reverted (-:"
+  else
+    log_success ":-) $itemid would be reverted [dry run] (-:"
+  fi
+  OKLIST+=( "$itemid" )
   return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function remove_item
-# Remove an item's package(s) from the package repository and the source repository
+# Move an item's package(s) and metadata from the package repository to the
+# backup, and remove its stuff from the source repository.
 # $1 = itemid
 # Return status: always 0
 {
@@ -41,17 +80,16 @@ function remove_item
   local itemdir="${ITEMDIR[$itemid]}"
 
   if [ -d "$SR_PKGREPO"/"$itemdir" ]; then
-    [ "$OPT_DRY_RUN" != 'y' ] && rm -f "$SR_PKGREPO"/"$itemdir"/.revision
     pkglist=( $(ls "$SR_PKGREPO"/"$itemdir"/*.t?z 2>/dev/null) )
     if [ "${#pkglist[@]}" = 0 ] ; then
-      log_normal "There is nothing in $SR_PKGREPO/$itemdir"
+      log_normal "There are no packages in $SR_PKGREPO/$itemdir"
     else
       for pkg in "${pkglist[@]}"; do
         pkgbase=$(basename "$pkg")
         if [ "$OPT_DRY_RUN" != 'y' ]; then
           log_normal "Removing package $pkgbase"
-          rm "$pkg"
-          db_del_buildsecs "$itemid"
+          rm -f $(echo "$pkg" | sed 's/\.t.z$//').*
+          echo "$pkgbase:  Removed. NEWLINE" >> "$CHANGELOG"
         else
           log_normal "Would remove package $pkgbase"
         fi
@@ -63,6 +101,7 @@ function remove_item
       done
     fi
     if [ "$OPT_DRY_RUN" != 'y' ]; then
+      db_del_buildsecs "$itemid"
       log_normal "Removing directory $SR_PKGREPO/$itemdir"
       rm -rf "$SR_PKGREPO"/"$itemdir"
       up="$(dirname "$itemdir")"
@@ -94,7 +133,6 @@ function remove_item
   fi
 
   if [ "$OPT_DRY_RUN" != 'y' ]; then
-    echo "$itemid: Removed. NEWLINE" >> "$CHANGELOG"
     log_success ":-) $itemid: Removed (-:"
   else
     log_success ":-) $itemid would be removed [dry run] (-:"

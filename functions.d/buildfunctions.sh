@@ -314,19 +314,27 @@ function build_ok
     rm -rf "$DRYREPO"/"$itemdir"/*
     mv "$MYTMPOUT"/* "$DRYREPO"/"$itemdir"/
   else
-    # put them into the real package repo
+    # save any existing packages to the backup repo
+    if [ -d "$SR_PKGREPO"/"$itemdir" -a -n "$SR_PKGBACKUP" ]; then
+      [ -d "$SR_PKGBACKUP"/"$itemdir" ] && mv "$SR_PKGBACKUP"/"$itemdir" "$SR_PKGBACKUP"/"$itemdir".prev
+      mv "$SR_PKGREPO"/"$itemdir" "$SR_PKGBACKUP"/"$itemdir"
+      rm -rf "$SR_PKGBACKUP"/"$itemdir".prev
+      log_verbose "These packages have been backed up:"
+      log_verbose "$(printf '  %s\n' $(cd "$SR_PKGBACKUP"/"$itemdir"; ls *.t?z))"
+    fi
+    # put the new packages into the real package repo
     mkdir -p "$SR_PKGREPO"/"$itemdir"
-    rm -rf "$SR_PKGREPO"/"$itemdir"/*
     mv "$MYTMPOUT"/* "$SR_PKGREPO"/"$itemdir"/
   fi
+
+  create_pkg_metadata "$itemid"  # sets $CHANGEMSG
+
   # MYTMPOUT is empty now, so remove it even if OPT_KEEP_TMP is set
   rm -rf "$MYTMPOUT"
 
   if [ "${HINT_INSTALL[$itemid]}" = 'n' ] || [ "$OPT_INSTALL" != 'y' -a "${HINT_INSTALL[$itemid]}" != 'y' ]; then
     uninstall_deps "$itemid"
   fi
-
-  create_pkg_metadata "$itemid"  # sets $CHANGEMSG
 
   # This won't always kill everything, but it's good enough for saving space
   [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
@@ -397,31 +405,29 @@ function create_pkg_metadata
   MYREPO="$SR_PKGREPO"
   [ "$OPT_DRY_RUN" = 'y' ] && MYREPO="$DRYREPO"
 
-  #-----------------------------#
-  # .revision file
-  #-----------------------------#
-  print_current_revinfo "$itemid" > "$MYREPO"/"$itemdir"/.revision
-
-
   pkglist=( $(ls "$MYREPO"/"$itemdir"/*.t?z 2>/dev/null) )
   for pkgpath in "${pkglist[@]}"; do
 
     pkgbasename=$(basename "$pkgpath")
     pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
     nosuffix=$(echo "$pkgpath" | sed 's/\.t.z$//')
-    dotdep="$nosuffix".dep
-    dottxt="$nosuffix".txt
-    dotlst="$nosuffix".lst
-    dotmeta="$nosuffix".meta
-    # but the .md5 and .sha256 filenames includes the suffix:
-    dotmd5="$pkgpath".md5
-    dotsha256="$pkgpath".sha256
+    dotrev=".revision"
+#   soon changing to:
+#   dotrev="${nosuffix}.rev"
+    dotdep="${nosuffix}.dep"
+    dottxt="${nosuffix}.txt"
+    dotlst="${nosuffix}.lst"
+    dotmeta="${nosuffix}.meta"
+    # but the .md5, .sha256 and .asc filenames include the suffix:
+    dotmd5="${pkgpath}.md5"
+    dotsha256="${pkgpath}.sha256"
+    dotasc="${pkgpath}.asc"
 
     #-----------------------------#
     # changelog entry: needlessly elaborate :-)
     #-----------------------------#
 
-    OPERATION="$(echo $BUILDINFO | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/')"
+    OPERATION="$(echo $BUILDINFO | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/' -e 's/^revert.*/Reverted/' )"
     extrastuff=''
     case "$BUILDINFO" in
     add*)
@@ -447,71 +453,102 @@ function create_pkg_metadata
       echo "$changelogentry" >> "$CHANGELOG"
     fi
 
-    # Although gen_repos_files.sh can create most of the following files, it's
-    # quicker to create them here (we don't have to extract the slack-desc from
-    # the package, and if test_package has been run, we can reuse its listing
-    # of the package contents)
-
-    #-----------------------------#
-    # .dep file (no deps => no file)
-    #-----------------------------#
-    rm -f "$dotdep"
-    if [ -n "${FULLDEPS[$itemid]}" ]; then
-      for dep in ${FULLDEPS[$itemid]}; do
-        printf "%s\n" $(basename $dep) >> "$dotdep"
-      done
-    fi
-
-    #-----------------------------#
-    # slack-required
-    #-----------------------------#
-    if [ "$SR_FOR_SLAPTGET" -eq 1 ]; then
-      if [ -n "${DIRECTDEPS[$itemid]}" ]; then
-        if [ -d "$TMP"/package-"$pkgnam"/install -a ! -f "$TMP"/package-"$pkgnam"/install/slack-required ]; then
-          for dep in ${DIRECTDEPS[$itemid]}; do
-            printf "%s\n" $(basename $dep) >> "$TMP"/package-"$pkgnam"/install/slack-required
-          done
-          ( cd "$TMP"/package-"$itemprgnam"; tar-1.13 r "$pkgpath" install/slack-required )
-        fi
-      fi
-    fi
-
-    #-----------------------------#
-    # .txt file
-    #-----------------------------#
-    if [ -f "$SR_SBREPO"/"$itemdir"/slack-desc ]; then
-      cat "$SR_SBREPO"/"$itemdir"/slack-desc | sed -n '/^#/d;/:/p' > "$dottxt"
-    else
-      echo "${itemprgnam}: ERROR: No slack-desc" > "$dottxt"
-    fi
-
-    #-----------------------------#
-    # .md5 file
-    #-----------------------------#
-    ( cd "$MYREPO"/"$itemdir"/; md5sum "$pkgbasename" > "$dotmd5" )
-
-    #-----------------------------#
-    # .sha256 file
-    #-----------------------------#
-    ( cd "$MYREPO"/"$itemdir"/; sha256sum "$pkgbasename" > "$dotsha256" )
+    # If this is a reverted package, most of the existing metadata can be reused.
+    # Otherwise, although gen_repos_files.sh can create most of the following files,
+    # it's quicker to create them here (we can probably get the slack-desc from the
+    # packaging directory, and if test_package has been run we can reuse its list
+    # of the package contents).
 
     #-----------------------------#
     # .lst file
+    # (do this first so we have a quick way of seeing what's in the package)
     #-----------------------------#
-    cat << EOF > "$dotlst"
+    if [ ! -f "$dotlst" ]; then
+      cat << EOF > "$dotlst"
 ++========================================
 ||
 ||   Package:  ./$itemdir/$pkgbasename
 ||
 ++========================================
 EOF
-    TMP_PKGCONTENTS="$MYTMPDIR"/pkgcontents_"$pkgbasename"
-    if [ ! -f "$TMP_PKGCONTENTS" ]; then
-      tar tvf "$pkgpath" > "$TMP_PKGCONTENTS"
+      TMP_PKGCONTENTS="$MYTMPDIR"/pkgcontents_"$pkgbasename"
+      if [ ! -f "$TMP_PKGCONTENTS" ]; then
+        tar tvf "$pkgpath" > "$TMP_PKGCONTENTS"
+      fi
+      cat "$TMP_PKGCONTENTS" >> "$dotlst"
+      echo "" >> "$dotlst"
+      echo "" >> "$dotlst"
     fi
-    cat "$TMP_PKGCONTENTS" >> "$dotlst"
-    echo "" >> "$dotlst"
-    echo "" >> "$dotlst"
+
+    #-----------------------------#
+    # .rev file
+    #-----------------------------#
+    if [ ! -f "$dotrev" ]; then
+      print_current_revinfo "$itemid" > "$dotrev"
+    fi
+
+    #-----------------------------#
+    # .dep file (no deps => no file)
+    #-----------------------------#
+    if [ ! -f "$dotdep" ]; then
+      if [ -n "${FULLDEPS[$itemid]}" ]; then
+        for dep in ${FULLDEPS[$itemid]}; do
+          printf "%s\n" $(basename $dep) >> "$dotdep"
+        done
+      fi
+    fi
+
+    #-----------------------------#
+    # .txt file
+    #-----------------------------#
+    if [ ! -f "$dottxt" ]; then
+      if [ -f "$SR_SBREPO"/"$itemdir"/slack-desc ]; then
+        cat "$SR_SBREPO"/"$itemdir"/slack-desc | sed -n '/^#/d;/:/p' > "$dottxt"
+      elif grep -q install/slack-desc "$dotlst"; then
+        tar xf "$pkgpath" -O install/slack-desc 2>/dev/null | sed -n '/^#/d;/:/p' > "$dottxt"
+      else
+        # bad egg!
+        > "$dottxt"
+      fi
+    fi
+
+    #-----------------------------#
+    # slack-required, slack-conflicts, slack-suggests
+    #-----------------------------#
+    if [ "$SR_FOR_SLAPTGET" -eq 1 ]; then
+
+      # slack-required: from packaging dir, or extract from package, or synthesise it from DIRECTDEPS.
+      if [ -f "$TMP"/package-"$pkgnam"/install/slack-required ]; then
+        SLACKREQUIRED=$(cat "$TMP"/package-"$pkgnam"/install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+      elif grep -q install/slack-required "$dotlst"; then
+        SLACKREQUIRED=$(tar xf "$pkgpath" -O install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+      elif [ -n "${DIRECTDEPS[$itemid]}" ]; then
+        SLACKREQUIRED=$(for dep in ${DIRECTDEPS[$itemid]}; do printf "%s\n" $(basename $dep); done | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+      else
+        SLACKREQUIRED=""
+      fi
+
+      # slack-conflicts: from packaging dir, or extract from package, or get it from the hintfile.
+      if [ -f "$TMP"/package-"$pkgnam"/install/slack-conflicts ]; then
+        SLACKCONFLICTS=$(cat "$TMP"/package-"$pkgnam"/install/slack-conflicts 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+      elif grep -q install/slack-conflicts "$dotlst"; then
+        SLACKCONFLICTS=$(tar xf "$pkgpath" -O install/slack-conflicts 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+      elif [ -n "${HINT_CONFLICTS[$itemid]}" ]; then
+        SLACKCONFLICTS="${HINT_CONFLICTS[$itemid]}"
+      else
+        SLACKCONFLICTS=""
+      fi
+
+      # slack-suggests: from packaging dir, or extract from package.
+      if [ -f "$TMP"/package-"$pkgnam"/install/slack-suggests ]; then
+        SLACKSUGGESTS=$(cat "$TMP"/package-"$pkgnam"/install/slack-suggests 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+      elif grep -q install/slack-suggests "$dotlst"; then
+        SLACKCONFLICTS=$(tar xf "$pkgpath" -O install/slack-suggests 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+      else
+        SLACKSUGGESTS=""
+      fi
+
+    fi
 
     #-----------------------------#
     # .meta file
@@ -527,17 +564,23 @@ EOF
     echo "PACKAGE SIZE (compressed):  ${pkgsize} K" >> "$dotmeta"
     echo "PACKAGE SIZE (uncompressed):  ${uncsize} K" >> "$dotmeta"
     if [ "$SR_FOR_SLAPTGET" -eq 1 ]; then
-      # Fish them out of the packaging directory.
-      REQUIRED=$(cat "$TMP"/package-"$pkgnam"/install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
-      echo "PACKAGE REQUIRED:  $REQUIRED" >> "$dotmeta"
-      CONFLICTS=$(cat "$TMP"/package-"$pkgnam"/install/slack-conflicts 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
-      echo "PACKAGE CONFLICTS:  $CONFLICTS" >> "$dotmeta"
-      SUGGESTS=$(cat "$TMP"/package-"$pkgnam"/install/slack-suggests 2>/dev/null | xargs -r)
-      echo "PACKAGE SUGGESTS:  $SUGGESTS" >> "$dotmeta"
+      echo "PACKAGE REQUIRED:  $SLACKREQUIRED" >> "$dotmeta"
+      echo "PACKAGE CONFLICTS:  $SLACKCONFLICTS" >> "$dotmeta"
+      echo "PACKAGE SUGGESTS:  $SLACKSUGGESTS" >> "$dotmeta"
     fi
     echo "PACKAGE DESCRIPTION:" >> "$dotmeta"
     cat "$dottxt" >> "$dotmeta"
     echo "" >> "$dotmeta"
+
+    #-----------------------------#
+    # .md5 file
+    #-----------------------------#
+    [ -f "$dotmd5" ] || ( cd "$MYREPO"/"$itemdir"/; md5sum "$pkgbasename" > "$dotmd5" )
+
+    #-----------------------------#
+    # .sha256 file
+    #-----------------------------#
+    [ -f "$dotsha256" ] || ( cd "$MYREPO"/"$itemdir"/; sha256sum "$pkgbasename" > "$dotsha256" )
 
     [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_PKGCONTENTS"
 

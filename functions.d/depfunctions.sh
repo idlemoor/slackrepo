@@ -108,8 +108,6 @@ function build_with_deps
   local itemfile="${ITEMFILE[$itemid]}"
 
   local mydeplist mydep
-  local revstatus op reason
-  local allinstalled
 
   calculate_deps "$itemid" || return 1
 

@@ -70,8 +70,8 @@ function print_current_revinfo
   for dep in ${DIRECTDEPS[$itemid]}; do
     if [ -n "${REVCACHE[$dep]}" ]; then
       deprev="${REVCACHE[$dep]}"
-    elif [ "$OPT_DRY_RUN" = 'y' -a -f $DRYREPO/$dep/.revision ]; then
-      deprev=$(head -q -n 1 $DRYREPO/$dep/.revision)
+    elif [ "$OPT_DRY_RUN" = 'y' -a -f "$DRYREPO"/"$dep"/.revision ]; then
+      deprev=$(head -q -n 1 "$DRYREPO"/"$dep"/.revision)
       REVCACHE[$dep]="$deprev"
     else
       deprev=$(head -q -n 1 $SR_PKGREPO/$dep/.revision)
@@ -116,9 +116,14 @@ function needs_build
     return 0
   fi
 
-  # Is the .revision file missing => add
-  PKGREVFILE=$(dirname "${pkglist[0]}")/.revision
-  if [ ! -f "$PKGREVFILE" ]; then
+  # Is the .rev file missing => add
+  if [ -f $(dirname "${pkglist[0]}")/.revision ]; then
+    # old style
+    PKGREVFILE=$(dirname "${pkglist[0]}")/.revision
+  elif [ -f $(dirname "${pkglist[0]}")/.rev ]; then
+    # new style
+    PKGREVFILE=$(dirname "${pkglist[0]}")/.rev
+  else
     BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
     return 0
   fi

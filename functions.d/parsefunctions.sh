@@ -344,7 +344,9 @@ function scan_dir
       return 0
     fi
   else
-    if [ -f "$dir"/.revision ]; then
+    oldstylerev="$dir"/.revision
+    newstylerev=$( ls "$dir"/"$dirbase"-*.rev 2>/dev/null | head -1)
+    if [ -f "$oldstylerev" -o -f "$newstylerev" ]; then
       #### use a wild guess for the filename
       #### interim solution, won't work for e.g. *.sh
       add_parsed_file "$searchtype" "$dir"/"$dirbase".SlackBuild

@@ -411,9 +411,7 @@ function create_pkg_metadata
     pkgbasename=$(basename "$pkgpath")
     pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
     nosuffix=$(echo "$pkgpath" | sed 's/\.t.z$//')
-    dotrev=".revision"
-#   soon changing to:
-#   dotrev="${nosuffix}.rev"
+    dotrev="${nosuffix}.rev"
     dotdep="${nosuffix}.dep"
     dottxt="${nosuffix}.txt"
     dotlst="${nosuffix}.lst"

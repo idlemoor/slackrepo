@@ -25,7 +25,7 @@ function build_item
 # 7 = excessively dramatic qa test fail
 # 8 = package install fail
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
@@ -48,7 +48,7 @@ function build_item
     # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
     log_verbose -a "Note: $itemid: setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]})"
     sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$MYTMPIN/$itemfile"
-    verpat="$(echo ${INFOVERSION[$itemid]} | sed 's/\./\\\./g')"
+    verpat="$(echo "${INFOVERSION[$itemid]}" | sed 's/\./\\\./g')"
     INFODOWNLIST[$itemid]="$(echo "${INFODOWNLIST[$itemid]}" | sed "s/$verpat/$NEWVERSION/g")"
     INFOVERSION[$itemid]="$NEWVERSION"
   fi
@@ -177,8 +177,8 @@ function build_item
       count=0
       for sourcefile in $(ls -rt "$SR_SRCREPO"/"$itemdir" 2>/dev/null); do
         target=$(basename "${tempdownlist[$count]}")
-        ( cd "$MYTMPIN"; [ ! -e "$target" ] && ln -s $(basename "$sourcefile") "$target" )
-        count=$(( $count + 1 ))
+        ( cd "$MYTMPIN"; [ ! -e "$target" ] && ln -s "$(basename "$sourcefile")" "$target" )
+        count=$(( count + 1 ))
       done
       ;;
     'noexport_ARCH' )
@@ -212,7 +212,7 @@ function build_item
   prevbuildsecs="$(db_get_buildsecs "$itemid")"
   eta=""
   # The term '30' in the following expression is dedicated to the memory of James Doohan.
-  [ -n "$prevbuildsecs" ] && eta="ETA $(date --date=@"$(( $buildstarttime + $prevbuildsecs + 30 ))" '+%H:%M')"
+  [ -n "$prevbuildsecs" ] && eta="ETA $(date --date=@"$(( buildstarttime + prevbuildsecs + 30 ))" '+%H:%M')"
   runmsg=$(format_left_right "Running $itemfile ..." "$eta")
   log_normal -a "$runmsg"
   log_verbose -a "$SLACKBUILDCMD"
@@ -222,10 +222,10 @@ function build_item
     echo ''
     set -o pipefail
     if [ "$SYS_MULTILIB" = "y" -a "$ARCH" = 'i486' ]; then
-      ( cd "$MYTMPIN"; . /etc/profile.d/32dev.sh; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
+      ( cd "$MYTMPIN"; . /etc/profile.d/32dev.sh; eval "$SLACKBUILDCMD" ) 2>&1 | tee -a "$ITEMLOG"
       buildstat=$?
     else
-      ( cd "$MYTMPIN"; eval $SLACKBUILDCMD ) 2>&1 | tee -a "$ITEMLOG"
+      ( cd "$MYTMPIN"; eval "$SLACKBUILDCMD" ) 2>&1 | tee -a "$ITEMLOG"
       buildstat=$?
     fi
     set +o pipefail
@@ -233,10 +233,10 @@ function build_item
     echo ''
   else
     if [ "$SYS_MULTILIB" = "y" -a "$ARCH" = 'i486' ]; then
-      ( cd "$MYTMPIN"; . /etc/profile.d/32dev.sh; eval $SLACKBUILDCMD ) >> "$ITEMLOG" 2>&1
+      ( cd "$MYTMPIN"; . /etc/profile.d/32dev.sh; eval "$SLACKBUILDCMD" ) >> "$ITEMLOG" 2>&1
       buildstat=$?
     else
-      ( cd "$MYTMPIN"; eval $SLACKBUILDCMD ) >> "$ITEMLOG" 2>&1
+      ( cd "$MYTMPIN"; eval "$SLACKBUILDCMD" ) >> "$ITEMLOG" 2>&1
       buildstat=$?
     fi
   fi
@@ -256,7 +256,7 @@ function build_item
     logpkgs=$(grep "Slackware package .* created." "$ITEMLOG" | cut -f3 -d" ")
     if [ -n "$logpkgs" ]; then
       for pkgpath in $logpkgs; do
-        if [ -f "$MYTMPIN/README" -a -f "$MYTMPIN"/$(basename "$itemfile" .SlackBuild).info ]; then
+        if [ -f "$MYTMPIN/README" -a -f "$MYTMPIN"/"$(basename "$itemfile" .SlackBuild)".info ]; then
           # it's probably an SBo SlackBuild, so complain and don't retag
           log_warning -a "${itemid}: Package should have been in \$OUTPUT: $pkgpath"
           mv "$pkgpath" "$MYTMPOUT"
@@ -266,7 +266,7 @@ function build_item
           if [ "$currtag" != "$SR_TAG" ]; then
             # retag it
             pkgtype=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
-            mv "$pkgpath" "$MYTMPOUT"/$(echo "$pkgnam" | sed 's/'"$currtag"'\.'"$pkgtype"'$/'$SR_TAG'.'"$pkgtype"'/')
+            mv "$pkgpath" "$MYTMPOUT"/"$(echo "$pkgnam" | sed 's/'"$currtag"'\.'"$pkgtype"'$/'"$SR_TAG"'.'"$pkgtype"'/')"
           else
             mv "$pkgpath" "$MYTMPOUT"/
           fi
@@ -280,7 +280,7 @@ function build_item
     fi
   fi
 
-  db_set_buildsecs "$itemid" $(( $buildfinishtime - $buildstarttime ))
+  db_set_buildsecs "$itemid" $(( buildfinishtime - buildstarttime ))
 
   if [ "$OPT_TEST" = 'y' ]; then
     test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
@@ -299,7 +299,7 @@ function build_ok
 # $1 = itemid
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
@@ -316,11 +316,15 @@ function build_ok
   else
     # save any existing packages to the backup repo
     if [ -d "$SR_PKGREPO"/"$itemdir" -a -n "$SR_PKGBACKUP" ]; then
-      [ -d "$SR_PKGBACKUP"/"$itemdir" ] && mv "$SR_PKGBACKUP"/"$itemdir" "$SR_PKGBACKUP"/"$itemdir".prev
+      if [ -d "$SR_PKGBACKUP"/"$itemdir" ]; then
+        mv "$SR_PKGBACKUP"/"$itemdir" "$SR_PKGBACKUP"/"$itemdir".prev
+      else
+        mkdir -p "$(dirname "$SR_PKGBACKUP"/"$itemdir")"
+      fi
       mv "$SR_PKGREPO"/"$itemdir" "$SR_PKGBACKUP"/"$itemdir"
       rm -rf "$SR_PKGBACKUP"/"$itemdir".prev
-      log_verbose "These packages have been backed up:"
-      log_verbose "$(printf '  %s\n' $(cd "$SR_PKGBACKUP"/"$itemdir"; ls *.t?z))"
+      #### handle this better if no such files
+      log_verbose "$(printf 'Backed up: %s\n' $(cd "$SR_PKGBACKUP"/"$itemdir"; ls *.t?z))"
     fi
     # put the new packages into the real package repo
     mkdir -p "$SR_PKGREPO"/"$itemdir"
@@ -356,7 +360,7 @@ function build_failed
 # Also uses BUILDINFO set by needs_build()
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
@@ -368,7 +372,7 @@ function build_failed
     rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
   fi
 
-  buildtype=$(echo $BUILDINFO | cut -f1 -d" ")
+  buildtype="$(echo "$BUILDINFO" | cut -f1 -d" ")"
   msg="$buildtype FAILED"
   log_error -n ":-( $itemid $msg )-:"
   if [ "$OPT_QUIET" != 'y' ]; then
@@ -394,7 +398,7 @@ function create_pkg_metadata
 # Return status:
 # 9 = bizarre existential error, otherwise 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
@@ -425,7 +429,7 @@ function create_pkg_metadata
     # changelog entry: needlessly elaborate :-)
     #-----------------------------#
 
-    OPERATION="$(echo $BUILDINFO | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/' -e 's/^revert.*/Reverted/' )"
+    OPERATION="$(echo "$BUILDINFO" | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/' -e 's/^revert.*/Reverted/' )"
     extrastuff=''
     case "$BUILDINFO" in
     add*)
@@ -491,7 +495,7 @@ EOF
     if [ ! -f "$dotdep" ]; then
       if [ -n "${FULLDEPS[$itemid]}" ]; then
         for dep in ${FULLDEPS[$itemid]}; do
-          printf "%s\n" $(basename $dep) >> "$dotdep"
+          printf "%s\n" "$(basename "$dep")" >> "$dotdep"
         done
       fi
     fi
@@ -501,7 +505,7 @@ EOF
     #-----------------------------#
     if [ ! -f "$dottxt" ]; then
       if [ -f "$SR_SBREPO"/"$itemdir"/slack-desc ]; then
-        cat "$SR_SBREPO"/"$itemdir"/slack-desc | sed -n '/^#/d;/:/p' > "$dottxt"
+        sed -n '/^#/d;/:/p' < "$SR_SBREPO"/"$itemdir"/slack-desc > "$dottxt"
       elif grep -q install/slack-desc "$dotlst"; then
         tar xf "$pkgpath" -O install/slack-desc 2>/dev/null | sed -n '/^#/d;/:/p' > "$dottxt"
       else
@@ -521,7 +525,7 @@ EOF
       elif grep -q install/slack-required "$dotlst"; then
         SLACKREQUIRED=$(tar xf "$pkgpath" -O install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
       elif [ -n "${DIRECTDEPS[$itemid]}" ]; then
-        SLACKREQUIRED=$(for dep in ${DIRECTDEPS[$itemid]}; do printf "%s\n" $(basename $dep); done | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        SLACKREQUIRED=$(for dep in ${DIRECTDEPS[$itemid]}; do printf "%s\n" "$(basename "$dep")"; done | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
       else
         SLACKREQUIRED=""
       fi
@@ -596,7 +600,7 @@ function do_groupadd_useradd
 # $1 = itemid
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
@@ -604,7 +608,7 @@ function do_groupadd_useradd
   if [ -n "${HINT_GROUPADD[$itemid]}" ]; then
     for groupstring in ${HINT_GROUPADD[$itemid]}; do
       gnum=''; gname="$itemprgnam"
-      for gfield in $(echo $groupstring | tr ':' ' '); do
+      for gfield in $(echo "$groupstring" | tr ':' ' '); do
         case "$gfield" in
           [0-9]* ) gnum="$gfield" ;;
           * ) gname="$gfield" ;;
@@ -614,7 +618,7 @@ function do_groupadd_useradd
       if ! getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
         gaddcmd="groupadd -g $gnum $gname"
         log_verbose -a "Adding group: $gaddcmd"
-        eval $gaddcmd
+        eval "$gaddcmd"
       else
         log_verbose -a "Group $gname already exists."
       fi
@@ -625,7 +629,7 @@ function do_groupadd_useradd
     for userstring in ${HINT_USERADD[$itemid]}; do
       unum=''; uname="$itemprgnam"; ugroup=""
       udir='/dev/null'; ushell='/bin/false'; uargs=''
-      for ufield in $(echo $userstring | tr ':' ' '); do
+      for ufield in $(echo "$userstring" | tr ':' ' '); do
         case "$ufield" in
           -g* ) ugroup="${ufield:2}" ;;
           -d* ) udir="${ufield:2}" ;;
@@ -642,11 +646,11 @@ function do_groupadd_useradd
         if ! getent group "${ugroup}" | grep -q "^${ugroup}:" 2>/dev/null ; then
           gaddcmd="groupadd -g $unum $ugroup"
           log_verbose -a "Adding group: $gaddcmd"
-          eval $gaddcmd
+          eval "$gaddcmd"
         fi
         uaddcmd="useradd  -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname"
         log_verbose -a "Adding user:  $uaddcmd"
-        eval $uaddcmd
+        eval "$uaddcmd"
       else
         log_verbose -a "User $uname already exists."
       fi

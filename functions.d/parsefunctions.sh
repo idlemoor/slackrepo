@@ -34,7 +34,7 @@ function parse_args
 # 1 = errors logged
 #
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid
   local searchtype toplevel
@@ -70,7 +70,7 @@ function parse_args
 
     # Queuefile?
     if [ "${item##*.}" = 'sqf' ]; then
-      find_queuefile $item
+      find_queuefile "$item"
       if [ $? = 0 ]; then
         scan_queuefile "$R_QUEUEFILE"
       else
@@ -127,7 +127,7 @@ function parse_args
         continue
       fi
     else
-      log_error "${blamemsg}Multiple matches for $item in $toplevel: ${gotitems[@]}"
+      log_error "${blamemsg}Multiple matches for $item in $toplevel: ${gotitems[*]}"
       errstat=1
       continue
     fi
@@ -154,7 +154,7 @@ function add_parsed_file
 # $2 = pathname (relative to the repo) of the file to add as an item
 # Returns: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local searchtype="$1"
   local id="$2"
@@ -192,7 +192,7 @@ function find_slackbuild
 # 1 = not found
 # 2 = multiple matches
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   unset R_SLACKBUILD
   local prgnam="$1"
@@ -228,7 +228,7 @@ function find_queuefile
 # 1 = not found
 # 2 = multiple matches
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   unset R_QUEUEFILE
   local qpath="$1"
@@ -239,10 +239,10 @@ function find_queuefile
   fi
 
   local -a qlist
-  local qbase="$(basename $1)"
+  local qbase="$(basename "$1")"
   local qfound=''
   local -a qsearch=( "$SR_QUEUEDIR" "$SR_HINTDIR" "$SR_SBREPO" )
-  for trydir in $qsearch; do
+  for trydir in "${qsearch[@]}"; do
     qlist=( $(find -L "$trydir" -name "$qbase" 2>/dev/null) )
     if [ "${#qlist[@]}" = 0 ]; then
       continue
@@ -271,7 +271,7 @@ function scan_queuefile
 # $1 = pathname of the queuefile to scan
 # Return status: always 0 (any bad slackbuilds are ignored)
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local sqfile="$1"
   local -a fakedeps
@@ -289,7 +289,7 @@ function scan_queuefile
   while read sqfitem sqfoptions ; do
     case $sqfitem
     in
-      @*) find_queuefile ${sqfitem:1}.sqf
+      @*) find_queuefile "${sqfitem:1}".sqf
           if [ $? = 0 ]; then
             scan_queuefile "$R_QUEUEFILE"
             fakedeps+=( "$lastinqueuefile" )
@@ -306,7 +306,7 @@ function scan_queuefile
             HINT_Q["$R_SLACKBUILD"]="$queuefile"
             # add sqfitem to fakedeps *after* adding fakedeps to INFOREQUIRES
             # so that sqfitem won't depend on itself
-            INFOREQUIRES["$R_SLACKBUILD"]="${fakedeps[@]}"
+            INFOREQUIRES["$R_SLACKBUILD"]="${fakedeps[*]}"
             fakedeps+=( "$sqfitem" )
           elif [ $fstat = 1 ]; then
             log_warning "${itemid}: Queuefile dep $sqfitem not found"
@@ -331,7 +331,7 @@ function scan_dir
 # $2 = pathname (relative to the repo) of the directory to scan
 # Returns: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local searchtype="$1"
   local dir="$2"
@@ -376,14 +376,14 @@ function parse_package_name
 # Returns global variables PN_{PRGNAM,VERSION,ARCH,BUILD,TAG,PKGTYPE}
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
-  local pkgnam=$(basename $1)
-  PN_PRGNAM=$(echo $pkgnam | rev | cut -f4- -d- | rev)
-  PN_VERSION=$(echo $pkgnam | rev | cut -f3 -d- | rev)
-  PN_ARCH=$(echo $pkgnam | rev | cut -f2 -d- | rev)
-  PN_BUILD=$(echo $pkgnam | rev | cut -f1 -d- | rev | sed 's/[^0-9]*$//')
-  PN_TAG=$(echo $pkgnam | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
-  PN_PKGTYPE=$(echo $pkgnam | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+  local pkgnam=$(basename "$1")
+  PN_PRGNAM=$(echo "$pkgnam" | rev | cut -f4- -d- | rev)
+  PN_VERSION=$(echo "$pkgnam" | rev | cut -f3 -d- | rev)
+  PN_ARCH=$(echo "$pkgnam" | rev | cut -f2 -d- | rev)
+  PN_BUILD=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/[^0-9]*$//')
+  PN_TAG=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
+  PN_PKGTYPE=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
   return
 }
 
@@ -410,7 +410,7 @@ function parse_info_and_hints
 # 0 = normal
 # 1 = skip/unsupported/untested, or cannot determine VERSION
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
@@ -432,9 +432,9 @@ function parse_info_and_hints
 
     # Set GITREV and GITDIRTY from repo
     if [ "$GOTGIT" = 'y' ]; then
-      GITREV[$itemid]="$(cd $SR_SBREPO/$itemdir; git log -n 1 --format=format:%H .)"
+      GITREV[$itemid]="$(cd "$SR_SBREPO"/"$itemdir"; git log -n 1 --format=format:%H .)"
       GITDIRTY[$itemid]="n"
-      if [ -n "$(cd $SR_SBREPO/$itemdir; git status -s .)" ]; then
+      if [ -n "$(cd "$SR_SBREPO"/"$itemdir"; git status -s .)" ]; then
         GITDIRTY[$itemid]="y"
         log_warning "${itemid}: git is dirty"
       fi
@@ -462,10 +462,10 @@ function parse_info_and_hints
       # of the SlackBuilds in Slackware, msb, csb, etc :-/
       versioncmds="$(grep -E '^(PKGNAM|SRCNAM|VERSION)=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
       # execute $versioncmds in the SlackBuild's directory so it can use the source tarball's name:
-      cd "$SR_SBREPO/$itemdir/"
-        eval $versioncmds
-      cd - >/dev/null
+      prevdir=$(pwd)
+      cd "$SR_SBREPO"/"$itemdir"/ && eval "$versioncmds"
       unset PKGNAM SRCNAM
+      cd "$prevdir"
     fi
     # Save $VERSION.
     # If it is '*', this is a Slackware SlackBuild that gets the version from the
@@ -479,16 +479,16 @@ function parse_info_and_hints
     # Don't bother checking if they are improperly paired (it'll become apparent later).
     # If they are unset, set empty strings in INFODOWNLIST / INFOMD5LIST / INFOSHA256LIST.
     # Also set SRCDIR (even if there is no source, SRCDIR is needed to hold .version)
-    if [ -n "$(eval echo \$DOWNLOAD_$SR_ARCH)" ]; then
-      INFODOWNLIST[$itemid]="$(eval echo \$DOWNLOAD_$SR_ARCH)"
-      INFOMD5LIST[$itemid]="$(eval echo \$MD5SUM_$SR_ARCH)"
-      INFOSHA256LIST[$itemid]="$(eval echo \$SHA256SUM_$SR_ARCH)"
-      SRCDIR[$itemid]="$SR_SRCREPO/$itemdir/$SR_ARCH"
+    if [ -n "$(eval echo \$DOWNLOAD_"$SR_ARCH")" ]; then
+      INFODOWNLIST[$itemid]="$(eval echo \$DOWNLOAD_"$SR_ARCH")"
+      INFOMD5LIST[$itemid]="$(eval echo \$MD5SUM_"$SR_ARCH")"
+      INFOSHA256LIST[$itemid]="$(eval echo \$SHA256SUM_"$SR_ARCH")"
+      SRCDIR[$itemid]="$SR_SRCREPO"/"$itemdir"/"$SR_ARCH"
     else
       INFODOWNLIST[$itemid]="${DOWNLOAD:-}"
       INFOMD5LIST[$itemid]="${MD5SUM:-}"
       INFOSHA256LIST[$itemid]="${SHA256SUM:-}"
-      SRCDIR[$itemid]="$SR_SRCREPO/$itemdir"
+      SRCDIR[$itemid]="$SR_SRCREPO"/"$itemdir"
     fi
     if [ -z "${INFODOWNLIST[$itemid]}" ]; then
       # Another sneaky slackbuild snarf ;-)
@@ -496,8 +496,8 @@ function parse_info_and_hints
       # But the url(s) might contain $PRGNAM and $VERSION, or even $SRCNAM,
       # and might be on continuation lines.
       local PRGNAM SRCNAM
-      eval $(grep 'PRGNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")
-      eval $(grep 'SRCNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")
+      eval "$(grep 'PRGNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
+      eval "$(grep 'SRCNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
       eval INFODOWNLIST["$itemid"]="$(sed ':x; /\\$/ { N; s/\\\n//; tx }' <"$SR_SBREPO"/"$itemdir"/"$itemfile" | grep 'wget -c ' | sed 's/wget -c //')"
       HINT_MD5IGNORE["$itemid"]='y'
       HINT_SHA256IGNORE["$itemid"]='y'
@@ -633,7 +633,7 @@ function parse_info_and_hints
       ${DOWNLOAD+"DOWNLOAD=\"$DOWNLOAD\""} \
       ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
       ${SHA256SUM+"SHA256SUM=\"$SHA256SUM\""} \
-      ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )"
+      ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )" 
     unset SKIP \
           VERSION OPTIONS GROUPADD USERADD \
           PREREMOVE CONFLICTS \
@@ -656,7 +656,7 @@ function parse_info_and_hints
   else
     if [ -v ADDREQUIRES ]; then
       # This gets rid of %README% if and only if ADDREQUIRES is set.
-      INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]} $ADDREQUIRES | sed -e 's/%README%//')"
+      INFOREQUIRES[$itemid]="$(echo "${INFOREQUIRES[$itemid]}" "$ADDREQUIRES" | sed -e 's/%README%//')"
       # Else %README% will remain, and calculate_deps will issue a warning.
     fi
   fi
@@ -664,10 +664,10 @@ function parse_info_and_hints
   # Fix INFOVERSION from hint file's VERSION, or DOWNLOAD, or git, or SlackBuild's modification time
   ver="${INFOVERSION[$itemid]}"
   [ -z "$ver" ] && ver="${HINT_VERSION[$itemid]}"
-  [ -z "$ver" ] && ver="$(basename $(echo "${INFODOWNLIST[$itemid]}" | sed 's/ .*//') 2>/dev/null | rev | cut -f 3- -d . | cut -f 1 -d - | rev)"
+  [ -z "$ver" ] && ver="$(basename "$(echo "${INFODOWNLIST[$itemid]}" | sed 's/ .*//')" 2>/dev/null | rev | cut -f 3- -d . | cut -f 1 -d - | rev)"
   [ -z "$ver" ] && log_normal "Version of $itemid can not be determined."
   [ -z "$ver" -a "$GOTGIT" = 'y' ] && ver="${GITREV[$itemid]:0:7}"
-  [ -z "$ver" ] && ver="$(date --date=@$(stat --format='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile") '+%Y%m%d')"
+  [ -z "$ver" ] && ver="$(date --date=@"$(stat --format='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile")" '+%Y%m%d')"
   INFOVERSION[$itemid]="$ver"
 
   return 0

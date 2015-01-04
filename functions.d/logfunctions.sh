@@ -52,24 +52,24 @@ function log_itemstart
 {
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
-  [ "$itemid" != "$ITEMID" ] && ITEMTOTAL=$(( $ITEMTOTAL + 1 ))
+  [ "$itemid" != "$ITEMID" ] && ITEMTOTAL=$(( ITEMTOTAL + 1 ))
 
   [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
   line="-------------------------------------------------------------------------------"
   tput bold; tput setaf 7
   if [ ${#1} -ge ${#line} ]; then
-    echo "$@"
+    echo "$*"
   else
     pad=$(( ${#line} - ${#1} - 1 ))
-    echo "$@ ${line:0:$pad}"
+    echo "$* ${line:0:$pad}"
   fi
   tput sgr0
   echo "${line:0:57} $(date '+%F %T') -" >> "$MAINLOG"
-  echo "$@"                              >> "$MAINLOG"
+  echo "$*"                              >> "$MAINLOG"
   if [ -n "$itemid" ]; then
     mkdir -p "$SR_LOGDIR"/"$itemdir"
     ITEMLOG="$SR_LOGDIR"/"$itemdir"/"$itemprgnam".log
-    echo "$@ $(date '+%F %T')"  > "$ITEMLOG"
+    echo "$* $(date '+%F %T')"  > "$ITEMLOG"
   fi
 }
 
@@ -185,11 +185,11 @@ function log_warning
     esac
   done
   tput bold; tput setaf 3
-  echo -e "${W}$@"
+  echo -e "${W}$*"
   tput sgr0
-  echo -e "${W}$@" >> "$MAINLOG"
+  echo -e "${W}$*" >> "$MAINLOG"
   [ "$A" = 'y' ] && \
-  echo -e "${W}$@" >> "$ITEMLOG"
+  echo -e "${W}$*" >> "$ITEMLOG"
   return 0
 }
 
@@ -212,13 +212,13 @@ function log_error
     esac
   done
   tput bold; tput setaf 1
-  echo -e "${E}$@"
+  echo -e "${E}$*"
   tput sgr0
   # In case we are called before MAINLOG is set:
   [ -z "$MAINLOG" ] && return 0
-  echo -e "${E}$@" >> "$MAINLOG"
+  echo -e "${E}$*" >> "$MAINLOG"
   [ "$A" = 'y' ] && \
-  echo -e "${E}$@" >> "$ITEMLOG"
+  echo -e "${E}$*" >> "$ITEMLOG"
   return 0
 }
 
@@ -266,11 +266,11 @@ function format_left_right
   plen=$pmin
 
   # If rlen is too long, reduce it:
-  [ $rlen -gt $(( $width - $lmin - $pmin )) ] && rlen=$(( $width - $lmin - $pmin ))
+  [ "$rlen" -gt $(( width - lmin - pmin )) ] && rlen=$(( width - lmin - pmin ))
   # If llen is too long, reduce it:
-  [ $llen -gt $(( $width - $pmin - $rlen )) ] && llen=$(( $width - $pmin - $rlen ))
+  [ "$llen" -gt $(( width - pmin - rlen )) ] && llen=$(( width - pmin - rlen ))
   # If llen is too short, increase the padding:
-  [ $(( $llen + $plen + $rlen )) -lt $width ] && plen=$(( $width - $llen - $rlen ))
+  [ $(( llen + plen + rlen )) -lt "$width" ] && plen=$(( width - llen - rlen ))
   # Ok, print it:
   echo "${lmsg:0:llen}${pad:0:plen}${rmsg:0:rlen}"
   return 0

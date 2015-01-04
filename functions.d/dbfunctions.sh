@@ -12,7 +12,7 @@
 function db_init
 # Initialise the sqlite database
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 0
 
   sqlite3 "$SR_DATABASE" << ++++
@@ -29,7 +29,7 @@ function db_set_buildsecs
 # $1 = itemid
 # $2 = elapsed seconds
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 0
 
   sqlite3 "$SR_DATABASE" \
@@ -43,7 +43,7 @@ function db_get_buildsecs
 # Retrieve a build time (if no database, do not print anything)
 # $1 = itemid
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 0
 
   sqlite3 "$SR_DATABASE" \
@@ -57,7 +57,7 @@ function db_del_buildsecs
 # Delete a build time
 # $1 = itemid
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 0
 
   sqlite3 "$SR_DATABASE" \
@@ -72,7 +72,7 @@ function db_set_pkgnam_itemid
 # $1 = pkgnam
 # $2 = itemid
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 0
 
   sqlite3 "$SR_DATABASE" \
@@ -86,7 +86,7 @@ function db_get_pkgnam_itemid
 # Get the itemid for a given pkgnam
 # $1 = pkgnam
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 0
 
   sqlite3 "$SR_DATABASE" \
@@ -100,7 +100,7 @@ function db_del_pkgnam_itemid
 # Delete a package name and its corresponding itemid
 # $1 = pkgnam
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 0
 
   sqlite3 "$SR_DATABASE" \

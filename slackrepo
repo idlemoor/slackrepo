@@ -27,11 +27,11 @@
 function print_usage
 {
   echo 'Usage:'
-  echo "  $(basename $0) build   [--control_args] [item...]"
-  echo "  $(basename $0) rebuild [--control_args] [item...]"
-  echo "  $(basename $0) update  [--control_args] [item...]"
-  echo "  $(basename $0) remove  [--control_args] item..."
-  echo "  $(basename $0) revert  [--control_args] item..."
+  echo "  $(basename "$0") build   [--control_args] [item...]"
+  echo "  $(basename "$0") rebuild [--control_args] [item...]"
+  echo "  $(basename "$0") update  [--control_args] [item...]"
+  echo "  $(basename "$0") remove  [--control_args] item..."
+  echo "  $(basename "$0") revert  [--control_args] item..."
   echo 'Control args:'
   echo '  --repo=ID'
   echo '  --quiet | --verbose | --very-verbose'
@@ -66,7 +66,7 @@ starttime=$(date +%s)
 optnames="REPO QUIET VERBOSE VERY_VERBOSE MAKE_VERBOSE TEST DRY_RUN INSTALL PREREMOVE KEEP_TMP TRACE"
 # Initialise them all to null, set -u friendly ;-)
 for opt in $optnames ; do
-  eval OPT_$opt=''
+  eval OPT_"$opt"=''
 done
 # Initialise OPT_REPO from env var $REPO:
 OPT_REPO="$REPO"
@@ -97,7 +97,7 @@ while [ $# != 0 ]; do
       CMD='revert'
       shift; continue ;;
     --repo=* )
-      OPT_REPO=$(echo "$1" | sed 's/^--repo=//')
+      OPT_REPO="${1/--repo=/}"
       shift; continue ;;
     --quiet | -q )
       OPT_QUIET='y'
@@ -116,16 +116,16 @@ while [ $# != 0 ]; do
     --* )
       found='n'
       for opt in $optnames; do
-        arg=$(echo $opt | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+        arg=$(echo "$opt" | tr '_' '-' | tr '[:upper:]' '[:lower:]')
         if [ "$1" = "--${arg}" -o "$1" = "--${arg}=yes" -o "$1" = "--${arg}=y" ]; then
-          eval OPT_${opt}='y'
+          eval OPT_"${opt}"='y'
           found='y'; break
         elif [ "$1" = "--no-${arg}" -o "$1" = "--${arg}=no" -o "$1" = "--${arg}=n" ]; then
-          eval OPT_${opt}='n'
+          eval OPT_"${opt}"='n'
           found='y'; break
         fi
       done
-      [ "$found" = 'n' ] && echo "$(basename $0): invalid control argument: $1" >&2
+      [ "$found" = 'n' ] && echo "$(basename "$0"): invalid control argument: $1" >&2
       shift; continue ;;
     * )
       break ;;
@@ -138,7 +138,7 @@ if [ -z "$CMD" ]; then
   exit 3
 elif [ $# = 0 ] && [ "$CMD" = 'remove' -o "$CMD" = 'revert' ] ; then
   # remove or revert mode with no args => do nothing
-  echo "Usage: $(basename $0) $CMD [--repo=ID] item..."
+  echo "Usage: $(basename "$0") $CMD [--repo=ID] item..."
   echo "In $CMD mode, you *must* specify the items to be removed."
   exit_cleanup
   exit 3
@@ -148,12 +148,12 @@ fi
 # Startup
 #-------------------------------------------------------------------------------
 
-PIDFILE="/var/run/$(basename $0).pid"
+PIDFILE="/var/run/$(basename "$0").pid"
 oldpid=$(cat "$PIDFILE" 2>/dev/null)
-if [ -z "$oldpid" -o -z "$(pgrep -u root $(basename $0) | grep -v $$)" ]; then
+if [ -z "$oldpid" -o -z "$(pgrep -u root "$(basename "$0")" | grep -v $$)" ]; then
   echo $$ > "$PIDFILE"
 else
-  echo "$(basename $0): Another instance is already running." >&2
+  echo "$(basename "$0"): Another instance is already running." >&2
   exit_cleanup
   exit 3
 fi
@@ -162,7 +162,7 @@ fi
 trap "exit_cleanup; exit 1" SIGINT SIGQUIT SIGTERM
 
 # Get the support functions
-for f in /usr/libexec/$(basename $0)/functions.d/*.sh; do
+for f in /usr/libexec/$(basename "$0")/functions.d/*.sh; do
   if [ -x "$f" ]; then
     . "$f"
   fi
@@ -175,7 +175,7 @@ done
 # Find out about the host system:
 # version of Slackware:
 [ -f /etc/slackware-version ] || { log_error "/etc/slackware-version not found"; exit_cleanup; exit 4; }
-SYS_SLACKVER="$(cat /etc/slackware-version | sed 's/^Slackware //')"
+SYS_SLACKVER="$(sed 's/^Slackware //' /etc/slackware-version )"
 # native arch:
 SYS_ARCH=$(uname -m)
 # multilib or not:
@@ -197,7 +197,7 @@ initnames="INIT_GITCLONE INIT_GITBRANCH"
 # Initialise the SR_variables from the environment:
 for envvar in $varnames $genrepnames $initnames $optnames ; do
   srvar="SR_$envvar"
-  eval $srvar="${!envvar}"
+  eval "$srvar"="${!envvar}"
 done
 
 # Per-user config files:
@@ -229,19 +229,19 @@ done
 # and unset the config file variables to prevent SlackBuilds from seeing them:
 for name in $varnames $genrepnames $initnames; do
   srvar="SR_$name"
-  [ -z "${!srvar}" ] && eval $srvar=\"${!name}\"
-  eval unset $name
+  [ -z "${!srvar}" ] && eval "$srvar"="\"${!name}\""
+  eval unset "$name"
 done
 # and do something similar for the OPT_ variables:
 for name in $optnames ; do
   optvar="OPT_$name"
-  [ -z "${!optvar}" ] && eval $optvar=\"${!name}\"
-  eval unset $name
+  [ -z "${!optvar}" ] && eval "$optvar"="\"${!name}\""
+  eval unset "$name"
   # simplify anything that looks like a Boolean:
   if   [ "${!optvar}" = '1' -o "${!optvar}" = 'yes' -o "${!optvar}" = 'y' -o "${!optvar}" = 'YES' -o "${!optvar}" = 'Y' ]; then
-    eval $optvar='y'
+    eval "$optvar="'y'
   elif [ "${!optvar}" = '0' -o "${!optvar}" = 'no'  -o "${!optvar}" = 'n' -o "${!optvar}" = 'NO'  -o "${!optvar}" = 'N' -o "${!optvar}" = '' ]; then
-    eval $optvar='n'
+    eval "$optvar"='n'
   fi
 done
 
@@ -257,7 +257,7 @@ done
 
 # If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly
 if [ -z "$SR_NUMJOBS" ]; then
-  SR_NUMJOBS="-j$(( $SYS_NPROC + 1 ))"
+  SR_NUMJOBS="-j$(( SYS_NPROC + 1 ))"
 fi
 # setting ARCH breaks lots of SlackBuilds, which is why we do it ;-)
 if [ -z "$SR_ARCH" -o "$SR_ARCH" = '%ARCH%' ]; then
@@ -271,12 +271,12 @@ fi
 # Substitute %REPO%, %SLACKVER% and %ARCH%
 for name in $varnames $genrepnames $initnames; do
   srvar="SR_$name"
-  eval $srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\"
+  eval "$srvar"="\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\""
 done
 
 # Do this now so we can log the config:
 mkdir -p "$SR_LOGDIR"
-MAINLOG="$SR_LOGDIR"/$(basename $0)_$(date '+%F_%T').log
+MAINLOG="$SR_LOGDIR"/$(basename "$0")_$(date '+%F_%T').log
 > "$MAINLOG"
 
 # Log the config
@@ -327,7 +327,7 @@ if [ -n "$SR_TMP" -a -d "$SR_TMP" -a "$OPT_KEEP_TMP" != 'y' ]; then
   log_normal "Removing $SR_TMP/* ..."
   rm -rf "${SR_TMP:-dont-tase-me-bro}"/*
 else
-  mkdir -p $SR_TMP
+  mkdir -p "$SR_TMP"
 fi
 # We also need a slackrepo-specific temporary directory
 MYTMPDIR=$(mktemp -t -d slackrepo.XXXXXX) || { exit_cleanup; exit 4; }
@@ -344,7 +344,7 @@ fi
 [ -d "$SR_SBREPO" ]   || { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"   ; }
 [ -d "$SR_SRCREPO" ]  || { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO"  ; }
 [ -d "$SR_PKGREPO" ]  || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO"  ; }
-[ -n "$SR_PKGBACKUP" ] && [ -d "$SR_PKGBACKUP" ] || \
+[ -n "$SR_PKGBACKUP" -a -d "$SR_PKGBACKUP" ] || \
                          { log_normal "Creating backup repository: $SR_PKGBACKUP"  ; mkdir -p "$SR_PKGBACKUP"; }
 [ -d "$SR_HINTDIR" ]  || { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"  ; }
 [ -d "$SR_QUEUEDIR" ] || { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR" ; }
@@ -372,7 +372,7 @@ if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
     git fetch -a
     git remote update
     mybranch="${SR_INIT_GITBRANCH:-$SYS_SLACKVER}"
-    if [ $(git rev-parse --abbrev-ref HEAD) != "$mybranch" ]; then
+    if [ "$(git rev-parse --abbrev-ref HEAD)" != "$mybranch" ]; then
       git checkout -b "$mybranch" -t origin/"$mybranch"
     fi
     log_normal "Finished cloning SlackBuilds repository."
@@ -405,7 +405,7 @@ if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
   [ "$OPT_VERBOSE" = 'y' ] && echo ""
   log_verbose "Git repo:   $SR_SBREPO"
   log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"
-  log_verbose "  date:     $(date --date=@$(git log -n 1 --format=%ct))"
+  log_verbose "  date:     $(date --date=@"$(git log -n 1 --format=%ct)")"
   log_verbose "  revision: $(git rev-parse HEAD)$dirty"
   log_verbose "  title:    $(git log -n 1 --format=%s)"
   echo ""
@@ -416,8 +416,7 @@ if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' -a "$CMD" != 'remove' ]; then
   installed=$(ls /var/log/packages/*"$SR_TAG" 2>/dev/null)
   if [ -n "$installed" ]; then
     for pkg in $installed; do
-      pkgnam=$(basename $pkg | rev | cut -f4- -d- | rev)
-      log_warning "$(basename $pkg): package is already installed"
+      log_warning "$(basename "$pkg"): package is already installed"
     done
   fi
 fi
@@ -436,7 +435,7 @@ if [ $# = 0 ]; then
   fi
 fi
 
-BLAME="$(basename $0)"
+BLAME="$(basename "$0")"
 while [ $# != 0 ]; do
   arg="$1"
   shift
@@ -473,7 +472,7 @@ while [ $# != 0 ]; do
       remove_item "$ITEMID"
       ;;
     *)
-      log_error "$(basename $0): Unrecognised CMD = $CMD"
+      log_error "$(basename "$0"): Unrecognised CMD = $CMD"
       exit 4
       ;;
     esac
@@ -486,8 +485,8 @@ done
 
 log_start "SUMMARY"
 log_always "Logfile:    $MAINLOG"
-secs=$(( $(date +%s) - $starttime ))
-h=$(( $secs / 3600 )); m=$(( ( $secs / 60) % 60 )); s=$(( $secs % 60 ))
+secs=$(( $(date +%s) - starttime ))
+h=$(( secs / 3600 )); m=$(( ( secs / 60) % 60 )); s=$(( secs % 60 ))
 log_normal "Runtime:    ${h}h ${m}m ${s}s"
 
 if [ "$OPT_DRY_RUN" = 'y' ]; then
@@ -496,16 +495,16 @@ if [ "$OPT_DRY_RUN" = 'y' ]; then
   log_always "Dry run OK: $okcount"
   [ "$OPT_QUIET" != 'y' -a "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}" | tee -a "$MAINLOG"
 else
-  log_always "Added:      $(grep ': Added'   "$CHANGELOG" | wc -l)"
+  log_always "Added:      $(grep -c ': Added'   "$CHANGELOG")"
   [ "$OPT_QUIET" != 'y' ] && \
     grep ': Added'   "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
-  log_always "Updated:    $(grep ': Updated' "$CHANGELOG" | wc -l)"
+  log_always "Updated:    $(grep -c ': Updated' "$CHANGELOG")"
   [ "$OPT_QUIET" != 'y' ] && \
     grep ': Updated' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
-  log_always "Rebuilt:    $(grep ': Rebuilt' "$CHANGELOG" | wc -l)"
+  log_always "Rebuilt:    $(grep -c ': Rebuilt' "$CHANGELOG")"
   [ "$OPT_QUIET" != 'y' ] && \
     grep ': Rebuilt' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
-  log_always "Removed:    $(grep ': Removed' "$CHANGELOG" | wc -l)"
+  log_always "Removed:    $(grep -c ': Removed' "$CHANGELOG")"
   [ "$OPT_QUIET" != 'y' ] && \
     grep ': Removed' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
 fi
@@ -545,7 +544,7 @@ if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
       RSS_DESCRIPTION="$SR_RSS_DESCRIPTION" RSS_FEEDMAX="$SR_RSS_FEEDMAX" RSS_UUID="$SR_RSS_UUID" \
       GPGBIN="$SR_GPGBIN" USE_GPGAGENT="$SR_USE_GPGAGENT" FOR_SLAPTGET="$SR_FOR_SLAPTGET" \
       FOLLOW_SYMLINKS="$SR_FOLLOW_SYMLINKS" REPO_SUBDIRS="$SR_REPO_SUBDIRS" \
-      sh /usr/libexec/$(basename $0)/gen_repos_files.sh -l "$CHANGELOG" | tee -a "$MAINLOG"
+      sh /usr/libexec/"$(basename "$0")"/gen_repos_files.sh -l "$CHANGELOG" | tee -a "$MAINLOG"
       genrepstat=$?
       set +o pipefail
       [ "$genrepstat" != 0 ] && log_error "gen_repos_files.sh failed -- changelog retained"

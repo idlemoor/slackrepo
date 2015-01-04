@@ -20,7 +20,7 @@ function verify_src
 # 5 - .info says item is unsupported/untested on this arch
 # 6 - not in source cache and there is a nodownload hint
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local -a srcfilelist
@@ -61,8 +61,8 @@ function verify_src
     [ $numgot = 0 -a -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
     [ $numgot = 0 ] && return 3
     # or if we have not got the right number of sources, return 2 (or 6)
-    numwant=$(echo $DOWNLIST | wc -w)
-    if [ $numgot != $numwant ]; then
+    numwant=$(echo "$DOWNLIST" | wc -w)
+    if [ "$numgot" != "$numwant" ]; then
       log_verbose -a "Note: need $numwant source files, but have $numgot"
       [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
       return 2
@@ -105,7 +105,7 @@ function download_src
 # Return status:
 # 1 - curl failed
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   if [ -n "$DOWNDIR" ]; then
     mkdir -p "$DOWNDIR"
@@ -125,11 +125,11 @@ function download_src
     for url in $DOWNLIST; do
       if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
         set -o pipefail
-        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A SlackZilla -O $url 2>&1 | tee -a "$ITEMLOG"
+        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A SlackZilla -O "$url" 2>&1 | tee -a "$ITEMLOG"
         curlstat=$?
         set +o pipefail
       else
-        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A SlackZilla -O $url >> "$ITEMLOG" 2>&1
+        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A SlackZilla -O "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
       fi
       if [ $curlstat != 0 ]; then
@@ -140,7 +140,8 @@ function download_src
     echo "$VERSION" > "$DOWNDIR"/.version
     # curl content-disposition can't undo %-encoding.
     # If it's too hard for curl, we'll just zap the obvious ones:
-    for urltrouble in $(ls *%* 2>/dev/null); do
+    for urltrouble in *%*; do
+      [ -e "$urltrouble" ] || break
       mv "$urltrouble" "$(echo "$urltrouble" | sed -e 's/\%20/ /g' -e 's/\%7E/~/g' )"
     done
   )
@@ -154,7 +155,7 @@ function print_curl_status
 # $1 = curl status code
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   case $1 in
   1)   echo "Unsupported protocol" ;;
   2)   echo "Failed to initialize" ;;
@@ -232,7 +233,7 @@ function print_curl_status
   87)  echo "unable to parse FTP file list" ;;
   88)  echo "FTP chunk callback reported error" ;;
   89)  echo "No connection available, the session will be queued " ;;
-  *)   echo "curl status $curlstat" ;;
+  *)   echo "curl status $1" ;;
   esac
   return 0
 }

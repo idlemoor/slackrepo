@@ -19,7 +19,7 @@ function calculate_deps
 # 0 = ok
 # 1 = any error
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
 
@@ -40,9 +40,9 @@ function calculate_deps
   local itemfile="${ITEMFILE[$itemid]}"
 
   for dep in ${INFOREQUIRES[$itemid]}; do
-    if [ $dep = '%README%' ]; then
+    if [ "$dep" = '%README%' ]; then
       log_warning "${itemid}: Unhandled %README% in $itemprgnam.info"
-    elif [ $dep = "$itemprgnam" ]; then
+    elif [ "$dep" = "$itemprgnam" ]; then
       log_warning "${itemid}: Ignoring dependency of $itemprgnam on itself"
     else
       find_slackbuild "$dep"
@@ -57,8 +57,8 @@ function calculate_deps
     fi
   done
 
-  deplist=( $(printf '%s\n' "${deplist[@]}" | sort -u) )
-  DIRECTDEPS["$itemid"]="${deplist[@]}"
+  deplist=( $(printf '%s\n' ${deplist[*]} | sort -u) )
+  DIRECTDEPS["$itemid"]="${deplist[*]}"
 
   # If there are no direct deps, then there are no recursive deps ;-)
   if [ -z "${DIRECTDEPS[$itemid]}" ]; then
@@ -86,7 +86,7 @@ function calculate_deps
       fi
     done
   done
-  FULLDEPS["$itemid"]="${myfulldeps[@]}"
+  FULLDEPS["$itemid"]="${myfulldeps[*]}"
 
   return 0
 }
@@ -100,7 +100,7 @@ function build_with_deps
 # 0 = build ok, or already up-to-date so not built, or dry run
 # 1 = build failed, or sub-build failed => abort parent, or any other error
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
@@ -152,7 +152,7 @@ function install_deps
 # 0 = all installs succeeded
 # 1 = any install failed
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local mydep
@@ -182,7 +182,7 @@ function uninstall_deps
 # $1 = itemid
 # Return status always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local mydep

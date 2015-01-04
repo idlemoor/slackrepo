@@ -17,7 +17,7 @@ function install_packages
 # 0 = installed ok or already installed
 # 1 = install failed or not found
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -84,7 +84,7 @@ function uninstall_packages
 # If there is an install hint, the packages WILL NOT be removed UNLESS -f is specified.
 # If OPT_INSTALL is set, the packages WILL be removed, but extra cleanup won't be performed.
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local force='n'
   if [ "$1" = '-f' ]; then
@@ -139,7 +139,7 @@ function uninstall_packages
         /sbin/removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
         # Remove any surviving detritus
         for etcfile in $etcnewfiles; do
-          rm -f /"$etcfile" /"$(echo "$etcfile" | sed 's/\.new$//')"
+          rm -f /"$etcfile" /"${etcfile%.new}"
         done
         for etcdir in $etcdirs; do
           if [ -d "$etcdir" ]; then
@@ -187,7 +187,7 @@ function is_installed
           log_warning -n "  /var/log/packages/$R_INSTALLED"
           return 3
         fi
-        R_INSTALLED="$(basename $instpkg)"
+        R_INSTALLED="$(basename "$instpkg")"
       elif [ "${instid%-upgraded}" != "$instid" ]; then
         log_warning "Your /var/log/packages is broken, please review these files:"
         log_warning -n "  $instpkg"
@@ -206,7 +206,7 @@ function dotprofilizer
 # $1 = path of package
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local pkgpath="$1"
   local varlogpkg script

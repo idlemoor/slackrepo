@@ -14,7 +14,7 @@ function revert_item
 # 0 = ok
 # 1 = backups not configured
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -32,10 +32,10 @@ function revert_item
     if [ "$OPT_DRY_RUN" != 'y' ]; then
       mv "$SR_PKGREPO"/"$itemdir" "$SR_PKGBACKUP"/"$itemdir".temp
       log_normal "These packages have been backed up:"
-      log_normal "$(printf '  %s\n' $(cd "$SR_PKGBACKUP"/"$itemdir".temp; ls *.t?z))"
+      log_normal "$(printf '  %s\n' "$(cd "$SR_PKGBACKUP"/"$itemdir".temp; ls *.t?z)")"
     else
       log_normal "These packages would be backed up:"
-      log_normal "$(printf '  %s\n' $(cd "$SR_PKGREPO"/"$itemdir"; ls *.t?z))"
+      log_normal "$(printf '  %s\n' "$(cd "$SR_PKGREPO"/"$itemdir"; ls *.t?z)")"
     fi
   fi
   # move the backup to the package repo
@@ -43,10 +43,10 @@ function revert_item
     if [ "$OPT_DRY_RUN" != 'y' ]; then
       mv "$SR_PKGBACKUP"/"$itemdir" "$SR_PKGREPO"/"$itemdir"
       log_normal "These packages have been reverted:"
-      log_normal "$(printf '  %s\n' $(cd "$SR_PKGREPO"/"$itemdir"; ls *.t?z))"
+      log_normal "$(printf '  %s\n' "$(cd "$SR_PKGREPO"/"$itemdir"; ls *.t?z)")"
     else
       log_normal "These packages would be reverted:"
-      log_normal "$(printf '  %s\n' $(cd "$SR_PKGBACKUP"/"$itemdir"; ls *.t?z))"
+      log_normal "$(printf '  %s\n' "$(cd "$SR_PKGBACKUP"/"$itemdir"; ls *.t?z)")"
     fi
   fi
   # give the new backup its proper name
@@ -74,7 +74,7 @@ function remove_item
 # $1 = itemid
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -88,7 +88,7 @@ function remove_item
         pkgbase=$(basename "$pkg")
         if [ "$OPT_DRY_RUN" != 'y' ]; then
           log_normal "Removing package $pkgbase"
-          rm -f $(echo "$pkg" | sed 's/\.t.z$//').*
+          rm -f "$(echo "$pkg" | sed 's/\.t.z$//')".*
           echo "$pkgbase:  Removed. NEWLINE" >> "$CHANGELOG"
         else
           log_normal "Would remove package $pkgbase"

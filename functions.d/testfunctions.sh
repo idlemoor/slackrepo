@@ -15,7 +15,7 @@ function test_slackbuild
 # 0 = all good or warnings only
 # 1 = significant error
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
@@ -49,17 +49,17 @@ function test_slackbuild
   if [ -f "$slackdesc" ]; then
     hr='|-----handy-ruler------------------------------------------------------|'
     # check 11 line description
-    linecount=$(grep "^${itemprgnam}:" "$slackdesc" | wc -l)
+    linecount=$(grep -c "^${itemprgnam}:" "$slackdesc")
     [ "$linecount" != 11 ] && \
       log_warning -a "${itemid}: slack-desc: $linecount lines of description (expected 11)"
     # check handy ruler
     if ! grep -q "^ *$hr\$" "$slackdesc" ; then
       log_warning -a "${itemid}: slack-desc: handy-ruler is corrupt or missing"
-    elif [ $(grep "^ *$hr\$" "$slackdesc" | sed "s/|.*|//" | wc -c) -ne $(( ${#itemprgnam} + 1 )) ]; then
+    elif [ "$(grep "^ *$hr\$" "$slackdesc" | sed "s/|.*|//" | wc -c)" -ne $(( ${#itemprgnam} + 1 )) ]; then
       log_warning -a "${itemid}: slack-desc: handy-ruler is misaligned"
     fi
     # check line length <= 80
-    [ $(grep "^${itemprgnam}:" "$slackdesc" | sed "s/^${itemprgnam}://" | wc -L) -gt 80 ] && \
+    [ "$(grep "^${itemprgnam}:" "$slackdesc" | sed "s/^${itemprgnam}://" | wc -L)" -gt 80 ] && \
       log_warning -a "${itemid}: slack-desc: description lines too long"
     # check appname (i.e. $itemprgnam)
     grep -q -v -e '^#' -e "^${itemprgnam}:" -e '^$' -e '^ *|-.*-|$' "$slackdesc" && \
@@ -106,7 +106,7 @@ function test_slackbuild
   #-----------------------------#
 
   if [ -f "$SR_SBREPO"/"$itemdir"/README ]; then
-    [ $(wc -L < "$SR_SBREPO"/"$itemdir"/README) -le 79 ] || \
+    [ "$(wc -L < "$SR_SBREPO"/"$itemdir"/README)" -le 79 ] || \
       log_warning -a "${itemid}: long lines in README"
   elif [ "$OPT_REPO" = 'SBo' ]; then
     log_warning -a "${itemid}: README not found"
@@ -123,7 +123,7 @@ function test_download
 # $1 = itemid
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local -a downlist
@@ -190,7 +190,7 @@ function test_package
 # 0 = all good or warnings only
 # 1 = significant error
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[@]}\n     $*" >&2
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   shift
@@ -205,7 +205,7 @@ function test_package
     log_normal -a "Testing $pkgbasename..."
 
     # check the package name
-    parse_package_name $pkgbasename
+    parse_package_name "$pkgbasename"
     [ "$PN_PRGNAM" != "$itemprgnam" ] && \
       log_warning -a "${itemid}: ${pkgbasename}: PRGNAM is \"$PN_PRGNAM\" (expected \"$itemprgnam\")"
     [ "$PN_VERSION" != "${INFOVERSION[$itemid]}" -a \
@@ -249,7 +249,7 @@ function test_package
     [ "$PN_ARCH"  = 'x86_64' ] && baddirlist+=( 'usr/lib/' ) # but not /lib (e.g. modules)
     [ "$PN_ARCH" != 'x86_64' ] && baddirlist+=( 'lib64/' 'usr/lib64/' )
     for baddir in "${baddirlist[@]}"; do
-      awk '$6~/^'$(echo $baddir | sed s:/:'\\'/:g)'/' "$TMP_PKGCONTENTS" > "$TMP_PKGJUNK"
+      awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' "$TMP_PKGCONTENTS" > "$TMP_PKGJUNK"
       if [ -s "$TMP_PKGJUNK" ]; then
         log_warning -a "${itemid}: $pkgbasename uses $baddir"
       fi

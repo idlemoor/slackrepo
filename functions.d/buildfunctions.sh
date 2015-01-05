@@ -445,10 +445,10 @@ function create_pkg_metadata
     esac
     # Set $changelogentry for the ChangeLog, and $CHANGEMSG for build_ok()
     if [ -z "$extrastuff" ]; then
-      changelogentry="${pkgbasename}:  ${OPERATION}. NEWLINE"
+      changelogentry="${pkgbasename}: ${OPERATION}. NEWLINE"
       CHANGEMSG="${OPERATION}"
     else
-      changelogentry="${pkgbasename}:  ${OPERATION}. LINEFEED $extrastuff NEWLINE"
+      changelogentry="${pkgbasename}: ${OPERATION}. LINEFEED $extrastuff NEWLINE"
       CHANGEMSG="${OPERATION} ${extrastuff}"
     fi
     if [ "$OPT_DRY_RUN" != 'y' ]; then

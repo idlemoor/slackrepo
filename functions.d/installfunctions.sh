@@ -26,15 +26,15 @@ function install_packages
 
   # Look for the package(s).
   # Start with the temp output dir
-  [ -n "$MYTMPOUT" ] && pkglist=( $(ls "$MYTMPOUT"/*.t?z 2>/dev/null) )
+  [ -n "$MYTMPOUT" ] && pkglist=( "$MYTMPOUT"/*.t?z )
   # If nothing there, look in the dryrun repo
-  [ "${#pkglist[@]}" = 0 -a "$OPT_DRY_RUN" = 'y' ] &&
-    pkglist=( $(ls "$DRYREPO"/"$itemdir"/*.t?z 2>/dev/null) )
+  [ ! -e "${pkglist[0]}" -a "$OPT_DRY_RUN" = 'y' ] &&
+    pkglist=( "$DRYREPO"/"$itemdir"/*.t?z )
   # Finally, look in the proper package repo
-  [ "${#pkglist[@]}" = 0 ] && \
-    pkglist=( $(ls "$SR_PKGREPO"/"$itemdir"/*.t?z 2>/dev/null) )
+  [ ! -e "${pkglist[0]}" ] && \
+    pkglist=( "$SR_PKGREPO"/"$itemdir"/*.t?z )
   # should have something by now!
-  [ "${#pkglist[@]}" = 0 ] && \
+  [ ! -e "${pkglist[0]}" ] && \
     { log_error -a "${itemid}: Can't find any packages to install"; return 1; }
 
   for pkgpath in "${pkglist[@]}"; do
@@ -105,17 +105,17 @@ function uninstall_packages
   # Look for the package(s).
   # Start with the temp output dir
   [ -n "$MYTMPOUT" ] && \
-    pkglist=( $(ls "$MYTMPOUT"/*.t?z 2>/dev/null) )
+    pkglist=( "$MYTMPOUT"/*.t?z )
   # If nothing there, look in the dryrun repo
-  [ "${#pkglist[@]}" = 0 -a "$OPT_DRY_RUN" = 'y' ] && \
-    pkglist=( $(ls "$DRYREPO"/"$itemdir"/*.t?z 2>/dev/null) )
+  [ ! -e "${pkglist[0]}" -a "$OPT_DRY_RUN" = 'y' ] &&
+    pkglist=( "$DRYREPO"/"$itemdir"/*.t?z )
   # Finally, look in the proper package repo
-  [ "${#pkglist[@]}" = 0 ] && \
-    pkglist=( $(ls "$SR_PKGREPO"/"$itemdir"/*.t?z 2>/dev/null) )
-  if [ "${#pkglist[@]}" = 0 ]; then
+  [ ! -e "${pkglist[0]}" ] && \
+    pkglist=( "$SR_PKGREPO"/"$itemdir"/*.t?z )
+  # should have something by now!
+  [ ! -e "${pkglist[0]}" ] && \
     # there's nothing in the repo, so synthesize a package name
     pkglist=( "${itemprgnam}-0-noarch-0" )
-  fi
 
   for pkgpath in "${pkglist[@]}"; do
     is_installed "$pkgpath"
@@ -211,9 +211,9 @@ function dotprofilizer
   local pkgpath="$1"
   local varlogpkg script
   # examine /var/log/packages/xxxx because it's quicker than looking inside a .t?z
-  varlogpkg=/var/log/packages/$(basename "$pkgpath" | sed 's/\.t.z$//')
-  if grep -q -E 'etc/profile\.d/.*\.sh(\.new)?' "$varlogpkg"; then
-    for script in $(grep 'etc/profile\.d/.*\.sh' "$varlogpkg" | sed 's/.new$//'); do
+  varlogpkg=/var/log/packages/$(basename "${pkgpath/%.t?z/}")
+  if grep -q -E '^etc/profile\.d/.*\.sh(\.new)?' "$varlogpkg"; then
+    while read script; do
       if [ -f /"$script" ]; then
         log_verbose -a "  Running profile script: /$script"
         . /"$script"
@@ -221,7 +221,7 @@ function dotprofilizer
         log_verbose -a "  Running profile script: /$script.new"
         . /"$script".new
       fi
-    done
+    done < <(grep '^etc/profile\.d/.*\.sh' "$varlogpkg" | sed 's/.new$//')
   fi
   return
 }

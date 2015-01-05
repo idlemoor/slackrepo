@@ -31,7 +31,7 @@ function build_item
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
-  local -a pkglist
+  local -a pkglist tempdownlist
 
   MYTMPIN="$MYTMPDIR/slackbuild_$itemprgnam"
   # initial wipe of $MYTMPIN, even if $OPT_KEEP_TMP is set
@@ -48,8 +48,8 @@ function build_item
     # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
     log_verbose -a "Note: $itemid: setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]})"
     sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$MYTMPIN/$itemfile"
-    verpat="$(echo "${INFOVERSION[$itemid]}" | sed 's/\./\\\./g')"
-    INFODOWNLIST[$itemid]="$(echo "${INFODOWNLIST[$itemid]}" | sed "s/$verpat/$NEWVERSION/g")"
+    # Let's assume shell globbing chars won't appear in any sane VERSION ;-)
+    INFODOWNLIST[$itemid]="${INFODOWNLIST[$itemid]//${INFOVERSION[$itemid]}/$NEWVERSION}"
     INFOVERSION[$itemid]="$NEWVERSION"
   fi
 
@@ -101,8 +101,8 @@ function build_item
     SR_BUILD="$BUILD"
   else
     # Increment the existing package's BUILD, or use the SlackBuild's (whichever is greater).
-    # If there are multiple packages from one SlackBuild, and they all have different BUILD numbers,
-    # frankly, we are screwed :-(
+    #### If there are multiple packages from one SlackBuild, and they all have different BUILD numbers,
+    #### frankly, we are screwed :-(
     oldbuild=$(ls "$SR_PKGREPO"/"$itemdir"/*.t?z 2>/dev/null | head -n 1 | sed -e 's/^.*-//' -e 's/[^0-9]*$//' )
     nextbuild=$(( ${oldbuild:-0} + 1 ))
     if [ "$nextbuild" -gt "$BUILD" ]; then
@@ -172,14 +172,14 @@ function build_item
       log_verbose "Special action: download_basename"
       # We're going to guess that the timestamps in the source repo indicate the
       # order in which files were downloaded and therefore the order in INFODOWNLIST.
-      # most of the current bozo downloaders only download one file anyway :-)
+      # Most of the current bozo downloaders only download one file anyway :-)
       tempdownlist=( ${INFODOWNLIST[$itemid]} )
       count=0
-      for sourcefile in $(ls -rt "$SR_SRCREPO"/"$itemdir" 2>/dev/null); do
+      while read sourcefile; do
         target=$(basename "${tempdownlist[$count]}")
         ( cd "$MYTMPIN"; [ ! -e "$target" ] && ln -s "$(basename "$sourcefile")" "$target" )
         count=$(( count + 1 ))
-      done
+      done < <(ls -rt "$SR_SRCREPO"/"$itemdir" 2>/dev/null)
       ;;
     'noexport_ARCH' )
       log_verbose "Special action: noexport_ARCH"
@@ -243,6 +243,12 @@ function build_item
   buildfinishtime="$(date '+%s')"
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
 
+  # If there's a config.log in the obvious place, save it
+  configlog="$SR_TMP"/"$itemprgnam"-"${INFOVERSION[$itemid]}"/config.log
+  if [ -f "$configlog" ]; then
+    cp "$configlog" "$ITEMLOGDIR"
+  fi
+
   if [ "$buildstat" != 0 ]; then
     log_error -a "${itemid}: $itemfile failed (status $buildstat)"
     build_failed "$itemid"
@@ -266,7 +272,7 @@ function build_item
           if [ "$currtag" != "$SR_TAG" ]; then
             # retag it
             pkgtype=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
-            mv "$pkgpath" "$MYTMPOUT"/"$(echo "$pkgnam" | sed 's/'"$currtag"'\.'"$pkgtype"'$/'"$SR_TAG"'.'"$pkgtype"'/')"
+            mv "$pkgpath" "$MYTMPOUT"/"${pkgnam/%$currtag.$pkgtype/${SR_TAG}.$pkgtype}"
           else
             mv "$pkgpath" "$MYTMPOUT"/
           fi
@@ -323,8 +329,10 @@ function build_ok
       fi
       mv "$SR_PKGREPO"/"$itemdir" "$SR_PKGBACKUP"/"$itemdir"
       rm -rf "$SR_PKGBACKUP"/"$itemdir".prev
-      #### handle this better if no such files
-      log_verbose "$(printf 'Backed up: %s\n' $(cd "$SR_PKGBACKUP"/"$itemdir"; ls *.t?z))"
+      for backpack in "$SR_PKGBACKUP"/"$itemdir"/*.t?z; do
+        [ -e "$backpack" ] || break
+        log_verbose "Backed up: $(basename "$backpack")"
+      done
     fi
     # put the new packages into the real package repo
     mkdir -p "$SR_PKGREPO"/"$itemdir"
@@ -414,7 +422,7 @@ function create_pkg_metadata
 
     pkgbasename=$(basename "$pkgpath")
     pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
-    nosuffix=$(echo "$pkgpath" | sed 's/\.t.z$//')
+    nosuffix="${pkgpath%.t?z}"
     dotrev="${nosuffix}.rev"
     dotdep="${nosuffix}.dep"
     dottxt="${nosuffix}.txt"
@@ -444,15 +452,21 @@ function create_pkg_metadata
         ;;
     esac
     # Set $changelogentry for the ChangeLog, and $CHANGEMSG for build_ok()
-    if [ -z "$extrastuff" ]; then
-      changelogentry="${pkgbasename}: ${OPERATION}. NEWLINE"
-      CHANGEMSG="${OPERATION}"
-    else
+    if [ -n "$extrastuff" ]; then
       changelogentry="${pkgbasename}: ${OPERATION}. LINEFEED $extrastuff NEWLINE"
       CHANGEMSG="${OPERATION} ${extrastuff}"
+    else
+      changelogentry="${pkgbasename}: ${OPERATION}. NEWLINE"
+      CHANGEMSG="${OPERATION}"
     fi
     if [ "$OPT_DRY_RUN" != 'y' ]; then
       echo "$changelogentry" >> "$CHANGELOG"
+      echo "$(LC_ALL=C date -u): ${OPERATION}."  > "$ITEMLOGDIR"/ChangeLog.new
+      [ -n "$extrastuff" ] && \
+        echo "  $extrastuff"                    >> "$ITEMLOGDIR"/ChangeLog.new
+      [ -f  "$ITEMLOGDIR"/ChangeLog ] && \
+        cat "$ITEMLOGDIR"/ChangeLog             >> "$ITEMLOGDIR"/ChangeLog.new
+      mv    "$ITEMLOGDIR"/ChangeLog.new            "$ITEMLOGDIR"/ChangeLog
     fi
 
     # If this is a reverted package, most of the existing metadata can be reused.
@@ -521,7 +535,7 @@ EOF
 
       # slack-required: from packaging dir, or extract from package, or synthesise it from DIRECTDEPS.
       if [ -f "$TMP"/package-"$pkgnam"/install/slack-required ]; then
-        SLACKREQUIRED=$(cat "$TMP"/package-"$pkgnam"/install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        SLACKREQUIRED=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-required | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
       elif grep -q install/slack-required "$dotlst"; then
         SLACKREQUIRED=$(tar xf "$pkgpath" -O install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
       elif [ -n "${DIRECTDEPS[$itemid]}" ]; then
@@ -532,7 +546,7 @@ EOF
 
       # slack-conflicts: from packaging dir, or extract from package, or get it from the hintfile.
       if [ -f "$TMP"/package-"$pkgnam"/install/slack-conflicts ]; then
-        SLACKCONFLICTS=$(cat "$TMP"/package-"$pkgnam"/install/slack-conflicts 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        SLACKCONFLICTS=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-conflicts | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
       elif grep -q install/slack-conflicts "$dotlst"; then
         SLACKCONFLICTS=$(tar xf "$pkgpath" -O install/slack-conflicts 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
       elif [ -n "${HINT_CONFLICTS[$itemid]}" ]; then
@@ -543,7 +557,7 @@ EOF
 
       # slack-suggests: from packaging dir, or extract from package.
       if [ -f "$TMP"/package-"$pkgnam"/install/slack-suggests ]; then
-        SLACKSUGGESTS=$(cat "$TMP"/package-"$pkgnam"/install/slack-suggests 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        SLACKSUGGESTS=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-suggests | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
       elif grep -q install/slack-suggests "$dotlst"; then
         SLACKCONFLICTS=$(tar xf "$pkgpath" -O install/slack-suggests 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
       else

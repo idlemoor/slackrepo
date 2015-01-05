@@ -38,6 +38,8 @@ function print_current_revinfo
   local itemprgnam=${ITEMPRGNAM[$itemid]}
   local itemdir=${ITEMDIR[$itemid]}
 
+  # (1) Get the item's own prg/ver/blt/rev/slack/dep/hint stuff
+
   prgstuff="prgnam=${itemprgnam};"
   verstuff="version=${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}};"
   bltstuff="built=$(date +%s);"
@@ -54,7 +56,7 @@ function print_current_revinfo
   slackstuff="slackware=${SYS_SLACKVER};"
 
   depstuff=''
-  directdeps=$(echo "${DIRECTDEPS[$itemid]}" | sed 's/ /:/g')
+  directdeps="${DIRECTDEPS[$itemid]// /:}"
   [ -n "$directdeps" ] && depstuff="depends=${directdeps};"
 
   hintstuff=''
@@ -65,21 +67,24 @@ function print_current_revinfo
   REVCACHE[$itemid]="${prgstuff} ${verstuff} ${bltstuff} ${revstuff} ${slackstuff} ${depstuff} ${hintstuff}"
   echo "${REVCACHE[$itemid]}"
 
+
+  # (2) Get each dependency's prg/ver/blt/rev/slack/dep/hint stuff ($deprev).
+
   for dep in ${DIRECTDEPS[$itemid]}; do
     if [ -n "${REVCACHE[$dep]}" ]; then
       deprev="${REVCACHE[$dep]}"
     else
-      if [ "$OPT_DRY_RUN" = 'y' -a -f "$DRYREPO"/"$dep"/*.rev ]; then
-        deprev=$(head -q -n 1 "$DRYREPO"/"$dep"/*.rev)
-      elif [ -f "$SR_PKGREPO"/"$dep"/*.rev ]; then
-        deprev=$(head -q -n 1 "$SR_PKGREPO"/"$dep"/*.rev)
-      elif [ -f "$SR_PKGREPO"/"$dep"/.revision ]; then
-        deprev=$(head -q -n 1 "$SR_PKGREPO"/"$dep"/.revision)
-      else
-        # dep has no .rev, so it probably does not exist (e.g. manually removed),
-        # so fake something that will always be out of date:
-        deprev="prgnam=$(basename "$dep"); version=0; built=0; buildrev=0; slackware=0;"
-      fi
+      deprevfilelist=( "$SR_PKGREPO"/"$dep"/*.rev "$SR_PKGREPO"/"$dep"/.revision )
+      [ "$OPT_DRY_RUN" = 'y' ] && deprevfilelist=( "$DRYREPO"/"$dep"/*.rev "${deprevfilelist[@]}" )
+      # start with a fake deprev that will always be out of date:
+      deprev="prgnam=$(basename "$dep"); version=0; built=0; buildrev=0; slackware=0;"
+      # and then set deprev from the first existing rev file:
+      for deprevfile in "${deprevfilelist[@]}"; do
+        if [ -f "$deprevfile" ]; then
+          deprev=$(head -q -n 1 "$deprevfile" )
+          break
+        fi
+      done
       REVCACHE[$dep]="$deprev"
     fi
     echo "$deprev"
@@ -191,7 +196,7 @@ function needs_build
   fi
 
   # Has the list of deps changed => rebuild
-  currdep=$(echo "${DIRECTDEPS[$itemid]}" | sed 's/ /:/g')
+  currdep="${DIRECTDEPS[$itemid]// /:}"
   if [ "$pkgdep" != "$currdep" ]; then
     BUILDINFO="rebuild for added/removed deps"
     return 0

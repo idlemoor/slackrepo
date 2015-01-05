@@ -67,8 +67,9 @@ function log_itemstart
   echo "${line:0:57} $(date '+%F %T') -" >> "$MAINLOG"
   echo "$*"                              >> "$MAINLOG"
   if [ -n "$itemid" ]; then
-    mkdir -p "$SR_LOGDIR"/"$itemdir"
-    ITEMLOG="$SR_LOGDIR"/"$itemdir"/"$itemprgnam".log
+    ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"
+    mkdir -p "$ITEMLOGDIR"
+    ITEMLOG="$ITEMLOGDIR"/"$itemprgnam".log
     echo "$* $(date '+%F %T')"  > "$ITEMLOG"
   fi
 }

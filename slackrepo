@@ -197,7 +197,7 @@ initnames="INIT_GITCLONE INIT_GITBRANCH"
 # Initialise the SR_variables from the environment:
 for envvar in $varnames $genrepnames $initnames $optnames ; do
   srvar="SR_$envvar"
-  eval "$srvar"="${!envvar}"
+  eval "$srvar=\"${!envvar}\""
 done
 
 # Per-user config files:
@@ -229,17 +229,17 @@ done
 # and unset the config file variables to prevent SlackBuilds from seeing them:
 for name in $varnames $genrepnames $initnames; do
   srvar="SR_$name"
-  [ -z "${!srvar}" ] && eval "$srvar"="\"${!name}\""
+  [ -z "${!srvar}" ] && eval "$srvar=\"${!name}\""
   eval unset "$name"
 done
 # and do something similar for the OPT_ variables:
 for name in $optnames ; do
   optvar="OPT_$name"
-  [ -z "${!optvar}" ] && eval "$optvar"="\"${!name}\""
+  [ -z "${!optvar}" ] && eval "$optvar=\"${!name}\""
   eval unset "$name"
   # simplify anything that looks like a Boolean:
   if   [ "${!optvar}" = '1' -o "${!optvar}" = 'yes' -o "${!optvar}" = 'y' -o "${!optvar}" = 'YES' -o "${!optvar}" = 'Y' ]; then
-    eval "$optvar="'y'
+    eval "$optvar"='y'
   elif [ "${!optvar}" = '0' -o "${!optvar}" = 'no'  -o "${!optvar}" = 'n' -o "${!optvar}" = 'NO'  -o "${!optvar}" = 'N' -o "${!optvar}" = '' ]; then
     eval "$optvar"='n'
   fi
@@ -271,7 +271,7 @@ fi
 # Substitute %REPO%, %SLACKVER% and %ARCH%
 for name in $varnames $genrepnames $initnames; do
   srvar="SR_$name"
-  eval "$srvar"="\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\""
+  eval "$srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\""
 done
 
 # Do this now so we can log the config:

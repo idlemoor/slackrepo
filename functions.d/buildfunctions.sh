@@ -127,6 +127,8 @@ function build_item
     PKGTYPE="$SR_PKGTYPE" \
     NUMJOBS="$SR_NUMJOBS"
 
+  SLACKBUILDCMD="unbuffer sh ./$itemfile"
+
   # Process other hints for the build:
 
   # GROUPADD and USERADD ...
@@ -138,7 +140,6 @@ function build_item
 
   # ... OPTIONS ...
   options="${HINT_OPTIONS[$itemid]}"
-  SLACKBUILDCMD="sh ./$itemfile"
   [ -n "$tempmakeflags" -o -n "$options" ] && SLACKBUILDCMD="env $tempmakeflags $options $SLACKBUILDCMD"
 
   # ... ANSWER ...

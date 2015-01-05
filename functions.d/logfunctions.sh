@@ -23,7 +23,7 @@
 #-------------------------------------------------------------------------------
 
 function log_start
-# Log the start of a top level item on standard output and in MAINLOG
+# Log the start of a top level item on standard output.
 # $* = message
 # Return status: always 0
 {
@@ -34,17 +34,12 @@ function log_start
   echo "! ${msg:0:66} $(date +%T) !"
   echo "$line"
   echo ""
-  echo ""                                 >> "$MAINLOG"
-  echo "$line"                            >> "$MAINLOG"
-  echo "! ${msg:0:55} $(date '+%F %T') !" >> "$MAINLOG"
-  echo "$line"                            >> "$MAINLOG"
-  echo ""                                 >> "$MAINLOG"
 }
 
 #-------------------------------------------------------------------------------
 
 function log_itemstart
-# Log the start of an item on standard output and in MAINLOG.
+# Log the start of an item on standard output.
 # This is where we start logging to ITEMLOG, which is set here, using $itemid set by our caller.
 # (At any time only one ITEMLOG can be active.)
 # $* = message
@@ -56,16 +51,14 @@ function log_itemstart
 
   [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
   line="-------------------------------------------------------------------------------"
-  tput bold; tput setaf 7
+  [ "$DOCOLOUR" = 'y' ] && { tput bold; tput setaf 7; }
   if [ ${#1} -ge ${#line} ]; then
     echo "$*"
   else
     pad=$(( ${#line} - ${#1} - 1 ))
     echo "$* ${line:0:$pad}"
   fi
-  tput sgr0
-  echo "${line:0:57} $(date '+%F %T') -" >> "$MAINLOG"
-  echo "$*"                              >> "$MAINLOG"
+  [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
   if [ -n "$itemid" ]; then
     ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"
     mkdir -p "$ITEMLOGDIR"
@@ -77,102 +70,88 @@ function log_itemstart
 #-------------------------------------------------------------------------------
 
 function log_verbose
-# Log a message to MAINLOG, and also to standard output if OPT_VERBOSE is set
-# (and ITEMLOG if '-a' is specified)
+# Log a message to standard output if OPT_VERBOSE is set.
+# Log a message to ITEMLOG if '-a' is specified.
 # $* = message
 # Return status: always 0
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  if [ "$OPT_VERBOSE" = 'y' ]; then
-    echo -e "$@"
-  fi
-  echo -e "$@" >> "$MAINLOG"
-  [ "$A" = 'y' ] && \
-  echo -e "$@" >> "$ITEMLOG"
+  [ "$OPT_VERBOSE" = 'y' ] && echo -e "$@"
+  [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
   return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function log_normal
-# Log a message to MAINLOG, and also to standard output unless OPT_QUIET is set
-# (and ITEMLOG if '-a' is specified)
+# Log a message to standard output unless OPT_QUIET is set.
+# Log a message to ITEMLOG if '-a' is specified.
 # $* = message
 # Return status: always 0
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  if [ "$OPT_QUIET" != 'y' ]; then
-    echo -e "$@"
-  fi
-  echo -e "$@" >> "$MAINLOG"
-  [ "$A" = 'y' ] && \
-  echo -e "$@" >> "$ITEMLOG"
+  [ "$OPT_QUIET" != 'y' ] && echo -e "$@"
+  [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
   return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function log_always
-# Log a message to MAINLOG and standard output
-# (and ITEMLOG if '-a' is specified)
+# Log a message to standard output.
+# Log a message to ITEMLOG if '-a' is specified.
 # $* = message
 # Return status: always 0
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
   echo -e "$@"
-  echo -e "$@" >> "$MAINLOG"
-  [ "$A" = 'y' ] && \
-  echo -e "$@" >> "$ITEMLOG"
+  [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
   return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function log_important
-# Log a message to standard output in white highlight, and log to MAINLOG
-# (and ITEMLOG if '-a' is specified)
+# Log a message to standard output in white highlight.
+# Log a message to ITEMLOG if '-a' is specified.
 # $* = message
 # Return status: always 0
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  tput bold; tput setaf 7
+  [ "$DOCOLOUR" = 'y' ] && { tput bold; tput setaf 7; }
   echo -e "$@"
-  tput sgr0
-  echo -e "$@" >> "$MAINLOG"
-  [ "$A" = 'y' ] && \
-  echo -e "$@" >> "$ITEMLOG"
+  [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
+  [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
   return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function log_success
-# Log a message to standard output in green highlight, and log to MAINLOG
-# (and ITEMLOG if '-a' is specified)
+# Log a message to standard output in green highlight.
+# Log a message to ITEMLOG if '-a' is specified.
 # $* = message
 # Return status: always 0
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  tput bold; tput setaf 2
+  [ "$DOCOLOUR" = 'y' ] && { tput bold; tput setaf 2; }
   echo -e "$@"
-  tput sgr0
-  echo -e "$@" >> "$MAINLOG"
-  [ "$A" = 'y' ] && \
-  echo -e "$@" >> "$ITEMLOG"
+  [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
+  [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
   return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function log_warning
-# Log a message to standard output in yellow highlight, and log to MAINLOG
-# (and ITEMLOG if '-a' is specified)
-# Message is automatically prefixed with 'WARNING' (unless '-n' is specified)
+# Log a message to standard output in yellow highlight.
+# Log a message to ITEMLOG if '-a' is specified.
+# Message is automatically prefixed with 'WARNING' (unless '-n' is specified).
 # $* = message
 # Return status: always 0
 {
@@ -185,21 +164,19 @@ function log_warning
     *)    break ;;
     esac
   done
-  tput bold; tput setaf 3
+  [ "$DOCOLOUR" = 'y' ] && { tput bold; tput setaf 3; }
   echo -e "${W}$*"
-  tput sgr0
-  echo -e "${W}$*" >> "$MAINLOG"
-  [ "$A" = 'y' ] && \
-  echo -e "${W}$*" >> "$ITEMLOG"
+  [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
+  [ "$A" = 'y' ] && echo -e "${W}$*" >> "$ITEMLOG"
   return 0
 }
 
 #-------------------------------------------------------------------------------
 
 function log_error
-# Log a message to standard output in red highlight, and log to MAINLOG
-# (and ITEMLOG if '-a' is specified)
-# Message is automatically prefixed with 'ERROR' (unless '-n' is specified)
+# Log a message to standard output in red highlight.
+# Log a message to ITEMLOG if '-a' is specified.
+# Message is automatically prefixed with 'ERROR' (unless '-n' is specified).
 # $* = message
 # Return status: always 0
 {
@@ -212,14 +189,10 @@ function log_error
     *)    break ;;
     esac
   done
-  tput bold; tput setaf 1
+  [ "$DOCOLOUR" = 'y' ] && { tput bold; tput setaf 1; }
   echo -e "${E}$*"
-  tput sgr0
-  # In case we are called before MAINLOG is set:
-  [ -z "$MAINLOG" ] && return 0
-  echo -e "${E}$*" >> "$MAINLOG"
-  [ "$A" = 'y' ] && \
-  echo -e "${E}$*" >> "$ITEMLOG"
+  [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
+  [ "$A" = 'y' ] && echo -e "${E}$*" >> "$ITEMLOG"
   return 0
 }
 

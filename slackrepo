@@ -63,13 +63,15 @@ starttime=$(date +%s)
 # OPT_XXXX represents command line option XXXX
 # SR_XXXX represents config file variable XXXX
 
-optnames="REPO QUIET VERBOSE VERY_VERBOSE MAKE_VERBOSE TEST DRY_RUN INSTALL PREREMOVE KEEP_TMP TRACE"
+optnames="REPO QUIET VERBOSE VERY_VERBOSE MAKE_VERBOSE TEST DRY_RUN INSTALL PREREMOVE KEEP_TMP TRACE COLOR"
 # Initialise them all to null, set -u friendly ;-)
 for opt in $optnames ; do
   eval OPT_"$opt"=''
 done
 # Initialise OPT_REPO from env var $REPO:
 OPT_REPO="$REPO"
+# Default for OPT_COLOR:
+OPT_COLOR='auto'
 # No default for the processing mode (build/rebuild/update/remove):
 CMD=''
 
@@ -113,6 +115,9 @@ while [ $# != 0 ]; do
       OPT_VERY_VERBOSE='y'
       OPT_MAKE_VERBOSE='y'
       shift; continue ;;
+    --color=* | --colour=* )
+      OPT_COLOR="${1/--colo*r=/}"
+      shift; continue ;;
     --* )
       found='n'
       for opt in $optnames; do
@@ -125,7 +130,7 @@ while [ $# != 0 ]; do
           found='y'; break
         fi
       done
-      [ "$found" = 'n' ] && echo "$(basename "$0"): invalid control argument: $1" >&2
+      [ "$found" = 'n' ] && echo "$(basename "$0"): Warning: invalid control argument: $1" >&2
       shift; continue ;;
     * )
       break ;;
@@ -174,7 +179,7 @@ done
 
 # Find out about the host system:
 # version of Slackware:
-[ -f /etc/slackware-version ] || { log_error "/etc/slackware-version not found"; exit_cleanup; exit 4; }
+[ -f /etc/slackware-version ] || { echo "$(basename "$0"): Error: /etc/slackware-version not found"; exit_cleanup; exit 4; }
 SYS_SLACKVER="$(sed 's/^Slackware //' /etc/slackware-version )"
 # native arch:
 SYS_ARCH=$(uname -m)
@@ -215,7 +220,7 @@ repoconf="/etc/slackrepo/slackrepo_${OPT_REPO}.conf"
 if [ -f "$repoconf" ]; then
   . "$repoconf"
 else
-  echo "Error: repo configuration file not found: $repoconf"; exit_cleanup; exit 2
+  echo "$(basename "$0"): Error: repo configuration file not found: $repoconf" >&2; exit_cleanup; exit 2
 fi
 # Read the user config files to override everything in the main repo config file.
 # (Yes, we're reading ~/.slackreporc twice, but that's a lot easier than a proper solution)
@@ -255,6 +260,7 @@ done
 # lazy implementation of --make-verbose ;-)
 [ "$OPT_MAKE_VERBOSE" = 'y' ] && export VERBOSE=1 V=1
 
+
 # If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly
 if [ -z "$SR_NUMJOBS" ]; then
   SR_NUMJOBS="-j$(( SYS_NPROC + 1 ))"
@@ -274,13 +280,20 @@ for name in $varnames $genrepnames $initnames; do
   eval "$srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\""
 done
 
-# Do this now so we can log the config:
+# Setup logging:
 mkdir -p "$SR_LOGDIR"
 MAINLOG="$SR_LOGDIR"/$(basename "$0")_$(date '+%F_%T').log
-> "$MAINLOG"
+DOCOLOUR='n'
+[ "$OPT_COLOR" = 'always'       ] && DOCOLOUR='y'
+[ "$OPT_COLOR" = 'auto' -a -t 1 ] && DOCOLOUR='y'
+if [ "$DOCOLOUR" = 'y' ]; then
+  exec &> >( tee >(sed -r 's/\x1b\[[0-9;]*[mK]//g' >"$MAINLOG") )
+else
+  exec &> >( tee "$MAINLOG" )
+fi
 
 # Log the config
-[ "$OPT_VERBOSE" = 'y' ] && echo ""
+log_verbose ""
 log_verbose "Configuration:"
 log_verbose "  $CMD"
 log_verbose "  --repo=$OPT_REPO"
@@ -297,6 +310,7 @@ fi
 [         "$OPT_TEST" = 'y' ] && log_verbose "  --test"
 [     "$OPT_KEEP_TMP" = 'y' ] && log_verbose "  --keep-tmp"
 [        "$OPT_TRACE" = 'y' ] && log_verbose "  --trace"
+[    "$OPT_COLOR" != 'auto' ] && log_verbose "  --color=$OPT_COLOR"
 
 for name in $varnames; do
   srvar="SR_$name"
@@ -318,7 +332,7 @@ for name in AR AS CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS LD LDFLAGS DISTCC_HOSTS; d
   [ -n "${!name}" ] && log_verbose "  $name=\"${!name}\""
 done
 
-[ "$OPT_VERBOSE" = 'y' ] && echo ""
+log_verbose ""
 
 #-------------------------------------------------------------------------------
 # Initialisation
@@ -392,13 +406,12 @@ elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
   if [ -z "$muck" -a "$currbranch" = "$SYS_SLACKVER" ]; then
     if [ -n "$(find "$(git rev-parse --show-toplevel)"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
       log_normal "Updating git ..."
-      if [ "$OPT_QUIET" = 'y' ]; then
-        git fetch -a                             >> "$MAINLOG" 2>&1
-        git merge --ff-only origin/"$currbranch" >> "$MAINLOG" 2>&1
-      else
-        git fetch -a                             2>&1 | tee -a "$MAINLOG"
-        git merge --ff-only origin/"$currbranch" 2>&1 | tee -a "$MAINLOG"
-      fi
+      quietarg=''
+      colorarg=''
+      [ "$OPT_QUIET" = 'y' ] && quietarg='--quiet'
+      [ "$DOCOLOUR"  = 'y' ] && colorarg='--color'
+      git fetch $quietarg -a
+      git merge $quietarg $colorarg --ff-only origin/"$currbranch"
       log_normal "Finished updating git."
     fi
   fi
@@ -409,13 +422,13 @@ GOTGIT='n'
 if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
   GOTGIT='y'
   [ -n "$(git status -s .)" ] && dirty=' (DIRTY)'
-  [ "$OPT_VERBOSE" = 'y' ] && echo ""
+  log_verbose ""
   log_verbose "Git repo:   $SR_SBREPO"
   log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"
   log_verbose "  date:     $(date --date=@"$(git log -n 1 --format=%ct)")"
   log_verbose "  revision: $(git rev-parse HEAD)$dirty"
   log_verbose "  title:    $(git log -n 1 --format=%s)"
-  echo ""
+  log_normal ""
 fi
 
 # Warn about already installed packages (using package tag)
@@ -500,36 +513,36 @@ if [ "$OPT_DRY_RUN" = 'y' ]; then
   OKLIST=( $(printf '%s\n' "${OKLIST[@]}" | sort -u) )
   okcount="${#OKLIST[@]}"
   log_always "Dry run OK: $okcount"
-  [ "$OPT_QUIET" != 'y' -a "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}" | tee -a "$MAINLOG"
+  [ "$OPT_QUIET" != 'y' -a "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}"
 else
   log_always "Added:      $(grep -c ': Added'   "$CHANGELOG")"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Added'   "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
+    grep ': Added'   "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
   log_always "Updated:    $(grep -c ': Updated' "$CHANGELOG")"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Updated' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
+    grep ': Updated' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
   log_always "Rebuilt:    $(grep -c ': Rebuilt' "$CHANGELOG")"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Rebuilt' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
+    grep ': Rebuilt' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
   log_always "Removed:    $(grep -c ': Removed' "$CHANGELOG")"
   [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Removed' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort | tee -a "$MAINLOG"
+    grep ': Removed' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
 fi
 SKIPPEDLIST=( $(printf '%s\n' "${SKIPPEDLIST[@]}" | sort -u) )
 skippedcount="${#SKIPPEDLIST[@]}"
 log_always "Skipped:    $skippedcount"
-[ "$OPT_QUIET" != 'y' -a "$skippedcount" != 0 ] && printf '  %s\n' "${SKIPPEDLIST[@]}" | tee -a "$MAINLOG"
+[ "$OPT_QUIET" != 'y' -a "$skippedcount" != 0 ] && printf '  %s\n' "${SKIPPEDLIST[@]}"
 FAILEDLIST=( $(printf '%s\n' "${FAILEDLIST[@]}" | sort -u) )
 failedcount="${#FAILEDLIST[@]}"
 log_always "Failed:     $failedcount"
-[ "$OPT_QUIET" != 'y' -a "$failedcount" != 0 ]  && printf '  %s\n' "${FAILEDLIST[@]}" | tee -a "$MAINLOG"
+[ "$OPT_QUIET" != 'y' -a "$failedcount" != 0 ]  && printf '  %s\n' "${FAILEDLIST[@]}"
 ABORTEDLIST=( $(printf '%s\n' "${ABORTEDLIST[@]}" | sort -u) )
 abortedcount="${#ABORTEDLIST[@]}"
 log_always "Aborted:    $abortedcount"
-[ "$OPT_QUIET" != 'y' -a "$abortedcount" != 0 ] && printf '  %s\n' "${ABORTEDLIST[@]}" | tee -a "$MAINLOG"
+[ "$OPT_QUIET" != 'y' -a "$abortedcount" != 0 ] && printf '  %s\n' "${ABORTEDLIST[@]}"
 warningcount=$(grep '^WARNING: ' "$MAINLOG" | sort -u | wc -l)
 log_always "Warnings:   $warningcount"
-[ "$OPT_QUIET" != 'y' ] && grep '^WARNING: ' "$MAINLOG" | sort -u | sed 's/^WARNING: /  /' | tee -a "$MAINLOG"
+[ "$OPT_QUIET" != 'y' ] && grep '^WARNING: ' "$MAINLOG" | sort -u | sed 's/^WARNING: /  /'
 
 #-------------------------------------------------------------------------------
 # Package repository maintenance: gen_repos_files.sh
@@ -551,11 +564,11 @@ if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
       RSS_DESCRIPTION="$SR_RSS_DESCRIPTION" RSS_FEEDMAX="$SR_RSS_FEEDMAX" RSS_UUID="$SR_RSS_UUID" \
       GPGBIN="$SR_GPGBIN" USE_GPGAGENT="$SR_USE_GPGAGENT" FOR_SLAPTGET="$SR_FOR_SLAPTGET" \
       FOLLOW_SYMLINKS="$SR_FOLLOW_SYMLINKS" REPO_SUBDIRS="$SR_REPO_SUBDIRS" \
-      sh /usr/libexec/"$(basename "$0")"/gen_repos_files.sh -l "$CHANGELOG" | tee -a "$MAINLOG"
+      sh /usr/libexec/"$(basename "$0")"/gen_repos_files.sh -l "$CHANGELOG"
       genrepstat=$?
       set +o pipefail
       [ "$genrepstat" != 0 ] && log_error "gen_repos_files.sh failed -- changelog retained"
-      echo ""
+      log_normal ""
       log_important "Finished gen_repos_files.sh at $(date +%T)"
     fi
   fi
@@ -563,7 +576,7 @@ fi
 
 #-------------------------------------------------------------------------------
 
-echo ""
+log_normal ""
 
 [ "$genrepstat" = 0 ] && rm -f "$CHANGELOG"
 [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$DRYREPO"

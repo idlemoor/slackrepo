@@ -633,7 +633,7 @@ function parse_info_and_hints
       ${DOWNLOAD+"DOWNLOAD=\"$DOWNLOAD\""} \
       ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
       ${SHA256SUM+"SHA256SUM=\"$SHA256SUM\""} \
-      ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )" 
+      ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )"
     unset SKIP \
           VERSION OPTIONS GROUPADD USERADD \
           PREREMOVE CONFLICTS \

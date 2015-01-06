@@ -88,7 +88,7 @@ function remove_item
         pkgbase=$(basename "$pkg")
         if [ "$OPT_DRY_RUN" != 'y' ]; then
           log_normal "Removing package $pkgbase"
-          rm -f "$(echo "$pkg" | sed 's/\.t.z$//')".*
+          rm -f "${pkg%.t?z}".*
           echo "$pkgbase:  Removed. NEWLINE" >> "$CHANGELOG"
         else
           log_normal "Would remove package $pkgbase"

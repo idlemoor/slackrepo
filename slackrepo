@@ -287,7 +287,7 @@ DOCOLOUR='n'
 [ "$OPT_COLOR" = 'always'       ] && DOCOLOUR='y'
 [ "$OPT_COLOR" = 'auto' -a -t 1 ] && DOCOLOUR='y'
 if [ "$DOCOLOUR" = 'y' ]; then
-  exec &> >( tee >(sed -r 's/\x1b\[[0-9;]*[mK]//g' >"$MAINLOG") )
+  exec &> >( tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >"$MAINLOG") )
 else
   exec &> >( tee "$MAINLOG" )
 fi
@@ -405,13 +405,15 @@ elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
   currbranch=$(git rev-parse --abbrev-ref HEAD)
   if [ -z "$muck" -a "$currbranch" = "$SYS_SLACKVER" ]; then
     if [ -n "$(find "$(git rev-parse --show-toplevel)"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
-      log_normal "Updating git ..."
       quietarg=''
-      colorarg=''
       [ "$OPT_QUIET" = 'y' ] && quietarg='--quiet'
-      [ "$DOCOLOUR"  = 'y' ] && colorarg='--color'
+      log_normal "Updating git ..."
       git fetch $quietarg -a
-      git merge $quietarg $colorarg --ff-only origin/"$currbranch"
+      if [ "$DOCOLOUR"  = 'y' ]; then
+        unbuffer git merge $quietarg --ff-only origin/"$currbranch"
+      else
+        git merge $quietarg --ff-only origin/"$currbranch"
+      fi
       log_normal "Finished updating git."
     fi
   fi

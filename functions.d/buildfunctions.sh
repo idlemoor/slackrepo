@@ -127,7 +127,8 @@ function build_item
     PKGTYPE="$SR_PKGTYPE" \
     NUMJOBS="$SR_NUMJOBS"
 
-  SLACKBUILDCMD="unbuffer sh ./$itemfile"
+  SLACKBUILDCMD="sh ./$itemfile"
+  [ "$DOCOLOUR"  = 'y' ] && SLACKBUILDCMD="unbuffer $SLACKBUILDCMD"
 
   # Process other hints for the build:
 

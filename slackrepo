@@ -391,52 +391,57 @@ else
   > "$CHANGELOG"
 fi
 
-# git: initialise, or check and update
-if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
-  if [ -n "${SR_INIT_GITCLONE}" ]; then
-    log_normal "Cloning SlackBuilds repository $SR_SBREPO from ${SR_INIT_GITCLONE} ..."
-    git clone "${SR_INIT_GITCLONE}" "$SR_SBREPO"
-    git fetch -a
-    git remote update
-    mybranch="${SR_INIT_GITBRANCH:-$SYS_SLACKVER}"
-    if [ "$(git rev-parse --abbrev-ref HEAD)" != "$mybranch" ]; then
-      git checkout -b "$mybranch" -t origin/"$mybranch"
-    fi
-    log_normal "Finished cloning SlackBuilds repository."
-  fi
-elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
-  # Is git clean, and is the current branch SBo's stable branch?
-  log_normal "Checking git ..."
-  muck="$(git status -s .)"
-  currbranch=$(git rev-parse --abbrev-ref HEAD)
-  if [ -z "$muck" -a "$currbranch" = "$SYS_SLACKVER" ]; then
-    if [ -n "$(find "$(git rev-parse --show-toplevel)"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
-      quietarg=''
-      [ "$OPT_QUIET" = 'y' ] && quietarg='--quiet'
-      log_normal "Updating git ..."
-      git fetch $quietarg -a
-      if [ "$DOCOLOUR"  = 'y' ]; then
-        unbuffer git merge $quietarg --ff-only origin/"$currbranch"
-      else
-        git merge $quietarg --ff-only origin/"$currbranch"
-      fi
-      log_normal "Finished updating git."
-    fi
-  fi
-fi
+# Initialise git (only if this is a build or rebuild or update)
+if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
 
-# git: log a summary
-GOTGIT='n'
-if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
-  GOTGIT='y'
-  [ -n "$(git status -s .)" ] && dirty=' (DIRTY)'
-  log_verbose ""
-  log_verbose "Git repo:   $SR_SBREPO"
-  log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"
-  log_verbose "  date:     $(date --date=@"$(git log -n 1 --format=%ct)")"
-  log_verbose "  revision: $(git rev-parse HEAD)$dirty"
-  log_verbose "  title:    $(git log -n 1 --format=%s)"
-  log_normal ""
+  # git: initialise, or check and update
+  if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
+    if [ -n "${SR_INIT_GITCLONE}" ]; then
+      log_normal "Cloning SlackBuilds repository $SR_SBREPO from ${SR_INIT_GITCLONE} ..."
+      git clone "${SR_INIT_GITCLONE}" "$SR_SBREPO"
+      git fetch -a
+      git remote update
+      mybranch="${SR_INIT_GITBRANCH:-$SYS_SLACKVER}"
+      if [ "$(git rev-parse --abbrev-ref HEAD)" != "$mybranch" ]; then
+        git checkout -b "$mybranch" -t origin/"$mybranch"
+      fi
+      log_normal "Finished cloning SlackBuilds repository."
+    fi
+  elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+    # Is git clean, and is the current branch SBo's stable branch?
+    log_normal "Checking git ..."
+    muck="$(git status -s .)"
+    currbranch=$(git rev-parse --abbrev-ref HEAD)
+    if [ -z "$muck" -a "$currbranch" = "$SYS_SLACKVER" ]; then
+      if [ -n "$(find "$(git rev-parse --show-toplevel)"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
+        quietarg=''
+        [ "$OPT_QUIET" = 'y' ] && quietarg='--quiet'
+        log_normal "Updating git ..."
+        git fetch $quietarg -a
+        if [ "$DOCOLOUR"  = 'y' ]; then
+          unbuffer git merge $quietarg --ff-only origin/"$currbranch"
+        else
+          git merge $quietarg --ff-only origin/"$currbranch"
+        fi
+        log_normal "Finished updating git."
+      fi
+    fi
+  fi
+
+  # git: log a summary
+  GOTGIT='n'
+  if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+    GOTGIT='y'
+    [ -n "$(git status -s .)" ] && dirty=' (DIRTY)'
+    log_verbose ""
+    log_verbose "Git repo:   $SR_SBREPO"
+    log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"
+    log_verbose "  date:     $(date --date=@"$(git log -n 1 --format=%ct)")"
+    log_verbose "  revision: $(git rev-parse HEAD)$dirty"
+    log_verbose "  title:    $(git log -n 1 --format=%s)"
+    log_normal ""
+  fi
+
 fi
 
 # Warn about already installed packages (using package tag)

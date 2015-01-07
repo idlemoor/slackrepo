@@ -141,7 +141,7 @@ function needs_build
     fi
   fi
 
-  # Get more info from the .rev file
+  # Get info about the existing package from the .rev file
   eval "$(head -q -n 1 "${revfilelist[0]}")"
   pkgver="$version"
   pkgblt="$built"
@@ -157,29 +157,47 @@ function needs_build
     return 0
   fi
 
-  modifilelist=( $(find -L "$SR_SBREPO"/"$itemdir" -newermt @"$pkgblt" 2>/dev/null) )
+  if [ "$GOTGIT" = 'n' ]; then
 
-  # If this isn't a git repo, and any of the files have been modified since the package was built => update
-  if [ "$GOTGIT" = 'n' -a ${#modifilelist[@]} != 0 ]; then
-    BUILDINFO="update for modified files"
-    return 0
-  fi
+    # If this isn't a git repo, and any of the files have been modified since the package was built => update
+    modifilelist=( $(find -L "$SR_SBREPO"/"$itemdir" -newermt @"$pkgblt" 2>/dev/null) )
+    if [ ${#modifilelist[@]} != 0 ]; then
+      BUILDINFO="update for modified files"
+      return 0
+    fi
 
-  dirtymark=''
-  [ "${GITDIRTY[$itemid]}" = 'y' ] && dirtymark='+dirty'
-  currrev="${GITREV[$itemid]}$dirtymark"
-  shortcurrrev="${currrev:0:7}$dirtymark"
+  else
 
-  # Has the build revision (e.g. SlackBuild git rev) changed => update
-  if [ "$pkgrev" != "$currrev" ]; then
-    BUILDINFO="update for git $shortcurrrev"
-    return 0
-  fi
+    # The next couple of checks require git:
+    dirtymark=''
+    [ "${GITDIRTY[$itemid]}" = 'y' ] && dirtymark='+dirty'
+    currrev="${GITREV[$itemid]}$dirtymark"
+    shortcurrrev="${currrev:0:7}$dirtymark"
 
-  # If git is dirty, and any of the files have been modified since the package was built => update
-  if [ "${GITDIRTY[$itemid]}" = 'y' -a ${#modifilelist[@]} != 0 ]; then
-    BUILDINFO="update for git $shortcurrrev"
-    return 0
+    # If the git rev has changed => update
+    #   (ignoring README, slack-desc and .info -- we can ignore .info because
+    #   VERSION has already been checked)
+    if [ "$pkgrev" != "$currrev" ]; then
+      modifilelist=( $(git diff --name-only "$currrev" "$pkgrev" -- "$SR_SBREPO"/"$itemdir") )
+      for modifile in "${modifilelist[@]}"; do
+        bn=$(basename "$modifile")
+        [ "$bn" = "README" ] && continue
+        [ "$bn" = "slack-desc" ] && continue
+        [ "$bn" = "$itemprgnam.info" ] && continue
+        BUILDINFO="update for git $shortcurrrev"
+        return 0
+      done
+    fi
+
+    # If git is dirty, and any file has been modified since the package was built => update
+    if [ "${GITDIRTY[$itemid]}" = 'y' ]; then
+      modifilelist=( $(find -L "$SR_SBREPO"/"$itemdir" -newermt @"$pkgblt" 2>/dev/null) )
+      if [ ${#modifilelist[@]} != 0 ]; then
+        BUILDINFO="update for git $shortcurrrev"
+        return 0
+      fi
+    fi
+
   fi
 
   # Is this the top-level item and are we in rebuild mode

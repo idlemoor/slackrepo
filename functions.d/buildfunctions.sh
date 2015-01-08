@@ -294,6 +294,10 @@ function build_item
     fi
   fi
 
+  for pkgpath in "${pkglist[@]}"; do
+    log_normal "Built ok:  $(basename "$pkgpath")"
+  done
+
   db_set_buildsecs "$itemid" $(( buildfinishtime - buildstarttime ))
 
   if [ "$OPT_TEST" = 'y' ]; then

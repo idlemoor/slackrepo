@@ -9,6 +9,7 @@
 #
 #-------------------------------------------------------------------------------
 # logfunctions.sh - logging functions for slackrepo
+#   changelog
 #   log_start
 #   log_itemstart
 #   log_verbose
@@ -20,6 +21,44 @@
 #   log_error
 #   errorscan_itemlog
 #   format_left_right
+#-------------------------------------------------------------------------------
+
+function changelog
+# Append an entry to the main changelog and to the item's changelog
+# $1    = itemid
+# $2    = operation (e.g. "Updated for git 1a2b3c4")
+# $3    = extrastuff (e.g. git commit message)
+# $4... = package paths
+# Return status: always 0
+{
+  itemid="$1"
+  operation="$2"
+  extrastuff="$3"
+  shift 3
+
+  if [ "$OPT_DRY_RUN" != 'y' ]; then
+    echo "+--------------------------+"  > "$ITEMLOGDIR"/ChangeLog.new
+    echo "$(LC_ALL=C date -u)"          >> "$ITEMLOGDIR"/ChangeLog.new
+    if [ -n "$extrastuff" ]; then
+      details="${operation}. LINEFEED ${extrastuff} NEWLINE"
+    else
+      details="${operation}. NEWLINE"
+    fi
+    while [ $# != 0 ]; do
+      pkgbase=$(basename "$1")
+      shift
+      echo "${itemid}/${pkgbase}: ${operation}."   >> "$ITEMLOGDIR"/ChangeLog.new
+      [ -n "$extrastuff" ] && echo "  $extrastuff" >> "$ITEMLOGDIR"/ChangeLog.new
+      echo "${itemid}/${pkgbase}: ${details}" >> "$CHANGELOG"
+    done
+    if [ -f "$ITEMLOGDIR"/ChangeLog ]; then
+      echo "" | cat - "$ITEMLOGDIR"/ChangeLog >> "$ITEMLOGDIR"/ChangeLog.new
+    fi
+    mv "$ITEMLOGDIR"/ChangeLog.new "$ITEMLOGDIR"/ChangeLog
+  fi
+  return 0
+}
+
 #-------------------------------------------------------------------------------
 
 function log_start
@@ -34,6 +73,7 @@ function log_start
   echo "! ${msg:0:66} $(date +%T) !"
   echo "$line"
   echo ""
+  return 0
 }
 
 #-------------------------------------------------------------------------------
@@ -65,6 +105,7 @@ function log_itemstart
     ITEMLOG="$ITEMLOGDIR"/"$itemprgnam".log
     echo "$* $(date '+%F %T')"  > "$ITEMLOG"
   fi
+  return 0
 }
 
 #-------------------------------------------------------------------------------

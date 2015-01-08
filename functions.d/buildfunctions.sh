@@ -429,52 +429,43 @@ function create_pkg_metadata
   MYREPO="$SR_PKGREPO"
   [ "$OPT_DRY_RUN" = 'y' ] && MYREPO="$DRYREPO"
 
-  pkglist=( $(ls "$MYREPO"/"$itemdir"/*.t?z 2>/dev/null) )
+  pkglist=( "$MYREPO"/"$itemdir"/*.t?z )
+
+
+  #-----------------------------#
+  # changelog entry             #
+  # (gratuitously elaborate :-) #
+  #-----------------------------#
+
+  operation="$(echo "$BUILDINFO" | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/' )"
+  extrastuff=''
+  case "$BUILDINFO" in
+  add*)
+      # add short description from slack-desc (if there's no slack-desc, this should be null)
+      extrastuff="($(grep "^${pkgnam}: " "$SR_SBREPO"/"$itemdir"/slack-desc 2>/dev/null| head -n 1 | sed -e 's/.*(//' -e 's/).*//'))"
+      ;;
+  'update for git'*)
+      # add title of the latest commit message
+      extrastuff="($(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //' -e 's/\.$//'))"
+      ;;
+  *)  :
+      ;;
+  esac
+  # build_ok will need this:
+  CHANGEMSG="$operation"
+  [ -n "$extrastuff" ] && CHANGEMSG="${CHANGEMSG} ${extrastuff}"
+  # write the changelog entry:
+  changelog "$itemid" "$operation" "$extrastuff" "${pkglist[@]}"
+
+
+  #-----------------------------#
+  # metadata files              #
+  #-----------------------------#
+
   for pkgpath in "${pkglist[@]}"; do
 
     pkgbasename=$(basename "$pkgpath")
     pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
-
-    #-----------------------------#
-    # changelog entry             #
-    # (gratuitously elaborate :-) #
-    #-----------------------------#
-
-    OPERATION="$(echo "$BUILDINFO" | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/' -e 's/^revert.*/Reverted/' )"
-    extrastuff=''
-    case "$BUILDINFO" in
-    add*)
-        # add short description from slack-desc (if there's no slack-desc, this should be null)
-        extrastuff="($(grep "^${pkgnam}: " "$SR_SBREPO"/"$itemdir"/slack-desc 2>/dev/null| head -n 1 | sed -e 's/.*(//' -e 's/).*//'))"
-        ;;
-    'update for git'*)
-        # add title of the latest commit message
-        extrastuff="($(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //' -e 's/\.$//'))"
-        ;;
-    *)  :
-        ;;
-    esac
-    # Set $changelogentry for the ChangeLog, and $CHANGEMSG for build_ok()
-    if [ -n "$extrastuff" ]; then
-      changelogentry="${pkgbasename}: ${OPERATION}. LINEFEED $extrastuff NEWLINE"
-      CHANGEMSG="${OPERATION} ${extrastuff}"
-    else
-      changelogentry="${pkgbasename}: ${OPERATION}. NEWLINE"
-      CHANGEMSG="${OPERATION}"
-    fi
-    if [ "$OPT_DRY_RUN" != 'y' ]; then
-      echo "$changelogentry" >> "$CHANGELOG"
-      echo "$(LC_ALL=C date -u): ${OPERATION}."  > "$ITEMLOGDIR"/ChangeLog.new
-      [ -n "$extrastuff" ] && \
-        echo "  $extrastuff"                    >> "$ITEMLOGDIR"/ChangeLog.new
-      [ -f  "$ITEMLOGDIR"/ChangeLog ] && \
-        cat "$ITEMLOGDIR"/ChangeLog             >> "$ITEMLOGDIR"/ChangeLog.new
-      mv    "$ITEMLOGDIR"/ChangeLog.new            "$ITEMLOGDIR"/ChangeLog
-    fi
-
-    #-----------------------------#
-    # metadata files              #
-    #-----------------------------#
 
     nosuffix="${pkgpath%.t?z}"
     dotlst="${nosuffix}.lst"
@@ -487,8 +478,6 @@ function create_pkg_metadata
     dotsha256="${pkgpath}.sha256"
     dotasc="${pkgpath}.asc"
 
-    # If this is a reverted package, all the existing metadata can be reused,
-    # otherwise they will not exist (because build_item makes a new directory).
     # Although gen_repos_files.sh can create most of the following files,
     # it's quicker to create them here (we can probably get the slack-desc from the
     # packaging directory, and if test_package has been run we can reuse its list
@@ -643,6 +632,7 @@ EOF
     [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_PKGCONTENTS"
 
   done
+
   return 0
 }
 

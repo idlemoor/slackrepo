@@ -81,12 +81,11 @@ function revert_item
     done
     gotfiles="n"
     for f in "$SR_PKGBACKUP"/"$itemdir"/*.t?z; do
-      [ ! -e "$f" ] && break
+      [ ! -f "$f" ] && break
       [ "$gotfiles" = 'n' ] && { gotfiles='y'; log_normal "These packages have been backed up:"; }
       log_normal "$(printf '  %s\n' "$(basename "$f")")"
     done
-    BUILDINFO='revert'
-    create_pkg_metadata "$itemid"
+    changelog "$itemid" "Reverted" "" "$SR_PKGREPO"/"$itemdir"/*.t?z
     log_success ":-) $itemid: Reverted (-:"
 
   fi
@@ -119,7 +118,6 @@ function remove_item
         if [ "$OPT_DRY_RUN" != 'y' ]; then
           log_normal "Removing package $pkgbase"
           rm -f "${pkg%.t?z}".*
-          echo "$pkgbase:  Removed. NEWLINE" >> "$CHANGELOG"
         else
           log_normal "Would remove package $pkgbase"
         fi
@@ -129,6 +127,7 @@ function remove_item
           log_warning "Package $R_INSTALLED is installed, use removepkg to uninstall it"
         fi
       done
+      changelog "$itemid" "Removed" "" "${pkglist[@]}"
     fi
 
     if [ "$OPT_DRY_RUN" != 'y' ]; then

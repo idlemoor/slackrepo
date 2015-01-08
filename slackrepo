@@ -528,34 +528,52 @@ if [ "$OPT_DRY_RUN" = 'y' ]; then
   log_always "Dry run OK: $okcount"
   [ "$OPT_QUIET" != 'y' -a "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}"
 else
-  log_always "Added:      $(grep -c ': Added'   "$CHANGELOG")"
-  [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Added'   "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-  log_always "Updated:    $(grep -c ': Updated' "$CHANGELOG")"
-  [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Updated' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-  log_always "Rebuilt:    $(grep -c ': Rebuilt' "$CHANGELOG")"
-  [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Rebuilt' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-  log_always "Removed:    $(grep -c ': Removed' "$CHANGELOG")"
-  [ "$OPT_QUIET" != 'y' ] && \
-    grep ': Removed' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+  if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ]; then
+    log_always "Added:      $(grep -c ': Added'   "$CHANGELOG")"
+    [ "$OPT_QUIET" != 'y' ] && \
+      grep ': Added'    "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_always "Updated:    $(grep -c ': Updated' "$CHANGELOG")"
+    [ "$OPT_QUIET" != 'y' ] && \
+      grep ': Updated'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_always "Rebuilt:    $(grep -c ': Rebuilt' "$CHANGELOG")"
+    [ "$OPT_QUIET" != 'y' ] && \
+      grep ': Rebuilt'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+  fi
+  if [ "$CMD" = 'update' ] || [ "$CMD" = 'remove' ]; then
+    log_always "Removed:    $(grep -c ': Removed' "$CHANGELOG")"
+    [ "$OPT_QUIET" != 'y' ] && \
+      grep ': Removed'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+  fi
+  if [ "$CMD" = 'revert' ]; then
+    log_always "Reverted:   $(grep -c ': Reverted' "$CHANGELOG")"
+    [ "$OPT_QUIET" != 'y' ] && \
+      grep ': Reverted' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+  fi
 fi
+
 SKIPPEDLIST=( $(printf '%s\n' "${SKIPPEDLIST[@]}" | sort -u) )
 skippedcount="${#SKIPPEDLIST[@]}"
-log_always "Skipped:    $skippedcount"
-[ "$OPT_QUIET" != 'y' -a "$skippedcount" != 0 ] && printf '  %s\n' "${SKIPPEDLIST[@]}"
+if [ "$skippedcount" != 0 ]; then
+  log_always "Skipped:    $skippedcount"
+  [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${SKIPPEDLIST[@]}"
+fi
 FAILEDLIST=( $(printf '%s\n' "${FAILEDLIST[@]}" | sort -u) )
 failedcount="${#FAILEDLIST[@]}"
-log_always "Failed:     $failedcount"
-[ "$OPT_QUIET" != 'y' -a "$failedcount" != 0 ]  && printf '  %s\n' "${FAILEDLIST[@]}"
+if [ "$failedcount" != 0 ]; then
+  log_always "Failed:     $failedcount"
+  [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${FAILEDLIST[@]}"
+fi
 ABORTEDLIST=( $(printf '%s\n' "${ABORTEDLIST[@]}" | sort -u) )
 abortedcount="${#ABORTEDLIST[@]}"
-log_always "Aborted:    $abortedcount"
-[ "$OPT_QUIET" != 'y' -a "$abortedcount" != 0 ] && printf '  %s\n' "${ABORTEDLIST[@]}"
+if [ "$abortedcount" != 0 ]; then
+  log_always "Aborted:    $abortedcount"
+  [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${ABORTEDLIST[@]}"
+fi
 warningcount=$(grep '^WARNING: ' "$MAINLOG" | sort -u | wc -l)
-log_always "Warnings:   $warningcount"
-[ "$OPT_QUIET" != 'y' ] && grep '^WARNING: ' "$MAINLOG" | sort -u | sed 's/^WARNING: /  /'
+if [ "$warningcount" != 0 ]; then
+  log_always "Warnings:   $warningcount"
+  [ "$OPT_QUIET" != 'y' ] && grep '^WARNING: ' "$MAINLOG" | sort -u | sed 's/^WARNING: /  /'
+fi
 
 #-------------------------------------------------------------------------------
 # Package repository maintenance: gen_repos_files.sh

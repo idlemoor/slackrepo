@@ -5,7 +5,7 @@
 # installfunctions.sh - package install functions for slackrepo
 #   install_packages
 #   uninstall_packages
-#   status_installed
+#   is_installed
 #   dotprofilizer
 #-------------------------------------------------------------------------------
 

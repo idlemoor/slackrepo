@@ -343,7 +343,7 @@ function build_ok
       rm -rf "$SR_PKGBACKUP"/"$itemdir".prev
       for backpack in "$SR_PKGBACKUP"/"$itemdir"/*.t?z; do
         [ -e "$backpack" ] || break
-        log_verbose "Backed up: $(basename "$backpack")"
+        log_normal "Backed up: $(basename "$backpack")"
       done
     fi
     # put the new packages into the real package repo

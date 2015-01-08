@@ -113,6 +113,7 @@ function remove_item
     if [ "${#pkglist[@]}" = 0 ] ; then
       log_normal "There are no packages in $SR_PKGREPO/$itemdir"
     else
+      #### need to backup
       for pkg in "${pkglist[@]}"; do
         pkgbase=$(basename "$pkg")
         if [ "$OPT_DRY_RUN" != 'y' ]; then
@@ -129,8 +130,8 @@ function remove_item
         fi
       done
     fi
+
     if [ "$OPT_DRY_RUN" != 'y' ]; then
-      db_del_buildsecs "$itemid"
       log_normal "Removing directory $SR_PKGREPO/$itemdir"
       rm -rf "$SR_PKGREPO"/"$itemdir"
       up="$(dirname "$itemdir")"

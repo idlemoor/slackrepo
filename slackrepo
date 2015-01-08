@@ -418,7 +418,7 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
         [ "$OPT_QUIET" = 'y' ] && quietarg='--quiet'
         log_normal "Updating git ..."
         git fetch $quietarg -a
-        if [ "$DOCOLOUR"  = 'y' ]; then
+        if [ "$DOCOLOUR"  = 'y' -a -x /usr/bin/unbuffer ]; then
           unbuffer git merge $quietarg --ff-only origin/"$currbranch"
         else
           git merge $quietarg --ff-only origin/"$currbranch"

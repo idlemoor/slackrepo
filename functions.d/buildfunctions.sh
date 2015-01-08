@@ -134,7 +134,7 @@ function build_item
     NUMJOBS="$SR_NUMJOBS"
 
   SLACKBUILDCMD="sh ./$itemfile"
-  [ "$DOCOLOUR"  = 'y' ] && SLACKBUILDCMD="unbuffer $SLACKBUILDCMD"
+  [ "$DOCOLOUR"  = 'y' -a -x /usr/bin/unbuffer ] && SLACKBUILDCMD="unbuffer $SLACKBUILDCMD"
 
   # Process other hints for the build:
 

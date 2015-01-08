@@ -77,8 +77,8 @@ CMD=''
 
 while [ $# != 0 ]; do
   case "$1" in
-    # we'll accept build/rebuild/update/remove with or without '--'
-    build | --build )
+    # we'll accept add/build/rebuild/update/remove/revert with or without '--'
+    build | --build | add | --add )
       [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
       CMD='build'
       shift; continue ;;
@@ -147,7 +147,7 @@ elif [ $# = 0 ]; then
     echo "(you must specify the items to be removed)"
     exit_cleanup
     exit 3
-  elif ["$CMD" = 'revert' ] ; then
+  elif [ "$CMD" = 'revert' ] ; then
     echo "Usage: $(basename "$0") revert [--repo=ID] item..."
     echo "(you must specify the items to be reverted)"
     exit_cleanup

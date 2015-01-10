@@ -3,13 +3,65 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # depfunctions.sh - dependency functions for slackrepo
-#   calculate_deps
 #   build_with_deps
+#   calculate_deps
 #   install_deps
 #   uninstall_deps
 #-------------------------------------------------------------------------------
 
 declare -A DIRECTDEPS FULLDEPS
+
+function build_with_deps
+# Recursively build all dependencies, and then build the named item
+# $1 = itemid
+# Return status:
+# 0 = build ok, or already up-to-date so not built, or dry run
+# 1 = build failed, or sub-build failed => abort parent, or any other error
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+
+  local itemid="$1"
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
+  local itemdir="${ITEMDIR[$itemid]}"
+  local itemfile="${ITEMFILE[$itemid]}"
+
+  local mydeplist mydep
+
+  calculate_deps "$itemid" || return 1
+
+  mydeplist=( ${DIRECTDEPS[$itemid]} )
+  if [ "${#mydeplist[@]}" != 0 ]; then
+    log_normal "Dependencies of $itemid:"
+    log_normal "$(printf '  %s\n' "${mydeplist[@]}")"
+    for mydep in "${mydeplist[@]}"; do
+      build_with_deps $mydep || return 1
+    done
+  fi
+
+  needs_build "$itemid" || return 0
+
+  buildopt=''
+  [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
+  [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
+  log_itemstart "Starting $itemid ($BUILDINFO)$buildopt"
+
+  build_item "$itemid"
+  myresult=$?
+
+  # Now we can return
+  if [ $myresult = 0 ]; then
+    return 0
+  else
+    if [ "$itemid" != "$ITEMID" ]; then
+      log_error -n ":-( $ITEMID ABORTED )-:"
+      ABORTEDLIST+=( "$ITEMID" )
+    fi
+    return 1
+  fi
+
+}
+
+#-------------------------------------------------------------------------------
 
 function calculate_deps
 # Stores a space-separated list of deps of an item in ${DIRECTDEPS[$itemname]}
@@ -58,11 +110,11 @@ function calculate_deps
   done
 
   deplist=( $(printf '%s\n' ${deplist[*]} | sort -u) )
-  DIRECTDEPS["$itemid"]="${deplist[*]}"
+  DIRECTDEPS[$itemid]="${deplist[*]}"
 
   # If there are no direct deps, then there are no recursive deps ;-)
   if [ -z "${DIRECTDEPS[$itemid]}" ]; then
-    FULLDEPS["$itemid"]=''
+    FULLDEPS[$itemid]=''
     return 0
   fi
 
@@ -86,61 +138,9 @@ function calculate_deps
       fi
     done
   done
-  FULLDEPS["$itemid"]="${myfulldeps[*]}"
+  FULLDEPS[$itemid]="${myfulldeps[*]}"
 
   return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function build_with_deps
-# Recursively build all dependencies, and then build the named item
-# $1 = itemid
-# Return status:
-# 0 = build ok, or already up-to-date so not built, or dry run
-# 1 = build failed, or sub-build failed => abort parent, or any other error
-{
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
-  local itemid="$1"
-  local itemprgnam="${ITEMPRGNAM[$itemid]}"
-  local itemdir="${ITEMDIR[$itemid]}"
-  local itemfile="${ITEMFILE[$itemid]}"
-
-  local mydeplist mydep
-
-  calculate_deps "$itemid" || return 1
-
-  mydeplist=( ${DIRECTDEPS["$itemid"]} )
-  if [ "${#mydeplist[@]}" != 0 ]; then
-    log_normal "Dependencies of $itemid:"
-    log_normal "$(printf '  %s\n' "${mydeplist[@]}")"
-    for mydep in "${mydeplist[@]}"; do
-      build_with_deps $mydep || return 1
-    done
-  fi
-
-  needs_build "$itemid" || return 0
-
-  buildopt=''
-  [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
-  [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
-  log_itemstart "Starting $itemid ($BUILDINFO)$buildopt"
-
-  build_item "$itemid"
-  myresult=$?
-
-  # Now we can return
-  if [ $myresult = 0 ]; then
-    return 0
-  else
-    if [ "$itemid" != "$ITEMID" ]; then
-      log_error -n ":-( $ITEMID ABORTED )-:"
-      ABORTEDLIST+=( "$ITEMID" )
-    fi
-    return 1
-  fi
-
 }
 
 #-------------------------------------------------------------------------------

@@ -498,9 +498,9 @@ function parse_info_and_hints
       local PRGNAM SRCNAM
       eval "$(grep 'PRGNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
       eval "$(grep 'SRCNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
-      eval INFODOWNLIST["$itemid"]="$(sed ':x; /\\$/ { N; s/\\\n//; tx }' <"$SR_SBREPO"/"$itemdir"/"$itemfile" | grep 'wget -c ' | sed 's/wget -c //')"
-      HINT_MD5IGNORE["$itemid"]='y'
-      HINT_SHA256IGNORE["$itemid"]='y'
+      eval "INFODOWNLIST[$itemid]=$(sed ':x; /\\$/ { N; s/\\\n//; tx }' <"$SR_SBREPO"/"$itemdir"/"$itemfile" | grep 'wget -c ' | sed 's/wget -c //')"
+      HINT_MD5IGNORE[$itemid]='y'
+      HINT_SHA256IGNORE[$itemid]='y'
     fi
     unset DOWNLOAD MD5SUM SHA256SUM PRGNAM SRCNAM VERSION
     eval unset DOWNLOAD_"$SR_ARCH" MD5SUM_"$SR_ARCH" SHA256SUM_"$SR_ARCH"
@@ -597,21 +597,21 @@ function parse_info_and_hints
     fi
     [ -v ARCH ] && HINT_ARCH[$itemid]="$ARCH"
     if [ "$DOWNLOAD" = 'no' ]; then
-      HINT_NODOWNLOAD["$itemid"]='y'
+      HINT_NODOWNLOAD[$itemid]='y'
     elif [ -n "$DOWNLOAD" ]; then
-      INFODOWNLIST["$itemid"]="$DOWNLOAD"
+      INFODOWNLIST[$itemid]="$DOWNLOAD"
     fi
     if [ "$MD5SUM" = 'no' ]; then
-      HINT_MD5IGNORE["$itemid"]='y'
+      HINT_MD5IGNORE[$itemid]='y'
     elif [ -n "$MD5SUM" ]; then
-      INFOMD5LIST["$itemid"]="$MD5SUM"
-      HINT_MD5IGNORE["$itemid"]=''
+      INFOMD5LIST[$itemid]="$MD5SUM"
+      HINT_MD5IGNORE[$itemid]=''
     fi
     if [ "$SHA256SUM" = 'no' ]; then
-      HINT_SHA256IGNORE["$itemid"]='y'
+      HINT_SHA256IGNORE[$itemid]='y'
     elif [ -n "$SHA256SUM" ]; then
-      INFOSHA256LIST["$itemid"]="$SHA256SUM"
-      HINT_SHA256IGNORE["$itemid"]=''
+      INFOSHA256LIST[$itemid]="$SHA256SUM"
+      HINT_SHA256IGNORE[$itemid]=''
     fi
 
     # Process ADDREQUIRES in the Fixup department below.

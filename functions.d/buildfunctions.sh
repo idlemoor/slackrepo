@@ -9,6 +9,8 @@
 #   create_pkg_metadata
 #   do_groupadd_useradd
 #-------------------------------------------------------------------------------
+# If you're looking for build_with_deps, see depfunctions.sh
+#-------------------------------------------------------------------------------
 
 function build_item
 # Build the package(s) for an item

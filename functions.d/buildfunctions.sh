@@ -103,6 +103,7 @@ function build_item
     SR_BUILD="$BUILD"
   else
     # Increment the existing packages' BUILD, or use the SlackBuild's (whichever is greater).
+    #### Need to check if there is a backed up greater build
     oldpkgs=( "$SR_PKGREPO"/"$itemdir"/*.t?z )
     if [ "${oldpkgs[0]}" = "$SR_PKGREPO"/"$itemdir"/'*.t?z' ]; then
       # no existing packages

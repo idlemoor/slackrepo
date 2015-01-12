@@ -7,35 +7,47 @@
 #   remove_item
 #-------------------------------------------------------------------------------
 # For build, rebuild and update commands, see build_with_deps in depfunctions.sh
-# (and see also buildfunctions.sh)
+# (and see also build_item in buildfunctions.sh)
 #-------------------------------------------------------------------------------
 
 function revert_item
-# Revert an item's package(s) from the backup repository
-# (and send the current packages into the backup repository)
+# Revert an item's package(s) and source from the backup repository
+# (and send the current packages and source into the backup repository)
 # $1 = itemid
 # Return status:
 # 0 = ok
 # 1 = backups not configured
+# Problems: (1) messes up build number, (2) messes up deps & dependers
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemdir="${ITEMDIR[$itemid]}"
 
+  packagedir="$SR_PKGREPO"/"$itemdir"
+  backupdir="$SR_PKGBACKUP"/"$itemdir"
+  backuptempdir="$backupdir".temp
+  # We can't get these from parse_info_and_hints because the item's .info may have been removed:
+  allsourcedir="$SR_SRCREPO"/"$itemdir"
+  archsourcedir="$allsourcedir"/"$SR_ARCH"
+  allsourcebackupdir="$backupdir"/source
+  archsourcebackupdir="${allsourcebackupdir}_${SR_ARCH}"
+  allsourcebackuptempdir="$backuptempdir"/source
+  archsourcebackuptempdir="${allsourcebackuptempdir}_${SR_ARCH}"
+
+  # Check that there is something to revert.
   failmsg=":-( $itemid: revert failed )-:"
   [ "$OPT_DRY_RUN" = 'y' ] && failmsg=":-( $itemid: revert failed [dry run] )-:"
-
   if [ -z "$SR_PKGBACKUP" ]; then
     log_error "No backup repository configured -- please set PKGBACKUP in your config file"
     log_error "$failmsg"
     return 1
-  elif [ ! -d "$SR_PKGBACKUP"/"$itemdir" ]; then
-    log_error "There is no backup in $SR_PKGBACKUP/$itemdir to be reverted"
+  elif [ ! -d "$backupdir" ]; then
+    log_error "There is no backup in $backupdir to be reverted"
     log_error "$failmsg"
     return 1
   else
-    for f in "$SR_PKGBACKUP"/"$itemdir"/*.t?z; do
+    for f in "$backupdir"/*.t?z; do
       [ -f "$f" ] && break
       log_error "There are no backup packages in $SR_PKGBACKUP/$itemdir to be reverted"
       log_error "$failmsg"
@@ -43,51 +55,90 @@ function revert_item
     done
   fi
 
-  if [ "$OPT_DRY_RUN" = 'y' ]; then
+  # Get the backup package's dependencies and warn if any direct deps are newer than the restored package
+  for revfile in "$backupdir"/*.rev "$backupdir"/.revision ; do
+    [ ! -f "$revfile" ] && continue
+    pkgid=$(basename "$revfile" '.rev')
+    myprgnam=''
+    while read revfileline; do
+      eval "$revfileline"
+      # grab first line's details -- it's the rev info for this package
+      if [ "$myprgnam" = '' ]; then
+        myprgnam="$prgnam"; mybuildrev="$buildrev"; mybuildtime="$built";
+      else
+        if [ "$buildrev" != "$mybuildrev" ] && [ "$built" -gt "$mybuildtime" ]; then
+          log_warning "${pkgid}: dependency $prgnam may need to be reverted"
+        fi
+      fi
+    done < "$revfile"
+  done
+  # Log an unconditional warning about dependers
+  log_warning "Any packages that depend on ${itemid} may need to be rebuilt or reverted"
 
-    gotfiles="n"
-    for f in "$SR_PKGBACKUP"/"$itemdir"/*.t?z; do
-      [ ! -f "$f" ] && break
-      [ "$gotfiles" = 'n' ] && { gotfiles='y'; log_normal "These packages would be reverted:"; }
-      log_normal "$(printf '  %s\n' "$(basename "$f")")"
-    done
-    gotfiles="n"
-    for f in "$SR_PKGREPO"/"$itemdir"/*.t?z; do
-      [ ! -f "$f" ] && break
-      [ "$gotfiles" = 'n' ] && { gotfiles='y'; log_normal "These packages would be backed up:"; }
-      log_normal "$(printf '  %s\n' "$(basename "$f")")"
-    done
-    log_success ":-) $itemid: Reverted [dry run] (-:"
+  if [ "$OPT_DRY_RUN" != 'y' ]; then
+    # Perform the reversion.
 
-  else
-
-    # swap the package repo and backup repo
-    if [ -d "$SR_PKGREPO"/"$itemdir" ]; then
-      mv "$SR_PKGREPO"/"$itemdir" "$SR_PKGBACKUP"/"$itemdir".temp
+    # move the current package to a temporary backup directory
+    if [ -d "$packagedir" ]; then
+      mv "$packagedir" "$backuptempdir"
     fi
-    # we've already established this exists:
-    mv "$SR_PKGBACKUP"/"$itemdir" "$SR_PKGREPO"/"$itemdir"
+
+    # move the source files (for the correct arch) into a subdir of the temporary backup dir
+    if [ -d "$archsourcedir" ]; then
+      mkdir -p "$archsourcebackuptempdir"
+      find "$archsourcedir" -type f -maxdepth 1 -exec mv {} "$archsourcebackuptempdir" \;
+    elif [ -d "$allsourcedir" ]; then
+      mkdir -p "$allsourcebackuptempdir"
+      find "$allsourcedir" -type f -maxdepth 1 -exec mv {} "$allsourcebackuptempdir" \;
+    fi
+    # revert the previous source
+    if [ -d "$archsourcebackupdir" ]; then
+      mkdir -p "$archsourcedir"
+      find "$archsourcebackupdir" -type f -maxdepth 1 -exec mv {} "$archsourcedir" \;
+    elif [ -d "$allsourcebackupdir" ]; then
+      mkdir -p "$allsourcedir"
+      find "$allsourcebackupdir" -type f -maxdepth 1 -exec mv {} "$allsourcedir" \;
+    fi
+
+    # revert the previous package
+    # (we already know that this exists, so no need for a test)
+    mv "$backupdir" "$packagedir"
     # give the new backup its proper name
-    if [ -d "$SR_PKGBACKUP"/"$itemdir".temp ]; then
-      mv "$SR_PKGBACKUP"/"$itemdir".temp "$SR_PKGBACKUP"/"$itemdir"
+    if [ -d "$backuptempdir" ]; then
+      mv "$backuptempdir" "$backupdir"
     fi
 
-    # log what's happened
-    gotfiles="n"
-    for f in "$SR_PKGREPO"/"$itemdir"/*.t?z; do
-      [ ! -f "$f" ] && break
-      [ "$gotfiles" = 'n' ] && { gotfiles='y'; log_normal "These packages have been reverted:"; }
-      log_normal "$(printf '  %s\n' "$(basename "$f")")"
-    done
-    gotfiles="n"
-    for f in "$SR_PKGBACKUP"/"$itemdir"/*.t?z; do
-      [ ! -f "$f" ] && break
-      [ "$gotfiles" = 'n' ] && { gotfiles='y'; log_normal "These packages have been backed up:"; }
-      log_normal "$(printf '  %s\n' "$(basename "$f")")"
-    done
-    changelog "$itemid" "Reverted" "" "$SR_PKGREPO"/"$itemdir"/*.t?z
-    log_success ":-) $itemid: Reverted (-:"
+  fi
 
+  # Log what happened:
+  # setup the messages
+  if [ "$OPT_DRY_RUN" != 'y' ]; then
+    revertlist=( "$packagedir"/*.t?z )
+    backuplist=( "$backupdir"/*.t?z )
+    action='have been'
+  else
+    revertlist=( "$backupdir"/*.t?z )
+    backuplist=( "$packagedir"/*.t?z )
+    action='would be'
+  fi
+  # print the messages
+  gotfiles="n"
+  for f in "${backuplist[@]}"; do
+    [ ! -f "$f" ] && break
+    [ "$gotfiles" = 'n' ] && { gotfiles='y'; log_normal "These packages $action backed up:"; }
+    log_normal "$(printf '  %s\n' "$(basename "$f")")"
+  done
+  gotfiles="n"
+  for f in "${revertlist[@]}"; do
+    [ ! -f "$f" ] && break
+    [ "$gotfiles" = 'n' ] && { gotfiles='y'; log_normal "These packages $action reverted:"; }
+    log_normal "$(printf '  %s\n' "$(basename "$f")")"
+  done
+  if [ "$OPT_DRY_RUN" != 'y' ]; then
+    changelog "$itemid" "Reverted" "" "$packagedir"/*.t?z
+    log_success ":-) $itemid: Reverted (-:"
+  else
+    log_success ":-) $itemid: Reverted [dry run] (-:"
   fi
 
   OKLIST+=( "$itemid" )

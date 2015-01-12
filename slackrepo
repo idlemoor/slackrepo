@@ -344,8 +344,8 @@ log_verbose ""
 # Initialisation
 #-------------------------------------------------------------------------------
 
-# Arrays for tracking build outcomes:
-declare -a OKLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST
+# Arrays for tracking outcomes:
+declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST
 
 # Temporary directory:
 SR_TMP=${SR_TMP:-/tmp/SBo}
@@ -576,10 +576,12 @@ if [ "$abortedcount" != 0 ]; then
   log_always "Aborted:    $abortedcount"
   [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${ABORTEDLIST[@]}"
 fi
-warningcount=$(grep '^WARNING: ' "$MAINLOG" | sort -u | wc -l)
+uniquewarnings=()
+while read warning; do uniquewarnings+=( "$warning" ); done < <(printf '%s\n' "${WARNINGLIST[@]}" | sort -u )
+warningcount="${#uniquewarnings[@]}"
 if [ "$warningcount" != 0 ]; then
   log_always "Warnings:   $warningcount"
-  [ "$OPT_QUIET" != 'y' ] && grep '^WARNING: ' "$MAINLOG" | sort -u | sed 's/^WARNING: /  /'
+  [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${uniquewarnings[@]}"
 fi
 
 #-------------------------------------------------------------------------------

@@ -281,7 +281,7 @@ function scan_queuefile
     if [ -f "$SR_QUEUEDIR"/"$sqfile" ]; then
       sqfile="$SR_QUEUEDIR"/"$sqfile"
     else
-      log_warning "No such queuefile: $sqfile"
+      log_warning "${sqfile}: No such queuefile"
       return 1
     fi
   fi

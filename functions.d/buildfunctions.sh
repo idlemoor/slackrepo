@@ -207,7 +207,7 @@ function build_item
       noremove='y'
       ;;
     * )
-      log_warning "Hint SPECIAL=\"$special\" not recognised"
+      log_warning "${itemid}: Hint SPECIAL=\"$special\" not recognised"
       ;;
     esac
   done

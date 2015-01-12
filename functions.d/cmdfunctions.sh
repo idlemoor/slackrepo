@@ -73,7 +73,7 @@ function revert_item
     done < "$revfile"
   done
   # Log an unconditional warning about dependers
-  log_warning "Any packages that depend on ${itemid} may need to be rebuilt or reverted"
+  log_warning "${itemid}: Dependers may need to be rebuilt or reverted"
 
   if [ "$OPT_DRY_RUN" != 'y' ]; then
     # Perform the reversion.
@@ -175,7 +175,7 @@ function remove_item
         is_installed "$pkg"
         istat=$?
         if [ "$istat" = 0 -o "$istat" = 1 -o "$istat" = 3 ]; then
-          log_warning "Package $R_INSTALLED is installed, use removepkg to uninstall it"
+          log_warning "${itemid}: Package $R_INSTALLED is installed, use removepkg to uninstall it"
         fi
       done
       changelog "$itemid" "Removed" "" "${pkglist[@]}"

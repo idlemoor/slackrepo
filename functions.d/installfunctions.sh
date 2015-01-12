@@ -182,14 +182,16 @@ function is_installed
       instid=$(basename "$instpkg" | rev | cut -f4- -d- | rev)
       if [ "$instid" = "$pkgid" ]; then
         if [ -n "$R_INSTALLED" ]; then
-          log_warning "Your /var/log/packages is broken, please review these files:"
+          log_warning "Your /var/log/packages is broken."
+          log_warning -n "Please review these files:"
           log_warning -n "  $instpkg"
           log_warning -n "  /var/log/packages/$R_INSTALLED"
           return 3
         fi
         R_INSTALLED="$(basename "$instpkg")"
       elif [ "${instid%-upgraded}" != "$instid" ]; then
-        log_warning "Your /var/log/packages is broken, please review these files:"
+        log_warning "Your /var/log/packages is broken."
+        log_warning -n "Please review these files:"
         log_warning -n "  $instpkg"
       fi
     done

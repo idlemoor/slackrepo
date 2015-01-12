@@ -198,6 +198,7 @@ function log_warning
 # Log a message to standard output in yellow highlight.
 # Log a message to ITEMLOG if '-a' is specified.
 # Message is automatically prefixed with 'WARNING' (unless '-n' is specified).
+# Message is remembered in the array WARNINGLIST (unless '-n' is specified).
 # $* = message
 # Return status: always 0
 {
@@ -214,6 +215,7 @@ function log_warning
   echo -e "${W}$*"
   [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
   [ "$A" = 'y' ] && echo -e "${W}$*" >> "$ITEMLOG"
+  [ -n "$W" ] && WARNINGLIST+=( "$*" )
   return 0
 }
 

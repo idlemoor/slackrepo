@@ -351,8 +351,9 @@ declare -a OKLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST
 SR_TMP=${SR_TMP:-/tmp/SBo}
 # really really don't want the next bit to go badly ;-)
 if [ -n "$SR_TMP" -a -d "$SR_TMP" -a "$OPT_KEEP_TMP" != 'y' ]; then
-  log_normal "Cleaning $SR_TMP/* ..."
+  log_normal "Cleaning $SR_TMP/* ... "
   rm -rf "${SR_TMP:-dont-tase-me-bro}"/*
+  log_done
 else
   mkdir -p "$SR_TMP"
 fi
@@ -397,7 +398,7 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
   # git: initialise, or check and update
   if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
     if [ -n "${SR_INIT_GITCLONE}" ]; then
-      log_normal "Cloning SlackBuilds repository $SR_SBREPO from ${SR_INIT_GITCLONE} ..."
+      log_normal "Cloning SlackBuilds repository $SR_SBREPO from ${SR_INIT_GITCLONE}."
       git clone "${SR_INIT_GITCLONE}" "$SR_SBREPO"
       git fetch -a
       git remote update
@@ -409,21 +410,27 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
     fi
   elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
     # Is git clean, and is the current branch SBo's stable branch?
-    log_normal "Checking git ..."
+    log_normal "Checking git ... "
     muck="$(git status -s .)"
+    log_done
     currbranch=$(git rev-parse --abbrev-ref HEAD)
     if [ -z "$muck" -a "$currbranch" = "$SYS_SLACKVER" ]; then
       if [ -n "$(find "$(git rev-parse --show-toplevel)"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
-        quietarg=''
-        [ "$OPT_QUIET" = 'y' ] && quietarg='--quiet'
-        log_normal "Updating git ..."
-        git fetch $quietarg -a
-        if [ "$DOCOLOUR"  = 'y' -a -x /usr/bin/unbuffer ]; then
-          unbuffer git merge $quietarg --ff-only origin/"$currbranch"
+        if [ "$OPT_QUIET" = 'y' ]; then
+          log_normal "Updating git ... "
+          git fetch --quiet
+          git merge --quiet --ff-only origin/"$currbranch"
+          log_done
         else
-          git merge $quietarg --ff-only origin/"$currbranch"
+          log_normal "Updating git."
+          git fetch
+          if [ "$DOCOLOUR"  = 'y' -a -x /usr/bin/unbuffer ]; then
+            unbuffer git merge $quietarg --ff-only origin/"$currbranch"
+          else
+            git merge $quietarg --ff-only origin/"$currbranch"
+          fi
+          log_normal "Finished updating git."
         fi
-        log_normal "Finished updating git."
       fi
     fi
   fi

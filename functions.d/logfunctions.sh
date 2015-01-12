@@ -19,6 +19,7 @@
 #   log_success
 #   log_warning
 #   log_error
+#   log_done
 #   errorscan_itemlog
 #   format_left_right
 #-------------------------------------------------------------------------------
@@ -128,13 +129,17 @@ function log_verbose
 function log_normal
 # Log a message to standard output unless OPT_QUIET is set.
 # Log a message to ITEMLOG if '-a' is specified.
+# If the message ends with "... " (note the space), no newline is written.
 # $* = message
 # Return status: always 0
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  [ "$OPT_QUIET" != 'y' ] && echo -e "$@"
-  [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
+  nonewline=''
+  eval lastarg=\"\${$#}\"
+  [ "${lastarg: -4:4}" = '... ' ] && { nonewline='-n'; NEEDNEWLINE='y'; }
+  [ "$OPT_QUIET" != 'y' ] && echo -e $nonewline "$@"
+  [ "$A" = 'y' ] && echo -e $nonewline "$@" >> "$ITEMLOG"
   return 0
 }
 
@@ -234,6 +239,20 @@ function log_error
   echo -e "${E}$*"
   [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
   [ "$A" = 'y' ] && echo -e "${E}$*" >> "$ITEMLOG"
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function log_done
+# Log the message "done" to standard output.
+# Log the message "done" to ITEMLOG if '-a' is specified.
+# Return status: always 0
+{
+  A='n'
+  [ "$1" = '-a' ] && { A='y'; shift; }
+  echo "done."
+  [ "$A" = 'y' ] && echo "done." >> "$ITEMLOG"
   return 0
 }
 

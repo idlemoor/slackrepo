@@ -31,8 +31,8 @@ function build_with_deps
 
   mydeplist=( ${DIRECTDEPS[$itemid]} )
   if [ "${#mydeplist[@]}" != 0 ]; then
-    log_normal "Dependencies of $itemid:"
-    log_normal "$(printf '  %s\n' "${mydeplist[@]}")"
+    log_verbose "Dependencies of $itemid:"
+    log_verbose "$(printf '  %s\n' "${mydeplist[@]}")"
     for mydep in "${mydeplist[@]}"; do
       build_with_deps $mydep || return 1
     done

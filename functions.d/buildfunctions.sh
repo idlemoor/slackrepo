@@ -3,17 +3,14 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # buildfunctions.sh - build functions for slackrepo
-#   build_item
+#   build_item_packages
 #   build_ok
 #   build_failed
-#   create_pkg_metadata
 #   do_groupadd_useradd
 #-------------------------------------------------------------------------------
-# If you're looking for build_with_deps, see depfunctions.sh
-#-------------------------------------------------------------------------------
 
-function build_item
-# Build the package(s) for an item
+function build_item_packages
+# Build the package(s) for a single item
 # $1 = itemid
 # The built package goes into $MYTMPOUT, but function build_ok then stores it elsewhere
 # Return status:
@@ -54,6 +51,26 @@ function build_item
     INFODOWNLIST[$itemid]="${INFODOWNLIST[$itemid]//${INFOVERSION[$itemid]}/$NEWVERSION}"
     INFOVERSION[$itemid]="$NEWVERSION"
   fi
+
+  # Save the existing source to a temporary stash
+  allsourcedir="$SR_SRCREPO"/"$itemdir"
+  archsourcedir="$allsourcedir"/"$SR_ARCH"
+  allsourcestash="$MYTEMPDIR"/prev_source
+  archsourcestash="${allsourcestash}_${SR_ARCH}"
+  SOURCESTASH=""
+  if [ -d "$archsourcedir" ]; then
+    SOURCESTASH="$archsourcestash"
+    mkdir -p "$SOURCESTASH"
+    find "$SOURCESTASH" -type f -maxdepth 1 -exec rm {} \;
+    find "$archsourcedir" -type f -maxdepth 1 -exec cp {} "$SOURCESTASH" \;
+  elif [ -d "$allsourcedir" ]; then
+    SOURCESTASH="$allsourcestash"
+    mkdir -p "$SOURCESTASH"
+    find "$SOURCESTASH" -type f -maxdepth 1 -exec rm {} \;
+    find "$allsourcedir" -type f -maxdepth 1 -exec cp {} "$SOURCESTASH" \;
+  fi
+  # If there were no actual source files, remove the stash directory:
+  [ -n "$SOURCESTASH" ] && rmdir --ignore-fail-on-non-empty "$SOURCESTASH"
 
   # Get the source (including check for unsupported/untested/nodownload)
   verify_src "$itemid"
@@ -98,12 +115,12 @@ function build_item
     log_warning -a "${itemid}: no \"BUILD=\" in $itemfile; using 1"
   fi
   eval $buildassign
+  #### This still isn't right when the backup is a different version :-(
   if [ "${BUILDINFO:0:3}" = 'add' -o "${BUILDINFO:0:18}" = 'update for version' ]; then
     # We can just use the SlackBuild's BUILD
     SR_BUILD="$BUILD"
   else
     # Increment the existing packages' BUILD, or use the SlackBuild's (whichever is greater).
-    #### Need to check if there is a backed up greater build
     oldpkgs=( "$SR_PKGREPO"/"$itemdir"/*.t?z )
     if [ "${oldpkgs[0]}" = "$SR_PKGREPO"/"$itemdir"/'*.t?z' ]; then
       # no existing packages
@@ -112,6 +129,12 @@ function build_item
       # If there are multiple packages from one SlackBuild, and they all have
       # different BUILD numbers, frankly we are screwed, so just use the first:
       oldbuild=$(echo "${oldpkgs[0]}" | sed -e 's/^.*-//' -e 's/[^0-9]*$//' )
+    fi
+    backuppkgs=( "$SR_PKGBACKUP"/"$itemdir"/*.t?z )
+    if [ "${backuppkgs[0]}" != "$SR_PKGBACKUP"/"$itemdir"/'*.t?z' ]; then
+      # backup(s) exist, just use the first (as above)
+      backupbuild=$(echo "${backuppkgs[0]}" | sed -e 's/^.*-//' -e 's/[^0-9]*$//' )
+      [ "$backupbuild" -gt "$oldbuild" ] && oldbuild="$backupbuild"
     fi
     nextbuild=$(( ${oldbuild:-0} + 1 ))
     if [ "$nextbuild" -gt "$BUILD" ]; then
@@ -137,7 +160,7 @@ function build_item
     NUMJOBS="$SR_NUMJOBS"
 
   SLACKBUILDCMD="sh ./$itemfile"
-  [ "$DOCOLOUR"  = 'y' -a -x /usr/bin/unbuffer ] && SLACKBUILDCMD="unbuffer $SLACKBUILDCMD"
+  [ "$OPT_VERY_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && [ -x /usr/bin/unbuffer ] && SLACKBUILDCMD="unbuffer $SLACKBUILDCMD"
 
   # Process other hints for the build:
 
@@ -218,12 +241,21 @@ function build_item
     uninstall_packages -f "$itemid"
   fi
 
-  # Build it
+  # Record the build start time and estimate the build finish time
   buildstarttime="$(date '+%s')"
-  prevbuildsecs="$(db_get_buildsecs "$itemid")"
+  estbuildsecs=''
+  read prevsecs prevbogomips guessflag < <(db_get_buildsecs "$itemid")
+  if [ -n "$prevsecs" ] && [ -n "$prevbogomips" ]; then
+    case "$guessflag" in
+      '=')  estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevbogomips}/${SYS_BOGOMIPS}+1" | bc | sed 's/\..*//') ;;
+      '~')  estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevbogomips}/${SYS_BOGOMIPS}*${BOGOBODGE}+1" | bc | sed 's/\..*//') ;;
+        *)  ;;
+    esac
+  fi
   eta=""
-  # The term '30' in the following expression is dedicated to the memory of James Doohan.
-  [ -n "$prevbuildsecs" ] && eta="ETA $(date --date=@"$(( buildstarttime + prevbuildsecs + 30 ))" '+%H:%M')"
+  [ -n "$estbuildsecs" ] && eta="ETA ${guessflag/=/}$(date --date=@"$(( buildstarttime + estbuildsecs + 30 ))" '+%H:%M')"
+
+  # Build it
   runmsg=$(format_left_right "Running $itemfile ..." "$eta")
   log_normal -a "$runmsg"
   log_verbose -a "$SLACKBUILDCMD"
@@ -232,7 +264,7 @@ function build_item
     echo '---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---'
     echo ''
     set -o pipefail
-    if [ "$SYS_MULTILIB" = "y" -a "$ARCH" = 'i486' ]; then
+    if [ "$SYS_MULTILIB" = "y" ] && [ "$ARCH" = 'i486' -o "$ARCH" = 'i686' ]; then
       ( cd "$MYTMPIN"; . /etc/profile.d/32dev.sh; eval "$SLACKBUILDCMD" ) 2>&1 | tee -a "$ITEMLOG"
       buildstat=$?
     else
@@ -297,17 +329,35 @@ function build_item
     fi
   fi
 
-  for pkgpath in "${pkglist[@]}"; do
-    log_normal "Built ok:  $(basename "$pkgpath")"
-  done
+  # update pkgnam to itemid table
+  if [ "$OPT_DRY_RUN" != 'y' ]; then
+    db_del_pkgnam_itemid "$itemid"
+    for pkgpath in "${pkglist[@]}"; do
+      pkgbasename=$(basename "$pkgpath")
+      log_important "Built ok:  $pkgbasename"
+      pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
+      db_set_pkgnam_itemid "$pkgnam" "$itemid"
+    done
+  fi
 
-  db_set_buildsecs "$itemid" $(( buildfinishtime - buildstarttime ))
+  # update build time information
+  # add 1 to round it up so it's never zero
+  actualsecs=$(( buildfinishtime - buildstarttime + 1 ))
+  db_set_buildsecs "$itemid" "$actualsecs"
+  if [ -n "$estbuildsecs" ]; then
+    # adjust BOGOBODGE if wrong >30 secs, but weighted quite heavily towards the existing value
+    if [ "$(echo "${actualsecs}-${estbuildsecs}" | bc | sed 's/^-//')" -gt 30 ]; then
+      BOGOBODGE=$(echo "scale=3; (($BOGOBODGE * 4) + ($actualsecs / $estbuildsecs)) / 5" | bc)
+      db_set_misc bogobodge "$BOGOBODGE"
+    fi
+  fi
 
   if [ "$OPT_TEST" = 'y' ]; then
     test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
   elif [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
     install_packages "$itemid" || { build_failed "$itemid"; return 8; }
   fi
+  #### set the new pkgbase in KEEPINSTALLED[$pkgid]
 
   build_ok "$itemid"  # \o/
   return 0
@@ -316,7 +366,7 @@ function build_item
 #-------------------------------------------------------------------------------
 
 function build_ok
-# Log, cleanup and store the packages for a build that has succeeded
+# Store packages, write metadata, cleanup and log for a build that has succeeded
 # $1 = itemid
 # Return status: always 0
 {
@@ -329,6 +379,7 @@ function build_ok
 
   [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$MYTMPIN"
 
+  # ---- Store the packages ----
   if [ "$OPT_DRY_RUN" = 'y' ]; then
     # put the packages into the special dryrun repo
     mkdir -p "$DRYREPO"/"$itemdir"
@@ -337,16 +388,32 @@ function build_ok
   else
     # save any existing packages and metadata to the backup repo
     if [ -d "$SR_PKGREPO"/"$itemdir" -a -n "$SR_PKGBACKUP" ]; then
-      if [ -d "$SR_PKGBACKUP"/"$itemdir" ]; then
-        mv "$SR_PKGBACKUP"/"$itemdir" "$SR_PKGBACKUP"/"$itemdir".prev
+      backupdir="$SR_PKGBACKUP"/"$itemdir"
+      if [ -d "$backupdir" ]; then
+        mv "$backupdir" "$backupdir".prev
       else
-        mkdir -p "$(dirname "$SR_PKGBACKUP"/"$itemdir")"
+        mkdir -p "$(dirname "$backupdir")"
       fi
-      mv "$SR_PKGREPO"/"$itemdir" "$SR_PKGBACKUP"/"$itemdir"
-      rm -rf "$SR_PKGBACKUP"/"$itemdir".prev
-      for backpack in "$SR_PKGBACKUP"/"$itemdir"/*.t?z; do
+      mv "$SR_PKGREPO"/"$itemdir" "$backupdir"
+      rm -rf "$backupdir".prev
+      # if there's a stashed source, save it to the backup repo
+      if [ -d "$SOURCESTASH" ]; then
+        mv "$SOURCESTASH" "$backupdir"/"$(basename "${SOURCESTASH/prev_/}")"
+      fi
+      # save old revision data to a file in the backup repo
+      revisionfile="$backupdir"/revision
+      dbrevdata=( $(db_get_rev "$itemid") )
+      echo "$itemid" '/' "${dbrevdata[@]}" > "$revisionfile"
+      deplist="${dbrevdata[0]//,/ }"
+      if [ "$deplist" != '/' ]; then
+        for depid in ${deplist}; do
+          echo "$itemid $depid $(db_get_rev "$depid")" >> "$revisionfile"
+        done
+      fi
+      # log what happened
+      for backpack in "$backupdir"/*.t?z; do
         [ -e "$backpack" ] || break
-        log_normal "Backed up: $(basename "$backpack")"
+        log_verbose "Backed up: $(basename "$backpack")"
       done
     fi
     # put the new packages into the real package repo
@@ -354,18 +421,20 @@ function build_ok
     mv "$MYTMPOUT"/* "$SR_PKGREPO"/"$itemdir"/
   fi
 
-  create_pkg_metadata "$itemid"  # sets $CHANGEMSG
+  # ---- Write the metadata ----
+  write_pkg_metadata "$itemid"  # sets $CHANGEMSG
 
+  # ---- Cleanup ----
   # MYTMPOUT is empty now, so remove it even if OPT_KEEP_TMP is set
   rm -rf "$MYTMPOUT"
-
-  if [ "${HINT_INSTALL[$itemid]}" = 'n' ] || [ "$OPT_INSTALL" != 'y' -a "${HINT_INSTALL[$itemid]}" != 'y' ]; then
+  # uninstall the deps
+  if [ "$OPT_DRY_RUN" = 'y' ] || [ "${HINT_INSTALL[$itemid]}" != 'y' ] || [ "$OPT_INSTALL" != 'y' ]; then
     uninstall_deps "$itemid"
   fi
-
-  # This won't always kill everything, but it's good enough for saving space
+  # smite the temporary storage (this won't always kill everything, but it's good enough for saving space)
   [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
 
+  # ---- Logging ----
   buildopt=''
   [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
   [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
@@ -406,235 +475,11 @@ function build_failed
   log_error -n "See $ITEMLOG"
   FAILEDLIST+=( "$itemid" )
 
+  #### reinstate packages that were uninstalled prior to building
+
   if [ "${HINT_INSTALL[$itemid]}" = 'n' ] || [ "$OPT_INSTALL" != 'y' -a "${HINT_INSTALL[$itemid]}" != 'y' ]; then
     uninstall_deps "$itemid"
   fi
-
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function create_pkg_metadata
-# Create metadata files in package dir, and changelog entries
-# $1 = itemid
-# Return status:
-# 9 = bizarre existential error, otherwise 0
-{
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
-  local itemid="$1"
-  local itemprgnam="${ITEMPRGNAM[$itemid]}"
-  local itemdir="${ITEMDIR[$itemid]}"
-  local itemfile="${ITEMFILE[$itemid]}"
-  local -a pkglist
-
-  MYREPO="$SR_PKGREPO"
-  [ "$OPT_DRY_RUN" = 'y' ] && MYREPO="$DRYREPO"
-
-  pkglist=( "$MYREPO"/"$itemdir"/*.t?z )
-
-
-  #-----------------------------#
-  # changelog entry             #
-  # (gratuitously elaborate :-) #
-  #-----------------------------#
-
-  operation="$(echo "$BUILDINFO" | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/' )"
-  extrastuff=''
-  case "$BUILDINFO" in
-  add*)
-      # add short description from slack-desc (if there's no slack-desc, this should be null)
-      extrastuff="($(grep "^${pkgnam}: " "$SR_SBREPO"/"$itemdir"/slack-desc 2>/dev/null| head -n 1 | sed -e 's/.*(//' -e 's/).*//'))"
-      ;;
-  'update for git'*)
-      # add title of the latest commit message
-      extrastuff="($(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //' -e 's/\.$//'))"
-      ;;
-  *)  :
-      ;;
-  esac
-  # build_ok will need this:
-  CHANGEMSG="$operation"
-  [ -n "$extrastuff" ] && CHANGEMSG="${CHANGEMSG} ${extrastuff}"
-  # write the changelog entry:
-  changelog "$itemid" "$operation" "$extrastuff" "${pkglist[@]}"
-
-
-  #-----------------------------#
-  # metadata files              #
-  #-----------------------------#
-
-  for pkgpath in "${pkglist[@]}"; do
-
-    pkgbasename=$(basename "$pkgpath")
-    pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
-
-    nosuffix="${pkgpath%.t?z}"
-    dotlst="${nosuffix}.lst"
-    dotrev="${nosuffix}.rev"
-    dotdep="${nosuffix}.dep"
-    dottxt="${nosuffix}.txt"
-    dotmeta="${nosuffix}.meta"
-    # but the .md5, .sha256 and .asc filenames include the suffix:
-    dotmd5="${pkgpath}.md5"
-    dotsha256="${pkgpath}.sha256"
-    dotasc="${pkgpath}.asc"
-
-    # Although gen_repos_files.sh can create most of the following files,
-    # it's quicker to create them here (we can probably get the slack-desc from the
-    # packaging directory, and if test_package has been run we can reuse its list
-    # of the package contents).
-
-    #-----------------------------#
-    # .lst                        #
-    #-----------------------------#
-    # do this first so we have a quick way of seeing what's in the package
-
-    if [ ! -f "$dotlst" ]; then
-      cat << EOF > "$dotlst"
-++========================================
-||
-||   Package:  ./$itemdir/$pkgbasename
-||
-++========================================
-EOF
-      TMP_PKGCONTENTS="$MYTMPDIR"/pkgcontents_"$pkgbasename"
-      if [ ! -f "$TMP_PKGCONTENTS" ]; then
-        tar tvf "$pkgpath" > "$TMP_PKGCONTENTS"
-      fi
-      cat "$TMP_PKGCONTENTS" >> "$dotlst"
-      echo "" >> "$dotlst"
-      echo "" >> "$dotlst"
-    fi
-
-    #-----------------------------#
-    # .rev                        #
-    #-----------------------------#
-
-    oldstylerev=$(dirname "$dotrev")/.revision
-    if [ -f "$oldstylerev" ]; then
-      mv "$oldstylerev" "$dotrev"
-    elif [ ! -f "$dotrev" ]; then
-      print_current_revinfo "$itemid" > "$dotrev"
-    fi
-
-    #-----------------------------#
-    # .dep (no deps => no file)   #
-    #-----------------------------#
-
-    if [ ! -f "$dotdep" ]; then
-      if [ -n "${FULLDEPS[$itemid]}" ]; then
-        for dep in ${FULLDEPS[$itemid]}; do
-          printf "%s\n" "$(basename "$dep")" >> "$dotdep"
-        done
-      fi
-    fi
-
-    #-----------------------------#
-    # .txt                        #
-    #-----------------------------#
-
-    if [ ! -f "$dottxt" ]; then
-      if [ -f "$SR_SBREPO"/"$itemdir"/slack-desc ]; then
-        sed -n '/^#/d;/:/p' < "$SR_SBREPO"/"$itemdir"/slack-desc > "$dottxt"
-      elif grep -q install/slack-desc "$dotlst"; then
-        tar xf "$pkgpath" -O install/slack-desc 2>/dev/null | sed -n '/^#/d;/:/p' > "$dottxt"
-      else
-        # bad egg!
-        > "$dottxt"
-      fi
-    fi
-
-    #-----------------------------#
-    # .meta                       #
-    #-----------------------------#
-
-    if [ ! -f "$dotmeta" ]; then
-
-      pkgsize=$(du -s "$pkgpath" | cut -f1)
-      # this uncompressed size is approx, but hopefully good enough ;-)
-      uncsize=$(awk '{t+=int($3/1024)+1} END {print t}' "$TMP_PKGCONTENTS")
-      echo "PACKAGE NAME:  $pkgbase" > "$dotmeta"
-      if [ -n "$SR_DL_URL" ]; then
-        echo "PACKAGE MIRROR:  $SR_DL_URL" >> "$dotmeta"
-      fi
-      echo "PACKAGE LOCATION:  ./$itemdir" >> "$dotmeta"
-      echo "PACKAGE SIZE (compressed):  ${pkgsize} K" >> "$dotmeta"
-      echo "PACKAGE SIZE (uncompressed):  ${uncsize} K" >> "$dotmeta"
-
-      if [ "$SR_FOR_SLAPTGET" -eq 1 ]; then
-
-        # slack-required
-        # from packaging dir, or extract from package, or synthesise it from DIRECTDEPS
-        if [ -f "$TMP"/package-"$pkgnam"/install/slack-required ]; then
-          SLACKREQUIRED=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-required | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
-        elif grep -q install/slack-required "$dotlst"; then
-          SLACKREQUIRED=$(tar xf "$pkgpath" -O install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
-        elif [ -n "${DIRECTDEPS[$itemid]}" ]; then
-          SLACKREQUIRED=$(for dep in ${DIRECTDEPS[$itemid]}; do printf "%s\n" "$(basename "$dep")"; done | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
-        else
-          SLACKREQUIRED=""
-        fi
-        echo "PACKAGE REQUIRED:  $SLACKREQUIRED" >> "$dotmeta"
-
-        # slack-conflicts
-        # from packaging dir, or extract from package, or get it from the hintfile
-        if [ -f "$TMP"/package-"$pkgnam"/install/slack-conflicts ]; then
-          SLACKCONFLICTS=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-conflicts | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
-        elif grep -q install/slack-conflicts "$dotlst"; then
-          SLACKCONFLICTS=$(tar xf "$pkgpath" -O install/slack-conflicts 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
-        elif [ -n "${HINT_CONFLICTS[$itemid]}" ]; then
-          SLACKCONFLICTS="${HINT_CONFLICTS[$itemid]}"
-        else
-          SLACKCONFLICTS=""
-        fi
-        echo "PACKAGE CONFLICTS:  $SLACKCONFLICTS" >> "$dotmeta"
-
-        # slack-suggests
-        # from packaging dir, or extract from package
-        if [ -f "$TMP"/package-"$pkgnam"/install/slack-suggests ]; then
-          SLACKSUGGESTS=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-suggests | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
-        elif grep -q install/slack-suggests "$dotlst"; then
-          SLACKCONFLICTS=$(tar xf "$pkgpath" -O install/slack-suggests 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
-        else
-          SLACKSUGGESTS=""
-        fi
-        echo "PACKAGE SUGGESTS:  $SLACKSUGGESTS" >> "$dotmeta"
-
-      fi
-
-      echo "PACKAGE DESCRIPTION:" >> "$dotmeta"
-      cat  "$dottxt" >> "$dotmeta"
-      echo "" >> "$dotmeta"
-
-    fi
-
-    #-----------------------------#
-    # .md5                        #
-    #-----------------------------#
-
-    if [ ! -f "$dotmd5" ]; then
-      ( cd "$MYREPO"/"$itemdir"/; md5sum "$pkgbasename" > "$dotmd5" )
-    fi
-
-    #-----------------------------#
-    # .sha256                     #
-    #-----------------------------#
-
-    if [ ! -f "$dotsha256" ]; then
-      ( cd "$MYREPO"/"$itemdir"/; sha256sum "$pkgbasename" > "$dotsha256" )
-    fi
-
-    #-----------------------------#
-    # .asc                        #
-    #-----------------------------#
-    # gen_repos_files.sh will do it later :-)
-
-    # Finally, we can get rid of this:
-    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_PKGCONTENTS"
-
-  done
 
   return 0
 }

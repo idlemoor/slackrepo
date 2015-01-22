@@ -11,6 +11,7 @@
 #   find_queuefile
 #   parse_package_name
 #   parse_info_and_hints
+#   calculate_deps
 #-------------------------------------------------------------------------------
 
 declare -a PARSEDLIST UNPARSEDLIST
@@ -164,12 +165,12 @@ function add_parsed_file
   local prgnam
 
   if [ "$searchtype" = '-s' ]; then
-    # For SlackBuild lookups, get pkgnam from the filename:
+    # For SlackBuild lookups, get prgnam from the filename:
     prgnam=$(echo "$file" | sed -r 's/\.(SlackBuild|sh)$//')
     # Simplify $id if it's unambiguous:
     [ "$prgnam" = "$dirbase" ] && id="$dir"
   else
-    # For package lookups, get pkgnam from the containing directory's name:
+    # For package lookups, get prgnam from the containing directory's name:
     prgnam="$dirbase"
     # and simplify $id, just like above:
     id="$dir"
@@ -336,7 +337,7 @@ function scan_dir
   local searchtype="$1"
   local dir="$2"
   local dirbase
-  local -a subdirlist
+  local -a subdirlist pkglist itemlist
   dirbase=$(basename "$dir")
   if [ "$searchtype" = '-s' ]; then
     if [ -f "$dir"/"$dirbase".SlackBuild ]; then
@@ -344,14 +345,25 @@ function scan_dir
       return 0
     fi
   else
-    oldstylerev="$dir"/.revision
-    newstylerev=$( ls "$dir"/"$dirbase"-*.rev 2>/dev/null | head -1)
-    if [ -f "$oldstylerev" -o -f "$newstylerev" ]; then
-      #### use a wild guess for the filename
-      #### interim solution, won't work for e.g. *.sh
-      add_parsed_file "$searchtype" "$dir"/"$dirbase".SlackBuild
+    pkglist=( "$dir"/*.t?z )
+    itemlist=()
+    for pkg in "${pkglist[@]}"; do
+      if [ -f "$pkg" ]; then
+        pkgbase="${pkg##*/}"
+        pkgnam="${pkgbase%-*-*-*}"
+        itemnam=$(db_get_pkgnam_itemid "$pkgnam");
+        if [ -z "$itemnam" ]; then
+          # database record unavailable? Well we'll have to guess :-/
+          itemnam="$dir"
+        fi
+        itemlist+=( "$itemnam" )
+      fi
+    done
+    for itemid in $(printf "%s\n" "${itemlist[@]}" | sort -u); do
+      slackbuildpath="$dir"/$(basename "$itemid").SlackBuild
+      add_parsed_file "$searchtype" "$slackbuildpath"
       return 0
-    fi
+    done
   fi
   # Descend one level only - some SlackBuilds have subdirectories
   # (eg. for patches) that need to be ignored
@@ -391,7 +403,7 @@ function parse_package_name
 
 # Associative arrays to store stuff from .info files:
 declare -A INFOVERSION INFOREQUIRES INFODOWNLIST INFOMD5LIST INFOSHA256LIST
-# and to store source cache and revision info:
+# and to store source cache and git revision info:
 declare -A SRCDIR GITREV GITDIRTY
 # and to store hints:
 declare -A \
@@ -672,4 +684,88 @@ function parse_info_and_hints
 
   return 0
 
+}
+
+#-------------------------------------------------------------------------------
+
+declare -A DIRECTDEPS FULLDEPS
+
+function calculate_deps
+# Stores a space-separated list of deps of an item in ${DIRECTDEPS[$itemname]}
+# and ${FULLDEPS[$itemname]}
+# $1 = itemid
+# Return status:
+# 0 = ok
+# 1 = any error
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+
+  local itemid="$1"
+
+  # If FULLDEPS already has an entry for $itemid, do nothing
+  # (note that *null* means "we have already calculated that the item has no deps",
+  # whereas *unset* means "we have not yet calculated the deps of this item").
+  if [ "${FULLDEPS[$itemid]+yesitisset}" = 'yesitisset' ]; then
+    return 0
+  fi
+
+  parse_info_and_hints "$itemid" || return 1
+
+  local dep
+  local -a deplist
+
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
+  local itemdir="${ITEMDIR[$itemid]}"
+  local itemfile="${ITEMFILE[$itemid]}"
+
+  for dep in ${INFOREQUIRES[$itemid]}; do
+    if [ "$dep" = '%README%' ]; then
+      log_warning "${itemid}: Unhandled %README% in $itemprgnam.info"
+    elif [ "$dep" = "$itemprgnam" ]; then
+      log_warning "${itemid}: Ignoring dependency of $itemprgnam on itself"
+    else
+      find_slackbuild "$dep"
+      fstat=$?
+      if [ $fstat = 0 ]; then
+        deplist+=( "${R_SLACKBUILD}" )
+      elif [ $fstat = 1 ]; then
+        log_warning "${itemid}: Dependency $dep does not exist"
+      elif [ $fstat = 2 ]; then
+        log_warning "${itemid}: Dependency $dep matches more than one SlackBuild"
+      fi
+    fi
+  done
+
+  deplist=( $(printf '%s\n' ${deplist[*]} | sort -u) )
+  DIRECTDEPS[$itemid]="${deplist[*]}"
+
+  # If there are no direct deps, then there are no recursive deps ;-)
+  if [ -z "${DIRECTDEPS[$itemid]}" ]; then
+    FULLDEPS[$itemid]=''
+    return 0
+  fi
+
+  local -a myfulldeps
+
+  for dep in "${deplist[@]}"; do
+    calculate_deps "$dep" || return 1
+    for newdep in ${FULLDEPS[$dep]} "$dep"; do
+      gotnewdep='n'
+      for olddep in "${myfulldeps[@]}"; do
+        if [ "$newdep" = "$olddep" ]; then
+          gotnewdep='y'
+          break
+        elif [ "$newdep" = "$itemid" ]; then
+          log_error "${itemid}: Circular dependency via $dep"
+          return 1
+        fi
+      done
+      if [ "$gotnewdep" = 'n' ]; then
+        myfulldeps+=( "$newdep" )
+      fi
+    done
+  done
+  FULLDEPS[$itemid]="${myfulldeps[*]}"
+
+  return 0
 }

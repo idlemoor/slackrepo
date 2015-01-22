@@ -3,10 +3,65 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # installfunctions.sh - package install functions for slackrepo
+#   install_deps
+#   uninstall_deps
 #   install_packages
 #   uninstall_packages
 #   is_installed
 #   dotprofilizer
+#-------------------------------------------------------------------------------
+
+function install_deps
+# Install dependencies of $itemid (but NOT $itemid itself)
+# $1 = itemid
+# Return status:
+# 0 = all installs succeeded
+# 1 = any install failed
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+
+  local itemid="$1"
+  local mydep
+  local allinstalled='y'
+
+  if [ -n "${FULLDEPS[$itemid]}" ]; then
+    log_normal -a "Installing dependencies ..."
+    for mydep in ${FULLDEPS[$itemid]}; do
+      install_packages "$mydep" || allinstalled='n'
+    done
+    # If any installs failed, uninstall them all and return an error:
+    if [ "$allinstalled" = 'n' ]; then
+      for mydep in ${FULLDEPS[$itemid]}; do
+        uninstall_packages "$mydep"
+      done
+      return 1
+    fi
+  fi
+
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function uninstall_deps
+# Uninstall dependencies of $itemid (but NOT $itemid itself)
+# $1 = itemid
+# Return status always 0
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+
+  local itemid="$1"
+  local mydep
+
+  if [ -n "${FULLDEPS[$itemid]}" ]; then
+    log_normal -a "Uninstalling dependencies ..."
+    for mydep in ${FULLDEPS[$itemid]}; do
+      uninstall_packages "$mydep"
+    done
+  fi
+  return 0
+}
+
 #-------------------------------------------------------------------------------
 
 function install_packages
@@ -43,32 +98,40 @@ function install_packages
     is_installed "$pkgpath"
     istat=$?
     if [ "$istat" = 0 ]; then
+      # already installed, same version/arch/build/tag
       log_verbose -a "$R_INSTALLED is already installed"
-    elif [ "$istat" = 1 -o "$istat" = 3 ]; then
-      log_normal -a "Upgrading $R_INSTALLED ..."
-      if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
-        set -o pipefail
-        /sbin/upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$ITEMLOG"
-        stat=$?
-        set +o pipefail
-      else
-        /sbin/upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
-        stat=$?
-      fi
-      [ "$stat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $stat)"; return 1; }
-      dotprofilizer "$pkgpath"
-    else
+      KEEPINSTALLED[$pkgid]="$pkgbase"
+    elif [ "$istat" = 2 ]; then
+      # nothing similar currently installed
       if [ "$OPT_VERBOSE" = 'y' -o "$OPT_INSTALL" = 'y' ]; then
         set -o pipefail
         /sbin/installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
-        stat=$?
+        pstat=$?
         set +o pipefail
       else
         /sbin/installpkg --terse "$pkgpath" >> "$ITEMLOG" 2>&1
-        stat=$?
+        pstat=$?
       fi
-      [ "$stat" = 0 ] || { log_error -a "${itemid}: installpkg $pkgbase failed (status $stat)"; return 1; }
+      [ "$pstat" = 0 ] || { log_error -a "${itemid}: installpkg $pkgbase failed (status $stat)"; return 1; }
       dotprofilizer "$pkgpath"
+      [ "$OPT_INSTALL" = 'y' -o "${HINT_INSTALL[$itemid]}" = 'y' ] && KEEPINSTALLED[$pkgid]="$pkgbase"
+    else
+      # istat=1 (already installed, different version/arch/build/tag)
+      # or istat=3 (broken /var/log/packages) or istat=whatever
+      [ "$istat" = 1 ] && log_normal -a "Upgrading $R_INSTALLED ..."
+      [ "$istat" = 3 ] && log_warning -n "Attempting to upgrade or reinstall $R_INSTALLED ..."
+      if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
+        set -o pipefail
+        /sbin/upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$ITEMLOG"
+        pstat=$?
+        set +o pipefail
+      else
+        /sbin/upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
+        pstat=$?
+      fi
+      [ "$pstat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $stat)"; return 1; }
+      dotprofilizer "$pkgpath"
+      KEEPINSTALLED[$pkgid]="$pkgbase"
     fi
   done
   return 0
@@ -79,10 +142,13 @@ function install_packages
 function uninstall_packages
 # Run removepkg, and do extra cleanup
 # Usage: uninstall_packages [-f] itemid
-#   -f = (optionally) force uninstall
+#   -f = (optionally) force uninstall. This is intended for use prior to building.
+#        (Many packages don't build properly if a prior version is installed.)
 # Return status: always 0
+# If KEEPINSTALLED[pkgid] is set, the package WILL NOT be removed UNLESS -f is specified.
 # If there is an install hint, the packages WILL NOT be removed UNLESS -f is specified.
-# If OPT_INSTALL is set, the packages WILL be removed, but extra cleanup won't be performed.
+# If OPT_INSTALL is set, the packages WILL be removed.
+# Extra cleanup is only performed for 'vanilla' uninstalls.
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
@@ -124,7 +190,14 @@ function uninstall_packages
       # Not installed, carry on quietly
       continue
     else
-      if [ "$OPT_INSTALL" = 'y' ]; then
+
+      pkgbase=$(basename "$pkgpath" | sed 's/\.t.z$//')
+      pkgid=$(echo "$pkgbase" | rev | cut -f4- -d- | rev )
+      # Don't remove a package flagged with KEEPINSTALLED, unless -f was specified.
+      [ -n "${KEEPINSTALLED[$pkgid]}" -a "$force" != 'y' ] && continue
+
+      if [ "$OPT_INSTALL" = 'y' ] || [ -n "${KEEPINSTALLED[$pkgid]}" ] || \
+         [ "$force" = 'y' ] || [ "${HINT_INSTALL[$itemid]}" = 'y' ]; then
         # Conventional gentle removepkg :-)
         log_normal -a "Uninstalling $R_INSTALLED ..."
         /sbin/removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
@@ -142,16 +215,17 @@ function uninstall_packages
           rm -f /"$etcfile" /"${etcfile%.new}"
         done
         for etcdir in $etcdirs; do
-          if [ -d "$etcdir" ]; then
-            find "$etcdir" -type d -depth -exec rmdir --ignore-fail-on-non-empty {} \;
+          if [ -d /"$etcdir" ]; then
+            find /"$etcdir" -type d -depth -exec rmdir --ignore-fail-on-non-empty {} \;
           fi
         done
         # Do this last so it can mend things the package broke.
-        # The cleanup file can contain any required shell commands, for example:
+        # The cleanup hint can contain any required shell commands, for example:
         #   * Reinstalling Slackware packages that conflict with the item's packages
         #   * Unsetting environment variables set in an /etc/profile.d script
         #   * Removing specific files and directories that removepkg doesn't remove
         #   * Running depmod to remove references to removed kernel modules
+        # But it can destroy live config, so don't do it if 
         if [ -n "${HINT_CLEANUP[$itemid]}" ]; then
           eval "${HINT_CLEANUP[$itemid]}" >> "$ITEMLOG" 2>&1
         fi
@@ -169,8 +243,8 @@ function is_installed
 # $1 = pathname of a package file
 # Sets the installed package name/version/arch/build in R_INSTALLED
 # Return status:
-# 0 = installed, with same version/arch/build
-# 1 = installed, but with different version/arch/build
+# 0 = installed, with same version/arch/build/tag
+# 1 = installed, but with different version/arch/build/tag
 # 2 = not installed
 # 3 = /var/log/packages is broken (multiple packages)
 {

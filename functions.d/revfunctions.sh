@@ -8,87 +8,73 @@
 #   http://www.slackware.com/~alien/tools/gen_repos_files.sh
 #
 #-------------------------------------------------------------------------------
-# revfunctions.sh - revision control functions for slackrepo
+# revfunctions.sh - revision functions for slackrepo
 #   print_current_revinfo
 #   needs_build
+#   write_pkg_metadata
 #-------------------------------------------------------------------------------
 
-declare -A REVCACHE
-
 function print_current_revinfo
-# Prints a revision info summary on standard output, format as follows:
-#
-# Each line contains the following assignments, space-separated:
-#   prgnam=<prgnam>;
-#   version=<version>;
-#   built=<secs-since-epoch>;
-#   buildrev=<gitrevision|secs-since-epoch>;
-#   slackware=<slackversion>;
-#   [depends=<dep1>[:<dep2>[...]];]   (dep* must be sorted)
-#   [hintfile=<md5sum>;]
-#
-# This is repeated for each dependency.
-#
+# Prints an item's revision info on standard output.
+# Arguments:
 # $1 = itemid
 # Return status always 0
+#
+# The first line of output is revision info for itemid itself:
+#   itemid / depid1,depid2... version built rev os hintcksum
+# and then there is a line for each depid in deplist:
+#   itemid depid1 / version built rev os hintcksum
+# Fields are as follows, note that / is used as a placeholder for empty fields.
+#   itemid
+#   / (or depid)         (for dependency's revision info)
+#   deplist (or /)       (comma separated list of itemid's dependencies, or / if no deps)
+#   version              (arbitrary string)
+#   built                (secs since epoch)
+#   rev                  (gitrevision, or secs since epoch if not git)
+#   os                   (<osname><osversion>)
+#   hintcksum            (md5sum, or / if no hintfile)
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
-  local itemprgnam=${ITEMPRGNAM[$itemid]}
-  local itemdir=${ITEMDIR[$itemid]}
+  local itemdir="${ITEMDIR[$itemid]}"
 
-  # (1) Get the item's own prg/ver/blt/rev/slack/dep/hint stuff
+  # (1) Get the item's own stuff.
+  # For calculating whether an item needs to be built, or for recording the
+  # revision of a new package, we need the revision in the SlackBuild repo,
+  # not the Package repo, so the database and REVCACHE are not used for itemid.
 
-  prgstuff="prgnam=${itemprgnam};"
-  verstuff="version=${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}};"
-  bltstuff="built=$(date +%s);"
+  depid="/"
+  deplist="${DIRECTDEPS[$itemid]:-/}"
+  verstuff="${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
+  bltstuff="$(date +%s)"
 
   if [ "$GOTGIT" = 'y' ]; then
-    rev="${GITREV[$itemid]}"
-    [ "${GITDIRTY[$itemid]}" = 'y' ] && rev="${rev}+dirty"
+    revstuff="${GITREV[$itemid]}"
+    [ "${GITDIRTY[$itemid]}" = 'y' ] && revstuff="${revstuff}+dirty"
   else
     # Use newest file's seconds since epoch ;-)
-    rev="$(cd "$SR_SBREPO"/"$itemdir"; ls -t | head -n 1 | xargs stat --format='%Y')"
+    revstuff="$(cd "$SR_SBREPO"/"$itemdir"; ls -t | head -n 1 | xargs stat --format='%Y')"
   fi
-  revstuff="buildrev=${rev};"
 
-  slackstuff="slackware=${SYS_SLACKVER};"
+  osstuff="${SYS_OSNAME}${SYS_OSVER}"
 
-  depstuff=''
-  directdeps="${DIRECTDEPS[$itemid]// /:}"
-  [ -n "$directdeps" ] && depstuff="depends=${directdeps};"
-
-  hintstuff=''
+  hintstuff='/'
   if [ -n "${HINTFILE[$itemdir]}" ]; then
-    hintstuff="hintfile=$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//');"
+    hintstuff="$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//')"
   fi
 
-  REVCACHE[$itemid]="${prgstuff} ${verstuff} ${bltstuff} ${revstuff} ${slackstuff} ${depstuff} ${hintstuff}"
-  echo "${REVCACHE[$itemid]}"
+  echo "$itemid" '/' "${deplist// /,}" "${verstuff} ${bltstuff} ${revstuff} ${osstuff} ${hintstuff}"
 
+  # (2) Get each dependency's stuff.
+  # We can use the database.
 
-  # (2) Get each dependency's prg/ver/blt/rev/slack/dep/hint stuff ($deprev).
-
-  for dep in ${DIRECTDEPS[$itemid]}; do
-    if [ -n "${REVCACHE[$dep]}" ]; then
-      deprev="${REVCACHE[$dep]}"
-    else
-      deprevfilelist=( "$SR_PKGREPO"/"$dep"/*.rev "$SR_PKGREPO"/"$dep"/.revision )
-      [ "$OPT_DRY_RUN" = 'y' ] && deprevfilelist=( "$DRYREPO"/"$dep"/*.rev "${deprevfilelist[@]}" )
-      # start with a fake deprev that will always be out of date:
-      deprev="prgnam=$(basename "$dep"); version=0; built=0; buildrev=0; slackware=0;"
-      # and then set deprev from the first existing rev file:
-      for deprevfile in "${deprevfilelist[@]}"; do
-        if [ -f "$deprevfile" ]; then
-          deprev=$(head -q -n 1 "$deprevfile" )
-          break
-        fi
-      done
-      REVCACHE[$dep]="$deprev"
-    fi
-    echo "$deprev"
-  done
+  if [ "$deplist" != '/' ]; then
+    for depid in ${deplist}; do
+      deprevdata=$(db_get_rev "$depid")
+      [ -n "$deprevdata" ] && echo "$itemid" "$depid" "$deprevdata"
+    done
+  fi
 
   return 0
 }
@@ -110,45 +96,28 @@ function needs_build
   local itemprgnam=${ITEMPRGNAM[$itemid]}
   local itemdir=${ITEMDIR[$itemid]}
   local -a pkglist revfilelist deprevfilelist modifilelist
-  local prgnam version built revision depends slackware hintfile
+  local prgnam version built revision depends os hintfile
 
-  if [ "$OPT_DRY_RUN" = 'y' ]; then
-    myrepo="$DRYREPO"/"$itemdir"
-  else
-    myrepo="$SR_PKGREPO"/"$itemdir"
-  fi
-
-  # Package dir not found => add
-  if [ ! -d "$myrepo" ]; then
+  # Package dir not in either repo => add
+  if [ ! -d "$DRYREPO"/"$itemdir" ] && [ ! -d "$SR_PKGREPO"/"$itemdir" ]; then
     BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
     return 0
   fi
 
   # Package dir has no packages => add
-  pkglist=( "$myrepo"/*.t?z )
+  pkglist=( "$SR_PKGREPO"/"$itemdir"/*.t?z )
   if [ ! -f "${pkglist[0]}" ]; then
-    BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
-    return 0
-  fi
-
-  # No .rev file => add
-  revfilelist=( "$myrepo"/*.rev )
-  if [ ! -f "${revfilelist[0]}" ]; then
-    revfilelist=( "$myrepo"/.revision )
-    if [ ! -f "${revfilelist[0]}" ]; then
+    # Nothing in the main repo, so look in dryrun repo
+    pkglist=( "$DRYREPO"/"$itemdir"/*.t?z )
+    if [ ! -f "${pkglist[0]}" ]; then
       BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
       return 0
     fi
   fi
 
-  # Get info about the existing package from the .rev file
-  eval "$(head -q -n 1 "${revfilelist[0]}")"
-  pkgver="$version"
-  pkgblt="$built"
-  pkgrev="$buildrev"
-  pkgdep="$depends"
-  pkgslk="$slackware"
-  pkghnt="$hintfile"
+  # Get info about the existing package from the database
+  read pkgdeps pkgver pkgblt pkgrev pkgos pkghnt < <(db_get_rev "$itemid")
+  [ "$pkgdeps" = '/' ] && pkgdeps=''
 
   # Are we upversioning => update
   currver="${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
@@ -175,10 +144,10 @@ function needs_build
     shortcurrrev="${currrev:0:7}$dirtymark"
 
     # If the git rev has changed => update
-    #   (ignoring README, slack-desc and .info -- we can ignore .info because
-    #   VERSION has already been checked)
     if [ "$pkgrev" != "$currrev" ]; then
-      modifilelist=( $(git diff --name-only "$currrev" "$pkgrev" -- "$SR_SBREPO"/"$itemdir") )
+      #   if only README, slack-desc and .info have changed, don't build
+      #   (the VERSION in the .info file has already been checked ;-)
+      modifilelist=( $(cd "$SR_SBREPO"; git diff --name-only "$currrev" "$pkgrev" -- "$itemdir") )
       for modifile in "${modifilelist[@]}"; do
         bn=$(basename "$modifile")
         [ "$bn" = "README" ] && continue
@@ -214,31 +183,20 @@ function needs_build
   fi
 
   # Has the list of deps changed => rebuild
-  currdep="${DIRECTDEPS[$itemid]// /:}"
-  if [ "$pkgdep" != "$currdep" ]; then
+  currdeps="${DIRECTDEPS[$itemid]// /,}"
+  if [ "$pkgdeps" != "$currdeps" ]; then
     BUILDINFO="rebuild for added/removed deps"
     return 0
   fi
 
   # Have any of the deps been updated => rebuild
   local -a updeps
+  updeps=()
   for dep in ${DIRECTDEPS[$itemid]}; do
-    # ignore built= (merely rebuilt deps don't matter) and hintfile= (significant
-    # hintfile changes will affect version= or depends=, which *are* checked)
-    pkgdeprev=$(grep "^prgnam=${ITEMPRGNAM[$dep]};" "${revfilelist[0]}" | sed -e 's/ built=[0-9]*;//' -e 's/ hintfile=[0-9a-f]*;//' )
-    if [ -z "${REVCACHE[$dep]}" ]; then
-      # if there is nothing in REVCACHE, the dep's package can't be in DRYREPO
-      deprevfilelist=( "$SR_PKGREPO"/"${ITEMDIR[$dep]}"/*.rev )
-      if [ ! -f "${deprevfilelist[0]}" ]; then
-        deprevfilelist=( "$SR_PKGREPO"/"${ITEMDIR[$dep]}"/.revision )
-        if [ ! -f "${deprevfilelist[0]}" ]; then
-          #### wtf? where's it gone? rebuild, but it won't end well
-          return 0
-        fi
-      fi
-      REVCACHE[$dep]=$(head -q -n 1 "${deprevfilelist[0]}")
-    fi
-    currdeprev="$(echo "${REVCACHE[$dep]}" | sed -e 's/ built=[0-9]*;//' -e 's/ hintfile=[0-9a-f]*;//')"
+    # ignore built field (merely rebuilt deps don't matter) and hintfile field
+    # (significant hintfile changes will affect version or deps, which have already been checked)
+    pkgdeprev=$(db_get_rev "$itemid" "$dep" | cut -f1,2,4,5 -d" ")
+    currdeprev=$(db_get_rev "$dep" | cut -f1,2,4,5 -d" ")
     [ "$pkgdeprev" != "$currdeprev" ] && updeps+=( "$dep" )
   done
   if [ "${#updeps}" != 0 ]; then
@@ -248,15 +206,15 @@ function needs_build
     return 0
   fi
 
-  # Has Slackware changed => rebuild
-  currslk="$SYS_SLACKVER"
-  if [ "$pkgslk" != "$currslk" ]; then
-    BUILDINFO="rebuild for upgraded Slackware"
+  # Has the OS changed => rebuild
+  curros="${SYS_OSNAME}${SYS_OSVER}"
+  if [ "$pkgos" != "$curros" ]; then
+    BUILDINFO="rebuild for upgraded ${SYS_OSNAME}"
     return 0
   fi
 
   # Has the hintfile changed => rebuild
-  currhnt=''
+  currhnt='/'
   if [ -n "${HINTFILE[$itemdir]}" ]; then
     currhnt="$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//')"
   fi
@@ -273,4 +231,235 @@ function needs_build
   fi
   return 1
 
+}
+
+#-------------------------------------------------------------------------------
+
+function write_pkg_metadata
+# Update database, write changelog entries, and create metadata files in package dir
+# $1 = itemid
+# Return status:
+# 9 = bizarre existential error, otherwise 0
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+
+  local itemid="$1"
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
+  local itemdir="${ITEMDIR[$itemid]}"
+  local itemfile="${ITEMFILE[$itemid]}"
+  local -a pkglist
+
+  #-----------------------------#
+  # Update database             #
+  #-----------------------------#
+
+  if [ "$OPT_DRY_RUN" = 'y' ]; then
+    # don't update the database -- just set REVCACHE
+    REVCACHE[$itemid]=$(print_current_revinfo "$itemid" | head -n 1 | cut -f3- -d" ")
+  else
+    currentrevinfo="$(print_current_revinfo "$itemid")"
+    db_del_rev "$itemid"
+    echo "$currentrevinfo" | while read revinfo; do
+      db_set_rev $revinfo
+    done
+  fi
+
+  #-----------------------------#
+  # Write changelog entries     #
+  # (gratuitously elaborate :-) #
+  #-----------------------------#
+
+  myrepo="$SR_PKGREPO"
+  [ "$OPT_DRY_RUN" = 'y' ] && myrepo="$DRYREPO"
+  pkglist=( "$myrepo"/"$itemdir"/*.t?z )
+
+  operation="$(echo "$BUILDINFO" | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/' )"
+  extrastuff=''
+  case "$BUILDINFO" in
+  add*)
+      # add short description from slack-desc (if there's no slack-desc, this should be null)
+      extrastuff="($(grep "^${pkgnam}: " "$SR_SBREPO"/"$itemdir"/slack-desc 2>/dev/null| head -n 1 | sed -e 's/.*(//' -e 's/).*//'))"
+      ;;
+  'update for git'*)
+      # add title of the latest commit message
+      extrastuff="($(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //' -e 's/\.$//'))"
+      ;;
+  *)  :
+      ;;
+  esac
+  [ "$extrastuff" = '()' ] && extrastuff=''
+  # build_ok will need this:
+  CHANGEMSG="$operation"
+  [ -n "$extrastuff" ] && CHANGEMSG="${CHANGEMSG} ${extrastuff}"
+  # write the changelog entry:
+  changelog "$itemid" "$operation" "$extrastuff" "${pkglist[@]}"
+
+
+  #-----------------------------#
+  # Create metadata files       #
+  #-----------------------------#
+
+  for pkgpath in "${pkglist[@]}"; do
+    # pkglist should be 100% valid, but this can't hurt:
+    [ ! -f "$pkgpath" ] && continue
+
+    pkgdirname=$(dirname "$pkgpath")
+    pkgbasename=$(basename "$pkgpath")
+    pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
+
+    nosuffix="${pkgpath%.t?z}"
+    dotlst="${nosuffix}.lst"
+    dotdep="${nosuffix}.dep"
+    dottxt="${nosuffix}.txt"
+    dotmeta="${nosuffix}.meta"
+    # but the .md5, .sha256 and .asc filenames include the suffix:
+    dotmd5="${pkgpath}.md5"
+    dotsha256="${pkgpath}.sha256"
+    dotasc="${pkgpath}.asc"
+
+    # Although gen_repos_files.sh can create most of the following files,
+    # it's quicker to create them here (we can probably get the slack-desc from the
+    # packaging directory, and if test_package has been run we can reuse its list
+    # of the package contents).
+
+    #-----------------------------#
+    # .lst                        #
+    #-----------------------------#
+    # do this first so we have a quick way of seeing what's in the package
+
+    if [ ! -f "$dotlst" ]; then
+      cat << EOF > "$dotlst"
+++========================================
+||
+||   Package:  ./$itemdir/$pkgbasename
+||
+++========================================
+EOF
+      TMP_PKGCONTENTS="$MYTMPDIR"/pkgcontents_"$pkgbasename"
+      if [ ! -f "$TMP_PKGCONTENTS" ]; then
+        tar tvf "$pkgpath" > "$TMP_PKGCONTENTS"
+      fi
+      cat "$TMP_PKGCONTENTS" >> "$dotlst"
+      echo "" >> "$dotlst"
+      echo "" >> "$dotlst"
+    fi
+
+    #-----------------------------#
+    # .dep (no deps => no file)   #
+    #-----------------------------#
+
+    if [ ! -f "$dotdep" ]; then
+      if [ -n "${FULLDEPS[$itemid]}" ]; then
+        for dep in ${FULLDEPS[$itemid]}; do
+          printf "%s\n" "$(basename "$dep")" >> "$dotdep"
+        done
+      fi
+    fi
+
+    #-----------------------------#
+    # .txt                        #
+    #-----------------------------#
+
+    if [ ! -f "$dottxt" ]; then
+      if [ -f "$SR_SBREPO"/"$itemdir"/slack-desc ]; then
+        sed -n '/^#/d;/:/p' < "$SR_SBREPO"/"$itemdir"/slack-desc > "$dottxt"
+      elif grep -q install/slack-desc "$dotlst"; then
+        tar xf "$pkgpath" -O install/slack-desc 2>/dev/null | sed -n '/^#/d;/:/p' > "$dottxt"
+      else
+        # bad egg!
+        > "$dottxt"
+      fi
+    fi
+
+    #-----------------------------#
+    # .meta                       #
+    #-----------------------------#
+
+    if [ ! -f "$dotmeta" ]; then
+
+      pkgsize=$(du -s "$pkgpath" | cut -f1)
+      # this uncompressed size is approx, but hopefully good enough ;-)
+      uncsize=$(awk '{t+=int($3/1024)+1} END {print t}' "$TMP_PKGCONTENTS")
+      echo "PACKAGE NAME:  $pkgbase" > "$dotmeta"
+      if [ -n "$SR_DL_URL" ]; then
+        echo "PACKAGE MIRROR:  $SR_DL_URL" >> "$dotmeta"
+      fi
+      echo "PACKAGE LOCATION:  ./$itemdir" >> "$dotmeta"
+      echo "PACKAGE SIZE (compressed):  ${pkgsize} K" >> "$dotmeta"
+      echo "PACKAGE SIZE (uncompressed):  ${uncsize} K" >> "$dotmeta"
+
+      if [ "$SR_FOR_SLAPTGET" -eq 1 ]; then
+
+        # slack-required
+        # from packaging dir, or extract from package, or synthesise it from DIRECTDEPS
+        if [ -f "$TMP"/package-"$pkgnam"/install/slack-required ]; then
+          SLACKREQUIRED=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-required | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        elif grep -q install/slack-required "$dotlst"; then
+          SLACKREQUIRED=$(tar xf "$pkgpath" -O install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        elif [ -n "${DIRECTDEPS[$itemid]}" ]; then
+          SLACKREQUIRED=$(for dep in ${DIRECTDEPS[$itemid]}; do printf "%s\n" "$(basename "$dep")"; done | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        else
+          SLACKREQUIRED=""
+        fi
+        echo "PACKAGE REQUIRED:  $SLACKREQUIRED" >> "$dotmeta"
+
+        # slack-conflicts
+        # from packaging dir, or extract from package, or get it from the hintfile
+        if [ -f "$TMP"/package-"$pkgnam"/install/slack-conflicts ]; then
+          SLACKCONFLICTS=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-conflicts | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        elif grep -q install/slack-conflicts "$dotlst"; then
+          SLACKCONFLICTS=$(tar xf "$pkgpath" -O install/slack-conflicts 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        elif [ -n "${HINT_CONFLICTS[$itemid]}" ]; then
+          SLACKCONFLICTS="${HINT_CONFLICTS[$itemid]}"
+        else
+          SLACKCONFLICTS=""
+        fi
+        echo "PACKAGE CONFLICTS:  $SLACKCONFLICTS" >> "$dotmeta"
+
+        # slack-suggests
+        # from packaging dir, or extract from package
+        if [ -f "$TMP"/package-"$pkgnam"/install/slack-suggests ]; then
+          SLACKSUGGESTS=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-suggests | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        elif grep -q install/slack-suggests "$dotlst"; then
+          SLACKCONFLICTS=$(tar xf "$pkgpath" -O install/slack-suggests 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        else
+          SLACKSUGGESTS=""
+        fi
+        echo "PACKAGE SUGGESTS:  $SLACKSUGGESTS" >> "$dotmeta"
+
+      fi
+
+      echo "PACKAGE DESCRIPTION:" >> "$dotmeta"
+      cat  "$dottxt" >> "$dotmeta"
+      echo "" >> "$dotmeta"
+
+    fi
+
+    #-----------------------------#
+    # .md5                        #
+    #-----------------------------#
+
+    if [ ! -f "$dotmd5" ]; then
+      ( cd "$pkgdirname"; md5sum "$pkgbasename" > "$dotmd5" )
+    fi
+
+    #-----------------------------#
+    # .sha256                     #
+    #-----------------------------#
+
+    if [ ! -f "$dotsha256" ]; then
+      ( cd "$pkgdirname"; sha256sum "$pkgbasename" > "$dotsha256" )
+    fi
+
+    #-----------------------------#
+    # .asc                        #
+    #-----------------------------#
+    # gen_repos_files.sh will do it later :-)
+
+    # Finally, we can get rid of this:
+    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_PKGCONTENTS"
+
+  done
+
+  return 0
 }

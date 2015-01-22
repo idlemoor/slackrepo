@@ -233,6 +233,7 @@ function print_curl_status
   87)  echo "unable to parse FTP file list" ;;
   88)  echo "FTP chunk callback reported error" ;;
   89)  echo "No connection available, the session will be queued " ;;
+  '')  echo "curl status is null" ;;
   *)   echo "curl status $1" ;;
   esac
   return 0

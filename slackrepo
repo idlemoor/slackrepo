@@ -45,6 +45,7 @@ function print_usage
 
 function exit_cleanup
 {
+  stty sane   # in case we're killed waiting for the gpg passphrase
   rm -f "$PIDFILE"
   [ "$OPT_KEEP_TMP" != 'y' -a -n "$MYTMPDIR" ] && rm -rf "$MYTMPDIR"
 }
@@ -183,10 +184,21 @@ done
 # Configuration
 #-------------------------------------------------------------------------------
 
-# Find out about the host system:
-# version of Slackware:
-[ -f /etc/slackware-version ] || { echo "$(basename "$0"): Error: /etc/slackware-version not found"; exit_cleanup; exit 4; }
-SYS_SLACKVER="$(sed 's/^Slackware //' /etc/slackware-version )"
+# Find out about the host system.
+# operating system name and version:
+if [ -f /etc/os-release ]; then
+  # Lennart is my copilot <3
+  . /etc/os-release
+  SYS_OSNAME="${ID:-linux}"
+  SYS_OSVER="${VERSION_ID:-}"
+elif [ -f /etc/slackware-version ]; then
+  SYS_OSNAME='slackware'
+  SYS_OSVER="$(sed 's/^Slackware //' /etc/slackware-version)"
+else
+  echo "$(basename "$0"): Error: /etc/slackware-version not found"
+  exit_cleanup
+  exit 4
+fi
 # native arch:
 SYS_ARCH=$(uname -m)
 # multilib or not:
@@ -194,7 +206,10 @@ SYS_MULTILIB='n'
 [ "$SYS_ARCH" = 'x86_64' -a -f /etc/profile.d/32dev.sh ] && SYS_MULTILIB='y'
 # number of processors:
 SYS_NPROC=$(nproc)
+# bogomips:
+SYS_BOGOMIPS=$(awk '/^bogomips/ {sum+=$3} END {print sum}' < /proc/cpuinfo)
 
+# Next, do the config variables.
 # These config vars are prefixed with SR_ to stop SlackBuilds picking them up.
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO SRCREPO PKGREPO PKGBACKUP \
@@ -266,7 +281,6 @@ done
 # lazy implementation of --make-verbose ;-)
 [ "$OPT_MAKE_VERBOSE" = 'y' ] && export VERBOSE=1 V=1
 
-
 # If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly
 if [ -z "$SR_NUMJOBS" ]; then
   SR_NUMJOBS="-j$(( SYS_NPROC + 1 ))"
@@ -283,7 +297,7 @@ fi
 # Substitute %REPO%, %SLACKVER% and %ARCH%
 for name in $varnames $genrepnames $initnames; do
   srvar="SR_$name"
-  eval "$srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_SLACKVER/g" -e "s/%ARCH%/$SR_ARCH/g")\""
+  eval "$srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_OSVER/g" -e "s/%ARCH%/$SR_ARCH/g")\""
 done
 
 # Setup logging:
@@ -358,7 +372,7 @@ else
   mkdir -p "$SR_TMP"
 fi
 # We also need a slackrepo-specific temporary directory
-MYTMPDIR=$(mktemp -t -d slackrepo.XXXXXX) || { exit_cleanup; exit 4; }
+MYTMPDIR=$(mktemp -t -d slackrepo.XXXXXX) || { log_error "Failed to create temporary directory"; exit_cleanup; exit 4; }
 #### Probably should make --keep-tmp force $TMP into $MYTMPDIR
 
 # Disposable package repository for dry run:
@@ -378,8 +392,11 @@ fi
 [ -d "$SR_QUEUEDIR" ] || { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR" ; }
 [ -d "$SR_LOGDIR" ]   || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"   ; }
 
-# Experimental sqlite database for build times
-db_init
+# sqlite database for revision details, package identification, build times etc
+# This is now *required* so here is a default path:
+[ -n "$SR_DATABASE" ] || SR_DATABASE="$(dirname "$SR_SBREPO")/database_${OPT_REPO}.sqlite3"
+db_init || { log_error "Failed to initialise database"; exit_cleanup; exit 4; }
+BOGOBODGE=$(db_get_misc bogobodge '1.0' '1.0')
 
 # We will use $SR_SBREPO as the working directory; it simplifies lots of git stuff.
 cd "$SR_SBREPO"
@@ -402,7 +419,7 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
       git clone "${SR_INIT_GITCLONE}" "$SR_SBREPO"
       git fetch -a
       git remote update
-      mybranch="${SR_INIT_GITBRANCH:-$SYS_SLACKVER}"
+      mybranch="${SR_INIT_GITBRANCH:-${SYS_OSVER:-master}}"
       if [ "$(git rev-parse --abbrev-ref HEAD)" != "$mybranch" ]; then
         git checkout -b "$mybranch" -t origin/"$mybranch"
       fi
@@ -414,7 +431,7 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
     muck="$(git status -s .)"
     log_done
     currbranch=$(git rev-parse --abbrev-ref HEAD)
-    if [ -z "$muck" -a "$currbranch" = "$SYS_SLACKVER" ]; then
+    if [ -z "$muck" -a "$currbranch" = "${SYS_OSVER:-master}" ]; then
       if [ -n "$(find "$(git rev-parse --show-toplevel)"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
         if [ "$OPT_QUIET" = 'y' ]; then
           log_normal "Updating git ... "
@@ -451,14 +468,17 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
 
 fi
 
+declare -A KEEPINSTALLED
 # Warn about already installed packages (using package tag)
 if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' -a "$CMD" != 'remove' ]; then
-  installed=$(ls /var/log/packages/*"$SR_TAG" 2>/dev/null)
-  if [ -n "$installed" ]; then
-    for pkg in $installed; do
-      log_warning "$(basename "$pkg"): package is already installed"
-    done
-  fi
+  for pkg in /var/log/packages/*"$SR_TAG"; do
+    if [ -f "$pkg" ]; then
+      pkgbase=$(basename "$pkg")
+      log_warning "${pkgbase} is already installed"
+      pkgid=$(echo "$pkgbase" | rev | cut -f4- -d- | rev )
+      KEEPINSTALLED[$pkgid]="$pkgbase"
+    fi
+  done
 fi
 
 #-------------------------------------------------------------------------------
@@ -493,29 +513,14 @@ while [ $# != 0 ]; do
   # are dealing with the top level item.
   for ITEMID in "${PARSEDLIST[@]}"; do
     log_start "$ITEMID"
-    case "$CMD" in
-    'build' | 'rebuild' )
-      build_with_deps "$ITEMID"
-      ;;
-    'update' )
-      itemdir="${ITEMDIR[$ITEMID]}"
-      if [ -d "$SR_SBREPO"/"$itemdir"/ ]; then
-        build_with_deps "$ITEMID"
-      else
-        remove_item "$ITEMID"
-      fi
-      ;;
-    'revert' )
-      revert_item "$ITEMID"
-      ;;
-    'remove' )
-      remove_item "$ITEMID"
-      ;;
-    *)
+    # Commands are extensible, just put a script defining CMD_item() into functions.d/
+    cmdfunction="${CMD}_item"
+    if [ "$(type -t "$cmdfunction")" = 'function' ]; then
+      eval "${CMD}_item" "$ITEMID"
+    else
       log_error "$(basename "$0"): Unrecognised CMD = $CMD"
       exit 4
-      ;;
-    esac
+    fi
   done
 done
 
@@ -535,7 +540,7 @@ if [ "$OPT_DRY_RUN" = 'y' ]; then
   log_always "Dry run OK: $okcount"
   [ "$OPT_QUIET" != 'y' -a "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}"
 else
-  if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ]; then
+  if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
     log_always "Added:      $(grep -c ': Added'   "$CHANGELOG")"
     [ "$OPT_QUIET" != 'y' ] && \
       grep ': Added'    "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
@@ -577,7 +582,7 @@ if [ "$abortedcount" != 0 ]; then
   [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${ABORTEDLIST[@]}"
 fi
 uniquewarnings=()
-while read warning; do uniquewarnings+=( "$warning" ); done < <(printf '%s\n' "${WARNINGLIST[@]}" | sort -u )
+[ "${#WARNINGLIST[@]}" != 0 ] && while read warning; do uniquewarnings+=( "$warning" ); done < <(printf '%s\n' "${WARNINGLIST[@]}" | sort -u )
 warningcount="${#uniquewarnings[@]}"
 if [ "$warningcount" != 0 ]; then
   log_always "Warnings:   $warningcount"
@@ -598,7 +603,6 @@ if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
       log_start "gen_repos_files.sh"
       # 'man sort' says an in-place sort is ok, so let's be lazy :-)
       sort -o "$CHANGELOG" "$CHANGELOG"
-      set -o pipefail
       REPOSROOT="$SR_REPOSROOT" REPOSOWNER="$SR_REPOSOWNER" REPOSOWNERGPG="$SR_REPOSOWNERGPG" DL_URL="$SR_DL_URL" \
       RSS_TITLE="$SR_RSS_TITLE" RSS_ICON="$SR_RSS_ICON" RSS_LINK="$SR_RSS_LINK" RSS_CLURL="$SR_RSS_CLURL" \
       RSS_DESCRIPTION="$SR_RSS_DESCRIPTION" RSS_FEEDMAX="$SR_RSS_FEEDMAX" RSS_UUID="$SR_RSS_UUID" \
@@ -606,7 +610,6 @@ if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
       FOLLOW_SYMLINKS="$SR_FOLLOW_SYMLINKS" REPO_SUBDIRS="$SR_REPO_SUBDIRS" \
       sh /usr/libexec/"$(basename "$0")"/gen_repos_files.sh -l "$CHANGELOG"
       genrepstat=$?
-      set +o pipefail
       [ "$genrepstat" != 0 ] && log_error "gen_repos_files.sh failed -- changelog retained"
       log_normal ""
       log_important "Finished gen_repos_files.sh at $(date +%T)"

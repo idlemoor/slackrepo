@@ -8,7 +8,7 @@
          |-----handy-ruler------------------------------------------------------|
 slackrepo: slackrepo (automated SlackBuild package builder)
 slackrepo:
-slackrepo: This is an experimental SlackBuild package builder.
+slackrepo: This is a SlackBuild package builder and repository maintenance tool.
 slackrepo:
 slackrepo: Features:
 slackrepo:  - Package updates detected by tracking upstream revisions
@@ -16,4 +16,4 @@ slackrepo:  - Clean repeatable building, including dependencies
 slackrepo:  - Suitable for bulk testing (no interaction required)
 slackrepo:  - Output repository suitable for use with slackpkg+
 slackrepo:
-slackrepo: BEWARE! This is experimental software! Use with caution!
+slackrepo: Full documentation at http://idlemoor.github.io/slackrepo/

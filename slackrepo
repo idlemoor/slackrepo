@@ -303,9 +303,7 @@ done
 # Setup logging:
 mkdir -p "$SR_LOGDIR"
 MAINLOG="$SR_LOGDIR"/$(basename "$0")_$(date '+%F_%T').log
-DOCOLOUR='n'
-[ "$OPT_COLOR" = 'always'       ] && DOCOLOUR='y'
-[ "$OPT_COLOR" = 'auto' -a -t 1 ] && DOCOLOUR='y'
+init_colour
 if [ "$DOCOLOUR" = 'y' ]; then
   exec &> >( tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >"$MAINLOG") )
 else

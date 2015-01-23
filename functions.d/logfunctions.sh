@@ -62,6 +62,39 @@ function changelog
 
 #-------------------------------------------------------------------------------
 
+function init_colour
+# Set up console logging colours
+# Return status:
+# 0 = imax
+# 1 = 405 lines
+{
+  tputbold=''
+  tputred=''
+  tputgreen=''
+  tputyellow=''
+  tputwhite=''
+  tputnormal=''
+  DOCOLOUR='n'
+  [ "$OPT_COLOR" = 'always'       ] && DOCOLOUR='y'
+  [ "$OPT_COLOR" = 'auto' -a -t 1 ] && DOCOLOUR='y'
+  [ "$DOCOLOUR" = 'n' ] && return 1
+  tputbold="$(tput bold)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputred="$tputbold$(tput setaf 1)"
+  [ $? != 0 ] && { red=''; DOCOLOUR='n'; return 1; }
+  tputgreen="$tputbold$(tput setaf 2)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputyellow="$tputbold$(tput setaf 3)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputwhite="$tputbold$(tput setaf 7)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputnormal="$(tput sgr0)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
 function log_start
 # Log the start of a top level item on standard output.
 # $* = message
@@ -92,14 +125,12 @@ function log_itemstart
 
   [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
   line="-------------------------------------------------------------------------------"
-  [ "$DOCOLOUR" = 'y' ] && { tput bold; tput setaf 7; }
   if [ ${#1} -ge ${#line} ]; then
-    echo "$*"
+    echo "${tputwhite}$*${tputnormal}"
   else
     pad=$(( ${#line} - ${#1} - 1 ))
-    echo "$* ${line:0:$pad}"
+    echo "${tputwhite}$* ${line:0:$pad}${tputnormal}"
   fi
-  [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
   if [ -n "$itemid" ]; then
     ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"
     mkdir -p "$ITEMLOGDIR"
@@ -168,9 +199,7 @@ function log_important
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  [ "$DOCOLOUR" = 'y' ] && { tput bold; tput setaf 7; }
-  echo -e "$@"
-  [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
+  echo -e "${tputwhite}$@${tputnormal}"
   [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
   return 0
 }
@@ -185,9 +214,7 @@ function log_success
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  [ "$DOCOLOUR" = 'y' ] && { tput bold; tput setaf 2; }
-  echo -e "$@"
-  [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
+  echo -e "${tputgreen}$@${tputnormal}"
   [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
   return 0
 }
@@ -211,9 +238,7 @@ function log_warning
     *)    break ;;
     esac
   done
-  [ "$DOCOLOUR" = 'y' ] && { tput bold; tput setaf 3; }
-  echo -e "${W}$*"
-  [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
+  echo -e "${tputyellow}${W}$*${tputnormal}"
   [ "$A" = 'y' ] && echo -e "${W}$*" >> "$ITEMLOG"
   [ -n "$W" ] && WARNINGLIST+=( "$*" )
   return 0
@@ -237,9 +262,7 @@ function log_error
     *)    break ;;
     esac
   done
-  [ "$DOCOLOUR" = 'y' ] && { tput bold; tput setaf 1; }
-  echo -e "${E}$*"
-  [ "$DOCOLOUR" = 'y' ] && { tput sgr0; }
+  echo -e "${tputred}${E}$*${tputnormal}"
   [ "$A" = 'y' ] && echo -e "${E}$*" >> "$ITEMLOG"
   return 0
 }

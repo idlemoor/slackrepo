@@ -1,1 +1,1 @@
-CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall mesa xorg-server"
+CLEANUP="rm /usr/lib*/libGL.so* /usr/lib*/libEGL.so*; echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall mesa xorg-server"

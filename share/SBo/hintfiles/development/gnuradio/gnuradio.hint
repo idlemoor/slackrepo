@@ -1,0 +1,1 @@
+ADDREQUIRES="uhd cppunit gsl lxml numpy orc qwt wxPython"

@@ -484,8 +484,9 @@ function parse_info_and_hints
     # source tarball name, but there is no source tarball present.  Set it null.
     [ "$VERSION" = '*' ] && VERSION=''
     # If it is null, the Fixup department below will invent something.
-    INFOVERSION[$itemid]="$VERSION"
-    # but don't unset $VERSION yet, it'll be needed when we snarf from the SlackBuild below
+    # Canonicalise any silly spaces with an 'echo'.
+    INFOVERSION[$itemid]="$(echo $VERSION)"
+    # but don't unset $VERSION yet, it'll be needed when we snarf from the SlackBuild below.
 
     # Process DOWNLOAD[_ARCH] and MD5SUM[_ARCH]/SHA256SUM[_ARCH] from info file
     # Don't bother checking if they are improperly paired (it'll become apparent later).
@@ -519,7 +520,8 @@ function parse_info_and_hints
 
     # Conditionally save REQUIRES from info file into INFOREQUIRES
     # (which will be processed in the Fixup department below).
-    [ -v REQUIRES ] && INFOREQUIRES[$itemid]="$REQUIRES"
+    # Canonicalise any silly spaces with an 'echo'.
+    [ -v REQUIRES ] && INFOREQUIRES[$itemid]="$(echo $REQUIRES)"
     unset REQUIRES
 
   fi

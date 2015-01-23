@@ -145,17 +145,23 @@ function needs_build
 
     # If the git rev has changed => update
     if [ "$pkgrev" != "$currrev" ]; then
-      #   if only README, slack-desc and .info have changed, don't build
-      #   (the VERSION in the .info file has already been checked ;-)
-      modifilelist=( $(cd "$SR_SBREPO"; git diff --name-only "$currrev" "$pkgrev" -- "$itemdir") )
-      for modifile in "${modifilelist[@]}"; do
-        bn=$(basename "$modifile")
-        [ "$bn" = "README" ] && continue
-        [ "$bn" = "slack-desc" ] && continue
-        [ "$bn" = "$itemprgnam.info" ] && continue
+      if [ "${GITDIRTY[$itemid]}" != 'y' -a "${pkgrev/*+/+}" != '+dirty' ]; then
+        #   if only README, slack-desc and .info have changed, don't build
+        #   (the VERSION in the .info file has already been checked ;-)
+        modifilelist=( $(cd "$SR_SBREPO"; git diff --name-only "$pkgrev" "$currrev" -- "$itemdir") )
+        for modifile in "${modifilelist[@]}"; do
+          bn=$(basename "$modifile")
+          [ "$bn" = "README" ] && continue
+          [ "$bn" = "slack-desc" ] && continue
+          [ "$bn" = "$itemprgnam.info" ] && continue
+          BUILDINFO="update for git $shortcurrrev"
+          return 0
+        done
+      else
+        # we can't do the above check if git is or was dirty
         BUILDINFO="update for git $shortcurrrev"
         return 0
-      done
+      fi
     fi
 
     # If git is dirty, and any file has been modified since the package was built => update

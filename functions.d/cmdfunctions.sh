@@ -82,11 +82,13 @@ function update_item
 # Return status:
 # 0 = ok, anything else = whatever was returned by build_item or remove_item
 {
+  local itemid="${1:-$ITEMID}"
+  local itemdir="${ITEMDIR[$itemid]}"
   if [ -d "$SR_SBREPO"/"$itemdir"/ ]; then
-    build_item "${1:-$ITEMID}"
+    build_item "$itemid"
     return $?
   else
-    remove_item "${1:-$ITEMID}"
+    remove_item "$itemid"
     return $?
   fi
 }

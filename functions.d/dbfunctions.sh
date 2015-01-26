@@ -44,11 +44,13 @@ create table if not exists revisions ( itemid text, dep text, deplist text, vers
       dbstat=$?
       [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
       # load up the buildsecs table
-      log_normal "Populating the buildsecs table ... "
-      sqlite3 "$SR_DATABASE" < /usr/share/slackrepo/"$OPT_REPO"/buildsecs.sql
-      dbstat=$?
-      [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }      
-      log_done
+      if [ -f /usr/share/slackrepo/"$OPT_REPO"/buildsecs.sql ]; then
+        log_normal "Populating the buildsecs table ... "
+        sqlite3 "$SR_DATABASE" < /usr/share/slackrepo/"$OPT_REPO"/buildsecs.sql
+        dbstat=$?
+        [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
+        log_done
+      fi
       # load up the misc table
       db_set_misc bogobodge "1.0"        || return 1
       db_set_misc schema "$latestschema" || return 1
@@ -69,14 +71,17 @@ create table if not exists revisions ( itemid text, dep text, deplist text, vers
       [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
       # (b) upgrade the buildsecs table
       sqlite3 "$SR_DATABASE" "alter table buildsecs add column bogomips text;"      1>/dev/null 2>/dev/null
-      dbstat=$?
-      [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
       sqlite3 "$SR_DATABASE" "alter table buildsecs add column guessflag text;"     1>/dev/null 2>/dev/null
-      dbstat=$?
-      [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
       sqlite3 "$SR_DATABASE" "update buildsecs set bogomips='$SYS_BOGOMIPS', guessflag='=';"
       dbstat=$?
       [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
+      if [ -f /usr/share/slackrepo/"$OPT_REPO"/buildsecs.sql ]; then
+        log_normal "Populating the buildsecs table ... "
+        sqlite3 "$SR_DATABASE" < /usr/share/slackrepo/"$OPT_REPO"/buildsecs.sql
+        dbstat=$?
+        [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
+        log_done
+      fi
       # (c) populate the packages table from the package repo
       log_normal "Populating the packages table ... "
       ( cd "$SR_PKGREPO"

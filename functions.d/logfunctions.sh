@@ -2,7 +2,7 @@
 # Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 #   All rights reserved.  For licence details, see the file 'LICENCE'.
 #
-# Contains code and concepts from 'checkpkg' v1.15
+# errorscan_itemlog contains code and concepts from 'checkpkg' v1.15
 #   Copyright 2014 Eric Hameleers, Eindhoven, The Netherlands
 #   All rights reserved.  For licence details, see the file 'LICENCE'.
 #   http://www.slackware.com/~alien/tools/checkpkg
@@ -10,6 +10,7 @@
 #-------------------------------------------------------------------------------
 # logfunctions.sh - logging functions for slackrepo
 #   changelog
+#   init_colour
 #   log_start
 #   log_itemstart
 #   log_verbose

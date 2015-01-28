@@ -423,15 +423,6 @@ BOGOCONST=${BOGOCONST:-0.0}
 # We will use $SR_SBREPO as the working directory; it simplifies lots of git stuff.
 cd "$SR_SBREPO"
 
-# Changelog:
-CHANGELOG="$SR_PKGREPO"/.changelog
-if [ -s "$CHANGELOG" ]; then
-  log_normal "Continuing changelog from previous run."
-else
-  mkdir -p "$(basename $CHANGELOG)"
-  > "$CHANGELOG"
-fi
-
 # Initialise git (only if this is a build or rebuild or update)
 if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
 
@@ -489,6 +480,15 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
     log_normal ""
   fi
 
+fi
+
+# Changelog:
+CHANGELOG="$SR_PKGREPO"/.changelog
+if [ -s "$CHANGELOG" ]; then
+  log_normal "Continuing changelog from previous run."
+else
+  mkdir -p "$(basename $CHANGELOG)"
+  > "$CHANGELOG"
 fi
 
 declare -A KEEPINSTALLED

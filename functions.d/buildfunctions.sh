@@ -6,6 +6,7 @@
 #   build_item_packages
 #   build_ok
 #   build_failed
+#   build_skipped
 #   do_groupadd_useradd
 #-------------------------------------------------------------------------------
 
@@ -84,7 +85,7 @@ function build_item_packages
        verify_src "$itemid" || { log_error -a "${itemid}: Downloaded source is bad"; build_failed "$itemid"; return 3; }
        ;;
     5) # unsupported/untested
-       SKIPPEDLIST+=( "$itemid" )
+       build_skipped "$itemid"
        return 5
        ;;
     6) # nodownload hint (probably needs manual download due to licence agreement)
@@ -93,7 +94,7 @@ function build_item_packages
        log_normal "  to:   ${SRCDIR[$itemid]}"
        # We ought to prepare that directory ;-)
        mkdir -p "${SRCDIR[$itemid]}"
-       SKIPPEDLIST+=( "$itemid" )
+       build_skipped "$itemid"
        return 5
        ;;
   esac
@@ -102,9 +103,6 @@ function build_item_packages
   if [ -n "${INFODOWNLIST[$itemid]}" ]; then
     ln -sf -t "$MYTMPIN/" "${SRCDIR[$itemid]}"/*
   fi
-
-  # Get all dependencies installed
-  install_deps "$itemid" || { uninstall_deps "$itemid"; return 1; }
 
   # Work out BUILD
   # Get the value from the SlackBuild
@@ -116,7 +114,7 @@ function build_item_packages
   fi
   eval $buildassign
   #### This still isn't right when the backup is a different version :-(
-  if [ "${BUILDINFO:0:3}" = 'add' -o "${BUILDINFO:0:18}" = 'update for version' ]; then
+  if [ "${BUILDINFO[$itemid]:0:3}" = 'add' -o "${BUILDINFO[$itemid]:0:18}" = 'update for version' ]; then
     # We can just use the SlackBuild's BUILD
     SR_BUILD="$BUILD"
   else
@@ -235,6 +233,9 @@ function build_item_packages
     esac
   done
 
+  # Get all dependencies installed
+  install_deps "$itemid" || { build_failed "$itemid"; return 1; }
+
   # Remove any existing packages (some builds fail if already installed)
   # (... this might not be entirely appropriate for gcc or glibc ...)
   if [ "$noremove" != 'y' ]; then
@@ -246,11 +247,13 @@ function build_item_packages
   estbuildsecs=''
   read prevsecs prevbogomips guessflag < <(db_get_buildsecs "$itemid")
   if [ -n "$prevsecs" ] && [ -n "$prevbogomips" ]; then
-    case "$guessflag" in
-      '=')  estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevbogomips}/${SYS_BOGOMIPS}+1" | bc | sed 's/\..*//') ;;
-      '~')  estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevbogomips}/${SYS_BOGOMIPS}*${BOGOBODGE}+1" | bc | sed 's/\..*//') ;;
-        *)  ;;
-    esac
+    if [ "$guessflag" = '=' ] || [ "$prevsecs" -lt 120 ] || [ "${BOGOCOUNT:-0}" -lt 5 ]; then
+      estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevbogomips}/${SYS_BOGOMIPS}+1" | bc | sed 's/\..*//')
+    elif [ "$guessflag" = '~' ]; then
+      BOGOSLOPE=$(echo "scale=3; (($BOGOCOUNT*$BOGOSUMXY)-($BOGOSUMX*$BOGOSUMY))/(($BOGOCOUNT*$BOGOSUMX2)-($BOGOSUMX*$BOGOSUMX))" | bc)
+      BOGOCONST=$(echo "scale=3; ($BOGOSUMY - ($BOGOSLOPE*$BOGOSUMX))/$BOGOCOUNT*60.0" | bc)
+      estbuildsecs=$(echo "scale=3; $BOGOSLOPE*(${prevsecs}*${prevbogomips}/${SYS_BOGOMIPS})+$BOGOCONST+1" | bc | sed 's/\..*//')
+    fi
   fi
   eta=""
   [ -n "$estbuildsecs" ] && eta="ETA ${guessflag/=/}$(date --date=@"$(( buildstarttime + estbuildsecs + 30 ))" '+%H:%M')"
@@ -345,10 +348,15 @@ function build_item_packages
   actualsecs=$(( buildfinishtime - buildstarttime + 1 ))
   db_set_buildsecs "$itemid" "$actualsecs"
   if [ -n "$estbuildsecs" ]; then
-    # adjust BOGOBODGE if wrong >30 secs, but weighted quite heavily towards the existing value
-    if [ "$(echo "${actualsecs}-${estbuildsecs}" | bc | sed 's/^-//')" -gt 30 ]; then
-      BOGOBODGE=$(echo "scale=3; (($BOGOBODGE * 4) + ($actualsecs / $estbuildsecs)) / 5" | bc)
-      db_set_misc bogobodge "$BOGOBODGE"
+    secsdiff=$(( actualsecs - estbuildsecs ))
+    if [ "$guessflag" = '~' ] && [ "${estbuildsecs:-0}" -gt 120 ] && [ "${secsdiff//-/}" -gt 30 ] && [ "$BOGOCOUNT:-0" -lt 200 ]; then
+      # yes, this is crazy :P ... 200 data points should be enough. We use minutes to prevent the numbers getting enormous.
+      BOGOCOUNT=$(( BOGOCOUNT + 1 ))
+      BOGOSUMX=$(echo "scale=3; $BOGOSUMX+$estbuildsecs/60.0" | bc)
+      BOGOSUMY=$(echo "scale=3; $BOGOSUMY+$actualsecs/60.0" | bc)
+      BOGOSUMX2=$(echo "scale=3; $BOGOSUMX2 + ($estbuildsecs/60.0)*($estbuildsecs/60.0)" | bc)
+      BOGOSUMXY=$(echo "scale=3; $BOGOSUMXY + ($estbuildsecs/60.0)*($actualsecs/60.0)"   | bc)
+      db_set_misc bogostuff "BOGOCOUNT=$BOGOCOUNT; BOGOSUMX=$BOGOSUMX; BOGOSUMY=$BOGOSUMY; BOGOSUMX2=$BOGOSUMX2; BOGOSUMXY=$BOGOSUMXY;"
     fi
   fi
 
@@ -376,6 +384,9 @@ function build_ok
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
+
+  STATUS[$itemid]="ok"
+  OKLIST+=( "$itemid" )
 
   [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$MYTMPIN"
 
@@ -439,7 +450,6 @@ function build_ok
   [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
   [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
   log_success ":-) ${itemid}: $CHANGEMSG$buildopt (-:"
-  OKLIST+=( "$itemid" )
 
   return 0
 }
@@ -449,7 +459,7 @@ function build_ok
 function build_failed
 # Log and cleanup for a build that has failed
 # $1 = itemid
-# Also uses BUILDINFO set by needs_build()
+# Also uses BUILDINFO[$itemid] set by needs_build()
 # Return status: always 0
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
@@ -459,21 +469,21 @@ function build_failed
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
+  STATUS[$itemid]="failed"
+  FAILEDLIST+=( "$itemid" )
+
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
     rm -rf "$MYTMPIN" "$MYTMPOUT"
     rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
   fi
 
-  buildtype="$(echo "$BUILDINFO" | cut -f1 -d" ")"
-  msg="$buildtype FAILED"
-  log_error -n ":-( $itemid $msg )-:"
+  log_error -n ":-( $itemid FAILED )-:"
   if [ "$OPT_QUIET" != 'y' ]; then
     errorscan_itemlog | tee -a "$MAINLOG"
   else
     errorscan_itemlog >> "$MAINLOG"
   fi
   log_error -n "See $ITEMLOG"
-  FAILEDLIST+=( "$itemid" )
 
   #### reinstate packages that were uninstalled prior to building
 
@@ -481,6 +491,27 @@ function build_failed
     uninstall_deps "$itemid"
   fi
 
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function build_skipped
+# Log and cleanup for a build that has been skipped
+# $1 = itemid
+# Return status: always 0
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+  local itemid="$1"
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
+
+  STATUS[$itemid]="skipped"
+  SKIPPEDLIST+=( "$itemid" )
+
+  if [ "$OPT_KEEP_TMP" != 'y' ]; then
+    rm -rf "$MYTMPIN" "$MYTMPOUT"
+    rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
+  fi
   return 0
 }
 

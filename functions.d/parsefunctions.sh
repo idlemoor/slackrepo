@@ -11,7 +11,6 @@
 #   find_queuefile
 #   parse_package_name
 #   parse_info_and_hints
-#   calculate_deps
 #-------------------------------------------------------------------------------
 
 declare -a PARSEDLIST UNPARSEDLIST
@@ -529,11 +528,8 @@ function parse_info_and_hints
   # Check for unsupported/untested:
   if [ "${INFODOWNLIST[$itemid]}" = "UNSUPPORTED" -o "${INFODOWNLIST[$itemid]}" = "UNTESTED" ]; then
     log_warning -n ":-/ $itemid is ${INFODOWNLIST[$itemid]} on $SR_ARCH /-:"
+    STATUS[$itemid]="unsupported"
     SKIPPEDLIST+=( "$itemid" )
-    if [ "$itemid" != "$ITEMID" ]; then
-      log_error -n ":-( $ITEMID ABORTED )-:"
-      ABORTEDLIST+=( "$ITEMID" )
-    fi
     return 1
   fi
 
@@ -567,11 +563,8 @@ function parse_info_and_hints
       if [ "$SKIP" != 'no' ]; then
         log_warning -n ":-/ $itemid SKIPPED due to hint /-:"
         [ "$SKIP" != 'yes' ] && echo -e "$SKIP"
+        STATUS[$itemid]="skipped"
         SKIPPEDLIST+=( "$itemid" )
-        if [ "$itemid" != "$ITEMID" ]; then
-          log_error -n ":-( $ITEMID ABORTED )-:"
-          ABORTEDLIST+=( "$ITEMID" )
-        fi
         return 1
       fi
     fi
@@ -686,88 +679,4 @@ function parse_info_and_hints
 
   return 0
 
-}
-
-#-------------------------------------------------------------------------------
-
-declare -A DIRECTDEPS FULLDEPS
-
-function calculate_deps
-# Stores a space-separated list of deps of an item in ${DIRECTDEPS[$itemname]}
-# and ${FULLDEPS[$itemname]}
-# $1 = itemid
-# Return status:
-# 0 = ok
-# 1 = any error
-{
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
-  local itemid="$1"
-
-  # If FULLDEPS already has an entry for $itemid, do nothing
-  # (note that *null* means "we have already calculated that the item has no deps",
-  # whereas *unset* means "we have not yet calculated the deps of this item").
-  if [ "${FULLDEPS[$itemid]+yesitisset}" = 'yesitisset' ]; then
-    return 0
-  fi
-
-  parse_info_and_hints "$itemid" || return 1
-
-  local dep
-  local -a deplist
-
-  local itemprgnam="${ITEMPRGNAM[$itemid]}"
-  local itemdir="${ITEMDIR[$itemid]}"
-  local itemfile="${ITEMFILE[$itemid]}"
-
-  for dep in ${INFOREQUIRES[$itemid]}; do
-    if [ "$dep" = '%README%' ]; then
-      log_warning "${itemid}: Unhandled %README% in $itemprgnam.info"
-    elif [ "$dep" = "$itemprgnam" ]; then
-      log_warning "${itemid}: Ignoring dependency of $itemprgnam on itself"
-    else
-      find_slackbuild "$dep"
-      fstat=$?
-      if [ $fstat = 0 ]; then
-        deplist+=( "${R_SLACKBUILD}" )
-      elif [ $fstat = 1 ]; then
-        log_warning "${itemid}: Dependency $dep does not exist"
-      elif [ $fstat = 2 ]; then
-        log_warning "${itemid}: Dependency $dep matches more than one SlackBuild"
-      fi
-    fi
-  done
-
-  deplist=( $(printf '%s\n' ${deplist[*]} | sort -u) )
-  DIRECTDEPS[$itemid]="${deplist[*]}"
-
-  # If there are no direct deps, then there are no recursive deps ;-)
-  if [ -z "${DIRECTDEPS[$itemid]}" ]; then
-    FULLDEPS[$itemid]=''
-    return 0
-  fi
-
-  local -a myfulldeps
-
-  for dep in "${deplist[@]}"; do
-    calculate_deps "$dep" || return 1
-    for newdep in ${FULLDEPS[$dep]} "$dep"; do
-      gotnewdep='n'
-      for olddep in "${myfulldeps[@]}"; do
-        if [ "$newdep" = "$olddep" ]; then
-          gotnewdep='y'
-          break
-        elif [ "$newdep" = "$itemid" ]; then
-          log_error "${itemid}: Circular dependency via $dep"
-          return 1
-        fi
-      done
-      if [ "$gotnewdep" = 'n' ]; then
-        myfulldeps+=( "$newdep" )
-      fi
-    done
-  done
-  FULLDEPS[$itemid]="${myfulldeps[*]}"
-
-  return 0
 }

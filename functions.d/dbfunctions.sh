@@ -52,7 +52,6 @@ create table if not exists revisions ( itemid text, dep text, deplist text, vers
         log_done
       fi
       # load up the misc table
-      db_set_misc bogobodge "1.0"        || return 1
       db_set_misc schema "$latestschema" || return 1
       ;;
 
@@ -147,7 +146,6 @@ create table if not exists revisions ( itemid text, dep text, deplist text, vers
         rm -f "$SR_PKGBACKUP"/"$revfilepath"
       done < <(cd "$SR_PKGBACKUP"; find . -type f -name '*.rev' -o -name '.revision')
       log_done
-      db_set_misc bogobodge "1.0"        || return 1
       db_set_misc schema "$latestschema" || return 1
       # END UPGRADE DATABASE SCHEMA FROM v0
       ;;
@@ -424,7 +422,9 @@ function db_set_rev
 }
 
 function db_get_rev
-# Get a revision -- prints "deplist version built rev os hintcksum" to standard output
+# Get revision data for an item
+# Prints "deplist version built rev os hintcksum" to standard output
+#   (or prints nothing if not in database)
 # $1 = itemid
 # $2 = dep, default '/'
 {
@@ -432,14 +432,16 @@ function db_get_rev
   [ -z "$1" ] && return 1
   local itemid="$1"
   local dep="${2:-/}"
-  if [ "$dep" = '/' -a -n "${REVCACHE[$itemid]}" ]; then
+  if [ "$dep" = '/' ] && [ "${REVCACHE[$itemid]+yesitisset}" = 'yesitisset' ]; then
     echo "${REVCACHE[$itemid]}"
     return 0
   else
-    sqlite3 "$SR_DATABASE" \
-      "select deplist,version,built,rev,os,hintcksum from revisions where itemid='$1' and dep='$dep';" | tr '|' ' '
+    local dbinfo=$(sqlite3 "$SR_DATABASE" \
+      "select deplist,version,built,rev,os,hintcksum from revisions where itemid='$1' and dep='$dep';" | tr '|' ' ')
     dbstat="${PIPESTATUS[0]}"
     [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
+    [ "$dep" = '/' ] && REVCACHE[$itemid]="$dbinfo"
+    echo "$dbinfo"
     return 0
   fi
 }
@@ -464,6 +466,7 @@ function db_del_rev
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
+  unset REVCACHE[$itemid]
   sqlite3 "$SR_DATABASE" \
     "delete from revisions where itemid='$1';"
   dbstat=$?

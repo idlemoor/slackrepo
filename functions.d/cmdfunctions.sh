@@ -11,7 +11,7 @@
 #-------------------------------------------------------------------------------
 
 function build_item
-# Recursively build all dependencies, and then build the named item
+# Build an item and all its dependencies
 # $1 = itemid
 # Return status:
 # 0 = build ok, or already up-to-date so not built, or dry run
@@ -25,40 +25,75 @@ function build_item
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
-  local mydeplist mydep
+  case "${STATUS[$itemid]}" in
+    'ok' )
+      log_important "$itemid is up-to-date."; return 0 ;;
+    'updated' )
+      log_important "$itemid is up-to-date."; STATUS[$itemid]="ok"; return 0 ;;
+    'aborted' )
+      log_warning -n "$itemid was previously aborted."; return 1 ;;
+    'failed' )
+      log_warning -n "$itemid failed previously."; return 1 ;;
+    'skipped' )
+      log_warning -n "$itemid was skipped previously."; return 1 ;;
+    'unsupported' )
+      log_warning -n "$itemid is unsupported."; return 1 ;;
+    '' )
+      : ;;  # see the real business below :-)
+    '*' )
+      log_important "$itemid is ${STATUS[$itemid]}"; return 1 ;;
+  esac
 
-  calculate_deps "$itemid" || return 1
+  log_normal "Calculating dependencies ..."
+  > "$MYTMPDIR"/deptree
+  NEEDSBUILD=()
+  calculate_deps_and_status "$itemid"
+  if [ "${DIRECTDEPS[$itemid]}" != "" ]; then
+    log_verbose "Dependency tree for $itemid:"
+    [ "$OPT_VERBOSE" = 'y' ] && tac "$MYTMPDIR"/deptree && echo ""
+  fi
 
-  mydeplist=( ${DIRECTDEPS[$itemid]} )
-  if [ "${#mydeplist[@]}" != 0 ]; then
-    log_verbose "Dependencies of $itemid:"
-    log_verbose "$(printf '  %s\n' "${mydeplist[@]}")"
-    for mydep in "${mydeplist[@]}"; do
-      build_item $mydep || return 1
+  if [ "${#NEEDSBUILD[@]}" = 0 ]; then
+    log_important "$itemid is up-to-date."
+  else
+    for todo in "${NEEDSBUILD[@]}"; do
+      if [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
+        buildopt=''
+        [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
+        [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
+        log_itemstart "Starting $todo (${BUILDINFO[$todo]})$buildopt"
+      elif [ "${STATUS[$todo]}" = 'skipped' ]; then
+        log_error "$todo was previously skipped."
+        continue
+      elif [ "${STATUS[$todo]}" = 'unsupported' ]; then
+        log_error "$todo is unsupported on ${SR_ARCH}."
+        continue
+      elif [ "${STATUS[$todo]}" = 'aborted' ]; then
+        log_error "Cannot build ${todo}."
+      fi
+      missingdeps=()
+      for dep in ${DIRECTDEPS[$todo]}; do
+        if [ "${STATUS[$dep]}" != 'ok' ] && [ "${STATUS[$dep]}" != 'updated' ]; then
+         missingdeps+=( "$dep" )
+        fi
+      done
+      if [ "${#missingdeps[@]}" != '0' ] || [ "${STATUS[$todo]}" = 'aborted' ]; then
+        if [ "${#missingdeps[@]}" = '1' ]; then
+          log_error "Missing dependencies: ${missingdeps[0]}"
+        elif [ "${#missingdeps[@]}" != '0' ]; then
+          log_error "Missing dependencies:"
+          log_error -n "$(printf '  %s\n' "${missingdeps[@]}")"
+        fi
+        STATUS[$todo]='aborted'
+        ABORTEDLIST+=( "$todo" )
+        log_error -n ":-( $todo ABORTED )-:"
+      elif [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
+        build_item_packages "$todo"
+      fi
     done
   fi
 
-  needs_build "$itemid" || return 0
-
-  buildopt=''
-  [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
-  [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
-  log_itemstart "Starting $itemid ($BUILDINFO)$buildopt"
-
-  build_item_packages "$itemid"
-  myresult=$?
-
-  # Now we can return
-  if [ $myresult = 0 ]; then
-    return 0
-  else
-    if [ "$itemid" != "$ITEMID" ]; then
-      log_error -n ":-( $ITEMID ABORTED )-:"
-      ABORTEDLIST+=( "$ITEMID" )
-    fi
-    return 1
-  fi
-
+  return 0
 }
 
 #-------------------------------------------------------------------------------
@@ -123,8 +158,8 @@ function revert_item
   archsourcebackuptempdir="${allsourcebackuptempdir}_${SR_ARCH}"
 
   # Check that there is something to revert.
-  failmsg=":-( $itemid revert failed )-:"
-  [ "$OPT_DRY_RUN" = 'y' ] && failmsg=":-( $itemid: revert failed [dry run] )-:"
+  failmsg=":-( $itemid FAILED )-:"
+  [ "$OPT_DRY_RUN" = 'y' ] && failmsg=":-( $itemid: FAILED [dry run] )-:"
   if [ -z "$SR_PKGBACKUP" ]; then
     log_error "No backup repository configured -- please set PKGBACKUP in your config file"
     log_error "$failmsg"

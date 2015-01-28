@@ -394,7 +394,16 @@ fi
 # This is now *required* so here is a default path:
 [ -n "$SR_DATABASE" ] || SR_DATABASE="$(dirname "$SR_SBREPO")/database_${OPT_REPO}.sqlite3"
 db_init || { log_error "Failed to initialise database"; exit_cleanup; exit 4; }
-BOGOBODGE=$(db_get_misc bogobodge '1.0' '1.0')
+
+# Initialise the crazy estimator from the database :D
+eval $(db_get_misc bogostuff)
+BOGOCOUNT=${BOGOCOUNT:-0}
+BOGOSUMX=${BOGOSUMX:-0}
+BOGOSUMY=${BOGOSUMY:-0}
+BOGOSUMX2=${BOGOSUMX2:-0}
+BOGOSUMXY=${BOGOSUMXY:-0}
+BOGOSLOPE=${BOGOSLOPE:-1.0}
+BOGOCONST=${BOGOCONST:-0.0}
 
 # We will use $SR_SBREPO as the working directory; it simplifies lots of git stuff.
 cd "$SR_SBREPO"

@@ -2,7 +2,7 @@
 # Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 #   All rights reserved.  For licence details, see the file 'LICENCE'.
 #
-# Contains code and concepts from 'gen_repos_files.sh' 1.90
+# write_pkg_metadata contains code and concepts from 'gen_repos_files.sh' 1.90
 #   Copyright (c) 2006-2013  Eric Hameleers, Eindhoven, The Netherlands
 #   All rights reserved.  For licence details, see the file 'LICENCE'.
 #   http://www.slackware.com/~alien/tools/gen_repos_files.sh
@@ -10,7 +10,8 @@
 #-------------------------------------------------------------------------------
 # revfunctions.sh - revision functions for slackrepo
 #   print_current_revinfo
-#   needs_build
+#   calculate_deps_and_status
+#   calculate_item_status
 #   write_pkg_metadata
 #-------------------------------------------------------------------------------
 
@@ -67,8 +68,7 @@ function print_current_revinfo
   echo "$itemid" '/' "${deplist// /,}" "${verstuff} ${bltstuff} ${revstuff} ${osstuff} ${hintstuff}"
 
   # (2) Get each dependency's stuff.
-  # We can use the database.
-
+  # Because the dep tree is processed bottom up, it should already be in the database.
   if [ "$deplist" != '/' ]; then
     for depid in ${deplist}; do
       deprevdata=$(db_get_rev "$depid")
@@ -81,26 +81,202 @@ function print_current_revinfo
 
 #-------------------------------------------------------------------------------
 
-function needs_build
-# Works out whether the package needs to be built.
-# $1 = itemid
+declare -a NEEDSBUILD
+declare -A STATUS BUILDINFO DIRECTDEPS FULLDEPS
+
+function calculate_deps_and_status
+# Works out dependencies and their build statuses.
+# Populates ${STATUS[$itemid]}, ${BUILDINFO[$itemid]}, ${NEEDSBUILD[@]},
+#   ${DIRECTDEPS[$itemid]}, and ${FULLDEPS[$itemid]}.
+# Writes a pretty tree (bottom-up) to "$MYTMPDIR"/deptree.
+# Arguments:
+#   $1 = itemid
+#   $2 = parent's itemid, or null if no parent
+#   $3 = indentation for pretty tree
 # Return status:
-# 0 = yes, needs to be built
-# 1 = no, does not need to be built
+#   0 = ok
+#   1 = any error, e.g. a previous build fail remembered somewhere in the dep tree
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+
+  local itemid="$1"
+  local parentid="${2:-}"
+  local indent="${3:-}"
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
+  local itemdir="${ITEMDIR[$itemid]}"
+
+  # Examine the current item
+  if [ -z "${STATUS[$itemid]}" ]; then
+    parse_info_and_hints "$itemid" || return 1
+  fi
+
+  # Initial evaluation of whether itemid needs to be built
+  calculate_item_status "$itemid" "$parentid" || return 1
+
+  # Verify all the dependencies in the info+hints, and make a list of them
+  local dep
+  local -a deplist=()
+  for dep in ${INFOREQUIRES[$itemid]}; do
+    if [ "$dep" = '%README%' ]; then
+      log_warning "${itemid}: Unhandled %README% in ${itemprgnam}.info"
+    elif [ "$dep" = "$itemprgnam" ]; then
+      log_warning "${itemid}: Ignoring dependency of ${itemprgnam} on itself"
+    else
+      find_slackbuild "$dep"
+      fstat=$?
+      if [ $fstat = 0 ]; then
+        deplist+=( "${R_SLACKBUILD}" )
+      elif [ $fstat = 1 ]; then
+        log_warning "${itemid}: Dependency $dep does not exist"
+      elif [ $fstat = 2 ]; then
+        log_warning "${itemid}: Dependency $dep matches more than one SlackBuild"
+      fi
+    fi
+  done
+
+  # Canonicalise the list of deps so we can detect changes in the future.
+  deplist=( $(printf '%s\n' ${deplist[*]} | sort -u) )
+  DIRECTDEPS[$itemid]="${deplist[*]}"
+
+  # Walk the whole dependency tree for the item.
+  if [ -z "${DIRECTDEPS[$itemid]}" ]; then
+    # if there are no direct deps, then there are no recursive deps ;-)
+    FULLDEPS[$itemid]=''
+  else
+    local -a myfulldeps=()
+    #### maybe we should do this loop in reverse order
+    for dep in "${deplist[@]}"; do
+      calculate_deps_and_status "$dep" "$itemid" "$indent  "
+      for newdep in ${FULLDEPS[$dep]} "$dep"; do
+        gotnewdep='n'
+        for olddep in "${myfulldeps[@]}"; do
+          if [ "$newdep" = "$olddep" ]; then
+            gotnewdep='y'
+            break
+          elif [ "$newdep" = "$itemid" ]; then
+            log_error "${itemid}: Circular dependency via $dep"
+            return 1
+          fi
+        done
+        if [ "$gotnewdep" = 'n' ]; then
+          myfulldeps+=( "$newdep" )
+        fi
+      done
+    done
+    FULLDEPS[$itemid]="${myfulldeps[*]}"
+  fi
+
+  # Adjust the item's build status now that we know about its deps.
+
+  # Has the list of deps changed => rebuild
+  pkgdeps=$(db_get_rev "$itemid")
+  [ "${pkgdeps/ */}" = '/' ] && pkgdeps=""
+  if [ "${STATUS[$itemid]}" = 'ok' ] && [ "${pkgdeps/ */}" != "${DIRECTDEPS[$itemid]// /,}" ]; then
+    STATUS[$itemid]="rebuild"
+    BUILDINFO[$itemid]="rebuild for added/removed deps"
+  fi
+
+  # Have any of the deps been updated => rebuild
+  # Are any of the deps aborted, skipped or failed => abort
+  for dep in ${DIRECTDEPS[$itemid]}; do
+    case "${STATUS[$dep]}" in
+      'add' | 'update' | 'updated' )
+        if [ "${STATUS[$itemid]}" = 'ok' ]; then
+          STATUS[$itemid]="rebuild"
+          BUILDINFO[$itemid]="rebuild for updated deps"
+        fi
+        ;;
+      'ok' | 'rebuild' )
+        :
+        ;;
+      'aborted' | 'skipped' | 'failed' | '*' )
+        STATUS[$itemid]="aborted"
+        BUILDINFO[$itemid]="aborted"
+        ABORTEDLIST+=( "$itemid" )
+    esac
+  done
+
+  if [ "${STATUS[$itemid]}" = 'ok' ]; then
+    prettystatus=' [ok]'
+  elif [ "${STATUS[$itemid]}" = 'add' ] || [ "${STATUS[$itemid]}" = 'update' ] || [ "${STATUS[$itemid]}" = 'rebuild' ]; then
+    prettystatus=" [${tputgreen}${STATUS[$itemid]}${tputnormal}]"
+    additem='y'
+    for todo in "${NEEDSBUILD[@]}"; do
+      [ "$todo" != "$itemid" ] && continue
+      additem='n'
+      break
+    done
+    [ "$additem" = 'y' ] && NEEDSBUILD+=( "$itemid" )
+  elif [ "${STATUS[$itemid]}" = 'updated' ]; then
+    prettystatus=" [${tputyellow}${STATUS[$itemid]}${tputnormal}]"
+  else # skipped, failed, aborted, and other not-yet-invented catastrophes 
+    prettystatus=" [${tputred}${STATUS[$itemid]}${tputnormal}]"
+    # Add the item to NEEDSBUILD anyway, for logging purposes
+    additem='y'
+    for todo in "${NEEDSBUILD[@]}"; do
+      [ "$todo" != "$itemid" ] && continue
+      additem='n'
+      break
+    done
+    [ "$additem" = 'y' ] && NEEDSBUILD+=( "$itemid" )
+  fi
+  echo "${indent}${itemid}${prettystatus}" >> "$MYTMPDIR"/deptree
+
+  if [ "${STATUS[$itemid]}" = 'aborted' ] || [ "${STATUS[$itemid]}" = 'failed' ] || [ "${STATUS[$itemid]}" = 'skipped' ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+#-------------------------------------------------------------------------------
+
+function calculate_item_status
+# Works out whether the package needs to be built etc
+# $1 = itemid
+# $2 = parentid (or null)
+# Return status:
+# 0 = success, STATUS[$itemid] and BUILDINFO[$itemid] have been set
+# 1 = any failure
 # Also sets these variables when status=0:
-# BUILDINFO = friendly changelog-style message describing the build
+# BUILDEXTRA = friendly changelog-style message describing the build
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local itemid="$1"
   local itemprgnam=${ITEMPRGNAM[$itemid]}
   local itemdir=${ITEMDIR[$itemid]}
-  local -a pkglist revfilelist deprevfilelist modifilelist
-  local prgnam version built revision depends os hintfile
+  local -a pkglist modifilelist
+
+  # Quick checks if we've already seen this item:
+  if [ "${STATUS[$itemid]}" = "ok" ] || [ "${STATUS[$itemid]}" = "updated" ]; then
+    if [ -n "$parentid" ]; then
+      # check revisions - $itemid may be more recent than $parentid
+      read pkgdeps pkgver pkgblt pkgrev pkgos pkghnt < <(db_get_rev "$itemid")
+      read pardeps parver parblt parrev paros parhnt < <(db_get_rev "$parentid" "$itemid")
+      # proceed only if the parent exists in the database
+      if [ "$parver" != '' ]; then
+        # ignore built field (merely rebuilt deps don't matter)
+        # and ignore hintfile field (significant changes will show up as version or deplist changes)
+        if [ "$pardeps $parver $parrev $paros" != "$pkgdeps $pkgver $pkgrev $pkgos" ]; then
+          STATUS[$itemid]="updated"
+          BUILDINFO[$itemid]=""
+          return 0
+        fi
+      fi
+    fi
+    STATUS[$itemid]="ok"
+    BUILDINFO[$itemid]=""
+    return 0
+  elif [ "${STATUS[$itemid]}" = "aborted" ] || [ "${STATUS[$itemid]}" = "failed" ] || [ "${STATUS[$itemid]}" = "skipped" ]; then
+    # the situation is not going to improve ;-)
+    return 0
+  fi
 
   # Package dir not in either repo => add
   if [ ! -d "$DRYREPO"/"$itemdir" ] && [ ! -d "$SR_PKGREPO"/"$itemdir" ]; then
-    BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
+    STATUS[$itemid]="add"
+    BUILDINFO[$itemid]="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
     return 0
   fi
 
@@ -110,19 +286,20 @@ function needs_build
     # Nothing in the main repo, so look in dryrun repo
     pkglist=( "$DRYREPO"/"$itemdir"/*.t?z )
     if [ ! -f "${pkglist[0]}" ]; then
-      BUILDINFO="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
+      STATUS[$itemid]="add"
+      BUILDINFO[$itemid]="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
       return 0
     fi
   fi
 
-  # Get info about the existing package from the database
+  # Get info about the existing build from the database
   read pkgdeps pkgver pkgblt pkgrev pkgos pkghnt < <(db_get_rev "$itemid")
-  [ "$pkgdeps" = '/' ] && pkgdeps=''
 
   # Are we upversioning => update
   currver="${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
   if [ "$pkgver" != "$currver" ]; then
-    BUILDINFO="update for version $currver"
+    STATUS[$itemid]="update"
+    BUILDINFO[$itemid]="update for version $currver"
     return 0
   fi
 
@@ -131,7 +308,8 @@ function needs_build
     # If this isn't a git repo, and any of the files have been modified since the package was built => update
     modifilelist=( $(find -L "$SR_SBREPO"/"$itemdir" -newermt @"$pkgblt" 2>/dev/null) )
     if [ ${#modifilelist[@]} != 0 ]; then
-      BUILDINFO="update for modified files"
+      STATUS[$itemid]="update"
+      BUILDINFO[$itemid]="update for modified files"
       return 0
     fi
 
@@ -154,12 +332,14 @@ function needs_build
           [ "$bn" = "README" ] && continue
           [ "$bn" = "slack-desc" ] && continue
           [ "$bn" = "$itemprgnam.info" ] && continue
-          BUILDINFO="update for git $shortcurrrev"
+          STATUS[$itemid]="update"
+          BUILDINFO[$itemid]="update for git $shortcurrrev"
           return 0
         done
       else
         # we can't do the above check if git is or was dirty
-        BUILDINFO="update for git $shortcurrrev"
+        STATUS[$itemid]="update"
+        BUILDINFO[$itemid]="update for git $shortcurrrev"
         return 0
       fi
     fi
@@ -168,54 +348,48 @@ function needs_build
     if [ "${GITDIRTY[$itemid]}" = 'y' ]; then
       modifilelist=( $(find -L "$SR_SBREPO"/"$itemdir" -newermt @"$pkgblt" 2>/dev/null) )
       if [ ${#modifilelist[@]} != 0 ]; then
-        BUILDINFO="update for git $shortcurrrev"
+        STATUS[$itemid]="update"
+        BUILDINFO[$itemid]="update for git $shortcurrrev"
         return 0
       fi
     fi
 
   fi
 
+  # check revisions - $itemid may be more recent than $parentid
+  if [ -n "$parentid" ]; then
+    read pardeps parver parblt parrev paros parhnt < <(db_get_rev "$parentid" "$itemid")
+    # proceed only if the parent exists in the database
+    if [ "$parver" != '' ]; then
+      # ignore built field (merely rebuilt deps don't matter)
+      # and ignore hintfile field (significant changes will show up as version or deplist changes)
+      if [ "$pardeps $parver $parrev $paros" != "$pkgdeps $pkgver $pkgrev $pkgos" ]; then
+        STATUS[$itemid]="updated"
+        BUILDINFO[$itemid]=""
+        return 0
+      fi
+    fi
+  fi
+
   # Is this the top-level item and are we in rebuild mode
-  #   => rebuild if it hasn't previously been rebuilt (as a dep of something else)
+  #   => rebuild if it hasn't previously been built in this session (as a dep of something else)
   if [ "$itemid" = "$ITEMID" -a "$CMD" = 'rebuild' ]; then
     found='n'
     for previously in "${OKLIST[@]}"; do
       if [ "$previously" = "$ITEMID" ]; then found='y'; break; fi
     done
     if [ "$found" = 'n' ]; then
-      BUILDINFO="rebuild"
+      STATUS[$itemid]="rebuild"
+      BUILDINFO[$itemid]="rebuild"
       return 0
     fi
-  fi
-
-  # Has the list of deps changed => rebuild
-  currdeps="${DIRECTDEPS[$itemid]// /,}"
-  if [ "$pkgdeps" != "$currdeps" ]; then
-    BUILDINFO="rebuild for added/removed deps"
-    return 0
-  fi
-
-  # Have any of the deps been updated => rebuild
-  local -a updeps
-  updeps=()
-  for dep in ${DIRECTDEPS[$itemid]}; do
-    # ignore built field (merely rebuilt deps don't matter) and hintfile field
-    # (significant hintfile changes will affect version or deps, which have already been checked)
-    pkgdeprev=$(db_get_rev "$itemid" "$dep" | cut -f1,2,4,5 -d" ")
-    currdeprev=$(db_get_rev "$dep" | cut -f1,2,4,5 -d" ")
-    [ "$pkgdeprev" != "$currdeprev" ] && updeps+=( "$dep" )
-  done
-  if [ "${#updeps}" != 0 ]; then
-    log_verbose "Updated dependencies of ${itemid}:"
-    log_verbose "$(printf '  %s\n' "${updeps[@]}")"
-    BUILDINFO="rebuild for updated deps"
-    return 0
   fi
 
   # Has the OS changed => rebuild
   curros="${SYS_OSNAME}${SYS_OSVER}"
   if [ "$pkgos" != "$curros" ]; then
-    BUILDINFO="rebuild for upgraded ${SYS_OSNAME}"
+    STATUS[$itemid]="rebuild"
+    BUILDINFO[$itemid]="rebuild for upgraded ${SYS_OSNAME}"
     return 0
   fi
 
@@ -225,17 +399,15 @@ function needs_build
     currhnt="$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//')"
   fi
   if [ "$pkghnt" != "$currhnt" ]; then
-    BUILDINFO="rebuild for hintfile changes"
+    STATUS[$itemid]="rebuild"
+    BUILDINFO[$itemid]="rebuild for hintfile changes"
     return 0
   fi
 
-  # ok, it is genuinely up to date!
-  if [ "$itemid" = "$ITEMID" ]; then
-    log_important "$itemid is up-to-date."
-  else
-    log_normal "$itemid is up-to-date."
-  fi
-  return 1
+  # It seems to be up to date!
+  STATUS[$itemid]="ok"
+  BUILDINFO[$itemid]=""
+  return 0
 
 }
 
@@ -279,15 +451,15 @@ function write_pkg_metadata
   [ "$OPT_DRY_RUN" = 'y' ] && myrepo="$DRYREPO"
   pkglist=( "$myrepo"/"$itemdir"/*.t?z )
 
-  operation="$(echo "$BUILDINFO" | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild.*/Rebuilt/' )"
+  operation="$(echo "${BUILDINFO[$itemid]}" | sed -e 's/^add/Added/' -e 's/^update/Updated/' -e 's/^rebuild/Rebuilt/' )"
   extrastuff=''
-  case "$BUILDINFO" in
+  case "${BUILDINFO[$itemid]}" in
   add*)
-      # add short description from slack-desc (if there's no slack-desc, this should be null)
+      # append short description from slack-desc (if there's no slack-desc, this should be null)
       extrastuff="($(grep "^${pkgnam}: " "$SR_SBREPO"/"$itemdir"/slack-desc 2>/dev/null| head -n 1 | sed -e 's/.*(//' -e 's/).*//'))"
       ;;
   'update for git'*)
-      # add title of the latest commit message
+      # append title of the latest commit message
       extrastuff="($(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //' -e 's/\.$//'))"
       ;;
   *)  :

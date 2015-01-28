@@ -216,7 +216,7 @@ function uninstall_packages
         done
         for etcdir in $etcdirs; do
           if [ -d /"$etcdir" ]; then
-            find /"$etcdir" -type d -depth -exec rmdir --ignore-fail-on-non-empty {} \;
+            find /"$etcdir" -type d -depth -exec rmdir --ignore-fail-on-non-empty {} \; 2>/dev/null
           fi
         done
         # Do this last so it can mend things the package broke.

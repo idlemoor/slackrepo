@@ -161,22 +161,28 @@ fi
 #-------------------------------------------------------------------------------
 
 if [ "$EUID" != 0 ]; then
+  if [ ! -x /usr/bin/fakeroot ]; then
+    echo "$(basename "$0"): Running as user, but fakeroot is not installed."
+    echo "$(basename "$0"): You should either install fakeroot or run slackrepo as root."
+    exit_cleanup
+    exit 3
+  fi
   SUDO="sudo "
   CONFIGDIR=~/slackrepo
   export PATH="/usr/libexec/slackrepo:$PATH"
 else
   SUDO=''
   CONFIGDIR=/etc/slackrepo
-fi
-
-PIDFILE="/var/run/$(basename "$0").pid"
-oldpid=$(cat "$PIDFILE" 2>/dev/null)
-if [ -z "$oldpid" -o -z "$(pgrep -u root "$(basename "$0")" | grep -v $$)" ]; then
-  echo $$ > "$PIDFILE"
-else
-  echo "$(basename "$0"): Another instance is already running." >&2
-  exit_cleanup
-  exit 3
+  #### temporary solution, until we do locking properly
+  PIDFILE="/var/run/$(basename "$0").pid"
+  oldpid=$(cat "$PIDFILE" 2>/dev/null)
+  if [ -z "$oldpid" -o -z "$(pgrep -u root "$(basename "$0")" | grep -v $$)" ]; then
+    echo $$ > "$PIDFILE"
+  else
+    echo "$(basename "$0"): Another instance is already running." >&2
+    exit_cleanup
+    exit 3
+  fi
 fi
 
 # Ensure ctrl-c (etc) exits the whole thing, not just a random subshell
@@ -422,6 +428,7 @@ CHANGELOG="$SR_PKGREPO"/.changelog
 if [ -s "$CHANGELOG" ]; then
   log_normal "Continuing changelog from previous run."
 else
+  mkdir -p "$(basename $CHANGELOG)"
   > "$CHANGELOG"
 fi
 

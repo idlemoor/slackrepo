@@ -56,7 +56,7 @@ function build_item_packages
   # Save the existing source to a temporary stash
   allsourcedir="$SR_SRCREPO"/"$itemdir"
   archsourcedir="$allsourcedir"/"$SR_ARCH"
-  allsourcestash="$MYTEMPDIR"/prev_source
+  allsourcestash="$MYTMPDIR"/prev_source
   archsourcestash="${allsourcestash}_${SR_ARCH}"
   SOURCESTASH=""
   if [ -d "$archsourcedir" ]; then
@@ -159,6 +159,7 @@ function build_item_packages
 
   SLACKBUILDCMD="sh ./$itemfile"
   [ "$OPT_VERY_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && [ -x /usr/bin/unbuffer ] && SLACKBUILDCMD="unbuffer $SLACKBUILDCMD"
+  [ -n "$SUDO" ] && [ -x /usr/bin/fakeroot ] && SLACKBUILDCMD="fakeroot $SLACKBUILDCMD"
 
   # Process other hints for the build:
 

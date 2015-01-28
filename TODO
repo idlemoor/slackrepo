@@ -1,27 +1,31 @@
 TODO
 ----
 
-Report fails back to SBo maintainers
+Multi-repo support
 
-Fix 'remove' argument parsing (no pkg, sb exists)
+slacktrack
 
-After building, don't remove deps that were already installed
+locking
 
+Website and manpage update
+
+Share package dirs
+
+Redo argument parsing
+Install already-built packages
 Test already-built packages
 
-Install already-built packages
-
-get deps from other repos (using slackpkg?)
+Report fails back to SBo maintainers
 
 Queuefiles (factorial deps)
+Templates
 
 More testing for multilib cross-compiles
 
 ARM support
 
-Archive/restore upgraded/removed packages and source
-
 speed up gen_repos
+changelog even if no gen_repos
 
 do a FAQ
 
@@ -33,8 +37,16 @@ Rebuilds to permit circular deps
 
 logrotate
 
-share package dirs
+----
 
-sqlite database for package revisions?
+[done] sqlite database for package revisions?
 
-sqlite database for expected build times?
+[done] sqlite database for expected build times?
+
+[done] After building, don't remove deps that were already installed
+
+[done] Archive/restore upgraded/removed packages and source
+
+[done] Redo dependency calculation and display
+
+[done] non-root building

@@ -58,10 +58,9 @@ cp -a \
   $PRGNAM \
   $PKG/usr/sbin
 
-mkdir -p $PKG/usr/libexec/$PRGNAM
+mkdir -p $PKG/usr/libexec
 cp -a \
-  gen_repos_files.sh \
-  functions.d/ \
+  libexec/ \
   $PKG/usr/libexec/$PRGNAM
 
 mkdir -p $PKG/etc/$PRGNAM

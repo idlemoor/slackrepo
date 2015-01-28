@@ -160,6 +160,15 @@ fi
 # Startup
 #-------------------------------------------------------------------------------
 
+if [ "$EUID" != 0 ]; then
+  SUDO="sudo "
+  CONFIGDIR=~/slackrepo
+  export PATH="/usr/libexec/slackrepo:$PATH"
+else
+  SUDO=''
+  CONFIGDIR=/etc/slackrepo
+fi
+
 PIDFILE="/var/run/$(basename "$0").pid"
 oldpid=$(cat "$PIDFILE" 2>/dev/null)
 if [ -z "$oldpid" -o -z "$(pgrep -u root "$(basename "$0")" | grep -v $$)" ]; then
@@ -237,7 +246,7 @@ fi
 # If we didn't get a repo id from env or cmd line, drop $REPO from the user config file into $OPT_REPO:
 [ -z "$OPT_REPO" ] && OPT_REPO="${REPO:-SBo}"
 # Read the main repo config file, overriding anything that came from the user config file:
-repoconf="/etc/slackrepo/slackrepo_${OPT_REPO}.conf"
+repoconf="${CONFIGDIR:-/etc/slackrepo}/slackrepo_${OPT_REPO}.conf"
 if [ -f "$repoconf" ]; then
   . "$repoconf"
 else

@@ -571,11 +571,11 @@ function do_groupadd_useradd
         if ! getent group "${ugroup}" | grep -q "^${ugroup}:" 2>/dev/null ; then
           gaddcmd="groupadd -g $unum $ugroup"
           log_verbose -a "Adding group: $gaddcmd"
-          eval "$gaddcmd"
+          eval "${SUDO}$gaddcmd"
         fi
         uaddcmd="useradd  -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname"
         log_verbose -a "Adding user:  $uaddcmd"
-        eval "$uaddcmd"
+        eval "${SUDO}$uaddcmd"
       else
         log_verbose -a "User $uname already exists."
       fi

@@ -105,11 +105,11 @@ function install_packages
       # nothing similar currently installed
       if [ "$OPT_VERBOSE" = 'y' -o "$OPT_INSTALL" = 'y' ]; then
         set -o pipefail
-        /sbin/installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
+        ${SUDO}installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
         pstat=$?
         set +o pipefail
       else
-        /sbin/installpkg --terse "$pkgpath" >> "$ITEMLOG" 2>&1
+        ${SUDO}installpkg --terse "$pkgpath" >> "$ITEMLOG" 2>&1
         pstat=$?
       fi
       [ "$pstat" = 0 ] || { log_error -a "${itemid}: installpkg $pkgbase failed (status $stat)"; return 1; }
@@ -122,11 +122,11 @@ function install_packages
       [ "$istat" = 3 ] && log_warning -n "Attempting to upgrade or reinstall $R_INSTALLED ..."
       if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
         set -o pipefail
-        /sbin/upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$ITEMLOG"
+        ${SUDO}upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$ITEMLOG"
         pstat=$?
         set +o pipefail
       else
-        /sbin/upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
+        ${SUDO}upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
         pstat=$?
       fi
       [ "$pstat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $stat)"; return 1; }
@@ -200,7 +200,7 @@ function uninstall_packages
          [ "$force" = 'y' ] || [ "${HINT_INSTALL[$itemid]}" = 'y' ]; then
         # Conventional gentle removepkg :-)
         log_normal -a "Uninstalling $R_INSTALLED ..."
-        /sbin/removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
+        ${SUDO}removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
       else
         # Violent removal :D
         # Save a list of potential detritus in /etc
@@ -209,8 +209,8 @@ function uninstall_packages
         # Run removepkg
         log_verbose -a "Uninstalling $R_INSTALLED ..."
         #### if very verbose, we should really splurge this
-        /sbin/removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
-        # Remove any surviving detritus
+        ${SUDO}removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
+        # Remove any surviving detritus (do nothing if not root)
         for etcfile in $etcnewfiles; do
           rm -f /"$etcfile" /"${etcfile%.new}"
         done
@@ -227,7 +227,7 @@ function uninstall_packages
         #   * Running depmod to remove references to removed kernel modules
         # But it can destroy live config, so don't do it if 
         if [ -n "${HINT_CLEANUP[$itemid]}" ]; then
-          eval "${HINT_CLEANUP[$itemid]}" >> "$ITEMLOG" 2>&1
+          eval "${SUDO}${HINT_CLEANUP[$itemid]}" >> "$ITEMLOG" 2>&1
         fi
       fi
     fi

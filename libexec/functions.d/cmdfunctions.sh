@@ -54,7 +54,7 @@ function build_item
   fi
 
   if [ "${#NEEDSBUILD[@]}" = 0 ]; then
-    log_important "$itemid is up-to-date."
+    [ "${STATUS[$itemid]}" = 'ok' ] && log_important "$itemid is up-to-date."
   else
     for todo in "${NEEDSBUILD[@]}"; do
       if [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then

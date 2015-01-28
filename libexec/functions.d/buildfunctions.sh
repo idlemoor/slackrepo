@@ -350,11 +350,11 @@ function build_item_packages
   db_set_buildsecs "$itemid" "$actualsecs"
   if [ -n "$estbuildsecs" ]; then
     secsdiff=$(( actualsecs - estbuildsecs ))
-    if [ "$guessflag" = '~' ] && [ "${estbuildsecs:-0}" -gt 120 ] && [ "${secsdiff//-/}" -gt 30 ] && [ "$BOGOCOUNT:-0" -lt 200 ]; then
+    if [ "$guessflag" = '~' ] && [ "${estbuildsecs:-0}" -gt 120 ] && [ "${secsdiff//-/}" -gt 30 ] && [ "${BOGOCOUNT:-0}" -lt 200 ]; then
       # yes, this is crazy :P ... 200 data points should be enough. We use minutes to prevent the numbers getting enormous.
       BOGOCOUNT=$(( BOGOCOUNT + 1 ))
       BOGOSUMX=$(echo "scale=3; $BOGOSUMX+$estbuildsecs/60.0" | bc)
-      BOGOSUMY=$(echo "scale=3; $BOGOSUMY+$actualsecs/60.0" | bc)
+      BOGOSUMY=$(echo "scale=3; $BOGOSUMY+$actualsecs/60.0"   | bc)
       BOGOSUMX2=$(echo "scale=3; $BOGOSUMX2 + ($estbuildsecs/60.0)*($estbuildsecs/60.0)" | bc)
       BOGOSUMXY=$(echo "scale=3; $BOGOSUMXY + ($estbuildsecs/60.0)*($actualsecs/60.0)"   | bc)
       db_set_misc bogostuff "BOGOCOUNT=$BOGOCOUNT; BOGOSUMX=$BOGOSUMX; BOGOSUMY=$BOGOSUMY; BOGOSUMX2=$BOGOSUMX2; BOGOSUMXY=$BOGOSUMXY;"

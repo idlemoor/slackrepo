@@ -1,1 +1,1 @@
-CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall kernel-firmware"
+CLEANUP="s_reinstall kernel-firmware"

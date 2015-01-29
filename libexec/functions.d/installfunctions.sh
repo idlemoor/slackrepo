@@ -222,12 +222,26 @@ function uninstall_packages
         # Do this last so it can mend things the package broke.
         # The cleanup hint can contain any required shell commands, for example:
         #   * Reinstalling Slackware packages that conflict with the item's packages
+        #     (use the provided helper script: s_reinstall pkgnam...)
         #   * Unsetting environment variables set in an /etc/profile.d script
+        #     (e.g. unset LD_PRELOAD)
         #   * Removing specific files and directories that removepkg doesn't remove
         #   * Running depmod to remove references to removed kernel modules
-        # But it can destroy live config, so don't do it if 
+        #   * Running sed -i (e.g. to remove entries from /etc/shells, ld.so.conf)
+        #   * Running ldconfig
+        # Be very careful with semicolons, IFS splitting is dumb.
         if [ -n "${HINT_CLEANUP[$itemid]}" ]; then
-          eval "${SUDO}${HINT_CLEANUP[$itemid]}" >> "$ITEMLOG" 2>&1
+          IFS=';'
+          for cleancmd in ${HINT_CLEANUP[$itemid]}; do
+            if [ "${cleancmd:0:6}" = 'unset ' ]; then
+              # unset has to be run in this process (obvsly)
+              eval "${cleanup}" >> "$ITEMLOG" 2>&1
+            else
+              # Everything else will need sudo if you're not root.
+              eval "${SUDO}${cleanup}" >> "$ITEMLOG" 2>&1
+            fi
+          done
+          IFS=''
         fi
       fi
     fi

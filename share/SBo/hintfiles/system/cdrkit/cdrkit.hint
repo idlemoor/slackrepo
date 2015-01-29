@@ -1,2 +1,2 @@
 ADDREQUIRES="lame"
-CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall cdrtools"
+CLEANUP="s_reinstall cdrtools"

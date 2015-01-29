@@ -1,2 +1,2 @@
 ADDREQUIRES=""
-CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex-doc"
+CLEANUP="s_reinstall tetex tetex-doc"

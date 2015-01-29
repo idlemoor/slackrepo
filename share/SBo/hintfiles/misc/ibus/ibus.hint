@@ -1,1 +1,1 @@
-CLEANUP="/usr/bin/update-gtk-immodules"
+CLEANUP="update-gtk-immodules"

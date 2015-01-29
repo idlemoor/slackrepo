@@ -1,2 +1,2 @@
 ADDREQUIRES=""
-CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall pssh"
+CLEANUP="s_reinstall pssh"

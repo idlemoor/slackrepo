@@ -1,2 +1,2 @@
 ADDREQUIRES="libsigsegv texi2html"
-CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex-doc a2ps"
+CLEANUP="s_reinstall tetex tetex-doc a2ps"

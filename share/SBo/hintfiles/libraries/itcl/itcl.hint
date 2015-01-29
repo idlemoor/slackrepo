@@ -1,1 +1,1 @@
-CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tcl"
+CLEANUP="s_reinstall tcl"

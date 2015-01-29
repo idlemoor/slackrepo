@@ -169,7 +169,6 @@ if [ "$EUID" != 0 ]; then
   fi
   SUDO="sudo "
   CONFIGDIR=~/slackrepo
-  export PATH="/usr/libexec/slackrepo:$PATH"
 else
   SUDO=''
   CONFIGDIR=/etc/slackrepo
@@ -184,6 +183,7 @@ else
     exit 3
   fi
 fi
+export PATH="/usr/libexec/$(basename "$0"):$PATH"
 
 # Ensure ctrl-c (etc) exits the whole thing, not just a random subshell
 trap "exit_cleanup; exit 1" SIGINT SIGQUIT SIGTERM

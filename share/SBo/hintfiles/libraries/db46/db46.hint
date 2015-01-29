@@ -1,1 +1,1 @@
-CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall db48"
+CLEANUP="s_reinstall db48"

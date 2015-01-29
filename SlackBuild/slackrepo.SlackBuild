@@ -58,6 +58,11 @@ cp -a \
   $PRGNAM \
   $PKG/usr/sbin
 
+mkdir -p $PKG/usr/bin
+ln -sr \
+  $PKG/usr/sbin/$PRGNAM \
+  $PKG/usr/bin/
+
 mkdir -p $PKG/usr/libexec
 cp -a \
   libexec/ \

@@ -31,11 +31,11 @@ function build_item
     'updated' )
       log_important "$itemid is up-to-date."; STATUS[$itemid]="ok"; return 0 ;;
     'aborted' )
-      log_warning -n "$itemid was previously aborted."; return 1 ;;
+      log_warning -n "$itemid has been aborted."; return 1 ;;
     'failed' )
-      log_warning -n "$itemid failed previously."; return 1 ;;
+      log_warning -n "$itemid has failed to build."; return 1 ;;
     'skipped' )
-      log_warning -n "$itemid was skipped previously."; return 1 ;;
+      log_warning -n "$itemid has been skipped."; return 1 ;;
     'unsupported' )
       log_warning -n "$itemid is unsupported."; return 1 ;;
     '' )
@@ -48,50 +48,59 @@ function build_item
   > "$MYTMPDIR"/deptree
   NEEDSBUILD=()
   calculate_deps_and_status "$itemid"
+
+  if [ "${STATUS[$itemid]}" = 'unsupported' ] || [ "${STATUS[$itemid]}" = 'skipped' ]; then
+    # the dependency tree is irrelevant, and a message will already have been logged
+    return 1
+  fi
   if [ "${DIRECTDEPS[$itemid]}" != "" ]; then
-    log_verbose "Dependency tree for $itemid:"
-    [ "$OPT_VERBOSE" = 'y' ] && tac "$MYTMPDIR"/deptree && echo ""
+    if [ "$OPT_QUIET" != 'y' ]; then
+      log_normal "Dependency tree for $itemid:"
+      tac "$MYTMPDIR"/deptree && echo ""
+    fi
+  fi
+  if [ "${STATUS[$itemid]}" = 'ok' ] && [ "${#NEEDSBUILD[@]}" = 0 ]; then
+    log_important "$itemid is up-to-date."
+    return 0
   fi
 
-  if [ "${#NEEDSBUILD[@]}" = 0 ]; then
-    [ "${STATUS[$itemid]}" = 'ok' ] && log_important "$itemid is up-to-date."
-  else
-    for todo in "${NEEDSBUILD[@]}"; do
-      if [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
-        buildopt=''
-        [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
-        [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
-        log_itemstart "$todo" "Starting $todo (${BUILDINFO[$todo]})$buildopt"
-      elif [ "${STATUS[$todo]}" = 'skipped' ]; then
-        log_error "$todo was previously skipped."
-        continue
-      elif [ "${STATUS[$todo]}" = 'unsupported' ]; then
-        log_error "$todo is unsupported on ${SR_ARCH}."
-        continue
-      elif [ "${STATUS[$todo]}" = 'aborted' ]; then
-        log_error "Cannot build ${todo}."
-      fi
-      missingdeps=()
-      for dep in ${DIRECTDEPS[$todo]}; do
-        if [ "${STATUS[$dep]}" != 'ok' ] && [ "${STATUS[$dep]}" != 'updated' ]; then
-         missingdeps+=( "$dep" )
-        fi
-      done
-      if [ "${#missingdeps[@]}" != '0' ] || [ "${STATUS[$todo]}" = 'aborted' ]; then
-        if [ "${#missingdeps[@]}" = '1' ]; then
-          log_error "Missing dependencies: ${missingdeps[0]}"
-        elif [ "${#missingdeps[@]}" != '0' ]; then
-          log_error "Missing dependencies:"
-          log_error -n "$(printf '  %s\n' "${missingdeps[@]}")"
-        fi
-        STATUS[$todo]='aborted'
-        ABORTEDLIST+=( "$todo" )
-        log_error -n ":-( $todo ABORTED )-:"
-      elif [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
-        build_item_packages "$todo"
+  for todo in "${NEEDSBUILD[@]}"; do
+    if [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
+      buildopt=''
+      [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
+      [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
+      log_itemstart "$todo" "Starting $todo (${BUILDINFO[$todo]})$buildopt"
+    elif [ "${STATUS[$todo]}" = 'skipped' ] && [ "$todo" != "$itemid" ]; then
+      log_error "$todo has been skipped."
+      continue
+    elif [ "${STATUS[$todo]}" = 'unsupported' ] && [ "$todo" != "$itemid" ]; then
+      log_error "$todo is unsupported on ${SR_ARCH}."
+      continue
+    elif [ "${STATUS[$todo]}" = 'failed' ]; then
+      log_error "${todo} has failed to build."
+    elif [ "${STATUS[$todo]}" = 'aborted' ]; then
+      log_error "Cannot build ${todo}."
+    fi
+    missingdeps=()
+    for dep in ${DIRECTDEPS[$todo]}; do
+      if [ "${STATUS[$dep]}" != 'ok' ] && [ "${STATUS[$dep]}" != 'updated' ]; then
+       missingdeps+=( "$dep" )
       fi
     done
-  fi
+    if [ "${#missingdeps[@]}" != '0' ] || [ "${STATUS[$todo]}" = 'aborted' ]; then
+      if [ "${#missingdeps[@]}" = '1' ]; then
+        log_error "Missing dependencies: ${missingdeps[0]}"
+      elif [ "${#missingdeps[@]}" != '0' ]; then
+        log_error "Missing dependencies:"
+        log_error -n "$(printf '  %s\n' "${missingdeps[@]}")"
+      fi
+      STATUS[$todo]='aborted'
+      ABORTEDLIST+=( "$todo" )
+      log_error -n ":-( $todo ABORTED )-:"
+    elif [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
+      build_item_packages "$todo"
+    fi
+  done
 
   return 0
 }

@@ -212,7 +212,7 @@ function uninstall_packages
         ${SUDO}removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
         # Remove any surviving detritus (do nothing if not root)
         for etcfile in $etcnewfiles; do
-          rm -f /"$etcfile" /"${etcfile%.new}"
+          rm -f /"$etcfile" /"${etcfile%.new}" 2>/dev/null
         done
         for etcdir in $etcdirs; do
           if [ -d /"$etcdir" ]; then
@@ -235,10 +235,10 @@ function uninstall_packages
           for cleancmd in ${HINT_CLEANUP[$itemid]}; do
             if [ "${cleancmd:0:6}" = 'unset ' ]; then
               # unset has to be run in this process (obvsly)
-              eval "${cleanup}" >> "$ITEMLOG" 2>&1
+              eval "${cleancmd}" >> "$ITEMLOG" 2>&1
             else
               # Everything else will need sudo if you're not root.
-              eval "${SUDO}${cleanup}" >> "$ITEMLOG" 2>&1
+              eval "${SUDO}${cleancmd}" >> "$ITEMLOG" 2>&1
             fi
           done
           unset IFS

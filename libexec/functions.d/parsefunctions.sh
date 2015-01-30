@@ -419,7 +419,7 @@ function parse_info_and_hints
 # $1 = itemid
 # Return status:
 # 0 = normal
-# 1 = skip/unsupported/untested, or cannot determine VERSION
+# 1 = skipped/unsupported/untested
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 

@@ -107,11 +107,11 @@ function calculate_deps_and_status
 
   # Examine the current item
   if [ -z "${STATUS[$itemid]}" ]; then
-    parse_info_and_hints "$itemid" || return 1
+    parse_info_and_hints "$itemid"
+    if [ $? = 0 ]; then
+      calculate_item_status "$itemid" "$parentid" || return 1
+    fi
   fi
-
-  # Initial evaluation of whether itemid needs to be built
-  calculate_item_status "$itemid" "$parentid" || return 1
 
   # Verify all the dependencies in the info+hints, and make a list of them
   local dep

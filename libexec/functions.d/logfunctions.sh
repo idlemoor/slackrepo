@@ -117,9 +117,11 @@ function log_itemstart
 # Log the start of an item on standard output.
 # This is where we start logging to ITEMLOG, which is set here, using $itemid set by our caller.
 # (At any time only one ITEMLOG can be active.)
-# $* = message
+# $1 = itemid
+# $2... = message
 # Return status: always 0
 {
+  local itemid="$1"; shift
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
   [ "$itemid" != "$ITEMID" ] && ITEMTOTAL=$(( ITEMTOTAL + 1 ))

@@ -61,7 +61,7 @@ function build_item
         buildopt=''
         [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
         [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
-        log_itemstart "Starting $todo (${BUILDINFO[$todo]})$buildopt"
+        log_itemstart "$todo" "Starting $todo (${BUILDINFO[$todo]})$buildopt"
       elif [ "${STATUS[$todo]}" = 'skipped' ]; then
         log_error "$todo was previously skipped."
         continue

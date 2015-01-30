@@ -241,7 +241,7 @@ function uninstall_packages
               eval "${SUDO}${cleanup}" >> "$ITEMLOG" 2>&1
             fi
           done
-          IFS=''
+          unset IFS
         fi
       fi
     fi

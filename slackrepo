@@ -64,7 +64,7 @@ starttime=$(date +%s)
 # OPT_XXXX represents command line option XXXX
 # SR_XXXX represents config file variable XXXX
 
-optnames="REPO QUIET VERBOSE VERY_VERBOSE MAKE_VERBOSE TEST DRY_RUN INSTALL PREREMOVE KEEP_TMP TRACE COLOR"
+optnames="REPO QUIET VERBOSE VERY_VERBOSE MAKE_VERBOSE TEST DRY_RUN INSTALL KEEP_TMP TRACE COLOR"
 # Initialise them all to null, set -u friendly ;-)
 for opt in $optnames ; do
   eval OPT_"$opt"=''
@@ -168,7 +168,7 @@ if [ "$EUID" != 0 ]; then
     exit 3
   fi
   SUDO="sudo "
-  CONFIGDIR=~/slackrepo
+  CONFIGDIR=~/slackrepo  #### should provide some way of changing this
 else
   SUDO=''
   CONFIGDIR=/etc/slackrepo
@@ -200,7 +200,6 @@ done
 #-------------------------------------------------------------------------------
 
 # Find out about the host system.
-# operating system name and version:
 if [ -f /etc/os-release ]; then
   # Lennart is my copilot <3
   . /etc/os-release
@@ -214,15 +213,13 @@ else
   exit_cleanup
   exit 4
 fi
-# native arch:
 SYS_ARCH=$(uname -m)
-# multilib or not:
 SYS_MULTILIB='n'
 [ "$SYS_ARCH" = 'x86_64' -a -f /etc/profile.d/32dev.sh ] && SYS_MULTILIB='y'
-# number of processors:
 SYS_NPROC=$(nproc)
-# bogomips:
 SYS_BOGOMIPS=$(awk '/^bogomips/ {sum+=$3} END {print sum}' < /proc/cpuinfo)
+SYS_GOODMAKE='n'
+[ -f /var/log/packages/make-3.82-x86_64-5 ] && SYS_GOODMAKE='y'  #### crude but effective
 
 # Next, do the config variables.
 # These config vars are prefixed with SR_ to stop SlackBuilds picking them up.

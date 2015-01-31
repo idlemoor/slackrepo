@@ -33,7 +33,10 @@ function build_item
     'aborted' )
       log_warning -n "$itemid has been aborted."; return 1 ;;
     'failed' )
-      log_warning -n "$itemid has failed to build."; return 1 ;;
+      log_warning -n "$itemid has failed to build."
+      [ -f "$SR_LOGDIR/$itemdir/$itemprgnam.log" ] && log_warning -n "See $SR_LOGDIR/$itemdir/$itemprgnam.log"
+      return 1
+      ;;
     'skipped' )
       log_warning -n "$itemid has been skipped."; return 1 ;;
     'unsupported' )

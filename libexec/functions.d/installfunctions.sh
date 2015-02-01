@@ -204,8 +204,8 @@ function uninstall_packages
       else
         # Violent removal :D
         # Save a list of potential detritus in /etc
-        etcnewfiles=$(grep '^etc/.*\.new$' /var/log/packages/"$R_INSTALLED")
-        etcdirs=$(grep '^etc/.*/$' /var/log/packages/"$R_INSTALLED")
+        etcnewfiles=$(grep '^etc/.*\.new$' "${CHROOTDIR}"/var/log/packages/"$R_INSTALLED")
+        etcdirs=$(grep '^etc/.*/$' "${CHROOTDIR}"/var/log/packages/"$R_INSTALLED")
         # Run removepkg
         log_verbose -a "Uninstalling $R_INSTALLED ..."
         #### if very verbose, we should really splurge this
@@ -265,8 +265,8 @@ function is_installed
   local pkgbase=$(basename "$1" | sed 's/\.t.z$//')
   local pkgid=$(echo "$pkgbase" | rev | cut -f4- -d- | rev )
   R_INSTALLED=''
-  if ls /var/log/packages/"$pkgid"-* 1>/dev/null 2>/dev/null; then
-    for instpkg in /var/log/packages/"$pkgid"-*; do
+  if ls "${CHROOTDIR}"/var/log/packages/"$pkgid"-* 1>/dev/null 2>/dev/null; then
+    for instpkg in "${CHROOTDIR}"/var/log/packages/"$pkgid"-*; do
       instid=$(basename "$instpkg" | rev | cut -f4- -d- | rev)
       if [ "$instid" = "$pkgid" ]; then
         if [ -n "$R_INSTALLED" ]; then
@@ -301,15 +301,15 @@ function dotprofilizer
   local pkgpath="$1"
   local varlogpkg script
   # examine /var/log/packages/xxxx because it's quicker than looking inside a .t?z
-  varlogpkg=/var/log/packages/$(basename "${pkgpath/%.t?z/}")
+  varlogpkg="${CHROOTDIR}"/var/log/packages/$(basename "${pkgpath/%.t?z/}")
   if grep -q -E '^etc/profile\.d/.*\.sh(\.new)?' "$varlogpkg"; then
     while read script; do
-      if [ -f /"$script" ]; then
+      if [ -f "${CHROOTDIR}"/"$script" ]; then
         log_verbose -a "  Running profile script: /$script"
-        . /"$script"
-      elif [ -f /"$script".new ]; then
+        . "${CHROOTDIR}"/"$script"
+      elif [ -f "${CHROOTDIR}"/"$script".new ]; then
         log_verbose -a "  Running profile script: /$script.new"
-        . /"$script".new
+        . "${CHROOTDIR}"/"$script".new
       fi
     done < <(grep '^etc/profile\.d/.*\.sh' "$varlogpkg" | sed 's/.new$//')
   fi

@@ -101,11 +101,11 @@ function log_start
 # $* = message
 # Return status: always 0
 {
-  msg="${*}                                                                      "
+  msg="${*}                                                                        "
   line="==============================================================================="
   echo ""
   echo "$line"
-  echo "! ${msg:0:66} $(date +%T) !"
+  echo "${msg:0:70} $(date +%T)"
   echo "$line"
   echo ""
   return 0
@@ -131,8 +131,8 @@ function log_itemstart
   if [ ${#1} -ge ${#line} ]; then
     echo "${tputwhite}$*${tputnormal}"
   else
-    pad=$(( ${#line} - ${#1} - 1 ))
-    echo "${tputwhite}$* ${line:0:$pad}${tputnormal}"
+    pad=$(( ${#line} - ${#1} - 10 ))
+    echo "${tputwhite}$*${tputnormal} ${line:0:$pad} $(date +%T)"
   fi
   if [ -n "$itemid" ]; then
     ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"

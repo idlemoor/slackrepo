@@ -8,6 +8,8 @@
 #   build_failed
 #   build_skipped
 #   do_groupadd_useradd
+#   chroot_setup
+#   chroot_destroy
 #-------------------------------------------------------------------------------
 
 function build_item_packages
@@ -53,7 +55,7 @@ function build_item_packages
     INFOVERSION[$itemid]="$NEWVERSION"
   fi
 
-  # Save the existing source to a temporary stash
+  # Save the existing source to a temporary stash.
   allsourcedir="$SR_SRCREPO"/"$itemdir"
   archsourcedir="$allsourcedir"/"$SR_ARCH"
   allsourcestash="$MYTMPDIR"/prev_source
@@ -99,9 +101,15 @@ function build_item_packages
        ;;
   esac
 
-  # Symlink the source (if any) into the temporary SlackBuild directory
+  # Copy or link the source (if any) into the temporary SlackBuild directory
+  # (need to copy if this is a chroot, it might be on an inaccessible mounted FS)
   if [ -n "${INFODOWNLIST[$itemid]}" ]; then
-    ln -sf -t "$MYTMPIN/" "${SRCDIR[$itemid]}"/*
+    if [ "$SYS_OVERLAYFS" = 'y' ]; then
+      cp -a "${SRCDIR[$itemid]}"/* "$MYTMPIN/"
+    else
+      # "Copy / is dandy / but linky / is quicky" [after Ogden Nash]
+      ln -sf -t "$MYTMPIN/" "${SRCDIR[$itemid]}"/*
+    fi
   fi
 
   # Work out BUILD
@@ -163,10 +171,7 @@ function build_item_packages
 
   # Process other hints for the build:
 
-  # GROUPADD and USERADD ...
-  do_groupadd_useradd "$itemid"
-
-  # ... NUMJOBS (with MAKEFLAGS and NUMJOBS env vars) ...
+  # NUMJOBS (with MAKEFLAGS and NUMJOBS env vars) ...
   NUMJOBS=" ${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS} "
   tempmakeflags="MAKEFLAGS='${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS}'"
 
@@ -234,17 +239,23 @@ function build_item_packages
     esac
   done
 
+  # Setup the chroot
+  # (to be destroyed below, or by build_failed if necessary)
+  chroot_setup
+
+  # Process GROUPADD and USERADD hints, preferably inside the chroot :-)
+  do_groupadd_useradd "$itemid"
+
   # Get all dependencies installed
   install_deps "$itemid" || { build_failed "$itemid"; return 1; }
 
   # Remove any existing packages (some builds fail if already installed)
   # (... this might not be entirely appropriate for gcc or glibc ...)
   if [ "$noremove" != 'y' ]; then
-    uninstall_packages -f "$itemid"
+    uninstall_packages "$itemid"
   fi
 
-  # Record the build start time and estimate the build finish time
-  buildstarttime="$(date '+%s')"
+  # Remember the build start time and estimate the build finish time
   estbuildsecs=''
   read prevsecs prevbogomips guessflag < <(db_get_buildsecs "$itemid")
   if [ -n "$prevsecs" ] && [ -n "$prevbogomips" ]; then
@@ -256,10 +267,12 @@ function build_item_packages
       estbuildsecs=$(echo "scale=3; $BOGOSLOPE*(${prevsecs}*${prevbogomips}/${SYS_BOGOMIPS})+$BOGOCONST+1" | bc | sed 's/\..*//')
     fi
   fi
+  buildstarttime="$(date '+%s')"
   eta=""
   [ -n "$estbuildsecs" ] && eta="ETA ${guessflag/=/}$(date --date=@"$(( buildstarttime + estbuildsecs + 30 ))" '+%H:%M')"
 
   # Build it
+  touch "$MYTMPDIR"/start
   runmsg=$(format_left_right "Running $itemfile ..." "$eta")
   log_normal -a "$runmsg"
   log_verbose -a "$SLACKBUILDCMD"
@@ -269,10 +282,10 @@ function build_item_packages
     echo ''
     set -o pipefail
     if [ "$SYS_MULTILIB" = "y" ] && [ "$ARCH" = 'i486' -o "$ARCH" = 'i686' ]; then
-      ( cd "$MYTMPIN"; . /etc/profile.d/32dev.sh; eval "$SLACKBUILDCMD" ) 2>&1 | tee -a "$ITEMLOG"
+      ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" 2>&1 | tee -a "$ITEMLOG"
       buildstat=$?
     else
-      ( cd "$MYTMPIN"; eval "$SLACKBUILDCMD" ) 2>&1 | tee -a "$ITEMLOG"
+      ${CHROOTCMD}sh -c "cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" 2>&1 | tee -a "$ITEMLOG"
       buildstat=$?
     fi
     set +o pipefail
@@ -280,10 +293,10 @@ function build_item_packages
     echo ''
   else
     if [ "$SYS_MULTILIB" = "y" -a "$ARCH" = 'i486' ]; then
-      ( cd "$MYTMPIN"; . /etc/profile.d/32dev.sh; eval "$SLACKBUILDCMD" ) >> "$ITEMLOG" 2>&1
+      ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" >> "$ITEMLOG" 2>&1
       buildstat=$?
     else
-      ( cd "$MYTMPIN"; eval "$SLACKBUILDCMD" ) >> "$ITEMLOG" 2>&1
+      ${CHROOTCMD}sh -c "cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" >> "$ITEMLOG" 2>&1
       buildstat=$?
     fi
   fi
@@ -291,7 +304,7 @@ function build_item_packages
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
 
   # If there's a config.log in the obvious place, save it
-  configlog="$SR_TMP"/"$itemprgnam"-"${INFOVERSION[$itemid]}"/config.log
+  configlog="${CHROOTDIR}$SR_TMP"/"$itemprgnam"-"${INFOVERSION[$itemid]}"/config.log
   if [ -f "$configlog" ]; then
     cp "$configlog" "$ITEMLOGDIR"
   fi
@@ -303,8 +316,8 @@ function build_item_packages
   fi
 
   # Make sure we got *something* :-)
-  pkglist=( "$MYTMPOUT"/*.t?z )
-  if [ "${pkglist[0]}" = "$MYTMPOUT"/'*.t?z' ]; then
+  pkglist=( "${CHROOTDIR}${MYTMPOUT}"/*.t?z )
+  if [ "${pkglist[0]}" = "${CHROOTDIR}${MYTMPOUT}"/'*.t?z' ]; then
     # no packages: let's get sneaky and snarf it/them from where makepkg said it/them was/were going ;-)
     logpkgs=( $(grep "Slackware package .* created." "$ITEMLOG" | cut -f3 -d" ") )
     if [ "${#logpkgs[@]}" = 0 ]; then
@@ -315,23 +328,40 @@ function build_item_packages
       for pkgpath in "${logpkgs[@]}"; do
         if [ -f "$MYTMPIN/README" -a -f "$MYTMPIN"/"$(basename "$itemfile" .SlackBuild)".info ]; then
           # it's probably an SBo SlackBuild, so complain and don't retag
-          log_warning -a "${itemid}: Package should have been in \$OUTPUT: $pkgpath"
-          mv "$pkgpath" "$MYTMPOUT"
+          if [ -f "${CHROOTDIR}$pkgpath" ]; then
+            log_warning -a "${itemid}: Package should have been in \$OUTPUT: $pkgpath"
+            mv "${CHROOTDIR}$pkgpath" "$MYTMPOUT"
+          else
+            log_error -a "${itemid}: Package not found: $pkgpath"
+            build_failed "$itemid"
+            return 6
+          fi
         else
           pkgnam=$(basename "$pkgpath")
           currtag=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
           if [ "$currtag" != "$SR_TAG" ]; then
-            # retag it
+            # retag it. If it's not found, sod it...
             pkgtype=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
-            mv "$pkgpath" "$MYTMPOUT"/"${pkgnam/%$currtag.$pkgtype/${SR_TAG}.$pkgtype}"
+            mv "${CHROOTDIR}$pkgpath" "$MYTMPOUT"/"${pkgnam/%$currtag.$pkgtype/${SR_TAG}.$pkgtype}"
           else
-            mv "$pkgpath" "$MYTMPOUT"/
+            mv "${CHROOTDIR}$pkgpath" "$MYTMPOUT"/
           fi
         fi
       done
       pkglist=( "$MYTMPOUT"/*.t?z )
     fi
+  else
+    if [ -n "${CHROOTDIR}" ]; then
+      mv "${CHROOTDIR}${MYTMPOUT}"/*.t?z "${MYTMPOUT}"
+    fi
   fi
+
+  if [ "$OPT_TEST" = 'y' ]; then
+    # this will happen inside the chw00t :D
+    test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
+  fi
+
+  chroot_destroy
 
   # update pkgnam to itemid table
   if [ "$OPT_DRY_RUN" != 'y' ]; then
@@ -361,9 +391,7 @@ function build_item_packages
     fi
   fi
 
-  if [ "$OPT_TEST" = 'y' ]; then
-    test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
-  elif [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
+  if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
     install_packages "$itemid" || { build_failed "$itemid"; return 8; }
   fi
   #### set the new pkgbase in KEEPINSTALLED[$pkgid]
@@ -395,7 +423,7 @@ function build_ok
   if [ "$OPT_DRY_RUN" = 'y' ]; then
     # put the packages into the special dryrun repo
     mkdir -p "$DRYREPO"/"$itemdir"
-    rm -rf "$DRYREPO"/"$itemdir"/*
+    rm -rf "${DRYREPO:?NotSetDRYREPO}"/"$itemdir"/*
     mv "$MYTMPOUT"/* "$DRYREPO"/"$itemdir"/
   else
     # save any existing packages and metadata to the backup repo
@@ -432,19 +460,22 @@ function build_ok
     mkdir -p "$SR_PKGREPO"/"$itemdir"
     mv "$MYTMPOUT"/* "$SR_PKGREPO"/"$itemdir"/
   fi
+  rmdir "$MYTMPOUT"
 
   # ---- Write the metadata ----
   write_pkg_metadata "$itemid"  # sets $CHANGEMSG
 
   # ---- Cleanup ----
-  # MYTMPOUT is empty now, so remove it even if OPT_KEEP_TMP is set
-  rm -rf "$MYTMPOUT"
-  # uninstall the deps
-  if [ "$OPT_DRY_RUN" = 'y' ] || [ "${HINT_INSTALL[$itemid]}" != 'y' ] || [ "$OPT_INSTALL" != 'y' ]; then
-    uninstall_deps "$itemid"
+  # We can skip this if we were using the chroot :-)
+  if [ "$SYS_OVERLAYFS" != 'y' ]; then
+    # uninstall the deps
+    if [ "$OPT_DRY_RUN" = 'y' ] || [ "${HINT_INSTALL[$itemid]}" != 'y' ] || [ "$OPT_INSTALL" != 'y' ]; then
+      uninstall_deps "$itemid"
+    fi
+    #### IMPORTANT #### some cleanup hints (depmod, possibly others) are needed even if we're chroot ####
+    # smite the temporary storage (this won't always kill everything, but it's good enough for saving space)
+    [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "${SR_TMP:?NotSetSR_TMP}"/"$itemprgnam"* "${SR_TMP:?NotSetSR_TMP}"/package-"$itemprgnam"
   fi
-  # smite the temporary storage (this won't always kill everything, but it's good enough for saving space)
-  [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
 
   # ---- Logging ----
   buildopt=''
@@ -475,8 +506,16 @@ function build_failed
 
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
     rm -rf "$MYTMPIN" "$MYTMPOUT"
-    rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
+    rm -rf "${SR_TMP:?NotSetSR_TMP}"/"$itemprgnam"* "${SR_TMP:?NotSetSR_TMP}"/package-"$itemprgnam"
+  else
+    if [ -n "${CHROOTDIR}" ]; then
+      rsync -a "${CHROOTDIR}$MYTMPIN"  "$MYTMPIN"
+      rsync -a "${CHROOTDIR}$MYTMPOUT" "$MYTMPOUT"
+      rsync -a "${CHROOTDIR}$SR_TMP"   "$SR_TMP"
+    fi
   fi
+
+  chroot_destroy  # :D
 
   log_error -n ":-( $itemid FAILED )-:"
   if [ "$OPT_QUIET" != 'y' ]; then
@@ -486,7 +525,8 @@ function build_failed
   fi
   log_error -n "See $ITEMLOG"
 
-  #### reinstate packages that were uninstalled prior to building
+  #### reinstate packages that we uninstalled prior to building
+  #### ... not required if using chroot :-)
 
   if [ "${HINT_INSTALL[$itemid]}" = 'n' ] || [ "$OPT_INSTALL" != 'y' -a "${HINT_INSTALL[$itemid]}" != 'y' ]; then
     uninstall_deps "$itemid"
@@ -511,7 +551,7 @@ function build_skipped
 
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
     rm -rf "$MYTMPIN" "$MYTMPOUT"
-    rm -rf "$SR_TMP"/"$itemprgnam"* "$SR_TMP"/package-"$itemprgnam"
+    rm -rf "${SR_TMP:?NotSetSR_TMP}"/"$itemprgnam"* "${SR_TMP:?NotSetSR_TMP}"/package-"$itemprgnam"
   fi
   return 0
 }
@@ -572,16 +612,65 @@ function do_groupadd_useradd
         if ! getent group "${ugroup}" | grep -q "^${ugroup}:" 2>/dev/null ; then
           gaddcmd="groupadd -g $unum $ugroup"
           log_verbose -a "Adding group: $gaddcmd"
-          eval "${SUDO}$gaddcmd"
+          eval "${CHROOTCMD}${SUDO}$gaddcmd"
         fi
         uaddcmd="useradd  -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname"
         log_verbose -a "Adding user:  $uaddcmd"
-        eval "${SUDO}$uaddcmd"
+        eval "${CHROOTCMD}${SUDO}$uaddcmd"
       else
         log_verbose -a "User $uname already exists."
       fi
     done
   fi
 
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function chroot_setup
+# Setup a temporary chroot environment at $MYTMPDIR/chroot using overlayfs
+# Also sets the global variables $CHROOTCMD and $CHROOTDIR
+# Return status:
+# 0 = it worked
+# 1 = SYS_OVERLAYFS is not set, or could not mount the overlay
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+  CHROOTCMD=''
+  [ "$SYS_OVERLAYFS" != 'y' ] && return 1
+  ${SUDO}mkdir -p "$MYTMPDIR"/{changes,workdir,chroot}
+  ${SUDO}mount -t overlay overlay -olowerdir=/,upperdir="$MYTMPDIR"/changes,workdir="$MYTMPDIR"/workdir "$MYTMPDIR"/chroot || return 1
+  #### do we actually need any of these?
+  # ${SUDO}mount -t devpts  devpts  -ogid=5,mode=620 "$MYTMPDIR"/chroot/dev/pts
+  # ${SUDO}mount -t tmpfs   shm     "$MYTMPDIR"/chroot/dev/shm
+  # ${SUDO}mount -t proc    proc    "$MYTMPDIR"/chroot/proc
+  # ${SUDO}mount -t sysfs   sysfs   "$MYTMPDIR"/chroot/sys
+  CHROOTDIR="${MYTMPDIR}/chroot/"   # note the trailing slash
+  CHROOTCMD="chroot ${CHROOTDIR} "  # note the trailing space
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function chroot_destroy
+# Copy wanted files out of the temporary chroot, and warn about everything else
+# Return status: always 0
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+  [ -z "$CHROOTDIR" ] && return 0
+  log_normal "Unmounting chroot ... "
+  umount "$CHROOTDIR" || return 0
+  if [ "$OPT_KEEP_TMP" = 'y' ]; then
+    rsync -rlptgo "$MYTMPDIR"/changes/"$SR_TMP" "$SR_TMP"
+  fi
+  log_done
+  rm -rf "$MYTMPDIR"/changes/tmp
+  crap=$(find "$MYTMPDIR"/changes -newer "$MYTMPDIR"/start -print | sed -e "s#"$MYTMPDIR"/changes##" | sort)
+  if [ -n "$crap" ]; then
+    log_warning "$itemid: Files/directories were modified during the build"
+    printf "  %s\n" ${crap}
+  fi
+  rm -rf "$MYTMPDIR"/changes
+  unset CHROOTCMD CHROOTDIR
   return 0
 }

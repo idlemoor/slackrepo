@@ -47,7 +47,7 @@ function exit_cleanup
 {
   stty sane   # in case we're killed waiting for the gpg passphrase
   rm -f "$PIDFILE"
-  [ "$OPT_KEEP_TMP" != 'y' -a -n "$MYTMPDIR" ] && rm -rf "$MYTMPDIR"
+  [ -n "$CHROOTDIR" ] && umount -l "$CHROOTDIR"
 }
 
 #-------------------------------------------------------------------------------
@@ -218,6 +218,9 @@ SYS_MULTILIB='n'
 [ "$SYS_ARCH" = 'x86_64' -a -f /etc/profile.d/32dev.sh ] && SYS_MULTILIB='y'
 SYS_NPROC=$(nproc)
 SYS_BOGOMIPS=$(awk '/^bogomips/ {sum+=$3} END {print sum}' < /proc/cpuinfo)
+SYS_OVERLAYFS='n'
+# don't look at the kernel version -- somebody might have the old patchset
+[ -f /lib/modules/$(uname -r)/kernel/fs/overlayfs/overlay.ko ] && SYS_OVERLAYFS='y'
 SYS_GOODMAKE='n'
 [ -f /var/log/packages/make-3.82-x86_64-5 ] && SYS_GOODMAKE='y'  #### crude but effective
 
@@ -361,6 +364,11 @@ fi
 for name in AR AS CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS LD LDFLAGS DISTCC_HOSTS; do
   [ -n "${!name}" ] && log_verbose "  $name=\"${!name}\""
 done
+if [ "$OPT_TRACE" = 'y' ]; then
+  for name in SYS_BOGOMIPS SYS_NPROC SYS_OSNAME SYS_OSVER SYS_ARCH SYS_MULTILIB SYS_OVERLAYFS SYS_GOODMAKE; do
+    [ -n "${!name}" ] && log_verbose "  $name=\"${!name}\""
+  done
+fi
 
 log_verbose ""
 
@@ -383,6 +391,7 @@ else
 fi
 # We also need a slackrepo-specific temporary directory
 MYTMPDIR=$(mktemp -t -d slackrepo.XXXXXX) || { log_error "Failed to create temporary directory"; exit_cleanup; exit 4; }
+[ -n "$SUDO" ] && chmod go+rx "$MYTMPDIR"
 #### Probably should make --keep-tmp force $TMP into $MYTMPDIR
 
 # Disposable package repository for dry run:
@@ -418,7 +427,7 @@ BOGOSLOPE=${BOGOSLOPE:-1.0}
 BOGOCONST=${BOGOCONST:-0.0}
 
 # We will use $SR_SBREPO as the working directory; it simplifies lots of git stuff.
-cd "$SR_SBREPO"
+cd "$SR_SBREPO" || { log_error "Failed to access SlackBuilds repository"; exit_cleanup; exit 4; }
 
 # Initialise git (only if this is a build or rebuild or update)
 if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
@@ -490,7 +499,8 @@ fi
 
 declare -A KEEPINSTALLED
 # Warn about already installed packages (using package tag)
-if [ -n "$SR_TAG" -a "$OPT_INSTALL" != 'y' -a "$CMD" != 'remove' ]; then
+# no need to worry if we have chw00t
+if [ -n "$SR_TAG" ] && [ "$OPT_INSTALL" != 'y' ] && [ "$CMD" != 'remove' ] && [ "$SYS_OVERLAYFS" != 'y' ]; then
   for pkg in /var/log/packages/*"$SR_TAG"; do
     if [ -f "$pkg" ]; then
       pkgbase=$(basename "$pkg")

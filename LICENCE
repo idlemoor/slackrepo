@@ -48,18 +48,23 @@ All rights reserved.
 
 --------------------------------------------------------------------------------
 
-fmakepkg.sh   https://gist.github.com/ruario/9672717
+unbuffer   http://sourceforge.net/projects/expect/files/Expect/5.45/expect5.45.tar.gz/download
 
-Copyright (C) 2015 Ruarí Ødegaard, Olso, Norway
+Author: Don Libes, NIST
 
-          DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-                  Version 2, December 2004
+Expect FAQ http://expect.sourceforge.net/FAQ.html#q5
+#5. Do we need to pay or ask for permission to distribute Expect?
 
-Everyone is permitted to copy and distribute verbatim or modified
-copies of this license document, and changing it is allowed as long as
-the name is changed.
+It is my understanding that you are allowed to do just about anything
+with Expect.  You can even sell it.  You need not ask our permission.
+You need not pay for it.  (Your tax dollars, in effect, already have
+paid for it.)
 
-          DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
- TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+You should not claim that you wrote it (since this would be a lie), nor
+should you attempt to copyright it (this would be fruitless as it is a
+work of the US government and therefore not subject to copyright).
 
-0. You just DO WHAT THE FUCK YOU WANT TO.
+NIST would appreciate any credit you can give for this work.  One line
+may suffice (as far as I'm concerned) although there should be
+something to the effect that this software was produced for research
+purposes.  No warantee, guarantee, or liability is implied.

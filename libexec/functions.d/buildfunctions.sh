@@ -166,7 +166,7 @@ function build_item_packages
     NUMJOBS="$SR_NUMJOBS"
 
   SLACKBUILDCMD="sh ./$itemfile"
-  [ "$OPT_VERY_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && [ -x /usr/bin/unbuffer ] && SLACKBUILDCMD="unbuffer $SLACKBUILDCMD"
+  [ "$OPT_VERY_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && SLACKBUILDCMD="/usr/libexec/slackrepo/unbuffer $SLACKBUILDCMD"
   [ -n "$SUDO" ] && [ -x /usr/bin/fakeroot ] && SLACKBUILDCMD="fakeroot $SLACKBUILDCMD"
 
   # Process other hints for the build:

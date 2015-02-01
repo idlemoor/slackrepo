@@ -504,32 +504,24 @@ function build_failed
   STATUS[$itemid]="failed"
   FAILEDLIST+=( "$itemid" )
 
-  if [ "$OPT_KEEP_TMP" != 'y' ]; then
-    rm -rf "$MYTMPIN" "$MYTMPOUT"
-    rm -rf "${SR_TMP:?NotSetSR_TMP}"/"$itemprgnam"* "${SR_TMP:?NotSetSR_TMP}"/package-"$itemprgnam"
-  else
-    if [ -n "${CHROOTDIR}" ]; then
-      rsync -a "${CHROOTDIR}$MYTMPIN"  "$MYTMPIN"
-      rsync -a "${CHROOTDIR}$MYTMPOUT" "$MYTMPOUT"
-      rsync -a "${CHROOTDIR}$SR_TMP"   "$SR_TMP"
-    fi
-  fi
-
-  chroot_destroy  # :D
-
-  log_error -n ":-( $itemid FAILED )-:"
   if [ "$OPT_QUIET" != 'y' ]; then
     errorscan_itemlog | tee -a "$MAINLOG"
   else
     errorscan_itemlog >> "$MAINLOG"
   fi
   log_error -n "See $ITEMLOG"
+  log_error -n ":-( $itemid FAILED )-:"
 
-  #### reinstate packages that we uninstalled prior to building
-  #### ... not required if using chroot :-)
-
-  if [ "${HINT_INSTALL[$itemid]}" = 'n' ] || [ "$OPT_INSTALL" != 'y' -a "${HINT_INSTALL[$itemid]}" != 'y' ]; then
+  if [ -n "${CHROOTDIR}" ]; then
+    chroot_destroy
+  elif [ "${HINT_INSTALL[$itemid]}" = 'n' ] || [ "$OPT_INSTALL" != 'y' -a "${HINT_INSTALL[$itemid]}" != 'y' ]; then
     uninstall_deps "$itemid"
+    #### reinstate packages that we uninstalled prior to building
+  fi
+
+  if [ "$OPT_KEEP_TMP" != 'y' ]; then
+    rm -rf "$MYTMPIN" "$MYTMPOUT"
+    rm -rf "${SR_TMP:?NotSetSR_TMP}"/"$itemprgnam"* "${SR_TMP:?NotSetSR_TMP}"/package-"$itemprgnam"
   fi
 
   return 0

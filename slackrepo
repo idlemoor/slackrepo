@@ -358,18 +358,12 @@ else
   log_verbose "  USE_GENREPOS=\"$SR_USE_GENREPOS\""
 fi
 
-# Log interesting environment variables. This is not a comprehensive list (see
+# Log significant environment variables. This is not a comprehensive list (see
 # https://www.gnu.org/software/make/manual/html_node/Implicit-Variables.html)
 # and upstream builds don't always use them properly.
 for name in AR AS CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS LD LDFLAGS DISTCC_HOSTS; do
   [ -n "${!name}" ] && log_verbose "  $name=\"${!name}\""
 done
-if [ "$OPT_TRACE" = 'y' ]; then
-  for name in SYS_BOGOMIPS SYS_NPROC SYS_OSNAME SYS_OSVER SYS_ARCH SYS_MULTILIB SYS_OVERLAYFS SYS_GOODMAKE; do
-    [ -n "${!name}" ] && log_verbose "  $name=\"${!name}\""
-  done
-fi
-
 log_verbose ""
 
 #-------------------------------------------------------------------------------

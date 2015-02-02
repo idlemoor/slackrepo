@@ -220,7 +220,7 @@ SYS_NPROC=$(nproc)
 SYS_BOGOMIPS=$(awk '/^bogomips/ {sum+=$3} END {print sum}' < /proc/cpuinfo)
 SYS_OVERLAYFS='n'
 # don't look at the kernel version -- somebody might have the old patchset
-[ -f /lib/modules/$(uname -r)/kernel/fs/overlayfs/overlay.ko ] && SYS_OVERLAYFS='y'
+[ -f /lib/modules/"$(uname -r)"/kernel/fs/overlayfs/overlay.ko ] && SYS_OVERLAYFS='y'
 SYS_GOODMAKE='n'
 [ -f /var/log/packages/make-3.82-x86_64-5 ] && SYS_GOODMAKE='y'  #### crude but effective
 
@@ -228,7 +228,7 @@ SYS_GOODMAKE='n'
 # These config vars are prefixed with SR_ to stop SlackBuilds picking them up.
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO SRCREPO PKGREPO PKGBACKUP \
-          HINTDIR QUEUEDIR LOGDIR TMP DATABASE \
+          HINTDIR QUEUEDIR LOGDIR DATABASE TMP \
           ARCH TAG PKGTYPE NUMJOBS"
 # These config vars don't need to be obfuscated:
 genrepnames="USE_GENREPOS REPOSROOT REPOSOWNER REPOSOWNERGPG DL_URL \
@@ -327,6 +327,14 @@ fi
 
 # Log the config
 log_verbose ""
+log_verbose "OS: ${SYS_OSNAME}${SYS_OSVER}"
+log_verbose "arch: ${SYS_ARCH}"
+[ "$SYS_MULTILIB" = 'y' ] && log_verbose "multilib: yes"
+log_verbose "nproc: ${SYS_NPROC}"
+log_verbose "bogomips: ${SYS_BOGOMIPS}"
+[ "$SYS_OVERLAYFS" = 'y' ] && log_verbose "overlayfs: yes"
+[ "$EUID" != 0 ] && log_verbose "username: $USER"
+log_verbose ""
 log_verbose "Configuration:"
 log_verbose "  $CMD"
 log_verbose "  --repo=$OPT_REPO"
@@ -373,12 +381,27 @@ log_verbose ""
 # Arrays for tracking outcomes:
 declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST
 
+# Create directories:
+[ -d "$SR_SBREPO" ]   || { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"   ; }
+[ -d "$SR_SRCREPO" ]  || { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO"  ; }
+[ -d "$SR_PKGREPO" ]  || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO"  ; }
+[ -n "$SR_PKGBACKUP" -a -d "$SR_PKGBACKUP" ] || \
+                         { log_normal "Creating backup repository: $SR_PKGBACKUP"  ; mkdir -p "$SR_PKGBACKUP"; }
+[ -d "$SR_HINTDIR" ]  || { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"  ; }
+[ -d "$SR_QUEUEDIR" ] || { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR" ; }
+[ -d "$SR_LOGDIR" ]   || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"   ; }
+
+# sqlite database for revision details, package identification, build times etc
+# This is now *required* so here is a default path:
+[ -n "$SR_DATABASE" ] || SR_DATABASE="$(dirname "$SR_SBREPO")/database_${OPT_REPO}.sqlite3"
+db_init || { log_error "Failed to initialise database"; exit_cleanup; exit 4; }
+
 # Temporary directory:
 SR_TMP=${SR_TMP:-/tmp/SBo}
 # really really don't want the next bit to go badly ;-)
 if [ -n "$SR_TMP" -a -d "$SR_TMP" -a "$OPT_KEEP_TMP" != 'y' ]; then
   log_normal "Cleaning $SR_TMP/* ... "
-  rm -rf "${SR_TMP:-dont-tase-me-bro}"/*
+  find "${SR_TMP:?NotSetSR_TMP}" -mindepth 1 -maxdepth 1 -print0 | xargs -0 rm -rf \;
   log_done
 else
   mkdir -p "$SR_TMP"
@@ -394,21 +417,6 @@ if [ "$OPT_DRY_RUN" = 'y' ]; then
   rm -rf "$DRYREPO"
   mkdir -p "$DRYREPO"
 fi
-
-# Create directories:
-[ -d "$SR_SBREPO" ]   || { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"   ; }
-[ -d "$SR_SRCREPO" ]  || { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO"  ; }
-[ -d "$SR_PKGREPO" ]  || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO"  ; }
-[ -n "$SR_PKGBACKUP" -a -d "$SR_PKGBACKUP" ] || \
-                         { log_normal "Creating backup repository: $SR_PKGBACKUP"  ; mkdir -p "$SR_PKGBACKUP"; }
-[ -d "$SR_HINTDIR" ]  || { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"  ; }
-[ -d "$SR_QUEUEDIR" ] || { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR" ; }
-[ -d "$SR_LOGDIR" ]   || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"   ; }
-
-# sqlite database for revision details, package identification, build times etc
-# This is now *required* so here is a default path:
-[ -n "$SR_DATABASE" ] || SR_DATABASE="$(dirname "$SR_SBREPO")/database_${OPT_REPO}.sqlite3"
-db_init || { log_error "Failed to initialise database"; exit_cleanup; exit 4; }
 
 # Initialise the crazy estimator from the database :D
 eval $(db_get_misc bogostuff)
@@ -487,20 +495,19 @@ CHANGELOG="$SR_PKGREPO"/.changelog
 if [ -s "$CHANGELOG" ]; then
   log_normal "Continuing changelog from previous run."
 else
-  mkdir -p "$(basename $CHANGELOG)"
+  mkdir -p "$(basename "$CHANGELOG")"
   > "$CHANGELOG"
 fi
 
 declare -A KEEPINSTALLED
 # Warn about already installed packages (using package tag)
-# no need to worry if we have chw00t
-if [ -n "$SR_TAG" ] && [ "$OPT_INSTALL" != 'y' ] && [ "$CMD" != 'remove' ] && [ "$SYS_OVERLAYFS" != 'y' ]; then
+if [ -n "$SR_TAG" ] && [ "$OPT_INSTALL" != 'y' ] && [ "$CMD" != 'remove' ]; then
   for pkg in /var/log/packages/*"$SR_TAG"; do
     if [ -f "$pkg" ]; then
-      pkgbase=$(basename "$pkg")
-      log_warning "${pkgbase} is already installed"
-      pkgid=$(echo "$pkgbase" | rev | cut -f4- -d- | rev )
-      KEEPINSTALLED[$pkgid]="$pkgbase"
+      pkgbase="${pkg##*/}"
+      [ "${#KEEPINSTALLED[@]}" = 0 ] && log_warning "Packages with tag $SR_TAG are already installed"
+      log_normal "  $pkgbase"
+      KEEPINSTALLED[${pkgbase%-*-*-*}]="$pkgbase"
     fi
   done
 fi

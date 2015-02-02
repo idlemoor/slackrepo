@@ -48,9 +48,14 @@ function build_item
   esac
 
   log_normal "Calculating dependencies ..."
-  > "$MYTMPDIR"/deptree
+  DEPTREE=""
   NEEDSBUILD=()
   calculate_deps_and_status "$itemid"
+
+  # set anything flagged 'updated' back to 'ok' before we go any further
+  for depid in ${FULLDEPS[$itemid]}; do
+    [ "${STATUS[$depid]}" = 'updated' ] && STATUS[$depid]='ok'
+  done
 
   if [ "${STATUS[$itemid]}" = 'unsupported' ] || [ "${STATUS[$itemid]}" = 'skipped' ]; then
     # the dependency tree is irrelevant, and a message will already have been logged
@@ -59,7 +64,7 @@ function build_item
   if [ "${DIRECTDEPS[$itemid]}" != "" ]; then
     if [ "$OPT_QUIET" != 'y' ]; then
       log_normal "Dependency tree for $itemid:"
-      tac "$MYTMPDIR"/deptree && echo ""
+      echo -n "$DEPTREE"
     fi
   fi
   if [ "${STATUS[$itemid]}" = 'ok' ] && [ "${#NEEDSBUILD[@]}" = 0 ]; then
@@ -68,6 +73,7 @@ function build_item
   fi
 
   for todo in "${NEEDSBUILD[@]}"; do
+    log_normal ""
     if [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
       buildopt=''
       [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
@@ -91,12 +97,15 @@ function build_item
        missingdeps+=( "$dep" )
       fi
     done
-    if [ "${#missingdeps[@]}" != '0' ] || [ "${STATUS[$todo]}" = 'aborted' ]; then
+    if [ "${#missingdeps[@]}" != '0' ]; then
+      if [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
+        log_error "Cannot build ${todo}."
+      fi
       if [ "${#missingdeps[@]}" = '1' ]; then
-        log_error "Missing dependencies: ${missingdeps[0]}"
+        log_normal "Missing dependency: ${missingdeps[0]}"
       elif [ "${#missingdeps[@]}" != '0' ]; then
-        log_error "Missing dependencies:"
-        log_error -n "$(printf '  %s\n' "${missingdeps[@]}")"
+        log_normal "Missing dependencies:"
+        log_normal "$(printf '  %s\n' "${missingdeps[@]}")"
       fi
       STATUS[$todo]='aborted'
       ABORTEDLIST+=( "$todo" )
@@ -444,9 +453,9 @@ function remove_item
   # Remove the package directory and any empty parent directories
   # (don't bother with the source directory)
   if  [ "$OPT_DRY_RUN" != 'y' ]; then
-    rm -rf "$SR_PKGREPO"/"$itemdir"
+    rm -rf "${SR_PKGREPO:?NotSetSR_PKGREPO}/${itemdir}"
     up="$(dirname "$itemdir")"
-    [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "$SR_PKGREPO"/"$up"
+    [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "${SR_PKGREPO}/${up}"
   fi
 
   # Delete the revision data

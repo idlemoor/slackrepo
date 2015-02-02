@@ -62,7 +62,7 @@ function print_current_revinfo
 
   hintstuff='/'
   if [ -n "${HINTFILE[$itemdir]}" ]; then
-    hintstuff="$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//')"
+    hintstuff="$(md5sum "${HINTFILE[$itemdir]}")"; hintstuff="${hintstuff/ */}"
   fi
 
   echo "$itemid" '/' "${deplist// /,}" "${verstuff} ${bltstuff} ${revstuff} ${osstuff} ${hintstuff}"
@@ -88,7 +88,7 @@ function calculate_deps_and_status
 # Works out dependencies and their build statuses.
 # Populates ${STATUS[$itemid]}, ${BUILDINFO[$itemid]}, ${NEEDSBUILD[@]},
 #   ${DIRECTDEPS[$itemid]}, and ${FULLDEPS[$itemid]}.
-# Writes a pretty tree (bottom-up) to "$MYTMPDIR"/deptree.
+# Writes a pretty tree to $DEPTREE.
 # Arguments:
 #   $1 = itemid
 #   $2 = parent's itemid, or null if no parent
@@ -107,10 +107,8 @@ function calculate_deps_and_status
 
   # Examine the current item
   if [ -z "${STATUS[$itemid]}" ]; then
-    parse_info_and_hints "$itemid"
-    if [ $? = 0 ]; then
-      calculate_item_status "$itemid" "$parentid" || return 1
-    fi
+    parse_info_and_hints "$itemid" || return 1
+    calculate_item_status "$itemid" "$parentid" || return 1
   fi
 
   # Verify all the dependencies in the info+hints, and make a list of them
@@ -220,7 +218,7 @@ function calculate_deps_and_status
     done
     [ "$additem" = 'y' ] && NEEDSBUILD+=( "$itemid" )
   fi
-  echo "${indent}${itemid}${prettystatus}" >> "$MYTMPDIR"/deptree
+  DEPTREE="${indent}${itemid}${prettystatus}"$'\n'"$DEPTREE"
 
   if [ "${STATUS[$itemid]}" = 'aborted' ] || [ "${STATUS[$itemid]}" = 'failed' ] || [ "${STATUS[$itemid]}" = 'skipped' ]; then
     return 1
@@ -328,7 +326,7 @@ function calculate_item_status
         #   (the VERSION in the .info file has already been checked ;-)
         modifilelist=( $(cd "$SR_SBREPO"; git diff --name-only "$pkgrev" "$currrev" -- "$itemdir") )
         for modifile in "${modifilelist[@]}"; do
-          bn=$(basename "$modifile")
+          bn="${modifile##*/}"
           [ "$bn" = "README" ] && continue
           [ "$bn" = "slack-desc" ] && continue
           [ "$bn" = "$itemprgnam.info" ] && continue
@@ -396,7 +394,7 @@ function calculate_item_status
   # Has the hintfile changed => rebuild
   currhnt='/'
   if [ -n "${HINTFILE[$itemdir]}" ]; then
-    currhnt="$(md5sum "${HINTFILE[$itemdir]}" | sed 's/ .*//')"
+    currhnt="$(md5sum "${HINTFILE[$itemdir]}")"; currhnt="${currhnt/ */}"
   fi
   if [ "$pkghnt" != "$currhnt" ]; then
     STATUS[$itemid]="rebuild"
@@ -481,9 +479,9 @@ function write_pkg_metadata
     # pkglist should be 100% valid, but this can't hurt:
     [ ! -f "$pkgpath" ] && continue
 
-    pkgdirname=$(dirname "$pkgpath")
-    pkgbasename=$(basename "$pkgpath")
-    pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
+    pkgdirname="${pkgpath%/*}"
+    pkgbasename="${pkgpath##*/}"
+    pkgnam="${pkgbasename%-*-*-*}"
 
     nosuffix="${pkgpath%.t?z}"
     dotlst="${nosuffix}.lst"
@@ -529,7 +527,7 @@ EOF
     if [ ! -f "$dotdep" ]; then
       if [ -n "${FULLDEPS[$itemid]}" ]; then
         for dep in ${FULLDEPS[$itemid]}; do
-          printf "%s\n" "$(basename "$dep")" >> "$dotdep"
+          printf "%s\n" "${dep##*/}" >> "$dotdep"
         done
       fi
     fi
@@ -575,7 +573,7 @@ EOF
         elif grep -q install/slack-required "$dotlst"; then
           SLACKREQUIRED=$(tar xf "$pkgpath" -O install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
         elif [ -n "${DIRECTDEPS[$itemid]}" ]; then
-          SLACKREQUIRED=$(for dep in ${DIRECTDEPS[$itemid]}; do printf "%s\n" "$(basename "$dep")"; done | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+          SLACKREQUIRED=$(for dep in ${DIRECTDEPS[$itemid]}; do printf "%s\n" "${dep##*/}"; done | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
         else
           SLACKREQUIRED=""
         fi

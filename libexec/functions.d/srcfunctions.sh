@@ -55,7 +55,7 @@ function verify_src
     fi
 
     # check files in this dir only (arch-specific subdirectories may exist, ignore them)
-    IFS=$'\n'; srcfilelist=( $(find . -maxdepth 1 -type f -print 2>/dev/null| grep -v '^\./\.version$' | sed 's:^\./::') ); unset IFS
+    IFS=$'\n'; srcfilelist=( $(find . -maxdepth 1 -type f \! -name .version -print 2>/dev/null | sed 's#^\./##') ); unset IFS
     numgot=${#srcfilelist[@]}
     # no files, empty directory => return 3 (same as no directory) or 6
     [ $numgot = 0 -a -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
@@ -76,7 +76,7 @@ function verify_src
     allok='y'
     if [ "${HINT_MD5IGNORE[$itemid]}" != 'y' -a -n "$MD5LIST" ]; then
       for f in "${srcfilelist[@]}"; do
-        mf=$(md5sum "$f" | sed 's/ .*//')
+        mf=$(md5sum "$f"); mf="${mf/ */}"
         ok='n'
         # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
         for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
@@ -85,7 +85,7 @@ function verify_src
     fi
     if [ "${HINT_SHA256IGNORE[$itemid]}" != 'y' -a -n "$SHA256LIST" ]; then
       for f in "${srcfilelist[@]}"; do
-        sf=$(sha256sum "$f" | sed 's/ .*//')
+        sf=$(sha256sum "$f"); sf="${sf/ */}"
         ok='n'
         # The next bit checks all files have a good sha256sum, but not vice versa, so it's not perfect :-/
         for sinfo in $SHA256LIST; do if [ "$sf" = "$sinfo" ]; then ok='y'; break; fi; done

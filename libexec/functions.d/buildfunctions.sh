@@ -214,9 +214,13 @@ function build_item_packages
       tempdownlist=( ${INFODOWNLIST[$itemid]} )
       count=0
       while read sourcefile; do
-        target=$(basename "${tempdownlist[$count]}")
-        ( cd "$MYTMPIN"; [ ! -e "$target" ] && ln -s "$(basename "$sourcefile")" "$target" )
-        count=$(( count + 1 ))
+        source="${sourcefile##*/}"
+        # skip subdirectories (and don't increment count)
+        if [ -f "$sourcefile" ]; then
+          target="${tempdownlist[$count]##*/}"
+          ( cd "$MYTMPIN"; [ -n "$target" ] && [ ! -e "$target" ] && ln -s "$source" "$target" )
+          count=$(( count + 1 ))
+        fi
       done < <(ls -rt "$SR_SRCREPO"/"$itemdir" 2>/dev/null)
       ;;
     'noexport_ARCH' )
@@ -307,7 +311,7 @@ function build_item_packages
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
 
   # If there's a config.log in the obvious place, save it
-  configlog="${CHROOTDIR}$SR_TMP"/"$itemprgnam"-"${INFOVERSION[$itemid]}"/config.log
+  configlog="${CHROOTDIR}${SR_TMP}/${itemprgnam}-${INFOVERSION[$itemid]}/config.log"
   if [ -f "$configlog" ]; then
     cp "$configlog" "$ITEMLOGDIR"
   fi
@@ -662,7 +666,7 @@ function chroot_destroy
   log_done
   rm -rf "$MYTMPDIR"/changes/tmp
   if [ -f "$MYTMPDIR"/start ]; then
-    crap=$(find "$MYTMPDIR"/changes -newer "$MYTMPDIR"/start -print | sed -e "s#"$MYTMPDIR"/changes##" | sort)
+    crap=$(find "$MYTMPDIR"/changes -newer "$MYTMPDIR"/start -print | sed -e "s#${MYTMPDIR}/changes##" | sort)
     if [ -n "$crap" ]; then
       log_warning "$itemid: Files/directories were modified during the build"
       printf "  %s\n" ${crap}

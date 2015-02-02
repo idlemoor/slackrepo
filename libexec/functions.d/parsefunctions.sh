@@ -661,10 +661,10 @@ function parse_info_and_hints
       INFOREQUIRES[$itemid]=""
     fi
   else
+    # Get rid of %README% if and only if ADDREQUIRES is set.
     if [ -v ADDREQUIRES ]; then
-      # This gets rid of %README% if and only if ADDREQUIRES is set.
-      INFOREQUIRES[$itemid]="$(echo "${INFOREQUIRES[$itemid]}" "$ADDREQUIRES" | sed -e 's/%README%//')"
-      # Else %README% will remain, and calculate_deps will issue a warning.
+      INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]//%README%/} ${ADDREQUIRES})"
+    # Else %README% will remain, and calculate_deps will issue a warning.
     fi
   fi
 
@@ -672,7 +672,7 @@ function parse_info_and_hints
   ver="${INFOVERSION[$itemid]}"
   [ -z "$ver" ] && ver="${HINT_VERSION[$itemid]}"
   [ -z "$ver" ] && ver="$(basename "$(echo "${INFODOWNLIST[$itemid]}" | sed 's/ .*//')" 2>/dev/null | rev | cut -f 3- -d . | cut -f 1 -d - | rev)"
-  [ -z "$ver" ] && log_normal "Version of $itemid can not be determined."
+  [ -z "$ver" ] && log_warning "Version of $itemid can not be determined."
   [ -z "$ver" -a "$GOTGIT" = 'y' ] && ver="${GITREV[$itemid]:0:7}"
   [ -z "$ver" ] && ver="$(date --date=@"$(stat --format='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile")" '+%Y%m%d')"
   INFOVERSION[$itemid]="$ver"

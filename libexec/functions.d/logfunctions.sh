@@ -82,7 +82,7 @@ function init_colour
   tputbold="$(tput bold)"
   [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
   tputred="$tputbold$(tput setaf 1)"
-  [ $? != 0 ] && { red=''; DOCOLOUR='n'; return 1; }
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
   tputgreen="$tputbold$(tput setaf 2)"
   [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
   tputyellow="$tputbold$(tput setaf 3)"
@@ -153,8 +153,8 @@ function log_verbose
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  [ "$OPT_VERBOSE" = 'y' ] && echo -e "$@"
-  [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
+  [ "$OPT_VERBOSE" = 'y' ] && echo -e "$*"
+  [ "$A" = 'y' ] && echo -e "$*" >> "$ITEMLOG"
   return 0
 }
 
@@ -172,8 +172,8 @@ function log_normal
   nonewline=''
   eval lastarg=\"\${$#}\"
   [ "${lastarg: -4:4}" = '... ' ] && { nonewline='-n'; NEEDNEWLINE='y'; }
-  [ "$OPT_QUIET" != 'y' ] && echo -e $nonewline "$@"
-  [ "$A" = 'y' ] && echo -e $nonewline "$@" >> "$ITEMLOG"
+  [ "$OPT_QUIET" != 'y' ] && echo -e $nonewline "$*"
+  [ "$A" = 'y' ] && echo -e $nonewline "$*" >> "$ITEMLOG"
   return 0
 }
 
@@ -187,8 +187,8 @@ function log_always
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  echo -e "$@"
-  [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
+  echo -e "$*"
+  [ "$A" = 'y' ] && echo -e "$*" >> "$ITEMLOG"
   return 0
 }
 
@@ -202,8 +202,8 @@ function log_important
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  echo -e "${tputwhite}$@${tputnormal}"
-  [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
+  echo -e "${tputwhite}$*${tputnormal}"
+  [ "$A" = 'y' ] && echo -e "$*" >> "$ITEMLOG"
   return 0
 }
 
@@ -217,8 +217,8 @@ function log_success
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  echo -e "${tputgreen}$@${tputnormal}"
-  [ "$A" = 'y' ] && echo -e "$@" >> "$ITEMLOG"
+  echo -e "${tputgreen}$*${tputnormal}"
+  [ "$A" = 'y' ] && echo -e "$*" >> "$ITEMLOG"
   return 0
 }
 

@@ -1,1 +1,1 @@
-SPECIAL="download_basename"
+SPECIAL="download_basename unset_PKGTYPE"

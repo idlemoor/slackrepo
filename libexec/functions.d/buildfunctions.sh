@@ -172,7 +172,7 @@ function build_item_packages
   # Process other hints for the build:
 
   # NUMJOBS (with MAKEFLAGS and NUMJOBS env vars) ...
-  NUMJOBS=" ${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS} "
+  NUMJOBS="${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS}"
   tempmakeflags="MAKEFLAGS='${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS}'"
 
   # ... OPTIONS ...
@@ -228,6 +228,9 @@ function build_item_packages
       log_verbose "Special action: noexport_BUILD"
       sed -i -e "s/^BUILD=.*/BUILD='$BUILD'/" "$MYTMPIN"/"$itemfile"
       unset BUILD
+      ;;
+    'unset'* )
+      eval "${special//_/ }"
       ;;
     'noremove' )
       log_verbose "Special action: noremove"

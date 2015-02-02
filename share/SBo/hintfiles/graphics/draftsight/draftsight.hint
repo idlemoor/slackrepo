@@ -1,1 +1,1 @@
-ARCH="i386"
+SPECIAL="unset_ARCH"

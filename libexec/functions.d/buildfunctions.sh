@@ -510,7 +510,6 @@ function build_failed
     errorscan_itemlog >> "$MAINLOG"
   fi
   log_error -n "See $ITEMLOG"
-  log_error -n ":-( $itemid FAILED )-:"
 
   if [ -n "${CHROOTDIR}" ]; then
     chroot_destroy
@@ -523,6 +522,8 @@ function build_failed
     rm -rf "$MYTMPIN" "$MYTMPOUT"
     rm -rf "${SR_TMP:?NotSetSR_TMP}"/"$itemprgnam"* "${SR_TMP:?NotSetSR_TMP}"/package-"$itemprgnam"
   fi
+
+  log_error -n ":-( $itemid FAILED )-:"
 
   return 0
 }

@@ -31,16 +31,16 @@ function build_item
     'updated' )
       log_important "$itemid is up-to-date."; STATUS[$itemid]="ok"; return 0 ;;
     'aborted' )
-      log_warning -n "$itemid has been aborted."; return 1 ;;
+      log_error -n "$itemid has been aborted."; return 1 ;;
     'failed' )
-      log_warning -n "$itemid has failed to build."
-      [ -f "$SR_LOGDIR/$itemdir/$itemprgnam.log" ] && log_warning -n "See $SR_LOGDIR/$itemdir/$itemprgnam.log"
+      log_error -n "$itemid has failed to build."
+      [ -f "$SR_LOGDIR/$itemdir/$itemprgnam.log" ] && log_normal "See $SR_LOGDIR/$itemdir/$itemprgnam.log"
       return 1
       ;;
     'skipped' )
       log_warning -n "$itemid has been skipped."; return 1 ;;
     'unsupported' )
-      log_warning -n "$itemid is unsupported."; return 1 ;;
+      log_warning -n "$itemid is unsupported on ${SR_ARCH}."; return 1 ;;
     '' )
       : ;;  # see the real business below :-)
     '*' )
@@ -81,6 +81,7 @@ function build_item
       continue
     elif [ "${STATUS[$todo]}" = 'failed' ]; then
       log_error "${todo} has failed to build."
+      [ -f "$SR_LOGDIR/${ITEMDIR[$todo]}/${ITEMPRGNAM[$todo]}.log" ] && log_normal "See $SR_LOGDIR/${ITEMDIR[$todo]}/${ITEMPRGNAM[$todo]}.log"
     elif [ "${STATUS[$todo]}" = 'aborted' ]; then
       log_error "Cannot build ${todo}."
     fi

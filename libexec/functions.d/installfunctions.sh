@@ -105,14 +105,14 @@ function install_packages
       # nothing similar currently installed
       if [ "$OPT_VERBOSE" = 'y' -o "$OPT_INSTALL" = 'y' ]; then
         set -o pipefail
-        ${CHROOTCMD}${SUDO}installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
+        ROOT=${CHROOTDIR:-/} ${SUDO}installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
         pstat=$?
         set +o pipefail
       else
-        ${CHROOTCMD}${SUDO}installpkg --terse "$pkgpath" >> "$ITEMLOG" 2>&1
+        ROOT=${CHROOTDIR:-/} ${SUDO}installpkg --terse "$pkgpath" >> "$ITEMLOG" 2>&1
         pstat=$?
       fi
-      [ "$pstat" = 0 ] || { log_error -a "${itemid}: installpkg $pkgbase failed (status $stat)"; return 1; }
+      [ "$pstat" = 0 ] || { log_error -a "${itemid}: installpkg $pkgbase failed (status $pstat)"; return 1; }
       dotprofilizer "$pkgpath"
       [ "$OPT_INSTALL" = 'y' -o "${HINT_INSTALL[$itemid]}" = 'y' ] && KEEPINSTALLED[$pkgid]="$pkgbase"
     else
@@ -122,11 +122,11 @@ function install_packages
       [ "$istat" = 3 ] && log_warning -n "Attempting to upgrade or reinstall $R_INSTALLED ..."
       if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
         set -o pipefail
-        ${CHROOTCMD}${SUDO}upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$ITEMLOG"
+        ROOT=${CHROOTDIR:-/} ${SUDO}upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$ITEMLOG"
         pstat=$?
         set +o pipefail
       else
-        ${CHROOTCMD}${SUDO}upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
+        ROOT=${CHROOTDIR:-/} ${SUDO}upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
         pstat=$?
       fi
       [ "$pstat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $stat)"; return 1; }
@@ -200,7 +200,7 @@ function uninstall_packages
          [ "$force" = 'y' ] || [ "${HINT_INSTALL[$itemid]}" = 'y' ]; then
         # Conventional gentle removepkg :-)
         log_normal -a "Uninstalling $R_INSTALLED ..."
-        ${CHROOTCMD}${SUDO}removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
+        ROOT=${CHROOTDIR:-/} ${SUDO}removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
       else
         # Violent removal :D
         # Save a list of potential detritus in /etc
@@ -209,7 +209,7 @@ function uninstall_packages
         # Run removepkg
         log_verbose -a "Uninstalling $R_INSTALLED ..."
         #### if very verbose, we should really splurge this
-        ${CHROOTCMD}${SUDO}removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
+        ROOT=${CHROOTDIR:-/} ${SUDO}removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
         # Remove any surviving detritus (do nothing if not root)
         for etcfile in $etcnewfiles; do
           rm -f /"$etcfile" /"${etcfile%.new}" 2>/dev/null

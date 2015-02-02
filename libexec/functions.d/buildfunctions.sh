@@ -654,14 +654,16 @@ function chroot_destroy
   log_normal "Unmounting chroot ... "
   umount "$CHROOTDIR" || return 0
   if [ "$OPT_KEEP_TMP" = 'y' ]; then
-    rsync -rlptgo "$MYTMPDIR"/changes/"$SR_TMP" "$SR_TMP"
+    rsync -rlptgo "$MYTMPDIR"/changes/"$SR_TMP"/ "$SR_TMP"/
   fi
   log_done
   rm -rf "$MYTMPDIR"/changes/tmp
-  crap=$(find "$MYTMPDIR"/changes -newer "$MYTMPDIR"/start -print | sed -e "s#"$MYTMPDIR"/changes##" | sort)
-  if [ -n "$crap" ]; then
-    log_warning "$itemid: Files/directories were modified during the build"
-    printf "  %s\n" ${crap}
+  if [ -f "$MYTMPDIR"/start ]; then
+    crap=$(find "$MYTMPDIR"/changes -newer "$MYTMPDIR"/start -print | sed -e "s#"$MYTMPDIR"/changes##" | sort)
+    if [ -n "$crap" ]; then
+      log_warning "$itemid: Files/directories were modified during the build"
+      printf "  %s\n" ${crap}
+    fi
   fi
   rm -rf "$MYTMPDIR"/changes
   unset CHROOTCMD CHROOTDIR

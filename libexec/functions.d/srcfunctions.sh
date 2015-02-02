@@ -142,7 +142,7 @@ function download_src
     # If it's too hard for curl, we'll just zap the obvious ones:
     for urltrouble in *%*; do
       [ -e "$urltrouble" ] || break
-      mv "$urltrouble" "$(echo "$urltrouble" | sed -e 's/\%20/ /g' -e 's/\%7E/~/g' )"
+      mv "$urltrouble" "$(echo "$urltrouble" | sed -e 's/\%20/ /g' -e 's/\%7E/~/g' -e 's/\%28/(/g' -e 's/\%29/)/g')"
     done
   )
   return 0

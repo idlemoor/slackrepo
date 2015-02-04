@@ -182,24 +182,27 @@ function log_itemstart
 # Log the start of an item on standard output.
 # This is where we start logging to ITEMLOG, which is set here, using $itemid set by our caller.
 # (At any time only one ITEMLOG can be active.)
+# If the optional message is not specified, don't print the log - just setup the itemlog.
 # $1 = itemid
-# $2... = message
+# $2... = message (optional)
 # Return status: always 0
 {
   local itemid="$1"; shift
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
   [ "$itemid" != "$ITEMID" ] && ITEMTOTAL=$(( ITEMTOTAL + 1 ))
-
-  [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
-  line="-------------------------------------------------------------------------------"
-  if [ ${#1} -ge ${#line} ]; then
-    echo "${tputwhite}$*${tputnormal}"
-  else
-    pad=$(( ${#line} - ${#1} - 10 ))
-    echo "${tputwhite}$*${tputnormal} ${line:0:$pad} $(date +%T)"
-  fi
+  
   if [ -n "$itemid" ]; then
+    if [ -n "$1" ]; then
+      [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
+      line="-------------------------------------------------------------------------------"
+      if [ ${#1} -ge ${#line} ]; then
+        echo "${tputwhite}$*${tputnormal}"
+      else
+        pad=$(( ${#line} - ${#1} - 10 ))
+        echo "${tputwhite}$*${tputnormal} ${line:0:$pad} $(date +%T)"
+      fi
+    fi
     ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"
     mkdir -p "$ITEMLOGDIR"
     ITEMLOG="$ITEMLOGDIR"/"$itemprgnam".log

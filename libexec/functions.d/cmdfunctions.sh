@@ -178,6 +178,8 @@ function revert_item
   allsourcebackuptempdir="$backuptempdir"/source
   archsourcebackuptempdir="${allsourcebackuptempdir}_${SR_ARCH}"
 
+  log_itemstart "$itemid"
+
   # Check that there is something to revert.
   failmsg=''
   [ "$OPT_DRY_RUN" = 'y' ] && failmsg="[dry run]"
@@ -328,6 +330,8 @@ function remove_item
   local packagedir="$SR_PKGREPO"/"$itemdir"
   local allsourcedir="$SR_SRCREPO"/"$itemdir"
   local archsourcedir="$allsourcedir"/"$SR_ARCH"
+
+  log_itemstart "$itemid"
 
   # Preliminary warnings and comments:
   # Log a warning if there will be no backup

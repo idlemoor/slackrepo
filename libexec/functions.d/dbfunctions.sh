@@ -9,6 +9,7 @@
 #   db_set_pkgnam_itemid, db_get_pkgnam_itemid, db_del_pkgnam_itemid
 #   db_set_misc, db_get_misc, db_del_misc
 #   db_set_rev, db_get_rev, db_get_dependers, db_del_rev
+#   db_set_buildresults
 #-------------------------------------------------------------------------------
 
 function db_init
@@ -19,7 +20,7 @@ function db_init
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 1
 
-  latestschema='1'
+  latestschema='2'
   if [ -f "$SR_DATABASE" ]; then
     dbschema=$(db_get_misc schema 0 0) 2>/dev/null
   else
@@ -34,8 +35,9 @@ function db_init
       : ;;
 
   '')
-      # database schema needs to be created
+      # DATABASE SCHEMA NEEDS TO BE CREATED
       sqlite3 "$SR_DATABASE" << ++++
+create table if not exists buildresults ( itemid text primary key, time text, result text );
 create table if not exists buildsecs ( itemid text primary key, secs text, bogomips text, guessflag text );
 create table if not exists packages ( pkgnam text primary key, itemid text );
 create table if not exists misc ( key text primary key, value text );
@@ -53,6 +55,7 @@ create table if not exists revisions ( itemid text, dep text, deplist text, vers
       fi
       # load up the misc table
       db_set_misc schema "$latestschema" || return 1
+      # END DATABASE SCHEMA NEEDS TO BE CREATED
       ;;
 
   '0')
@@ -61,6 +64,7 @@ create table if not exists revisions ( itemid text, dep text, deplist text, vers
       log_normal "If you have a lot of packages, this may take a few minutes."
       # (a) create the new tables
       sqlite3 "$SR_DATABASE" << ++++
+create table if not exists buildresults ( itemid text primary key, time text, result text );
 create table if not exists buildsecs ( itemid text primary key, secs text, bogomips text, guessflag text );
 create table if not exists packages ( pkgnam text primary key, itemid text );
 create table if not exists misc ( key text primary key, value text );
@@ -150,6 +154,17 @@ create table if not exists revisions ( itemid text, dep text, deplist text, vers
       # END UPGRADE DATABASE SCHEMA FROM v0
       ;;
 
+  '1')
+      # DATABASE SCHEMA NEEDS TO BE UPGRADED FROM v1
+      log_normal "Upgrading the database schema from v${dbschema} to v${latestschema}."
+      sqlite3 "$SR_DATABASE" << ++++
+create table if not exists buildresults ( itemid text primary key, time text, result text );
+++++
+      dbstat=$?
+      [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
+      db_set_misc schema "$latestschema" || return 1
+      # END UPGRADE DATABASE SCHEMA FROM v1
+      ;;
   esac
 
   return 0
@@ -326,8 +341,8 @@ function db_set_misc
 # $1 = key
 # $2 = value (optional, default null)
 {
-  [ -z "$1" ] && return 1
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+  [ -z "$1" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "insert or replace into misc ( key, value ) values ( '$1', '$2' );"
   dbstat=$?
@@ -469,6 +484,27 @@ function db_del_rev
   unset REVCACHE[$itemid]
   sqlite3 "$SR_DATABASE" \
     "delete from revisions where itemid='$1';"
+  dbstat=$?
+  [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+# Set a record in the 'buildresults' table.
+# This table is effectively write-only (it is used for creating reports),
+# so there are no 'get' and 'del' functions.
+#-------------------------------------------------------------------------------
+
+function db_set_buildresults
+# Record the outcome of a build
+# $1 = itemid
+# $2 = result (ok, skipped, failed, or aborted)
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+  [ -z "$1" ] && return 1
+  [ -z "$2" ] && return 1
+  sqlite3 "$SR_DATABASE" \
+    "insert or replace into buildresults ( itemid, time, result ) values ( '$1', $(date +%s), '$2' );"
   dbstat=$?
   [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
   return 0

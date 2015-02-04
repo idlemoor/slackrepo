@@ -121,7 +121,6 @@ function build_item_packages
     log_warning -a "${itemid}: no \"BUILD=\" in $itemfile; using 1"
   fi
   eval $buildassign
-  #### This still isn't right when the backup is a different version :-(
   if [ "${BUILDINFO[$itemid]:0:3}" = 'add' -o "${BUILDINFO[$itemid]:0:18}" = 'update for version' ]; then
     # We can just use the SlackBuild's BUILD
     SR_BUILD="$BUILD"
@@ -138,9 +137,11 @@ function build_item_packages
     fi
     backuppkgs=( "$SR_PKGBACKUP"/"$itemdir"/*.t?z )
     if [ "${backuppkgs[0]}" != "$SR_PKGBACKUP"/"$itemdir"/'*.t?z' ]; then
-      # backup(s) exist, just use the first (as above)
+      # backup(s) exist, just look at the first (as above)
+      # if the version is the same, we need the higher build no.
+      backupver=$(echo "${backuppkgs[0]}" | rev | cut -f3 -d- | rev )
       backupbuild=$(echo "${backuppkgs[0]}" | sed -e 's/^.*-//' -e 's/[^0-9]*$//' )
-      [ "$backupbuild" -gt "$oldbuild" ] && oldbuild="$backupbuild"
+      [ "$backupver" = "${INFOVERSION[$itemid]}" ] && [ "$backupbuild" -gt "$oldbuild" ] && oldbuild="$backupbuild"
     fi
     nextbuild=$(( ${oldbuild:-0} + 1 ))
     if [ "$nextbuild" -gt "$BUILD" ]; then
@@ -166,8 +167,8 @@ function build_item_packages
     NUMJOBS="$SR_NUMJOBS"
 
   SLACKBUILDCMD="sh ./$itemfile"
-  [ "$OPT_VERY_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && SLACKBUILDCMD="/usr/libexec/slackrepo/unbuffer $SLACKBUILDCMD"
   [ -n "$SUDO" ] && [ -x /usr/bin/fakeroot ] && SLACKBUILDCMD="fakeroot $SLACKBUILDCMD"
+  [ "$OPT_VERY_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && SLACKBUILDCMD="/usr/libexec/slackrepo/unbuffer $SLACKBUILDCMD"
 
   # Process other hints for the build:
 
@@ -276,7 +277,10 @@ function build_item_packages
   fi
   buildstarttime="$(date '+%s')"
   eta=""
-  [ -n "$estbuildsecs" ] && eta="ETA ${guessflag/=/}$(date --date=@"$(( buildstarttime + estbuildsecs + 30 ))" '+%H:%M')"
+  if [ -n "$estbuildsecs" ]; then
+    eta="eta $(date --date=@"$(( buildstarttime + estbuildsecs + 30 ))" '+%H:%M'):??"
+    [ "$guessflag" = '~' ] && [ "$estbuildsecs" -gt "600" ] && eta="${eta:0:8}?:??"
+  fi
 
   # Build it
   touch "$MYTMPDIR"/start
@@ -363,13 +367,6 @@ function build_item_packages
     fi
   fi
 
-  if [ "$OPT_TEST" = 'y' ]; then
-    # this will happen inside the chw00t :D
-    test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
-  fi
-
-  chroot_destroy
-
   # update pkgnam to itemid table
   if [ "$OPT_DRY_RUN" != 'y' ]; then
     db_del_pkgnam_itemid "$itemid"
@@ -380,6 +377,13 @@ function build_item_packages
       db_set_pkgnam_itemid "$pkgnam" "$itemid"
     done
   fi
+
+  if [ "$OPT_TEST" = 'y' ]; then
+    # this will happen inside the chw00t :D
+    test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
+  fi
+
+  chroot_destroy
 
   # update build time information
   # add 1 to round it up so it's never zero
@@ -473,14 +477,21 @@ function build_ok
   write_pkg_metadata "$itemid"  # sets $CHANGEMSG
 
   # ---- Cleanup ----
-  # We can skip this if we were using the chroot :-)
-  if [ "$SYS_OVERLAYFS" != 'y' ]; then
-    # uninstall the deps
+  if [ "$SYS_OVERLAYFS" = 'y' ]; then
+    # cherry pick 'depmod' out of the cleanup hints
+    if [ -n "${HINT_CLEANUP[$itemid]}" ]; then
+      IFS=';'
+      for cleancmd in ${HINT_CLEANUP[$itemid]}; do
+        if [ "${cleancmd:0:7}" = 'depmod ' ]; then
+          eval "${SUDO}${cleancmd}" >> "$ITEMLOG" 2>&1
+        fi
+      done
+      unset IFS
+    fi
+  else
     if [ "$OPT_DRY_RUN" = 'y' ] || [ "${HINT_INSTALL[$itemid]}" != 'y' ] || [ "$OPT_INSTALL" != 'y' ]; then
       uninstall_deps "$itemid"
     fi
-    #### IMPORTANT #### some cleanup hints (depmod, possibly others) are needed even if we're chroot ####
-    # smite the temporary storage (this won't always kill everything, but it's good enough for saving space)
     [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "${SR_TMP:?NotSetSR_TMP}"/"$itemprgnam"* "${SR_TMP:?NotSetSR_TMP}"/package-"$itemprgnam"
   fi
 
@@ -638,7 +649,7 @@ function chroot_setup
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   CHROOTCMD=''
   [ "$SYS_OVERLAYFS" != 'y' ] && return 1
-  ${SUDO}mkdir -p "$MYTMPDIR"/{changes,workdir,chroot}
+  mkdir -p "$MYTMPDIR"/{changes,workdir,chroot}
   ${SUDO}mount -t overlay overlay -olowerdir=/,upperdir="$MYTMPDIR"/changes,workdir="$MYTMPDIR"/workdir "$MYTMPDIR"/chroot || return 1
   #### do we actually need any of these?
   # ${SUDO}mount -t devpts  devpts  -ogid=5,mode=620 "$MYTMPDIR"/chroot/dev/pts
@@ -647,6 +658,7 @@ function chroot_setup
   # ${SUDO}mount -t sysfs   sysfs   "$MYTMPDIR"/chroot/sys
   CHROOTDIR="${MYTMPDIR}/chroot/"   # note the trailing slash
   CHROOTCMD="chroot ${CHROOTDIR} "  # note the trailing space
+  [ -n "$SUDO" ] && CHROOTCMD="sudo chroot --userspec=${USER} ${CHROOTDIR} "
   return 0
 }
 
@@ -659,20 +671,20 @@ function chroot_destroy
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$CHROOTDIR" ] && return 0
   log_normal "Unmounting chroot ... "
-  umount "$CHROOTDIR" || return 0
-  if [ "$OPT_KEEP_TMP" = 'y' ]; then
+  ${SUDO}umount "$CHROOTDIR" || return 0
+  if [ "$OPT_KEEP_TMP" = 'y' ] && [ -d "$MYTMPDIR"/changes/"$SR_TMP" ]; then
     rsync -rlptgo "$MYTMPDIR"/changes/"$SR_TMP"/ "$SR_TMP"/
   fi
   log_done
-  rm -rf "$MYTMPDIR"/changes/tmp
+  ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes/{"$SR_TMP","${MYTMPDIR:?NotSetMYTMPDIR}"}
   if [ -f "$MYTMPDIR"/start ]; then
-    crap=$(find "$MYTMPDIR"/changes -newer "$MYTMPDIR"/start -print | sed -e "s#${MYTMPDIR}/changes##" | sort)
+    crap=$(find "$MYTMPDIR"/changes -newer "$MYTMPDIR"/start -print | sed -e "s#${MYTMPDIR}/changes##" -e '/^\/tmp/d' -e '/^\/dev\/ttyp/d' | sort)
     if [ -n "$crap" ]; then
       log_warning "$itemid: Files/directories were modified during the build"
       printf "  %s\n" ${crap}
     fi
   fi
-  rm -rf "$MYTMPDIR"/changes
+  ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes
   unset CHROOTCMD CHROOTDIR
   return 0
 }

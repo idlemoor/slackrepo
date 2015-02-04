@@ -9,140 +9,27 @@
 #
 #-------------------------------------------------------------------------------
 # logfunctions.sh - logging functions for slackrepo
-#   changelog
-#   init_colour
-#   log_start
-#   log_itemstart
+# Progress:
 #   log_verbose
 #   log_normal
 #   log_always
 #   log_important
-#   log_success
 #   log_warning
 #   log_error
 #   log_done
+# Start and finish:
+#   log_start
+#   log_itemstart
+#   log_itemfinish
+# Utilities:
+#   init_colour
+#   changelog
 #   errorscan_itemlog
 #   format_left_right
 #-------------------------------------------------------------------------------
 
-function changelog
-# Append an entry to the main changelog and to the item's changelog
-# $1    = itemid
-# $2    = operation (e.g. "Updated for git 1a2b3c4")
-# $3    = extrastuff (e.g. git commit message)
-# $4... = package paths
-# Return status: always 0
-{
-  itemid="$1"
-  operation="$2"
-  extrastuff="$3"
-  shift 3
-
-  if [ "$OPT_DRY_RUN" != 'y' ]; then
-    echo "+--------------------------+"  > "$ITEMLOGDIR"/ChangeLog.new
-    echo "$(LC_ALL=C date -u)"          >> "$ITEMLOGDIR"/ChangeLog.new
-    if [ -n "$extrastuff" ]; then
-      details="${operation}. LINEFEED ${extrastuff} NEWLINE"
-    else
-      details="${operation}. NEWLINE"
-    fi
-    while [ $# != 0 ]; do
-      pkgbase=$(basename "$1")
-      shift
-      echo "${itemid}/${pkgbase}: ${operation}."   >> "$ITEMLOGDIR"/ChangeLog.new
-      [ -n "$extrastuff" ] && echo "  $extrastuff" >> "$ITEMLOGDIR"/ChangeLog.new
-      echo "${itemid}/${pkgbase}: ${details}" >> "$CHANGELOG"
-    done
-    if [ -f "$ITEMLOGDIR"/ChangeLog ]; then
-      echo "" | cat - "$ITEMLOGDIR"/ChangeLog >> "$ITEMLOGDIR"/ChangeLog.new
-    fi
-    mv "$ITEMLOGDIR"/ChangeLog.new "$ITEMLOGDIR"/ChangeLog
-  fi
-  return 0
-}
-
 #-------------------------------------------------------------------------------
-
-function init_colour
-# Set up console logging colours
-# Return status:
-# 0 = imax
-# 1 = 405 lines
-{
-  tputbold=''
-  tputred=''
-  tputgreen=''
-  tputyellow=''
-  tputwhite=''
-  tputnormal=''
-  DOCOLOUR='n'
-  [ "$OPT_COLOR" = 'always'       ] && DOCOLOUR='y'
-  [ "$OPT_COLOR" = 'auto' -a -t 1 ] && DOCOLOUR='y'
-  [ "$DOCOLOUR" = 'n' ] && return 1
-  tputbold="$(tput bold)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputred="$tputbold$(tput setaf 1)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputgreen="$tputbold$(tput setaf 2)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputyellow="$tputbold$(tput setaf 3)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputwhite="$tputbold$(tput setaf 7)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputnormal="$(tput sgr0)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function log_start
-# Log the start of a top level item on standard output.
-# $* = message
-# Return status: always 0
-{
-  msg="${*}                                                                        "
-  line="==============================================================================="
-  echo ""
-  echo "$line"
-  echo "${msg:0:70} $(date +%T)"
-  echo "$line"
-  echo ""
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function log_itemstart
-# Log the start of an item on standard output.
-# This is where we start logging to ITEMLOG, which is set here, using $itemid set by our caller.
-# (At any time only one ITEMLOG can be active.)
-# $1 = itemid
-# $2... = message
-# Return status: always 0
-{
-  local itemid="$1"; shift
-  local itemprgnam="${ITEMPRGNAM[$itemid]}"
-  local itemdir="${ITEMDIR[$itemid]}"
-  [ "$itemid" != "$ITEMID" ] && ITEMTOTAL=$(( ITEMTOTAL + 1 ))
-
-  [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
-  line="-------------------------------------------------------------------------------"
-  if [ ${#1} -ge ${#line} ]; then
-    echo "${tputwhite}$*${tputnormal}"
-  else
-    pad=$(( ${#line} - ${#1} - 10 ))
-    echo "${tputwhite}$*${tputnormal} ${line:0:$pad} $(date +%T)"
-  fi
-  if [ -n "$itemid" ]; then
-    ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"
-    mkdir -p "$ITEMLOGDIR"
-    ITEMLOG="$ITEMLOGDIR"/"$itemprgnam".log
-    echo "$* $(date '+%F %T')"  > "$ITEMLOG"
-  fi
-  return 0
-}
-
+# PROGRESS
 #-------------------------------------------------------------------------------
 
 function log_verbose
@@ -209,25 +96,10 @@ function log_important
 
 #-------------------------------------------------------------------------------
 
-function log_success
-# Log a message to standard output in green highlight.
-# Log a message to ITEMLOG if '-a' is specified.
-# $* = message
-# Return status: always 0
-{
-  A='n'
-  [ "$1" = '-a' ] && { A='y'; shift; }
-  echo -e "${tputgreen}$*${tputnormal}"
-  [ "$A" = 'y' ] && echo -e "$*" >> "$ITEMLOG"
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
 function log_warning
 # Log a message to standard output in yellow highlight.
 # Log a message to ITEMLOG if '-a' is specified.
-# Message is automatically prefixed with 'WARNING' (unless '-n' is specified).
+# Message is prefixed with 'WARNING' (unless '-n' is specified).
 # Message is remembered in the array WARNINGLIST (unless '-n' is specified).
 # $* = message
 # Return status: always 0
@@ -252,7 +124,7 @@ function log_warning
 function log_error
 # Log a message to standard output in red highlight.
 # Log a message to ITEMLOG if '-a' is specified.
-# Message is automatically prefixed with 'ERROR' (unless '-n' is specified).
+# Message is prefixed with 'ERROR' (unless '-n' is specified).
 # $* = message
 # Return status: always 0
 {
@@ -281,6 +153,164 @@ function log_done
   [ "$1" = '-a' ] && { A='y'; shift; }
   echo "done."
   [ "$A" = 'y' ] && echo "done." >> "$ITEMLOG"
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+# START AND FINISH
+# note that these functions set various globals etc
+#-------------------------------------------------------------------------------
+
+function log_start
+# Log the start of a top level item on standard output.
+# $* = message
+# Return status: always 0
+{
+  msg="${*}                                                                        "
+  line="==============================================================================="
+  echo ""
+  echo "$line"
+  echo "${msg:0:70} $(date +%T)"
+  echo "$line"
+  echo ""
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function log_itemstart
+# Log the start of an item on standard output.
+# This is where we start logging to ITEMLOG, which is set here, using $itemid set by our caller.
+# (At any time only one ITEMLOG can be active.)
+# $1 = itemid
+# $2... = message
+# Return status: always 0
+{
+  local itemid="$1"; shift
+  local itemprgnam="${ITEMPRGNAM[$itemid]}"
+  local itemdir="${ITEMDIR[$itemid]}"
+  [ "$itemid" != "$ITEMID" ] && ITEMTOTAL=$(( ITEMTOTAL + 1 ))
+
+  [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
+  line="-------------------------------------------------------------------------------"
+  if [ ${#1} -ge ${#line} ]; then
+    echo "${tputwhite}$*${tputnormal}"
+  else
+    pad=$(( ${#line} - ${#1} - 10 ))
+    echo "${tputwhite}$*${tputnormal} ${line:0:$pad} $(date +%T)"
+  fi
+  if [ -n "$itemid" ]; then
+    ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"
+    mkdir -p "$ITEMLOGDIR"
+    ITEMLOG="$ITEMLOGDIR"/"$itemprgnam".log
+    echo "$* $(date '+%F %T')"  > "$ITEMLOG"
+  fi
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function log_itemfinish
+# Log the finish of an item to standard output, and to ITEMLOG
+# $1 = itemid
+# $2 = result ('ok', 'skipped', 'failed', or 'aborted')
+# $3 = message (optional)
+# Return status: always 0
+{
+  local itemid="$1"
+  local result="${2^^}"
+  local message="$1"
+  [ "$result" != 'OK' ] && message="$message $result"
+  [ -n "$3" ] && message="$message $3"
+  case "$result" in
+    'OK')
+      echo -e "${tputgreen}:-) $message (-:${tputnormal}"
+      echo -e ":-) $message (-:" >> "$ITEMLOG"
+      ;;
+    'SKIPPED')
+      echo -e "${tputyellow}:-/ $message /-:${tputnormal}"
+      echo -e ":-/ $message /-:" >> "$ITEMLOG"
+      ;;
+    'FAILED' | 'ABORTED')
+      echo -e "${tputred}:-( $message )-:${tputnormal}"
+      echo -e ":-( $message )-:" >> "$ITEMLOG"
+      ;;
+  esac
+  eval "${result}LIST+=( ${itemid} )"
+  db_set_buildresults "$itemid" "$2"
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+# UTILITIES
+#-------------------------------------------------------------------------------
+
+function init_colour
+# Set up console logging colours
+# Return status:
+# 0 = imax
+# 1 = 405 lines
+{
+  tputbold=''
+  tputred=''
+  tputgreen=''
+  tputyellow=''
+  tputwhite=''
+  tputnormal=''
+  DOCOLOUR='n'
+  [ "$OPT_COLOR" = 'always'       ] && DOCOLOUR='y'
+  [ "$OPT_COLOR" = 'auto' -a -t 1 ] && DOCOLOUR='y'
+  [ "$DOCOLOUR" = 'n' ] && return 1
+  tputbold="$(tput bold)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputred="$tputbold$(tput setaf 1)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputgreen="$tputbold$(tput setaf 2)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputyellow="$tputbold$(tput setaf 3)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputwhite="$tputbold$(tput setaf 7)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputnormal="$(tput sgr0)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function changelog
+# Append an entry to the main changelog and to the item's changelog
+# $1    = itemid
+# $2    = operation (e.g. "Updated for git 1a2b3c4")
+# $3    = extrastuff (e.g. git commit message)
+# $4... = package paths
+# Return status: always 0
+{
+  itemid="$1"
+  operation="$2"
+  extrastuff="$3"
+  shift 3
+
+  if [ "$OPT_DRY_RUN" != 'y' ]; then
+    echo "+--------------------------+"  > "$ITEMLOGDIR"/ChangeLog.new
+    echo "$(LC_ALL=C date -u)"          >> "$ITEMLOGDIR"/ChangeLog.new
+    if [ -n "$extrastuff" ]; then
+      details="${operation}. LINEFEED ${extrastuff} NEWLINE"
+    else
+      details="${operation}. NEWLINE"
+    fi
+    while [ $# != 0 ]; do
+      pkgbase=$(basename "$1")
+      shift
+      echo "${itemid}/${pkgbase}: ${operation}."   >> "$ITEMLOGDIR"/ChangeLog.new
+      [ -n "$extrastuff" ] && echo "  $extrastuff" >> "$ITEMLOGDIR"/ChangeLog.new
+      echo "${itemid}/${pkgbase}: ${details}" >> "$CHANGELOG"
+    done
+    if [ -f "$ITEMLOGDIR"/ChangeLog ]; then
+      echo "" | cat - "$ITEMLOGDIR"/ChangeLog >> "$ITEMLOGDIR"/ChangeLog.new
+    fi
+    mv "$ITEMLOGDIR"/ChangeLog.new "$ITEMLOGDIR"/ChangeLog
+  fi
   return 0
 }
 

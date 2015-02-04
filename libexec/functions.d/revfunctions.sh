@@ -142,7 +142,6 @@ function calculate_deps_and_status
     FULLDEPS[$itemid]=''
   else
     local -a myfulldeps=()
-    #### maybe we should do this loop in reverse order
     for dep in "${deplist[@]}"; do
       calculate_deps_and_status "$dep" "$itemid" "$indent  "
       for newdep in ${FULLDEPS[$dep]} "$dep"; do
@@ -190,7 +189,6 @@ function calculate_deps_and_status
       'aborted' | 'skipped' | 'failed' | '*' )
         STATUS[$itemid]="aborted"
         BUILDINFO[$itemid]="aborted"
-        ABORTEDLIST+=( "$itemid" )
     esac
   done
 

@@ -107,9 +107,8 @@ function build_item
         log_normal "Missing dependencies:"
         log_normal "$(printf '  %s\n' "${missingdeps[@]}")"
       fi
+      log_itemfinish "$todo" "aborted"
       STATUS[$todo]='aborted'
-      ABORTEDLIST+=( "$todo" )
-      log_error -n ":-( $todo ABORTED )-:"
     elif [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
       build_item_packages "$todo"
     fi
@@ -180,21 +179,21 @@ function revert_item
   archsourcebackuptempdir="${allsourcebackuptempdir}_${SR_ARCH}"
 
   # Check that there is something to revert.
-  failmsg=":-( $itemid FAILED )-:"
-  [ "$OPT_DRY_RUN" = 'y' ] && failmsg=":-( $itemid: FAILED [dry run] )-:"
+  failmsg=''
+  [ "$OPT_DRY_RUN" = 'y' ] && failmsg="[dry run]"
   if [ -z "$SR_PKGBACKUP" ]; then
     log_error "No backup repository configured -- please set PKGBACKUP in your config file"
-    log_error "$failmsg"
+    log_itemfinish "$itemid" 'failed' "$failmsg"
     return 1
   elif [ ! -d "$backupdir" ]; then
     log_error "$itemid has no backup packages to be reverted"
-    log_error "$failmsg"
+    log_itemfinish "$itemid" 'failed' "$failmsg"
     return 1
   else
     for f in "$backupdir"/*.t?z; do
       [ -f "$f" ] && break
       log_error "$itemid has no backup packages to be reverted"
-      log_error "$failmsg"
+      log_itemfinish "$itemid" 'failed' "$failmsg"
       return 1
     done
   fi
@@ -213,7 +212,7 @@ function revert_item
     done < "$backuprevfile"
   else
     log_error "There is no revision file in $backupdir"
-    log_error "$failmsg"
+    log_itemfinish "$itemid" 'failed' "$failmsg"
     return 1
   fi
   # Log a warning about any dependers
@@ -307,12 +306,11 @@ function revert_item
   done
   if [ "$OPT_DRY_RUN" != 'y' ]; then
     changelog "$itemid" "Reverted" "" "$packagedir"/*.t?z
-    log_success ":-) $itemid: Reverted (-:"
+    log_itemfinish "$itemid" 'ok' "Reverted"
   else
-    log_success ":-) $itemid: Reverted [dry run] (-:"
+    log_itemfinish "$itemid" 'ok' "Reverted [dry run]"
   fi
 
-  OKLIST+=( "$itemid" )
   return 0
 }
 
@@ -464,9 +462,9 @@ function remove_item
   # Changelog, and exit with a smile
   if [ "$OPT_DRY_RUN" != 'y' ]; then
     changelog "$itemid" "Removed" "" "${pkglist[@]}"
-    log_success ":-) $itemid: Removed (-:"
+    log_itemfinish "$itemid" 'ok' "Removed"
   else
-    log_success ":-) $itemid: Removed [dry run] (-:"
+    log_itemfinish "$itemid" 'ok' "Removed [dry run]"
   fi
   OKLIST+=( "$itemid" )
 

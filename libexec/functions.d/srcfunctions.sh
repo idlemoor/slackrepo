@@ -35,8 +35,7 @@ function verify_src
   # if the item doesn't need source, return 0
   [ -z "$DOWNLIST" -o -z "$DOWNDIR" ] && return 0
   # if unsupported/untested, return 5
-  [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ] && \
-    { log_warning -n "$itemid is $DOWNLIST on $SR_ARCH"; return 5; }
+  [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ] && return 5
   # if no directory, return 6 (nodownload hint) or 3 (source not found)
   [ ! -d "$DOWNDIR" -a -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
   [ ! -d "$DOWNDIR" ] && return 3

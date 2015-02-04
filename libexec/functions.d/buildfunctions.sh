@@ -87,16 +87,16 @@ function build_item_packages
        verify_src "$itemid" || { log_error -a "${itemid}: Downloaded source is bad"; build_failed "$itemid"; return 3; }
        ;;
     5) # unsupported/untested
-       build_skipped "$itemid"
+       build_skipped "$itemid" "${INFODOWNLIST[$itemid]} on $SR_ARCH"
        return 5
        ;;
     6) # nodownload hint (probably needs manual download due to licence agreement)
-       log_warning -n -a ":-/ SKIPPED $itemid - please download the source /-:"
-       log_normal "  from: ${INFODOWNLIST[$itemid]}"
-       log_normal "  to:   ${SRCDIR[$itemid]}"
+       log_warning -n -a "$itemid: Please download the source"
+       log_warning -n -a "  from: ${INFODOWNLIST[$itemid]}"
+       log_warning -n -a "  to:   ${SRCDIR[$itemid]}"
        # We ought to prepare that directory ;-)
        mkdir -p "${SRCDIR[$itemid]}"
-       build_skipped "$itemid"
+       build_skipped "$itemid" "Source not available"
        return 5
        ;;
   esac
@@ -426,7 +426,6 @@ function build_ok
   local itemfile="${ITEMFILE[$itemid]}"
 
   STATUS[$itemid]="ok"
-  OKLIST+=( "$itemid" )
 
   [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$MYTMPIN"
 
@@ -499,7 +498,7 @@ function build_ok
   buildopt=''
   [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
   [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
-  log_success ":-) ${itemid}: $CHANGEMSG$buildopt (-:"
+  log_itemfinish "${itemid}" 'ok' "$CHANGEMSG$buildopt"
 
   return 0
 }
@@ -519,8 +518,6 @@ function build_failed
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
-  STATUS[$itemid]="failed"
-  FAILEDLIST+=( "$itemid" )
 
   if [ "$OPT_QUIET" != 'y' ]; then
     errorscan_itemlog | tee -a "$MAINLOG"
@@ -541,7 +538,8 @@ function build_failed
     rm -rf "${SR_TMP:?NotSetSR_TMP}"/"$itemprgnam"* "${SR_TMP:?NotSetSR_TMP}"/package-"$itemprgnam"
   fi
 
-  log_error -n ":-( $itemid FAILED )-:"
+  log_itemfinish "$itemid" 'failed'
+  STATUS[$itemid]="failed"
 
   return 0
 }
@@ -551,14 +549,15 @@ function build_failed
 function build_skipped
 # Log and cleanup for a build that has been skipped
 # $1 = itemid
+# $2 = message
 # Return status: always 0
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
 
+  log_itemfinish "$itemid" "skipped" "$2"
   STATUS[$itemid]="skipped"
-  SKIPPEDLIST+=( "$itemid" )
 
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
     rm -rf "$MYTMPIN" "$MYTMPOUT"

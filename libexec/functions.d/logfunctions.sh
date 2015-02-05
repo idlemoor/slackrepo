@@ -206,6 +206,12 @@ function log_itemstart
     ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"
     mkdir -p "$ITEMLOGDIR"
     ITEMLOG="$ITEMLOGDIR"/"$itemprgnam".log
+    if [ -f "$ITEMLOG" ]; then
+      oldlog="${ITEMLOG%.log}.1.log"
+      mv "$ITEMLOG" "$oldlog"
+      nohup gzip -f "$oldlog" &
+      rm -f config.log 2>/dev/null
+    fi
     echo "$* $(date '+%F %T')"  > "$ITEMLOG"
   fi
   return 0

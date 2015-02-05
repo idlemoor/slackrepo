@@ -235,7 +235,7 @@ function build_item_packages
       unset BUILD
       ;;
     'unset'* )
-      eval "${special//_/ }"
+      eval "${special/_/ }"
       ;;
     'noremove' )
       log_verbose "Special action: noremove"

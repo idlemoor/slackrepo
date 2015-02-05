@@ -104,7 +104,7 @@ function build_item_packages
   # Copy or link the source (if any) into the temporary SlackBuild directory
   # (need to copy if this is a chroot, it might be on an inaccessible mounted FS)
   if [ -n "${INFODOWNLIST[$itemid]}" ]; then
-    if [ "$SYS_OVERLAYFS" = 'y' ]; then
+    if [ "$OPT_CHROOT" = 'y' ]; then
       cp -a "${SRCDIR[$itemid]}"/* "$MYTMPIN/"
     else
       # "Copy / is dandy / but linky / is quicky" [after Ogden Nash]
@@ -476,7 +476,7 @@ function build_ok
   write_pkg_metadata "$itemid"  # sets $CHANGEMSG
 
   # ---- Cleanup ----
-  if [ "$SYS_OVERLAYFS" = 'y' ]; then
+  if [ "$OPT_CHROOT" = 'y' ]; then
     # cherry pick 'depmod' out of the cleanup hints
     if [ -n "${HINT_CLEANUP[$itemid]}" ]; then
       IFS=';'
@@ -643,11 +643,11 @@ function chroot_setup
 # Also sets the global variables $CHROOTCMD and $CHROOTDIR
 # Return status:
 # 0 = it worked
-# 1 = SYS_OVERLAYFS is not set, or could not mount the overlay
+# 1 = OPT_CHROOT is not set, or could not mount the overlay
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   CHROOTCMD=''
-  [ "$SYS_OVERLAYFS" != 'y' ] && return 1
+  [ "$OPT_CHROOT" != 'y' ] && return 1
   mkdir -p "$MYTMPDIR"/{changes,workdir,chroot}
   ${SUDO}mount -t overlay overlay -olowerdir=/,upperdir="$MYTMPDIR"/changes,workdir="$MYTMPDIR"/workdir "$MYTMPDIR"/chroot || return 1
   #### do we actually need any of these?
@@ -677,7 +677,7 @@ function chroot_destroy
   log_done
   ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes/{"$SR_TMP","${MYTMPDIR:?NotSetMYTMPDIR}"}
   if [ -f "$MYTMPDIR"/start ]; then
-    crap=$(find "$MYTMPDIR"/changes -newer "$MYTMPDIR"/start -print | sed -e "s#${MYTMPDIR}/changes##" -e '/^\/tmp/d' -e '/^\/dev\/ttyp/d' | sort)
+    crap=$(find "$MYTMPDIR"/changes -newer "$MYTMPDIR"/start -print 2>/dev/null | sed -e "s#${MYTMPDIR}/changes##" -e '/^\/tmp/d' -e '/^\/dev\/ttyp/d' | sort)
     if [ -n "$crap" ]; then
       log_warning "$itemid: Files/directories were modified during the build"
       printf "  %s\n" ${crap}

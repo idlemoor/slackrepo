@@ -64,7 +64,7 @@ starttime=$(date +%s)
 # OPT_XXXX represents command line option XXXX
 # SR_XXXX represents config file variable XXXX
 
-optnames="REPO QUIET VERBOSE VERY_VERBOSE MAKE_VERBOSE TEST DRY_RUN INSTALL KEEP_TMP TRACE COLOR"
+optnames="REPO QUIET VERBOSE VERY_VERBOSE MAKE_VERBOSE TEST DRY_RUN INSTALL KEEP_TMP TRACE CHROOT COLOR"
 # Initialise them all to null, set -u friendly ;-)
 for opt in $optnames ; do
   eval OPT_"$opt"=''
@@ -295,6 +295,11 @@ done
 [ "$OPT_DRY_RUN" = 'y' ] && OPT_INSTALL='n'
 # lazy implementation of --make-verbose ;-)
 [ "$OPT_MAKE_VERBOSE" = 'y' ] && export VERBOSE=1 V=1
+# chroot will only work if overlayfs is available
+if [ "$OPT_CHROOT" = 'y' ] && [ "$SYS_OVERLAYFS" != 'y' ]; then
+  OPT_CHROOT='n'
+  echo "$(basename "$0"): Warning: cannot enable --chroot (overlayfs is not available in your kernel)"
+fi
 
 # If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly
 if [ -z "$SR_NUMJOBS" ]; then
@@ -351,6 +356,7 @@ fi
 [         "$OPT_TEST" = 'y' ] && log_verbose "  --test"
 [     "$OPT_KEEP_TMP" = 'y' ] && log_verbose "  --keep-tmp"
 [        "$OPT_TRACE" = 'y' ] && log_verbose "  --trace"
+[       "$OPT_CHROOT" = 'y' ] && log_verbose "  --chroot"
 [    "$OPT_COLOR" != 'auto' ] && log_verbose "  --color=$OPT_COLOR"
 
 for name in $varnames; do

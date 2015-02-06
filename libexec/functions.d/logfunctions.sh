@@ -209,7 +209,7 @@ function log_itemstart
     if [ -f "$ITEMLOG" ]; then
       oldlog="${ITEMLOG%.log}.1.log"
       mv "$ITEMLOG" "$oldlog"
-      nohup gzip -f "$oldlog" &
+      gzip -f "$oldlog" &
       rm -f config.log 2>/dev/null
     fi
     echo "$* $(date '+%F %T')"  > "$ITEMLOG"

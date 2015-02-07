@@ -3,14 +3,14 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # cmdfunctions.sh - command functions for slackrepo
-#   build_item   (see also build_item_packages in buildfunctions.sh)
-#   rebuild_item
+#   build_command   (see also build_item_packages in buildfunctions.sh)
+#   rebuild_command
 #   update_item
-#   revert_item
+#   revert_command
 #   remove_item
 #-------------------------------------------------------------------------------
 
-function build_item
+function build_command
 # Build an item and all its dependencies
 # $1 = itemid
 # Return status:
@@ -119,39 +119,39 @@ function build_item
 
 #-------------------------------------------------------------------------------
 
-function rebuild_item
-# Implements the 'rebuild' command (by calling build_item)
+function rebuild_command
+# Implements the 'rebuild' command (by calling build_command)
 # $1 = itemid
 # Return status:
-# 0 = ok, anything else = whatever was returned by build_item
+# 0 = ok, anything else = whatever was returned by build_command
 {
-  build_item "${1:-$ITEMID}"
+  build_command "${1:-$ITEMID}"
   return $?
 }
 
 #-------------------------------------------------------------------------------
 
-function update_item
+function update_command
 # Implements the 'update' command:
 # build or rebuild an item that exists, or remove packages for an item that doesn't exist
 # $1 = itemid
 # Return status:
-# 0 = ok, anything else = whatever was returned by build_item or remove_item
+# 0 = ok, anything else = whatever was returned by build_command or remove_command
 {
   local itemid="${1:-$ITEMID}"
   local itemdir="${ITEMDIR[$itemid]}"
   if [ -d "$SR_SBREPO"/"$itemdir"/ ]; then
-    build_item "$itemid"
+    build_command "$itemid"
     return $?
   else
-    remove_item "$itemid"
+    remove_command "$itemid"
     return $?
   fi
 }
 
 #-------------------------------------------------------------------------------
 
-function revert_item
+function revert_command
 # Revert an item's package(s) and source from the backup repository
 # (and send the current packages and source into the backup repository)
 # $1 = itemid
@@ -318,7 +318,7 @@ function revert_item
 
 #-------------------------------------------------------------------------------
 
-function remove_item
+function remove_command
 # Move an item's source, package(s) and metadata to the backup.
 # $1 = itemid
 # Return status: always 0

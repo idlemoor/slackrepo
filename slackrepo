@@ -57,17 +57,32 @@ function exit_cleanup
 starttime=$(date +%s)
 
 #-------------------------------------------------------------------------------
-# Mode and control args
+# Command modes and options
 #-------------------------------------------------------------------------------
 
 # General rule:
-# OPT_XXXX represents command line option XXXX
-# SR_XXXX represents config file variable XXXX
+# OPT_XXXX is the internal representation of command line option XXXX
+# SR_XXXX is the internal representation of config file variable XXXX
 
-optnames="REPO QUIET VERBOSE VERY_VERBOSE MAKE_VERBOSE TEST DRY_RUN INSTALL KEEP_TMP TRACE CHROOT COLOR"
-# Initialise them all to null, set -u friendly ;-)
-for opt in $optnames ; do
-  eval OPT_"$opt"=''
+# The command modes and options are extensible by adding more source files in
+#   /usr/libexec/slackrepo/functions.d
+# To define an extended command mode 'foo', add a function named foo_command
+# To define an extended option '--bar', do OPTIONLIST+=( 'BAR' )
+
+# Initialise OPTIONLIST first so that any extended options are at the end
+OPTIONLIST=( 'REPO' 'QUIET' 'VERBOSE' 'VERY_VERBOSE' 'MAKE_VERBOSE' 'TEST DRY_RUN' 'INSTALL' 'KEEP_TMP' 'TRACE' 'CHROOT' 'COLOR' )
+
+# Get the support functions
+for f in /usr/libexec/$(basename "$0")/functions.d/*.sh; do
+  if [ -x "$f" ]; then
+    . "$f"
+  fi
+done
+
+# Initialise all the undefined options to null, set -u friendly ;-)
+for opt in "${OPTIONLIST[@]}" ; do
+  optopt="OPT_$opt"
+  [ "${!optopt-unset}" = 'unset' ] && [ -z "${!optopt}" ] && eval "$optopt"=''
 done
 # Initialise OPT_REPO from env var $REPO:
 OPT_REPO="$REPO"
@@ -121,7 +136,7 @@ while [ $# != 0 ]; do
       shift; continue ;;
     --* )
       found='n'
-      for opt in $optnames; do
+      for opt in "${OPTIONLIST[@]}"; do
         arg=$(echo "$opt" | tr '_' '-' | tr '[:upper:]' '[:lower:]')
         if [ "$1" = "--${arg}" -o "$1" = "--${arg}=yes" -o "$1" = "--${arg}=y" ]; then
           eval OPT_"${opt}"='y'
@@ -188,13 +203,6 @@ export PATH="/usr/libexec/$(basename "$0"):$PATH"
 # Ensure ctrl-c (etc) exits the whole thing, not just a random subshell
 trap "exit_cleanup; exit 1" SIGINT SIGQUIT SIGTERM
 
-# Get the support functions
-for f in /usr/libexec/$(basename "$0")/functions.d/*.sh; do
-  if [ -x "$f" ]; then
-    . "$f"
-  fi
-done
-
 #-------------------------------------------------------------------------------
 # Configuration
 #-------------------------------------------------------------------------------
@@ -236,7 +244,7 @@ genrepnames="USE_GENREPOS REPOSROOT REPOSOWNER REPOSOWNERGPG DL_URL \
              GPGBIN USE_GPGAGENT FOR_SLAPTGET FOLLOW_SYMLINKS REPO_SUBDIRS REPO_EXCLUDES"
 initnames="INIT_GITCLONE INIT_GITBRANCH"
 # Initialise the SR_variables from the environment:
-for envvar in $varnames $genrepnames $initnames $optnames ; do
+for envvar in $varnames $genrepnames $initnames "${OPTIONLIST[@]}" ; do
   srvar="SR_$envvar"
   eval "$srvar=\"${!envvar}\""
 done
@@ -274,7 +282,7 @@ for name in $varnames $genrepnames $initnames; do
   eval unset "$name"
 done
 # and do something similar for the OPT_ variables:
-for name in $optnames ; do
+for name in "${OPTIONLIST[@]}" ; do
   optvar="OPT_$name"
   [ -z "${!optvar}" ] && eval "$optvar=\"${!name}\""
   eval unset "$name"
@@ -550,10 +558,10 @@ while [ $# != 0 ]; do
   # are dealing with the top level item.
   for ITEMID in "${PARSEDLIST[@]}"; do
     log_start "$ITEMID"
-    # Commands are extensible, just put a script defining CMD_item() into functions.d/
-    cmdfunction="${CMD}_item"
+    # Commands are extensible, just put a script defining CMD_command() into functions.d/
+    cmdfunction="${CMD}_command"
     if [ "$(type -t "$cmdfunction")" = 'function' ]; then
-      eval "${CMD}_item" "$ITEMID"
+      eval "${CMD}_command" "$ITEMID"
     else
       log_error "$(basename "$0"): Unrecognised CMD = $CMD"
       exit 4

@@ -190,8 +190,7 @@ function log_itemstart
   local itemid="$1"; shift
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
-  [ "$itemid" != "$ITEMID" ] && ITEMTOTAL=$(( ITEMTOTAL + 1 ))
-  
+
   if [ -n "$itemid" ]; then
     if [ -n "$1" ]; then
       [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
@@ -234,19 +233,20 @@ function log_itemfinish
   case "$result" in
     'OK')
       echo -e "${tputgreen}:-) $message (-:${tputnormal}"
-      echo -e ":-) $message (-:" >> "$ITEMLOG"
+      [ -n "$ITEMLOG" ] && echo -e ":-) $message (-:" >> "$ITEMLOG"
       ;;
     'SKIPPED')
       echo -e "${tputyellow}:-/ $message /-:${tputnormal}"
-      echo -e ":-/ $message /-:" >> "$ITEMLOG"
+      [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:" >> "$ITEMLOG"
       ;;
     'FAILED' | 'ABORTED')
       echo -e "${tputred}:-( $message )-:${tputnormal}"
-      echo -e ":-( $message )-:" >> "$ITEMLOG"
+      [ -n "$ITEMLOG" ] && echo -e ":-( $message )-:" >> "$ITEMLOG"
       ;;
   esac
   eval "${result}LIST+=( ${itemid} )"
   db_set_buildresults "$itemid" "$2"
+  unset ITEMLOG
   return 0
 }
 

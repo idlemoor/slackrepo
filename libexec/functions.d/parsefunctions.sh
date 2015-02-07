@@ -527,6 +527,7 @@ function parse_info_and_hints
 
   # Check for unsupported/untested:
   if [ "${INFODOWNLIST[$itemid]}" = "UNSUPPORTED" -o "${INFODOWNLIST[$itemid]}" = "UNTESTED" ]; then
+    log_itemstart "$itemid"
     log_itemfinish "$itemid" "skipped" "${INFODOWNLIST[$itemid]} on $SR_ARCH"
     STATUS[$itemid]="unsupported"
     return 1
@@ -560,6 +561,7 @@ function parse_info_and_hints
     # Process hint file's SKIP first.
     if [ -n "$SKIP" ]; then
       if [ "$SKIP" != 'no' ]; then
+        log_itemstart "$itemid"
         log_itemfinish "$itemid" "skipped" "due to hint"
         [ "$SKIP" != 'yes' ] && log_warning -n -a "$SKIP"
         STATUS[$itemid]="skipped"

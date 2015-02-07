@@ -48,9 +48,9 @@ commit;
       dbstat=$?
       [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
       # load up the buildsecs table
-      if [ -f /usr/share/slackrepo/"$OPT_REPO"/buildsecs.sql ]; then
+      if [ -f /usr/share/slackrepo/"$OPT_REPO"/buildsecs_"$SYS_ARCH".sql ]; then
         log_normal "Populating the buildsecs table ... "
-        sqlite3 "$SR_DATABASE" < /usr/share/slackrepo/"$OPT_REPO"/buildsecs.sql
+        sqlite3 "$SR_DATABASE" < /usr/share/slackrepo/"$OPT_REPO"/buildsecs_"$SYS_ARCH".sql
         dbstat=$?
         [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
         log_done
@@ -82,9 +82,9 @@ commit;
       sqlite3 "$SR_DATABASE" "update buildsecs set mhzsum='$SYS_MHz', guessflag='=';"
       dbstat=$?
       [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
-      if [ -f /usr/share/slackrepo/"$OPT_REPO"/buildsecs.sql ]; then
+      if [ -f /usr/share/slackrepo/"$OPT_REPO"/buildsecs_"$SYS_ARCH".sql ]; then
         log_normal "Populating the buildsecs table ... "
-        sqlite3 "$SR_DATABASE" < /usr/share/slackrepo/"$OPT_REPO"/buildsecs.sql
+        sqlite3 "$SR_DATABASE" < /usr/share/slackrepo/"$OPT_REPO"/buildsecs_"$SYS_ARCH".sql
         dbstat=$?
         [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
         log_done
@@ -165,7 +165,7 @@ commit;
 begin transaction;
 create table if not exists buildresults ( itemid text primary key, time text, result text );
 alter table buildsecs rename to oldbuildsecs;
-create table buildsecs as select itemid, secs, bogomips as mhzsum, guessflag from oldbuildsecs;
+create table buildsecs as select itemid, secs, bogomips/2.0 as mhzsum, guessflag from oldbuildsecs;
 drop table oldbuildsecs;
 commit;
 ++++

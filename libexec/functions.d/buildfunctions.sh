@@ -278,8 +278,9 @@ function build_item_packages
   buildstarttime="$(date '+%s')"
   eta=""
   if [ -n "$estbuildsecs" ]; then
-    eta="eta $(date --date=@"$(( buildstarttime + estbuildsecs + 30 ))" '+%H:%M'):??"
+    eta="ETA $(date --date=@"$(( buildstarttime + estbuildsecs + 30 ))" '+%H:%M'):??"
     [ "$guessflag" = '~' ] && [ "$estbuildsecs" -gt "600" ] && eta="${eta:0:8}?:??"
+    [ "$guessflag" = '~' ] && eta="eta ~${eta:4:4}?:??"
   fi
 
   # Build it

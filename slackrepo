@@ -70,7 +70,7 @@ starttime=$(date +%s)
 # To define an extended option '--bar', do OPTIONLIST+=( 'BAR' )
 
 # Initialise OPTIONLIST first so that any extended options are at the end
-OPTIONLIST=( 'REPO' 'QUIET' 'VERBOSE' 'VERY_VERBOSE' 'MAKE_VERBOSE' 'TEST DRY_RUN' 'INSTALL' 'KEEP_TMP' 'TRACE' 'CHROOT' 'COLOR' )
+OPTIONLIST=( 'REPO' 'QUIET' 'VERBOSE' 'VERY_VERBOSE' 'MAKE_VERBOSE' 'TEST' 'DRY_RUN' 'INSTALL' 'KEEP_TMP' 'TRACE' 'CHROOT' 'COLOR' )
 
 # Get the support functions
 for f in /usr/libexec/$(basename "$0")/functions.d/*.sh; do
@@ -225,7 +225,7 @@ SYS_ARCH=$(uname -m)
 SYS_MULTILIB='n'
 [ "$SYS_ARCH" = 'x86_64' -a -f /etc/profile.d/32dev.sh ] && SYS_MULTILIB='y'
 SYS_NPROC=$(nproc)
-SYS_BOGOMIPS=$(awk '/^bogomips/ {sum+=$3} END {print sum}' < /proc/cpuinfo)
+SYS_MHz=$(awk '/^cpu MHz/ {sum+=$4} END {print sum}' < /proc/cpuinfo)
 SYS_OVERLAYFS='n'
 # don't look at the kernel version -- somebody might have the old patchset
 [ -f /lib/modules/"$(uname -r)"/kernel/fs/overlayfs/overlay.ko ] && SYS_OVERLAYFS='y'
@@ -344,7 +344,7 @@ log_verbose "OS: ${SYS_OSNAME}${SYS_OSVER}"
 log_verbose "arch: ${SYS_ARCH}"
 [ "$SYS_MULTILIB" = 'y' ] && log_verbose "multilib: yes"
 log_verbose "nproc: ${SYS_NPROC}"
-log_verbose "bogomips: ${SYS_BOGOMIPS}"
+log_verbose "MHz sum: ${SYS_MHz}"
 [ "$SYS_OVERLAYFS" = 'y' ] && log_verbose "overlayfs: yes"
 [ "$EUID" != 0 ] && log_verbose "username: $USER"
 log_verbose ""

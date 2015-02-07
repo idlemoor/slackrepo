@@ -20,7 +20,7 @@ function db_init
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 1
 
-  latestschema='2'
+  latestschema='2.1'
   if [ -f "$SR_DATABASE" ]; then
     dbschema=$(db_get_misc schema 0 0) 2>/dev/null
   else
@@ -37,11 +37,13 @@ function db_init
   '')
       # DATABASE SCHEMA NEEDS TO BE CREATED
       sqlite3 "$SR_DATABASE" << ++++
+begin transaction;
 create table if not exists buildresults ( itemid text primary key, time text, result text );
-create table if not exists buildsecs ( itemid text primary key, secs text, bogomips text, guessflag text );
+create table if not exists buildsecs ( itemid text primary key, secs text, mhzsum text, guessflag text );
 create table if not exists packages ( pkgnam text primary key, itemid text );
 create table if not exists misc ( key text primary key, value text );
 create table if not exists revisions ( itemid text, dep text, deplist text, version text, built text, rev text, os text, hintcksum text, primary key (itemid,dep) );
+commit;
 ++++
       dbstat=$?
       [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
@@ -64,18 +66,20 @@ create table if not exists revisions ( itemid text, dep text, deplist text, vers
       log_normal "If you have a lot of packages, this may take a few minutes."
       # (a) create the new tables
       sqlite3 "$SR_DATABASE" << ++++
+begin transaction;
 create table if not exists buildresults ( itemid text primary key, time text, result text );
-create table if not exists buildsecs ( itemid text primary key, secs text, bogomips text, guessflag text );
+create table if not exists buildsecs ( itemid text primary key, secs text, mhzsum text, guessflag text );
 create table if not exists packages ( pkgnam text primary key, itemid text );
 create table if not exists misc ( key text primary key, value text );
 create table if not exists revisions ( itemid text, dep text, deplist text, version text, built text, rev text, os text, hintcksum text, primary key (itemid,dep) );
+commit;
 ++++
       dbstat=$?
       [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
       # (b) upgrade the buildsecs table
-      sqlite3 "$SR_DATABASE" "alter table buildsecs add column bogomips text;"      1>/dev/null 2>/dev/null
+      sqlite3 "$SR_DATABASE" "alter table buildsecs add column mhzsum text;"        1>/dev/null 2>/dev/null
       sqlite3 "$SR_DATABASE" "alter table buildsecs add column guessflag text;"     1>/dev/null 2>/dev/null
-      sqlite3 "$SR_DATABASE" "update buildsecs set bogomips='$SYS_BOGOMIPS', guessflag='=';"
+      sqlite3 "$SR_DATABASE" "update buildsecs set mhzsum='$SYS_MHz', guessflag='=';"
       dbstat=$?
       [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
       if [ -f /usr/share/slackrepo/"$OPT_REPO"/buildsecs.sql ]; then
@@ -154,17 +158,23 @@ create table if not exists revisions ( itemid text, dep text, deplist text, vers
       # END UPGRADE DATABASE SCHEMA FROM v0
       ;;
 
-  '1')
-      # DATABASE SCHEMA NEEDS TO BE UPGRADED FROM v1
+  '1' | '2')
+      # DATABASE SCHEMA NEEDS TO BE UPGRADED FROM v1 OR v2
       log_normal "Upgrading the database schema from v${dbschema} to v${latestschema}."
       sqlite3 "$SR_DATABASE" << ++++
+begin transaction;
 create table if not exists buildresults ( itemid text primary key, time text, result text );
+alter table buildsecs rename to oldbuildsecs;
+create table buildsecs as select itemid, secs, bogomips as mhzsum, guessflag from oldbuildsecs;
+drop table oldbuildsecs;
+commit;
 ++++
       dbstat=$?
       [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
       db_set_misc schema "$latestschema" || return 1
-      # END UPGRADE DATABASE SCHEMA FROM v1
+      # END UPGRADE DATABASE SCHEMA FROM v1 OR v2
       ;;
+
   esac
 
   return 0
@@ -220,7 +230,7 @@ function db_error
 # Set, get or delete a record in the 'buildsecs' table.
 #   itemid text primary key
 #   secs text          (the number of seconds to build the item)
-#   bogomips text      (the bogomips of the box that built it)
+#   mhzsum text        (the sum of MHz of the box that built it - MHz*nproc if all cpus are the same)
 #   guessflag text
 #     '~' means this record is a slackrepo-provided guess
 #     '=' means this record is not a guess, we have actually built it on this box
@@ -230,12 +240,12 @@ function db_set_buildsecs
 # Record a build time
 # $1 = itemid
 # $2 = elapsed seconds
-# (bogmips is always set to $SYS_BOGOMIPS, and guessflag is always set to '=')
+# (mhzsum is always set to $SYS_MHz, and guessflag is always set to '=')
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" -o -z "$2" ] && return 1
   sqlite3 "$SR_DATABASE" \
-    "insert or replace into buildsecs ( itemid, secs, bogomips, guessflag ) values ( '$1', '$2', $SYS_BOGOMIPS, '=' );"
+    "insert or replace into buildsecs ( itemid, secs, mhzsum, guessflag ) values ( '$1', '$2', $SYS_MHz, '=' );"
   dbstat=$?
   [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
   return 0
@@ -244,13 +254,13 @@ function db_set_buildsecs
 function db_get_buildsecs
 # Retrieve a build time (if no database, do not print anything)
 # $1 = itemid
-# Prints "secs bogomips guessflag" on standard output
+# Prints "secs mhzsum guessflag" on standard output
 # (prints nothing if itemid is not in the table)
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   sqlite3 "$SR_DATABASE" \
-    "select secs, bogomips, guessflag from buildsecs where itemid='$1';" | tr '|' ' '
+    "select secs, mhzsum, guessflag from buildsecs where itemid='$1';" | tr '|' ' '
   dbstat="${PIPESTATUS[0]}"
   [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
   return 0
@@ -333,7 +343,7 @@ function db_del_pkgnam_itemid
 # Set, get or delete a record in the 'misc' table.
 # The 'misc' table stores key/value pairs:
 #   schema      (version number of the database schema)
-#   bogobodge   (fudge factor for estimating build times)
+#   bogostuff   (fudge factor for estimating build times)
 #-------------------------------------------------------------------------------
 
 function db_set_misc

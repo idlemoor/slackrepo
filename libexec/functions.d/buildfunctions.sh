@@ -265,14 +265,14 @@ function build_item_packages
 
   # Remember the build start time and estimate the build finish time
   estbuildsecs=''
-  read prevsecs prevbogomips guessflag < <(db_get_buildsecs "$itemid")
-  if [ -n "$prevsecs" ] && [ -n "$prevbogomips" ]; then
+  read prevsecs prevmhz guessflag < <(db_get_buildsecs "$itemid")
+  if [ -n "$prevsecs" ] && [ -n "$prevmhz" ]; then
     if [ "$guessflag" = '=' ] || [ "$prevsecs" -lt 120 ] || [ "${BOGOCOUNT:-0}" -lt 5 ]; then
-      estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevbogomips}/${SYS_BOGOMIPS}+1" | bc | sed 's/\..*//')
+      estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevmhz}/${SYS_MHz}+1" | bc | sed 's/\..*//')
     elif [ "$guessflag" = '~' ]; then
       BOGOSLOPE=$(echo "scale=3; (($BOGOCOUNT*$BOGOSUMXY)-($BOGOSUMX*$BOGOSUMY))/(($BOGOCOUNT*$BOGOSUMX2)-($BOGOSUMX*$BOGOSUMX))" | bc)
       BOGOCONST=$(echo "scale=3; ($BOGOSUMY - ($BOGOSLOPE*$BOGOSUMX))/$BOGOCOUNT*60.0" | bc)
-      estbuildsecs=$(echo "scale=3; $BOGOSLOPE*(${prevsecs}*${prevbogomips}/${SYS_BOGOMIPS})+$BOGOCONST+1" | bc | sed 's/\..*//')
+      estbuildsecs=$(echo "scale=3; $BOGOSLOPE*(${prevsecs}*${prevmhz}/${SYS_MHz})+$BOGOCONST+1" | bc | sed 's/\..*//')
     fi
   fi
   buildstarttime="$(date '+%s')"

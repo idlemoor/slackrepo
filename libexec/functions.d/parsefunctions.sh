@@ -529,7 +529,7 @@ function parse_info_and_hints
   if [ "${INFODOWNLIST[$itemid]}" = "UNSUPPORTED" -o "${INFODOWNLIST[$itemid]}" = "UNTESTED" ]; then
     log_itemstart "$itemid"
     log_itemfinish "$itemid" "skipped" "${INFODOWNLIST[$itemid]} on $SR_ARCH"
-    STATUS[$itemid]="unsupported"
+    STATUS[$itemid]="skipped"
     return 1
   fi
 

@@ -107,7 +107,7 @@ function calculate_deps_and_status
 
   # Examine the current item
   if [ -z "${STATUS[$itemid]}" ]; then
-    parse_info_and_hints "$itemid" || return 1
+    parse_info_and_hints "$itemid"
     calculate_item_status "$itemid" "$parentid" || return 1
   fi
 

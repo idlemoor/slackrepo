@@ -223,6 +223,7 @@ function log_itemfinish
 # $1 = itemid
 # $2 = result ('ok', 'skipped', 'failed', or 'aborted')
 # $3 = message (optional)
+# $4 = additional message for display on the next line (optional)
 # Return status: always 0
 {
   local itemid="$1"
@@ -230,18 +231,20 @@ function log_itemfinish
   local message="$1"
   [ "$result" != 'OK' ] && message="$message $result"
   [ -n "$3" ] && message="$message $3"
+  addmessage=""
+  [ -n "$4" ] && addmessage=$'\n'"$4"
   case "$result" in
     'OK')
-      echo -e "${tputgreen}:-) $message (-:${tputnormal}"
-      [ -n "$ITEMLOG" ] && echo -e ":-) $message (-:" >> "$ITEMLOG"
+      echo -e "${tputgreen}:-) $message (-:${addmessage}${tputnormal}"
+      [ -n "$ITEMLOG" ] && echo -e ":-) $message (-:${addmessage}" >> "$ITEMLOG"
       ;;
     'SKIPPED')
-      echo -e "${tputyellow}:-/ $message /-:${tputnormal}"
-      [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:" >> "$ITEMLOG"
+      echo -e "${tputyellow}:-/ $message /-:${addmessage}${tputnormal}"
+      [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:${addmessage}" >> "$ITEMLOG"
       ;;
     'FAILED' | 'ABORTED')
-      echo -e "${tputred}:-( $message )-:${tputnormal}"
-      [ -n "$ITEMLOG" ] && echo -e ":-( $message )-:" >> "$ITEMLOG"
+      echo -e "${tputred}:-( $message )-:${addmessage}${tputnormal}"
+      [ -n "$ITEMLOG" ] && echo -e ":-( $message )-:${addmessage}" >> "$ITEMLOG"
       ;;
   esac
   eval "${result}LIST+=( ${itemid} )"

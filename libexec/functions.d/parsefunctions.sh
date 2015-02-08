@@ -562,8 +562,9 @@ function parse_info_and_hints
     if [ -n "$SKIP" ]; then
       if [ "$SKIP" != 'no' ]; then
         log_itemstart "$itemid"
-        log_itemfinish "$itemid" "skipped" "due to hint"
-        [ "$SKIP" != 'yes' ] && log_warning -n -a "$SKIP"
+        skipmsg=""
+        [ "$SKIP" != 'yes' ] && skipmsg="$SKIP"
+        log_itemfinish "$itemid" "skipped" "due to hint" "$skipmsg"
         STATUS[$itemid]="skipped"
         return 1
       fi

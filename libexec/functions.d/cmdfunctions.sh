@@ -104,7 +104,7 @@ function build_command
       continue
     elif [ "${STATUS[$todo]}" = 'failed' ]; then
       log_error "${todo} has failed to build."
-      [ -n "${STATUSINFO[$itemid]}" ] && log_always "${STATUSINFO[$itemid]}"
+      [ -n "${STATUSINFO[$todo]}" ] && log_always "${STATUSINFO[$todo]}"
       continue
     fi
 
@@ -117,12 +117,12 @@ function build_command
     if [ "${#missingdeps[@]}" != '0' ]; then
       log_error "Cannot build ${todo}."
       if [ "${#missingdeps[@]}" = '1' ]; then
-        STATUSINFO[$itemid]="Missing dependency: ${missingdeps[0]}"
+        STATUSINFO[$todo]="Missing dependency: ${missingdeps[0]}"
       else
-        STATUSINFO[$itemid]="Missing dependencies:$'\n'$(printf '  %s\n' "${missingdeps[@]}")"
+        STATUSINFO[$todo]="Missing dependencies:\n$(printf '  %s\n' "${missingdeps[@]}")"
       fi
       STATUS[$todo]='aborted'
-      log_itemfinish "$todo" "aborted" '' "${STATUSINFO[$itemid]}"
+      log_itemfinish "$todo" "aborted" '' "${STATUSINFO[$todo]}"
       continue
     fi
 

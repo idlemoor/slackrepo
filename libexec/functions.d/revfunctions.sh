@@ -190,12 +190,12 @@ function calculate_deps_and_status
       'skipped' | 'unsupported' )
         if [ "${STATUS[$itemid]}" != "${STATUS[$dep]}" ]; then
           STATUS[$itemid]="aborted"
-          STATUSINFO[$itemid]="aborted"
+          STATUSINFO[$itemid]=""
         fi
         ;;
       'aborted' | 'failed' | '*' )
         STATUS[$itemid]="aborted"
-        STATUSINFO[$itemid]="aborted"
+        STATUSINFO[$itemid]=""
         ;;
     esac
   done

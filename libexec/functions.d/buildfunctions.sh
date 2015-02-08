@@ -217,7 +217,7 @@ function build_item_packages
       while read sourcefile; do
         source="${sourcefile##*/}"
         # skip subdirectories (and don't increment count)
-        if [ -f "$sourcefile" ]; then
+        if [ -f "$SR_SRCREPO"/"$itemdir"/"$sourcefile" ]; then
           target="${tempdownlist[$count]##*/}"
           ( cd "$MYTMPIN"; [ -n "$target" ] && [ ! -e "$target" ] && ln -s "$source" "$target" )
           count=$(( count + 1 ))

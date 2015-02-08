@@ -225,6 +225,10 @@ function build_item_packages
         fi
       done < <(ls -rt "$SR_SRCREPO"/"$itemdir" 2>/dev/null)
       ;;
+    'no_make_test' )
+      log_verbose "Special action: no_make_test"
+      sed -i -e "s/make test/: # make test/" "$MYTMPIN"/"$itemfile"
+      ;;
     'noexport_ARCH' )
       log_verbose "Special action: noexport_ARCH"
       sed -i -e "s/^PRGNAM=.*/&; ARCH='$SR_ARCH'/" "$MYTMPIN"/"$itemfile"

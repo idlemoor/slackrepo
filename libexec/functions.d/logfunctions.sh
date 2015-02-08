@@ -182,7 +182,7 @@ function log_itemstart
 # Log the start of an item on standard output.
 # This is where we start logging to ITEMLOG, which is set here, using $itemid set by our caller.
 # (At any time only one ITEMLOG can be active.)
-# If the optional message is not specified, don't print the log - just setup the itemlog.
+# If the optional message is not specified, don't print anything - just setup the itemlog.
 # $1 = itemid
 # $2... = message (optional)
 # Return status: always 0
@@ -221,24 +221,34 @@ function log_itemstart
 function log_itemfinish
 # Log the finish of an item to standard output, and to ITEMLOG
 # $1 = itemid
-# $2 = result ('ok', 'skipped', 'failed', or 'aborted')
+# $2 = result ('ok', 'skipped', 'unsupported', 'failed', or 'aborted')
 # $3 = message (optional)
 # $4 = additional message for display on the next line (optional)
 # Return status: always 0
 {
   local itemid="$1"
   local result="${2^^}"
-  local message="$1"
+  local message="$itemid"
+  [ "$result" = 'UNSUPPORTED' ] && message="$message is"
   [ "$result" != 'OK' ] && message="$message $result"
   [ -n "$3" ] && message="$message $3"
   addmessage=""
   [ -n "$4" ] && addmessage=$'\n'"$4"
+  if [ -z "$ITEMLOG" ]; then
+    # I know it's over, and it never really began,
+    log_itemstart "$itemid"
+    # but in my heart it was so real
+  fi
   case "$result" in
     'OK')
       echo -e "${tputgreen}:-) $message (-:${addmessage}${tputnormal}"
       [ -n "$ITEMLOG" ] && echo -e ":-) $message (-:${addmessage}" >> "$ITEMLOG"
       ;;
     'SKIPPED')
+      echo -e "${tputyellow}:-/ $message /-:${addmessage}${tputnormal}"
+      [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:${addmessage}" >> "$ITEMLOG"
+      ;;
+    'UNSUPPORTED')
       echo -e "${tputyellow}:-/ $message /-:${addmessage}${tputnormal}"
       [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:${addmessage}" >> "$ITEMLOG"
       ;;

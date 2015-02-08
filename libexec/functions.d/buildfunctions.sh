@@ -87,16 +87,17 @@ function build_item_packages
        verify_src "$itemid" || { log_error -a "${itemid}: Downloaded source is bad"; build_failed "$itemid"; return 3; }
        ;;
     5) # unsupported/untested
-       build_skipped "$itemid" "${INFODOWNLIST[$itemid]} on $SR_ARCH"
+       STATUS[$itemid]='unsupported'
+       STATUSINFO[$itemid]="${INFODOWNLIST[$itemid]} on $SR_ARCH"
+       build_skipped "$itemid" "${STATUSINFO[$itemid]}" ''
        return 5
        ;;
     6) # nodownload hint (probably needs manual download due to licence agreement)
-       log_warning -n -a "$itemid: Please download the source"
-       log_warning -n -a "  from: ${INFODOWNLIST[$itemid]}"
-       log_warning -n -a "  to:   ${SRCDIR[$itemid]}"
+       STATUS[$itemid]='skipped'
+       STATUSINFO[$itemid]="Please download the source\n  from: ${INFODOWNLIST[$itemid]}\n  to:   ${SRCDIR[$itemid]}"
        # We ought to prepare that directory ;-)
        mkdir -p "${SRCDIR[$itemid]}"
-       build_skipped "$itemid" "Source not available"
+       build_skipped "$itemid" 'Source not available' "${STATUSINFO[$itemid]}"
        return 5
        ;;
   esac
@@ -121,7 +122,7 @@ function build_item_packages
     log_warning -a "${itemid}: no \"BUILD=\" in $itemfile; using 1"
   fi
   eval $buildassign
-  if [ "${BUILDINFO[$itemid]:0:3}" = 'add' -o "${BUILDINFO[$itemid]:0:18}" = 'update for version' ]; then
+  if [ "${STATUSINFO[$itemid]:0:3}" = 'add' -o "${STATUSINFO[$itemid]:0:18}" = 'update for version' ]; then
     # We can just use the SlackBuild's BUILD
     SR_BUILD="$BUILD"
   else
@@ -499,7 +500,8 @@ function build_ok
   buildopt=''
   [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
   [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
-  log_itemfinish "${itemid}" 'ok' "$CHANGEMSG$buildopt"
+  STATUSINFO[$itemid]="$CHANGEMSG$buildopt"
+  log_itemfinish "${itemid}" 'ok' "${STATUSINFO[$itemid]}"
 
   return 0
 }
@@ -509,7 +511,6 @@ function build_ok
 function build_failed
 # Log and cleanup for a build that has failed
 # $1 = itemid
-# Also uses BUILDINFO[$itemid] set by needs_build()
 # Return status: always 0
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
@@ -519,13 +520,15 @@ function build_failed
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
+  STATUS[$itemid]="failed"
 
   if [ "$OPT_QUIET" != 'y' ]; then
     errorscan_itemlog | tee -a "$MAINLOG"
   else
     errorscan_itemlog >> "$MAINLOG"
   fi
-  log_error -n "See $ITEMLOG"
+  STATUSINFO[$itemid]="See $ITEMLOG"
+  log_error -n "${STATUSINFO[$itemid]}"
 
   if [ -n "${CHROOTDIR}" ]; then
     chroot_destroy
@@ -540,7 +543,6 @@ function build_failed
   fi
 
   log_itemfinish "$itemid" 'failed'
-  STATUS[$itemid]="failed"
 
   return 0
 }
@@ -548,17 +550,17 @@ function build_failed
 #-------------------------------------------------------------------------------
 
 function build_skipped
-# Log and cleanup for a build that has been skipped
+# Log and cleanup for a build that has been skipped or is unsupported
 # $1 = itemid
-# $2 = message
+# $2 = message (optional -- supplied to log_itemfinish as $3)
+# $3 = extra message for next line (optional -- supplied to log_itemfinish as $4)
 # Return status: always 0
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
 
-  log_itemfinish "$itemid" "skipped" "$2"
-  STATUS[$itemid]="skipped"
+  log_itemfinish "$itemid" "${STATUS[$itemid]}" "$2" "$3"
 
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
     rm -rf "$MYTMPIN" "$MYTMPOUT"

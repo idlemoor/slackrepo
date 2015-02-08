@@ -25,72 +25,89 @@ function build_command
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
-  case "${STATUS[$itemid]}" in
-    'ok' )
-      log_important "$itemid is up-to-date."; return 0 ;;
-    'updated' )
-      log_important "$itemid is up-to-date."; STATUS[$itemid]="ok"; return 0 ;;
-    'aborted' )
-      log_error -n "$itemid has been aborted (see above)."; return 1 ;;
-    'failed' )
-      log_error -n "$itemid has failed to build."
-      [ -f "$SR_LOGDIR/$itemdir/$itemprgnam.log" ] && log_normal "See $SR_LOGDIR/$itemdir/$itemprgnam.log"
-      return 1
-      ;;
-    'skipped' )
-      log_warning -n "$itemid has been skipped (see above)."; return 1 ;;
-    'unsupported' )
-      log_warning -n "$itemid is unsupported on ${SR_ARCH}."; return 1 ;;
-    '' )
-      : ;;  # see the real business below :-)
-    '*' )
-      log_important "$itemid is ${STATUS[$itemid]}"; return 1 ;;
-  esac
+  # Quick triage of any cached status:
+  if [ "${STATUS[$itemid]}" = 'ok' ]; then
+    log_important "$itemid is up-to-date."
+    return 0
+  elif [ "${STATUS[$itemid]}" = 'updated' ]; then
+    STATUS[$itemid]="ok"
+    log_important "$itemid is up-to-date."
+    return 0
+  elif [ "${STATUS[$itemid]}" = 'skipped' ]; then
+    log_itemfinish "$itemid" 'skipped' '' "${STATUSINFO[$itemid]}"
+    return 1
+  elif [ "${STATUS[$itemid]}" = 'unsupported' ]; then
+    log_itemfinish "$itemid" 'unsupported' "on ${SR_ARCH}"
+    return 1
+  elif [ "${STATUS[$itemid]}" = 'failed' ]; then
+    log_error "${itemid} has failed to build."
+    [ -n "${STATUSINFO[$itemid]}" ] && log_always "${STATUSINFO[$itemid]}"
+    return 1
+  elif [ "${STATUS[$itemid]}" = 'aborted' ]; then
+    log_error "Cannot build ${itemid}."
+    [ -n "${STATUSINFO[$itemid]}" ] && log_always "${STATUSINFO[$itemid]}"
+    return 1
+  elif [ "${STATUS[$itemid]}" != '' ]; then
+    # this can't happen (hopefully)
+    log_error "${itemid} status=${STATUS[$itemid]}"
+    return 1
+  fi
 
+  # Status is not cached, so work it out
   log_normal "Calculating dependencies ..."
   DEPTREE=""
   NEEDSBUILD=()
   calculate_deps_and_status "$itemid"
+  if [ "${DIRECTDEPS[$itemid]}" != "" ]; then
+    [ "$OPT_QUIET" != 'y' ] && echo -n "$DEPTREE"
+  fi
 
-  # set anything flagged 'updated' back to 'ok' before we go any further
+  # Set anything flagged 'updated' back to 'ok' before we go any further
   for depid in ${FULLDEPS[$itemid]}; do
     [ "${STATUS[$depid]}" = 'updated' ] && STATUS[$depid]='ok'
   done
 
-  if [ "${STATUS[$itemid]}" = 'unsupported' ] || [ "${STATUS[$itemid]}" = 'skipped' ]; then
-    # the dependency tree is irrelevant, and a message will already have been logged
-    return 1
-  fi
-  if [ "${DIRECTDEPS[$itemid]}" != "" ]; then
-    if [ "$OPT_QUIET" != 'y' ]; then
-      log_normal "Dependency tree for $itemid:"
-      echo -n "$DEPTREE"
-    fi
-  fi
+  # Now do almost-but-not-quite-the-same triage on the status
   if [ "${STATUS[$itemid]}" = 'ok' ] && [ "${#NEEDSBUILD[@]}" = 0 ]; then
     log_important "$itemid is up-to-date."
     return 0
+  elif [ "${STATUS[$itemid]}" = 'updated' ]; then
+    STATUS[$itemid]="ok"
+    if [ "${#NEEDSBUILD[@]}" = 0 ]; then
+      log_important "$itemid is up-to-date."
+      return 0
+    fi
+  elif [ "${STATUS[$itemid]}" = 'skipped' ]; then
+    log_itemfinish "$itemid" 'skipped' '' "${STATUSINFO[$itemid]}"
+    return 1
+  elif [ "${STATUS[$itemid]}" = 'unsupported' ]; then
+    log_itemfinish "$itemid" 'unsupported' "on ${SR_ARCH}"
+    return 1
+  elif [ "${STATUS[$itemid]}" = 'failed' ]; then
+    # this can't happen
+    log_error "${itemid} status=${STATUS[$itemid]}"
+    return 1
+  #else
+    # fall through:
+    # ok but something way down the dep tree needs a rebuild => do that
+    # add/update/rebuild => do that
+    # aborted => build what we can, and log errors about the rest
   fi
 
   for todo in "${NEEDSBUILD[@]}"; do
     log_normal ""
-    if [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
-      buildopt=''
-      [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
-      [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
-      log_itemstart "$todo" "Starting $todo (${BUILDINFO[$todo]})$buildopt"
-    elif [ "${STATUS[$todo]}" = 'skipped' ] && [ "$todo" != "$itemid" ]; then
-      log_error "$todo has been skipped."
+    if [ "${STATUS[$todo]}" = 'skipped' ] && [ "$todo" != "$itemid" ]; then
+      log_warning -n "$todo has been skipped."
       continue
     elif [ "${STATUS[$todo]}" = 'unsupported' ] && [ "$todo" != "$itemid" ]; then
-      log_error "$todo is unsupported on ${SR_ARCH}."
+      log_warning -n "$todo is unsupported."
       continue
     elif [ "${STATUS[$todo]}" = 'failed' ]; then
       log_error "${todo} has failed to build."
-      [ -f "$SR_LOGDIR/${ITEMDIR[$todo]}/${ITEMPRGNAM[$todo]}.log" ] && log_normal "See $SR_LOGDIR/${ITEMDIR[$todo]}/${ITEMPRGNAM[$todo]}.log"
-    elif [ "${STATUS[$todo]}" = 'aborted' ]; then
-      log_error "Cannot build ${todo}."
+      [ -n "${STATUSINFO[$itemid]}" ] && log_always "${STATUSINFO[$itemid]}"
+      continue
     fi
+
     missingdeps=()
     for dep in ${DIRECTDEPS[$todo]}; do
       if [ "${STATUS[$dep]}" != 'ok' ] && [ "${STATUS[$dep]}" != 'updated' ]; then
@@ -98,20 +115,23 @@ function build_command
       fi
     done
     if [ "${#missingdeps[@]}" != '0' ]; then
-      if [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
-        log_error "Cannot build ${todo}."
-      fi
+      log_error "Cannot build ${todo}."
       if [ "${#missingdeps[@]}" = '1' ]; then
-        log_normal "Missing dependency: ${missingdeps[0]}"
-      elif [ "${#missingdeps[@]}" != '0' ]; then
-        log_normal "Missing dependencies:"
-        log_normal "$(printf '  %s\n' "${missingdeps[@]}")"
+        STATUSINFO[$itemid]="Missing dependency: ${missingdeps[0]}"
+      else
+        STATUSINFO[$itemid]="Missing dependencies:$'\n'$(printf '  %s\n' "${missingdeps[@]}")"
       fi
-      log_itemfinish "$todo" "aborted"
       STATUS[$todo]='aborted'
-    elif [ "${STATUS[$todo]}" = 'add' ] || [ "${STATUS[$todo]}" = 'update' ] || [ "${STATUS[$todo]}" = 'rebuild' ]; then
-      build_item_packages "$todo"
+      log_itemfinish "$todo" "aborted" '' "${STATUSINFO[$itemid]}"
+      continue
     fi
+
+    buildopt=''
+    [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
+    [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
+    log_itemstart "$todo" "Starting $todo (${STATUSINFO[$todo]})$buildopt"
+    build_item_packages "$todo"
+
   done
 
   return 0
@@ -181,21 +201,21 @@ function revert_command
   log_itemstart "$itemid"
 
   # Check that there is something to revert.
-  failmsg=''
-  [ "$OPT_DRY_RUN" = 'y' ] && failmsg="[dry run]"
+  extramsg=''
+  [ "$OPT_DRY_RUN" = 'y' ] && extramsg="[dry run]"
   if [ -z "$SR_PKGBACKUP" ]; then
     log_error "No backup repository configured -- please set PKGBACKUP in your config file"
-    log_itemfinish "$itemid" 'failed' "$failmsg"
+    log_itemfinish "$itemid" 'failed' "$extramsg"
     return 1
   elif [ ! -d "$backupdir" ]; then
     log_error "$itemid has no backup packages to be reverted"
-    log_itemfinish "$itemid" 'failed' "$failmsg"
+    log_itemfinish "$itemid" 'failed' "$extramsg"
     return 1
   else
     for f in "$backupdir"/*.t?z; do
       [ -f "$f" ] && break
       log_error "$itemid has no backup packages to be reverted"
-      log_itemfinish "$itemid" 'failed' "$failmsg"
+      log_itemfinish "$itemid" 'failed' "$extramsg"
       return 1
     done
   fi
@@ -214,7 +234,7 @@ function revert_command
     done < "$backuprevfile"
   else
     log_error "There is no revision file in $backupdir"
-    log_itemfinish "$itemid" 'failed' "$failmsg"
+    log_itemfinish "$itemid" 'failed' "$extramsg"
     return 1
   fi
   # Log a warning about any dependers

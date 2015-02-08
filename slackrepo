@@ -574,35 +574,35 @@ done
 #-------------------------------------------------------------------------------
 
 log_start "SUMMARY"
-log_always "Logfile:    $MAINLOG"
+log_always "Logfile:     $MAINLOG"
 secs=$(( $(date +%s) - starttime ))
 h=$(( secs / 3600 )); m=$(( ( secs / 60) % 60 )); s=$(( secs % 60 ))
-log_normal "Runtime:    ${h}h ${m}m ${s}s"
+log_normal "Runtime:     ${h}h ${m}m ${s}s"
 
 if [ "$OPT_DRY_RUN" = 'y' ]; then
   OKLIST=( $(printf '%s\n' "${OKLIST[@]}" | sort -u) )
   okcount="${#OKLIST[@]}"
-  log_always "Dry run OK: $okcount"
+  log_always "Dry run OK:  $okcount"
   [ "$OPT_QUIET" != 'y' -a "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}"
 else
   if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
-    log_always "Added:      $(grep -c ': Added'   "$CHANGELOG")"
+    log_always "Added:       $(grep -c ': Added'   "$CHANGELOG")"
     [ "$OPT_QUIET" != 'y' ] && \
       grep ': Added'    "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-    log_always "Updated:    $(grep -c ': Updated' "$CHANGELOG")"
+    log_always "Updated:     $(grep -c ': Updated' "$CHANGELOG")"
     [ "$OPT_QUIET" != 'y' ] && \
       grep ': Updated'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-    log_always "Rebuilt:    $(grep -c ': Rebuilt' "$CHANGELOG")"
+    log_always "Rebuilt:     $(grep -c ': Rebuilt' "$CHANGELOG")"
     [ "$OPT_QUIET" != 'y' ] && \
       grep ': Rebuilt'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
   fi
   if [ "$CMD" = 'update' ] || [ "$CMD" = 'remove' ]; then
-    log_always "Removed:    $(grep -c ': Removed' "$CHANGELOG")"
+    log_always "Removed:     $(grep -c ': Removed' "$CHANGELOG")"
     [ "$OPT_QUIET" != 'y' ] && \
       grep ': Removed'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
   fi
   if [ "$CMD" = 'revert' ]; then
-    log_always "Reverted:   $(grep -c ': Reverted' "$CHANGELOG")"
+    log_always "Reverted:    $(grep -c ': Reverted' "$CHANGELOG")"
     [ "$OPT_QUIET" != 'y' ] && \
       grep ': Reverted' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
   fi
@@ -611,26 +611,32 @@ fi
 SKIPPEDLIST=( $(printf '%s\n' "${SKIPPEDLIST[@]}" | sort -u) )
 skippedcount="${#SKIPPEDLIST[@]}"
 if [ "$skippedcount" != 0 ]; then
-  log_always "Skipped:    $skippedcount"
+  log_always "Skipped:     $skippedcount"
   [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${SKIPPEDLIST[@]}"
+fi
+UNSUPPORTEDLIST=( $(printf '%s\n' "${UNSUPPORTEDLIST[@]}" | sort -u) )
+unsupportedcount="${#UNSUPPORTEDLIST[@]}"
+if [ "$unsupportedcount" != 0 ]; then
+  log_always "Unsupported: $unsupportedcount"
+  [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${UNSUPPORTEDLIST[@]}"
 fi
 FAILEDLIST=( $(printf '%s\n' "${FAILEDLIST[@]}" | sort -u) )
 failedcount="${#FAILEDLIST[@]}"
 if [ "$failedcount" != 0 ]; then
-  log_always "Failed:     $failedcount"
+  log_always "Failed:      $failedcount"
   [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${FAILEDLIST[@]}"
 fi
 ABORTEDLIST=( $(printf '%s\n' "${ABORTEDLIST[@]}" | sort -u) )
 abortedcount="${#ABORTEDLIST[@]}"
 if [ "$abortedcount" != 0 ]; then
-  log_always "Aborted:    $abortedcount"
+  log_always "Aborted:     $abortedcount"
   [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${ABORTEDLIST[@]}"
 fi
 uniquewarnings=()
 [ "${#WARNINGLIST[@]}" != 0 ] && while read warning; do uniquewarnings+=( "$warning" ); done < <(printf '%s\n' "${WARNINGLIST[@]}" | sort -u )
 warningcount="${#uniquewarnings[@]}"
 if [ "$warningcount" != 0 ]; then
-  log_always "Warnings:   $warningcount"
+  log_always "Warnings:    $warningcount"
   [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${uniquewarnings[@]}"
 fi
 

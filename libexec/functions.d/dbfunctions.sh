@@ -508,7 +508,7 @@ function db_del_rev
 function db_set_buildresults
 # Record the outcome of a build
 # $1 = itemid
-# $2 = result (ok, skipped, failed, or aborted)
+# $2 = result (ok, skipped, unsupported, failed, or aborted)
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1

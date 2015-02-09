@@ -183,10 +183,8 @@ if [ "$EUID" != 0 ]; then
     exit 3
   fi
   SUDO="sudo "
-  CONFIGDIR=~/slackrepo  #### should provide some way of changing this
 else
   SUDO=''
-  CONFIGDIR=/etc/slackrepo
   #### temporary solution, until we do locking properly
   PIDFILE="/var/run/$(basename "$0").pid"
   oldpid=$(cat "$PIDFILE" 2>/dev/null)

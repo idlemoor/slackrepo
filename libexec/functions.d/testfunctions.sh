@@ -166,7 +166,7 @@ function test_download
             if [ -f "${SRCDIR[$itemid]}"/"$filename" ]; then
               cachedlength=$(stat -c '%s' "${SRCDIR[$itemid]}"/"$filename")
               if [ "$remotelength" != "$cachedlength" ]; then
-                log_warning -a "${itemid}: $filename has been modified upstream"
+                log_warning -a "${itemid}: Source file $filename has been modified upstream."
               fi
             fi
           fi
@@ -202,7 +202,7 @@ function test_package
     pkgpath="$1"
     pkgbasename=$(basename "$pkgpath")
     shift
-    log_normal -a "Testing $pkgbasename..."
+    log_normal -a "Testing package $pkgbasename..."
 
     # check the package name
     parse_package_name "$pkgbasename"

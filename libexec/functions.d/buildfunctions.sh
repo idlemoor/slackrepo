@@ -385,7 +385,9 @@ function build_item_packages
   fi
 
   if [ "$OPT_TEST" = 'y' ]; then
-    # this will happen inside the chw00t :D
+    chroot_destroy
+    rm -f "$MYTMPDIR"/start 2>/dev/null
+    chroot_setup
     test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
   fi
 

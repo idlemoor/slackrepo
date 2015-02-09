@@ -551,7 +551,7 @@ function parse_info_and_hints
     HINTFILE[$itemid]="$hintfile"
   fi
 
-  if [ -n "${HINTFILE[$itemid]}" ]; then
+  if [ -n "${HINTFILE[$itemid]}" ] && [ -s "${HINTFILE[$itemid]}" ]; then
     local SKIP \
           VERSION ADDREQUIRES OPTIONS GROUPADD USERADD PREREMOVE CONFLICTS INSTALL NUMJOBS ANSWER CLEANUP \
           SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
@@ -610,9 +610,12 @@ function parse_info_and_hints
     fi
 
     # Process SKIP and ADDREQUIRES in the Fixup department below.
+    briefskip="${SKIP:0:20}"
+    [ "${#SKIP}" -gt 20 ] && briefskip="${SKIP:0:17}..."
 
     log_verbose "Hints for $itemid:"
     log_verbose "$(printf '  %s\n' \
+      ${SKIP+"SKIP=\"${briefskip}\""} \
       ${VERSION+"VERSION=\"$VERSION\""} \
       ${OPTIONS+"OPTIONS=\"$OPTIONS\""} \
       ${GROUPADD+"GROUPADD=\"$GROUPADD\""} \
@@ -628,8 +631,7 @@ function parse_info_and_hints
       ${DOWNLOAD+"DOWNLOAD=\"$DOWNLOAD\""} \
       ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
       ${SHA256SUM+"SHA256SUM=\"$SHA256SUM\""} \
-      ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} \
-      ${SKIP+"SKIP=\"${SKIP:0:20}\""} )"
+      ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )"
 
     unset VERSION OPTIONS GROUPADD USERADD \
           PREREMOVE CONFLICTS \

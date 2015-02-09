@@ -603,7 +603,7 @@ function do_groupadd_useradd
       if ! getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
         gaddcmd="groupadd -g $gnum $gname"
         log_verbose -a "Adding group: $gaddcmd"
-        eval "$gaddcmd"
+        eval "${CHROOTCMD}${SUDO}$gaddcmd"
       else
         log_verbose -a "Group $gname already exists."
       fi

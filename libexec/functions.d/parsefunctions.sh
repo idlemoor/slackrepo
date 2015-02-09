@@ -557,16 +557,6 @@ function parse_info_and_hints
           SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
     . "${HINTFILE[$itemid]}"
 
-    # Process hint file's SKIP first.
-    if [ -n "$SKIP" ]; then
-      if [ "$SKIP" != 'no' ]; then
-        STATUS[$itemid]="skipped"
-        STATUSINFO[$itemid]=""
-        [ "$SKIP" != 'yes' ] && STATUSINFO[$itemid]="$SKIP"
-        return 1
-      fi
-    fi
-
     # Process the hint file's variables individually (looping for each variable would need
     # 'eval', which would mess up the payload, so we don't do that).
     [ -n "$OPTIONS"   ] &&   HINT_OPTIONS[$itemid]="$OPTIONS"
@@ -619,7 +609,7 @@ function parse_info_and_hints
       HINT_SHA256IGNORE[$itemid]=''
     fi
 
-    # Process ADDREQUIRES in the Fixup department below.
+    # Process SKIP and ADDREQUIRES in the Fixup department below.
 
     log_verbose "Hints for $itemid:"
     log_verbose "$(printf '  %s\n' \
@@ -638,9 +628,10 @@ function parse_info_and_hints
       ${DOWNLOAD+"DOWNLOAD=\"$DOWNLOAD\""} \
       ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
       ${SHA256SUM+"SHA256SUM=\"$SHA256SUM\""} \
-      ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )"
-    unset SKIP \
-          VERSION OPTIONS GROUPADD USERADD \
+      ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} \
+      ${SKIP+"SKIP=\"${SKIP:0:20}\""} )"
+
+    unset VERSION OPTIONS GROUPADD USERADD \
           PREREMOVE CONFLICTS \
           INSTALL NUMJOBS ANSWER CLEANUP \
           SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
@@ -674,6 +665,16 @@ function parse_info_and_hints
   [ -z "$ver" -a "$GOTGIT" = 'y' ] && ver="${GITREV[$itemid]:0:7}"
   [ -z "$ver" ] && ver="$(date --date=@"$(stat --format='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile")" '+%Y%m%d')"
   INFOVERSION[$itemid]="$ver"
+
+  # Process SKIP last so that we've got rid of %README%.
+  if [ -n "$SKIP" ]; then
+    if [ "$SKIP" != 'no' ]; then
+      STATUS[$itemid]="skipped"
+      STATUSINFO[$itemid]=""
+      [ "$SKIP" != 'yes' ] && STATUSINFO[$itemid]="$SKIP"
+      return 1
+    fi
+  fi
 
   return 0
 

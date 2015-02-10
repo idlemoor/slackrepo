@@ -47,10 +47,6 @@ function build_command
     log_error "Cannot build ${itemid}."
     [ -n "${STATUSINFO[$itemid]}" ] && log_always "${STATUSINFO[$itemid]}"
     return 1
-  elif [ "${STATUS[$itemid]}" != '' ]; then
-    # this can't happen (hopefully)
-    log_error "${itemid} status=${STATUS[$itemid]}"
-    return 1
   fi
 
   # Status is not cached, so work it out

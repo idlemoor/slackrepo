@@ -659,10 +659,10 @@ function chroot_setup
   [ "$OPT_CHROOT" != 'y' ] && return 1
   mkdir -p "$MYTMPDIR"/{changes,workdir,chroot}
   ${SUDO}mount -t overlay overlay -olowerdir=/,upperdir="$MYTMPDIR"/changes,workdir="$MYTMPDIR"/workdir "$MYTMPDIR"/chroot || return 1
+  ${SUDO}mount -t proc    proc    "$MYTMPDIR"/chroot/proc
   #### do we actually need any of these?
   # ${SUDO}mount -t devpts  devpts  -ogid=5,mode=620 "$MYTMPDIR"/chroot/dev/pts
   # ${SUDO}mount -t tmpfs   shm     "$MYTMPDIR"/chroot/dev/shm
-  # ${SUDO}mount -t proc    proc    "$MYTMPDIR"/chroot/proc
   # ${SUDO}mount -t sysfs   sysfs   "$MYTMPDIR"/chroot/sys
   CHROOTDIR="${MYTMPDIR}/chroot/"   # note the trailing slash
   CHROOTCMD="chroot ${CHROOTDIR} "  # note the trailing space

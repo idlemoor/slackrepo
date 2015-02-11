@@ -400,7 +400,7 @@ declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST
 [ -d "$SR_SBREPO" ]   || { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"   ; }
 [ -d "$SR_SRCREPO" ]  || { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO"  ; }
 [ -d "$SR_PKGREPO" ]  || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO"  ; }
-[ -n "$SR_PKGBACKUP" -a -d "$SR_PKGBACKUP" ] || \
+[ -z "$SR_PKGBACKUP" ] || [ -d "$SR_PKGBACKUP" ] || \
                          { log_normal "Creating backup repository: $SR_PKGBACKUP"  ; mkdir -p "$SR_PKGBACKUP"; }
 [ -d "$SR_HINTDIR" ]  || { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"  ; }
 [ -d "$SR_QUEUEDIR" ] || { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR" ; }

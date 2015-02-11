@@ -688,10 +688,14 @@ function chroot_destroy
   log_done
   ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes/{"$SR_TMP","${MYTMPDIR:?NotSetMYTMPDIR}"}
   if [ -f "$MYTMPDIR"/start ]; then
-    crap=$(find "$MYTMPDIR"/changes -newer "$MYTMPDIR"/start -print 2>/dev/null | sed -e "s#${MYTMPDIR}/changes##" -e '/^\/tmp/d' -e '/^\/dev\/ttyp/d' | sort)
+    crap=$(cd "$MYTMPDIR"/changes; find . -path './tmp' -prune -o -newer ../start -print 2>/dev/null)
     if [ -n "$crap" ]; then
-      log_warning "$itemid: Files/directories were modified during the build"
-      printf "  %s\n" ${crap}
+      excludes="^/dev/ttyp|^$HOME/.distcc|^$HOME/.cache/g-ir-scanner|^$HOME\$"
+      significant="$(echo "$crap" | sed -e "s#^\./#/#" | grep -v -E "$excludes" | sort)"
+      if [ -n "$significant" ]; then
+        log_warning "$itemid: Files/directories were modified during the build"
+        printf "  %s\n" ${significant}
+      fi
     fi
   fi
   ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes

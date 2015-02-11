@@ -150,7 +150,8 @@ function test_download
         curl -q -f -s -k --connect-timeout 10 --retry 2 --ciphers ALL -J -L -A SlackZilla -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
-          log_warning -a "${itemid}: Header test failed: $(print_curl_status $curlstat). $url"
+          log_warning -a "${itemid}: Header test failed: $(print_curl_status $curlstat)."
+          log_warning -a -n "  $url"
           if [ -s "$TMP_HEADER" ]; then
             echo "The following headers may be informative:" >> "$ITEMLOG"
             cat "$TMP_HEADER" >> "$ITEMLOG"
@@ -202,7 +203,7 @@ function test_package
     pkgpath="$1"
     pkgbasename=$(basename "$pkgpath")
     shift
-    log_normal -a "Testing package $pkgbasename..."
+    log_normal -a "Testing package $pkgbasename ..."
 
     # check the package name
     parse_package_name "$pkgbasename"

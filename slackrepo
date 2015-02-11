@@ -46,8 +46,11 @@ function print_usage
 function exit_cleanup
 {
   stty sane   # in case we're killed waiting for the gpg passphrase
-  rm -f "$PIDFILE"
-  [ -n "$CHROOTDIR" ] && ${SUDO}umount -l "$CHROOTDIR"
+  if [ -n "$CHROOTDIR" ]; then
+    ${SUDO}umount -l "$CHROOTDIR"/dev/shm
+    ${SUDO}umount -l "$CHROOTDIR"/proc
+    ${SUDO}umount -l "$CHROOTDIR"
+  fi
 }
 
 #-------------------------------------------------------------------------------

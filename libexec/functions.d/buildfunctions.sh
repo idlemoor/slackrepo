@@ -660,9 +660,9 @@ function chroot_setup
   mkdir -p "$MYTMPDIR"/{changes,workdir,chroot}
   ${SUDO}mount -t overlay overlay -olowerdir=/,upperdir="$MYTMPDIR"/changes,workdir="$MYTMPDIR"/workdir "$MYTMPDIR"/chroot || return 1
   ${SUDO}mount -t proc    proc    "$MYTMPDIR"/chroot/proc
+  ${SUDO}mount -t tmpfs   shm     "$MYTMPDIR"/chroot/dev/shm
   #### do we actually need any of these?
   # ${SUDO}mount -t devpts  devpts  -ogid=5,mode=620 "$MYTMPDIR"/chroot/dev/pts
-  # ${SUDO}mount -t tmpfs   shm     "$MYTMPDIR"/chroot/dev/shm
   # ${SUDO}mount -t sysfs   sysfs   "$MYTMPDIR"/chroot/sys
   CHROOTDIR="${MYTMPDIR}/chroot/"   # note the trailing slash
   CHROOTCMD="chroot ${CHROOTDIR} "  # note the trailing space
@@ -679,6 +679,7 @@ function chroot_destroy
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$CHROOTDIR" ] && return 0
   log_normal "Unmounting chroot ... "
+  ${SUDO}umount "$CHROOTDIR"/dev/shm || return 0
   ${SUDO}umount "$CHROOTDIR"/proc || return 0
   ${SUDO}umount "$CHROOTDIR" || return 0
   if [ "$OPT_KEEP_TMP" = 'y' ] && [ -d "$MYTMPDIR"/changes/"$SR_TMP" ]; then

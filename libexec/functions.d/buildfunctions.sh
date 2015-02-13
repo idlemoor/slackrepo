@@ -473,6 +473,8 @@ function build_ok
         [ -e "$backpack" ] || break
         log_verbose "Backed up: $(basename "$backpack")"
       done
+    else
+      rm -rf "${SR_PKGREPO:?NotSetSR_PKGREPO}"/"$itemdir"/*
     fi
     # put the new packages into the real package repo
     mkdir -p "$SR_PKGREPO"/"$itemdir"

@@ -189,6 +189,7 @@ if [ "$EUID" != 0 ]; then
     exit 3
   fi
   SUDO="sudo "
+  export PATH="/usr/libexec/$(basename "$0"):/usr/local/sbin:/usr/sbin:/sbin:$PATH"
   # We need to launch a dbus session instance for root outside the chroot, to prevent
   # commands like gconftool-2 (in doinst.sh) launching a dbus in the chroot that
   # would persist after chroot exits and stop us unmounting the overlay (*BIG SIGH*)
@@ -196,6 +197,7 @@ if [ "$EUID" != 0 ]; then
   eval "${dbuscrap}"
 else
   SUDO=''
+  export PATH="/usr/libexec/$(basename "$0"):$PATH"
   #### temporary solution, until we do locking properly
   PIDFILE="/var/run/$(basename "$0").pid"
   oldpid=$(cat "$PIDFILE" 2>/dev/null)
@@ -212,7 +214,6 @@ else
     eval "${dbuscrap}"
   fi
 fi
-export PATH="/usr/libexec/$(basename "$0"):$PATH"
 
 # Ensure ctrl-c (etc) exits the whole thing, not just a random subshell
 trap "exit_cleanup; exit 1" SIGINT SIGQUIT SIGTERM

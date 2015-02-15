@@ -266,8 +266,8 @@ function test_package
       log_warning -a "${itemid}: ${pkgbasename} has wrong top level directory (not tar-1.13?)"
     fi
 
-    # check for non root/root ownership (this may be a bit oversensitive)
-    if awk '$6~/^(bin\/|lib\/|lib64\/|sbin\/|usr\/|\.\/$)/' "$TMP_PKGCONTENTS" | grep -q -v ' root/root ' ; then
+    # check for non root/root ownership (allow root/audio in usr/bin)
+    if ! awk '$2!="root/root" && $6~/^(bin\/|lib\/|lib64\/|sbin\/|usr\/|\.\/$)/ && ! ($2=="root/audio" && $6~/^usr\/bin\//) {exit 1}' "$TMP_PKGCONTENTS" ; then
       log_warning -a "${itemid}: ${pkgbasename} has files or dirs with owner not root/root"
     fi
 

@@ -46,6 +46,9 @@ function print_usage
 function exit_cleanup
 {
   stty sane   # in case we're killed waiting for the gpg passphrase
+  if [ -n "$DBUS_SESSION_BUS_PID" ]; then
+    ${SUDO}kill -15 "$DBUS_SESSION_BUS_PID"
+  fi
   if [ -n "$CHROOTDIR" ]; then
     ${SUDO}umount -l "$CHROOTDIR"/dev/shm
     ${SUDO}umount -l "$CHROOTDIR"/proc
@@ -186,6 +189,11 @@ if [ "$EUID" != 0 ]; then
     exit 3
   fi
   SUDO="sudo "
+  # We need to launch a dbus session instance for root outside the chroot, to prevent
+  # commands like gconftool-2 (in doinst.sh) launching a dbus in the chroot that
+  # would persist after chroot exits and stop us unmounting the overlay (*BIG SIGH*)
+  dbuscrap="$(DISPLAY='' ${SUDO}dbus-launch --sh-syntax 2>/dev/null)"
+  eval "${dbuscrap}"
 else
   SUDO=''
   #### temporary solution, until we do locking properly
@@ -197,6 +205,11 @@ else
     echo "$(basename "$0"): Another instance is already running." >&2
     exit_cleanup
     exit 3
+  fi
+  # If there is no existing dbus session instance for root, create one
+  if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+    dbuscrap="$(DISPLAY='' dbus-launch --sh-syntax 2>/dev/null)"
+    eval "${dbuscrap}"
   fi
 fi
 export PATH="/usr/libexec/$(basename "$0"):$PATH"

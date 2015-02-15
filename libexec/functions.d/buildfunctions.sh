@@ -683,7 +683,7 @@ function chroot_destroy
   log_normal "Unmounting chroot ... "
   ${SUDO}umount "$CHROOTDIR"/dev/shm || return 0
   ${SUDO}umount "$CHROOTDIR"/proc || return 0
-  ${SUDO}umount "$CHROOTDIR" || return 0
+  ${SUDO}umount -l "$CHROOTDIR" || return 0
   if [ "$OPT_KEEP_TMP" = 'y' ] && [ -d "$MYTMPDIR"/changes/"$SR_TMP" ]; then
     rsync -rlptgo "$MYTMPDIR"/changes/"$SR_TMP"/ "$SR_TMP"/
   fi

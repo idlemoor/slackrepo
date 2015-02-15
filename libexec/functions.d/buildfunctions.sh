@@ -660,13 +660,19 @@ function chroot_setup
   CHROOTCMD=''
   [ "$OPT_CHROOT" != 'y' ] && return 1
   mkdir -p "$MYTMPDIR"/{changes,workdir,chroot}
-  ${SUDO}mount -t overlay overlay -olowerdir=/,upperdir="$MYTMPDIR"/changes,workdir="$MYTMPDIR"/workdir "$MYTMPDIR"/chroot || return 1
-  ${SUDO}mount -t proc    proc    "$MYTMPDIR"/chroot/proc
-  ${SUDO}mount -t tmpfs   shm     "$MYTMPDIR"/chroot/dev/shm
-  #### do we actually need any of these?
-  # ${SUDO}mount -t devpts  devpts  -ogid=5,mode=620 "$MYTMPDIR"/chroot/dev/pts
-  # ${SUDO}mount -t sysfs   sysfs   "$MYTMPDIR"/chroot/sys
   CHROOTDIR="${MYTMPDIR}/chroot/"   # note the trailing slash
+  ${SUDO}mount -t overlay overlay -olowerdir=/,upperdir="$MYTMPDIR"/changes,workdir="$MYTMPDIR"/workdir "$CHROOTDIR" || return 1
+  ${SUDO}mount -t proc    proc    "$CHROOTDIR"/proc
+  ${SUDO}mount -t tmpfs   shm     "$CHROOTDIR"/dev/shm
+  #### do we actually need any of these?
+  # ${SUDO}mount -t devpts  devpts  -ogid=5,mode=620 "$CHROOTDIR"/dev/pts
+  # ${SUDO}mount -t sysfs   sysfs   "$CHROOTDIR"/sys
+  if [ -n "$SUDO" ] && [ ! -d "${CHROOTDIR}/${HOME}" ]; then
+    # bind $HOME into the chroot if it's not visible (probably on a mounted fs)
+    CHROOTHOME="${CHROOTDIR}/${HOME}"
+    ${SUDO}mkdir -p "$CHROOTHOME"
+    ${SUDO}mount --rbind "${HOME}" "$CHROOTHOME"
+  fi
   CHROOTCMD="chroot ${CHROOTDIR} "  # note the trailing space
   [ -n "$SUDO" ] && CHROOTCMD="sudo chroot --userspec=${USER} ${CHROOTDIR} "
   return 0
@@ -681,6 +687,9 @@ function chroot_destroy
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$CHROOTDIR" ] && return 0
   log_normal "Unmounting chroot ... "
+  if [ -n "$CHROOTHOME" ]; then
+    ${SUDO}umount "$CHROOTHOME" || return 0
+  fi
   ${SUDO}umount "$CHROOTDIR"/dev/shm || return 0
   ${SUDO}umount "$CHROOTDIR"/proc || return 0
   ${SUDO}umount -l "$CHROOTDIR" || return 0
@@ -701,6 +710,6 @@ function chroot_destroy
     fi
   fi
   ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes
-  unset CHROOTCMD CHROOTDIR
+  unset CHROOTCMD CHROOTDIR CHROOTHOME
   return 0
 }

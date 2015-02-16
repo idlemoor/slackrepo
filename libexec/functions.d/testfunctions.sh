@@ -50,8 +50,8 @@ function test_slackbuild
     hr='|-----handy-ruler------------------------------------------------------|'
     # check 11 line description
     linecount=$(grep -c "^${itemprgnam}:" "$slackdesc")
-    [ "$linecount" != 11 ] && \
-      log_warning -a "${itemid}: slack-desc: $linecount lines of description (expected 11)"
+    [ "$linecount" -gt 13 ] && \
+      log_warning -a "${itemid}: slack-desc: $linecount lines of description"
     # check handy ruler
     if ! grep -q "^ *$hr\$" "$slackdesc" ; then
       log_warning -a "${itemid}: slack-desc: handy-ruler is corrupt or missing"
@@ -105,10 +105,12 @@ function test_slackbuild
   # (4) README
   #-----------------------------#
 
-  if [ -f "$SR_SBREPO"/"$itemdir"/README ]; then
-    [ "$(wc -L < "$SR_SBREPO"/"$itemdir"/README)" -le 79 ] || \
-      log_warning -a "${itemid}: long lines in README"
-  elif [ "$OPT_REPO" = 'SBo' ]; then
+  # if [ -f "$SR_SBREPO"/"$itemdir"/README ]; then
+  #   [ "$(wc -L < "$SR_SBREPO"/"$itemdir"/README)" -le 79 ] || \
+  #     log_warning -a "${itemid}: long lines in README"
+  # fi
+
+  if [ "$OPT_REPO" = 'SBo' ] && [ ! -f "$SR_SBREPO"/"$itemdir"/README ]; then
     log_warning -a "${itemid}: README not found"
   fi
 
@@ -150,7 +152,7 @@ function test_download
         curl -q -f -s -k --connect-timeout 10 --retry 2 --ciphers ALL -J -L -A SlackZilla -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
-          log_warning -a "${itemid}: Header test failed: $(print_curl_status $curlstat)."
+          log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat)."
           log_warning -a -n "  $url"
           if [ -s "$TMP_HEADER" ]; then
             echo "The following headers may be informative:" >> "$ITEMLOG"

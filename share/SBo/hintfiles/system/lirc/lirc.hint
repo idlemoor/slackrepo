@@ -1,1 +1,2 @@
+SPECIAL="unset_ARCH"
 CLEANUP="depmod -a"

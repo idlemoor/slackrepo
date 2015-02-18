@@ -149,6 +149,7 @@ function uninstall_packages
 # If there is an install hint, the packages WILL NOT be removed UNLESS -f is specified.
 # If OPT_INSTALL is set, the packages WILL be removed.
 # Extra cleanup is only performed for 'vanilla' uninstalls.
+# If OPT_CHROOT is set, the packages will not be removed, but a bit of cleanup will be done.
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
@@ -164,6 +165,21 @@ function uninstall_packages
   local -a pkglist
   local pkgpath
   local etcnewfiles etcdirs etcfile etcdir
+
+  if [ "$OPT_CHROOT" = 'y' ]; then
+    # don't bother uninstalling, the chroot has already been destroyed
+    # just cherry pick 'depmod' out of the cleanup hints
+    if [ -n "${HINT_CLEANUP[$itemid]}" ]; then
+      IFS=';'
+      for cleancmd in ${HINT_CLEANUP[$itemid]}; do
+        if [ "${cleancmd:0:7}" = 'depmod ' ]; then
+          eval "${SUDO}${cleancmd}" >> "$ITEMLOG" 2>&1
+        fi
+      done
+      unset IFS
+    fi
+    return 0
+  fi
 
   # Don't remove a package that has an install hint, unless -f was specified.
   [ "${HINT_INSTALL[$itemid]}" = 'y' -a "$force" != 'y' ] && return 0

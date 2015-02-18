@@ -9,6 +9,7 @@
 #   build_skipped
 #   do_groupadd_useradd
 #   chroot_setup
+#   chroot_report
 #   chroot_destroy
 #-------------------------------------------------------------------------------
 
@@ -262,7 +263,8 @@ function build_item_packages
   # Get all dependencies installed
   install_deps "$itemid" || { build_failed "$itemid"; return 1; }
 
-  # Remove any existing packages (some builds fail if already installed)
+  # Remove any existing packages for the item to be built
+  # (some builds fail if already installed)
   # (... this might not be entirely appropriate for gcc or glibc ...)
   if [ "$noremove" != 'y' ]; then
     uninstall_packages "$itemid"
@@ -383,16 +385,6 @@ function build_item_packages
       db_set_pkgnam_itemid "$pkgnam" "$itemid"
     done
   fi
-
-  if [ "$OPT_TEST" = 'y' ]; then
-    chroot_destroy
-    rm -f "$MYTMPDIR"/start 2>/dev/null
-    chroot_setup
-    test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
-  fi
-
-  chroot_destroy
-
   # update build time information
   # add 1 to round it up so it's never zero
   actualsecs=$(( buildfinishtime - buildstarttime + 1 ))
@@ -410,10 +402,24 @@ function build_item_packages
     fi
   fi
 
-  if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
-    install_packages "$itemid" || { build_failed "$itemid"; return 8; }
+  [ "$OPT_CHROOT" = 'y' ] && chroot_report
+
+  if [ "$OPT_TEST" = 'y' ]; then
+    test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
   fi
-  #### set the new pkgbase in KEEPINSTALLED[$pkgid]
+
+  [ "$OPT_CHROOT" = 'y' ] && chroot_destroy
+  rm -f "$MYTMPDIR"/start 2>/dev/null
+
+  if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
+    #### what about dry run?
+    install_packages "$itemid" || { build_failed "$itemid"; return 8; }
+    #### set the new pkgbase in KEEPINSTALLED[$pkgid]
+  else
+    uninstall_deps "$itemid"
+  fi
+
+  [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "${SR_TMP:?NotSetSR_TMP}"/"$itemprgnam"* "${SR_TMP:?NotSetSR_TMP}"/package-"$itemprgnam"
 
   build_ok "$itemid"  # \o/
   return 0
@@ -484,25 +490,6 @@ function build_ok
 
   # ---- Write the metadata ----
   write_pkg_metadata "$itemid"  # sets $CHANGEMSG
-
-  # ---- Cleanup ----
-  if [ "$OPT_CHROOT" = 'y' ]; then
-    # cherry pick 'depmod' out of the cleanup hints
-    if [ -n "${HINT_CLEANUP[$itemid]}" ]; then
-      IFS=';'
-      for cleancmd in ${HINT_CLEANUP[$itemid]}; do
-        if [ "${cleancmd:0:7}" = 'depmod ' ]; then
-          eval "${SUDO}${cleancmd}" >> "$ITEMLOG" 2>&1
-        fi
-      done
-      unset IFS
-    fi
-  else
-    if [ "$OPT_DRY_RUN" = 'y' ] || [ "${HINT_INSTALL[$itemid]}" != 'y' ] || [ "$OPT_INSTALL" != 'y' ]; then
-      uninstall_deps "$itemid"
-    fi
-    [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "${SR_TMP:?NotSetSR_TMP}"/"$itemprgnam"* "${SR_TMP:?NotSetSR_TMP}"/package-"$itemprgnam"
-  fi
 
   # ---- Logging ----
   buildopt=''
@@ -668,10 +655,9 @@ function chroot_setup
   # ${SUDO}mount -t devpts  devpts  -ogid=5,mode=620 "$CHROOTDIR"/dev/pts
   # ${SUDO}mount -t sysfs   sysfs   "$CHROOTDIR"/sys
   if [ -n "$SUDO" ] && [ ! -d "${CHROOTDIR}/${HOME}" ]; then
-    # bind $HOME into the chroot if it's not visible (probably on a mounted fs)
-    CHROOTHOME="${CHROOTDIR}/${HOME}"
-    ${SUDO}mkdir -p "$CHROOTHOME"
-    ${SUDO}mount --rbind "${HOME}" "$CHROOTHOME"
+    # create $HOME as an empty directory
+    ${SUDO}mkdir -p "${CHROOTDIR}/${HOME}"
+    ${SUDO}chown "${EUID}" "${CHROOTDIR}/${HOME}"
   fi
   CHROOTCMD="chroot ${CHROOTDIR} "  # note the trailing space
   [ -n "$SUDO" ] && CHROOTCMD="sudo chroot --userspec=${USER} ${CHROOTDIR} "
@@ -680,24 +666,13 @@ function chroot_setup
 
 #-------------------------------------------------------------------------------
 
-function chroot_destroy
-# Copy wanted files out of the temporary chroot, and warn about everything else
+function chroot_report
+# Warn about modified files and directories in the chroot
 # Return status: always 0
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$CHROOTDIR" ] && return 0
-  log_normal "Unmounting chroot ... "
-  if [ -n "$CHROOTHOME" ]; then
-    ${SUDO}umount "$CHROOTHOME" || return 0
-  fi
-  ${SUDO}umount "$CHROOTDIR"/dev/shm || return 0
-  ${SUDO}umount "$CHROOTDIR"/proc || return 0
-  ${SUDO}umount -l "$CHROOTDIR" || return 0
-  if [ "$OPT_KEEP_TMP" = 'y' ] && [ -d "$MYTMPDIR"/changes/"$SR_TMP" ]; then
-    rsync -rlptgo "$MYTMPDIR"/changes/"$SR_TMP"/ "$SR_TMP"/
-  fi
-  log_done
-  ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes/{"$SR_TMP","${MYTMPDIR:?NotSetMYTMPDIR}"}
+
   if [ -f "$MYTMPDIR"/start ]; then
     crap=$(cd "$MYTMPDIR"/changes; find . -path './tmp' -prune -o -newer ../start -print 2>/dev/null)
     if [ -n "$crap" ]; then
@@ -709,7 +684,28 @@ function chroot_destroy
       fi
     fi
   fi
+
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function chroot_destroy
+# Unmount the chroot, copy any wanted files, and then destroy it
+# Return status: always 0
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+  [ -z "$CHROOTDIR" ] && return 0
+  log_normal "Unmounting chroot ... "
+  ${SUDO}umount "$CHROOTDIR"/dev/shm || return 0
+  ${SUDO}umount "$CHROOTDIR"/proc || return 0
+  ${SUDO}umount -l "$CHROOTDIR" || return 0
+  if [ "$OPT_KEEP_TMP" = 'y' ] && [ -d "$MYTMPDIR"/changes/"$SR_TMP" ]; then
+    rsync -rlptgo "$MYTMPDIR"/changes/"$SR_TMP"/ "$SR_TMP"/
+  fi
+  log_done
+  ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes/{"$SR_TMP","${MYTMPDIR:?NotSetMYTMPDIR}"}
   ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes
-  unset CHROOTCMD CHROOTDIR CHROOTHOME
+  unset CHROOTCMD CHROOTDIR
   return 0
 }

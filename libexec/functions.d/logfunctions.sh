@@ -184,22 +184,23 @@ function log_itemstart
 # (At any time only one ITEMLOG can be active.)
 # If the optional message is not specified, don't print anything - just setup the itemlog.
 # $1 = itemid
-# $2... = message (optional)
+# $2 = message (optional)
 # Return status: always 0
 {
-  local itemid="$1"; shift
+  local itemid="$1"
+  local message="$2"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
 
   if [ -n "$itemid" ]; then
-    if [ -n "$1" ]; then
+    if [ -n "$message" ]; then
       [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
-      line="-------------------------------------------------------------------------------"
-      if [ ${#1} -ge ${#line} ]; then
-        echo "${tputwhite}$*${tputnormal}"
+      padline="----------------------------------------------------------------------"
+      if [ ${#message} -ge ${#padline} ]; then
+        echo -e "${padline} $(date +%T)\n${tputwhite}${message}${tputnormal}"
       else
-        pad=$(( ${#line} - ${#1} - 10 ))
-        echo "${tputwhite}$*${tputnormal} ${line:0:$pad} $(date +%T)"
+        padlen=$(( ${#padline} - ${#message} - 1 ))
+        echo "${tputwhite}${message}${tputnormal} ${padline:0:$padlen} $(date +%T)"
       fi
     fi
     ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"
@@ -211,7 +212,7 @@ function log_itemstart
       gzip -f "$oldlog" &
       rm -f config.log 2>/dev/null
     fi
-    echo "$* $(date '+%F %T')"  > "$ITEMLOG"
+    echo "${message} $(date '+%F %T')"  > "$ITEMLOG"
   fi
   return 0
 }

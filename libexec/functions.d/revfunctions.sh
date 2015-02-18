@@ -165,6 +165,19 @@ function calculate_deps_and_status
 
   # Adjust the item's build status now that we know about its deps.
 
+  # Is this the top-level item and are we in rebuild mode => rebuild
+  # (code duplicated from calculate_item_status below)
+  if [ "${STATUS[$itemid]}" = "ok" ] && [ "$itemid" = "$ITEMID" ] && [ "$CMD" = 'rebuild' ]; then
+    found='n'
+    for previously in "${OKLIST[@]}"; do
+      if [ "$previously" = "$ITEMID" ]; then found='y'; break; fi
+    done
+    if [ "$found" = 'n' ]; then
+      STATUS[$itemid]="rebuild"
+      STATUSINFO[$itemid]="rebuild"
+    fi
+  fi
+
   # Has the list of deps changed => rebuild
   pkgdeps=$(db_get_rev "$itemid")
   [ "${pkgdeps/ */}" = '/' ] && pkgdeps=""

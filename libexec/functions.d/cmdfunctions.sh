@@ -26,7 +26,7 @@ function build_command
   local itemfile="${ITEMFILE[$itemid]}"
 
   # Quick triage of any cached status:
-  if [ "${STATUS[$itemid]}" = 'ok' ]; then
+  if [ "${STATUS[$itemid]}" = 'ok' ] && [ "$CMD" != 'rebuild' ]; then
     log_important "$itemid is up-to-date."
     return 0
   elif [ "${STATUS[$itemid]}" = 'updated' ]; then
@@ -55,6 +55,7 @@ function build_command
   NEEDSBUILD=()
   calculate_deps_and_status "$itemid"
   if [ "${DIRECTDEPS[$itemid]}" != "" ]; then
+    log_normal "Dependency tree:"
     [ "$OPT_QUIET" != 'y' ] && echo -n "$DEPTREE"
   fi
 
@@ -350,10 +351,6 @@ function remove_command
   log_itemstart "$itemid"
 
   # Preliminary warnings and comments:
-  # Log a warning if there will be no backup
-  if [ -z "$SR_PKGBACKUP" ]; then
-    log_warning "No backup repository configured -- please set PKGBACKUP in your config file"
-  fi
   # Log a warning about any dependers
   dependers=$(db_get_dependers "$itemid")
   for depender in $dependers; do

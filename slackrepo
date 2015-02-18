@@ -411,14 +411,27 @@ log_verbose ""
 declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST
 
 # Create directories:
-[ -d "$SR_SBREPO" ]   || { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"   ; }
-[ -d "$SR_SRCREPO" ]  || { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO"  ; }
-[ -d "$SR_PKGREPO" ]  || { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO"  ; }
+[ -d "$SR_SBREPO" ]   || \
+  { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"    || \
+  { log_error "Failed to create repository"; exit_cleanup; exit 4; }; }
+[ -d "$SR_SRCREPO" ]  || \
+  { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO"   || \
+  { log_error "Failed to create repository"; exit_cleanup; exit 4; }; }
+[ -d "$SR_PKGREPO" ]  || \
+  { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO"   || \
+  { log_error "Failed to create repository"; exit_cleanup; exit 4; }; }
 [ -z "$SR_PKGBACKUP" ] || [ -d "$SR_PKGBACKUP" ] || \
-                         { log_normal "Creating backup repository: $SR_PKGBACKUP"  ; mkdir -p "$SR_PKGBACKUP"; }
-[ -d "$SR_HINTDIR" ]  || { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"  ; }
-[ -d "$SR_QUEUEDIR" ] || { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR" ; }
-[ -d "$SR_LOGDIR" ]   || { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"   ; }
+  { log_normal "Creating backup repository: $SR_PKGBACKUP"  ; mkdir -p "$SR_PKGBACKUP" || \
+  { log_error "Failed to create repository"; exit_cleanup; exit 4; }; }
+[ -d "$SR_HINTDIR" ]  || \
+  { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"   || \
+  { log_error "Failed to create directory";  exit_cleanup; exit 4; }; }
+[ -d "$SR_QUEUEDIR" ] || \
+  { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR"  || \
+  { log_error "Failed to create directory";  exit_cleanup; exit 4; }; }
+[ -d "$SR_LOGDIR" ]   || \
+  { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"    || \
+  { log_error "Failed to create directory";  exit_cleanup; exit 4; }; }
 
 # sqlite database for revision details, package identification, build times etc
 # This is now *required* so here is a default path:

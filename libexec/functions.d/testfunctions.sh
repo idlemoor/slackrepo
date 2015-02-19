@@ -53,16 +53,16 @@ function test_slackbuild
     [ "$linecount" -gt 13 ] && \
       log_warning -a "${itemid}: slack-desc: $linecount lines of description"
     # check handy ruler
-    if ! grep -q "^ *$hr\$" "$slackdesc" ; then
+    if ! grep -q "^[[:blank:]]*$hr\$" "$slackdesc" ; then
       log_warning -a "${itemid}: slack-desc: handy-ruler is corrupt or missing"
-    elif [ "$(grep "^ *$hr\$" "$slackdesc" | sed "s/|.*|//" | wc -c)" -ne $(( ${#itemprgnam} + 1 )) ]; then
+    elif [ "$(grep "^[[:blank:]]*$hr\$" "$slackdesc" | sed "s/|.*|//" | wc -c)" -ne $(( ${#itemprgnam} + 1 )) ]; then
       log_warning -a "${itemid}: slack-desc: handy-ruler is misaligned"
     fi
     # check line length <= 80
     [ "$(grep "^${itemprgnam}:" "$slackdesc" | sed "s/^${itemprgnam}://" | wc -L)" -gt 80 ] && \
       log_warning -a "${itemid}: slack-desc: description lines too long"
     # check appname (i.e. $itemprgnam)
-    grep -q -v -e '^#' -e "^${itemprgnam}:" -e '^$' -e '^ *|-.*-|$' "$slackdesc" && \
+    grep -q -v -e '^#' -e "^${itemprgnam}:" -e '^$' -e '^[[:blank:]]*|-.*-|$' "$slackdesc" && \
       log_warning -a "${itemid}: slack-desc: unrecognised text (appname wrong?)"
   else
     log_warning -a "${itemid}: slack-desc not found"

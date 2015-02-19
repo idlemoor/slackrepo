@@ -61,8 +61,8 @@ function print_current_revinfo
   osstuff="${SYS_OSNAME}${SYS_OSVER}"
 
   hintstuff='/'
-  if [ -n "${HINTFILE[$itemdir]}" ]; then
-    hintstuff="$(md5sum "${HINTFILE[$itemdir]}")"; hintstuff="${hintstuff/ */}"
+  if [ -n "${HINTFILE[$itemdir]}" ] && [ -s "${HINTFILE[$itemdir]}" ]; then
+     hintstuff="$(md5sum "${HINTFILE[$itemdir]}")"; hintstuff="${hintstuff/ */}"
   fi
 
   echo "$itemid" '/' "${deplist// /,}" "${verstuff} ${bltstuff} ${revstuff} ${osstuff} ${hintstuff}"
@@ -412,7 +412,7 @@ function calculate_item_status
 
   # Has the hintfile changed => rebuild
   currhnt='/'
-  if [ -n "${HINTFILE[$itemdir]}" ]; then
+  if [ -n "${HINTFILE[$itemdir]}" ] && [ -s "${HINTFILE[$itemdir]}" ]; then
     currhnt="$(md5sum "${HINTFILE[$itemdir]}")"; currhnt="${currhnt/ */}"
   fi
   if [ "$pkghnt" != "$currhnt" ]; then

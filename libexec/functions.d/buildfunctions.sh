@@ -375,16 +375,6 @@ function build_item_packages
     fi
   fi
 
-  # update pkgnam to itemid table
-  if [ "$OPT_DRY_RUN" != 'y' ]; then
-    db_del_pkgnam_itemid "$itemid"
-    for pkgpath in "${pkglist[@]}"; do
-      pkgbasename=$(basename "$pkgpath")
-      log_important "Built ok:  $pkgbasename"
-      pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
-      db_set_pkgnam_itemid "$pkgnam" "$itemid"
-    done
-  fi
   # update build time information
   # add 1 to round it up so it's never zero
   actualsecs=$(( buildfinishtime - buildstarttime + 1 ))
@@ -402,6 +392,17 @@ function build_item_packages
     fi
   fi
 
+  # update pkgnam to itemid table (do this before any attempt to install)
+  if [ "$OPT_DRY_RUN" != 'y' ]; then
+    db_del_itemid_pkgnam "$itemid"
+    for pkgpath in "${pkglist[@]}"; do
+      pkgbasename=$(basename "$pkgpath")
+      log_important "Built ok:  $pkgbasename"
+      pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
+      db_set_pkgnam_itemid "$pkgnam" "$itemid"
+    done
+  fi
+
   [ "$OPT_CHROOT" = 'y' ] && chroot_report
 
   if [ "$OPT_TEST" = 'y' ]; then
@@ -412,9 +413,8 @@ function build_item_packages
   rm -f "$MYTMPDIR"/start 2>/dev/null
 
   if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
-    #### what about dry run?
-    install_packages "$itemid" || { build_failed "$itemid"; return 8; }
-    #### set the new pkgbase in KEEPINSTALLED[$pkgid]
+    install_packages "${pkglist[@]}" || { build_failed "$itemid"; return 8; }
+    #### set the new pkgbase in KEEPINSTALLED[$pkgnam] ????
   else
     uninstall_deps "$itemid"
   fi

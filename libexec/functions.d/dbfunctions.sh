@@ -6,7 +6,8 @@
 #   db_init
 #   db_error
 #   db_set_buildsecs, db_get_buildsecs, db_del_buildsecs
-#   db_set_pkgnam_itemid, db_get_pkgnam_itemid, db_del_pkgnam_itemid
+#   db_set_pkgnam_itemid, db_get_pkgnam_itemid, db_get_itemid_pkgnams,
+#     db_del_pkgnam, db_del_itemid_pkgnam
 #   db_set_misc, db_get_misc, db_del_misc
 #   db_set_rev, db_get_rev, db_get_dependers, db_del_rev
 #   db_set_buildresults
@@ -313,6 +314,19 @@ function db_get_pkgnam_itemid
   return 0
 }
 
+function db_get_itemid_pkgnams
+# Print the pkgnams for a given itemid on standard output.
+# $1 = itemid
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+  [ -z "$1" ] && return 1
+  sqlite3 "$SR_DATABASE" \
+    "select pkgnam from packages where itemid='$1';"
+  dbstat=$?
+  [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
+  return 0
+}
+
 function db_del_pkgnam
 # Delete all records for a specified pkgnam.
 # $1 = pkgnam
@@ -326,7 +340,7 @@ function db_del_pkgnam
   return 0
 }
 
-function db_del_pkgnam_itemid
+function db_del_itemid_pkgnam
 # Delete all records for a specified itemid.
 # $1 = itemid
 {

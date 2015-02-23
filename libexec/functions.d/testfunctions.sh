@@ -283,11 +283,11 @@ function test_package
 
     # Install it to see what happens (but not if --dry-run)
     if [ "$OPT_DRY_RUN" != 'y' ]; then
-      install_packages "$itemid" || return 1
-      uninstall_packages "$itemid"
+      install_packages "$pkgpath" || return 1
     fi
 
   done
 
+  uninstall_packages "$itemid"
   return 0
 }

@@ -54,6 +54,7 @@ function exit_cleanup
     ${SUDO}umount -l "$CHROOTDIR"/proc
     ${SUDO}umount -l "$CHROOTDIR"
   fi
+  [ -n "$PIDFILE" ] && rm -f "$PIDFILE" 2>/dev/null
 }
 
 #-------------------------------------------------------------------------------
@@ -546,10 +547,10 @@ declare -A KEEPINSTALLED
 if [ -n "$SR_TAG" ] && [ "$OPT_INSTALL" != 'y' ] && [ "$CMD" != 'remove' ]; then
   for pkg in /var/log/packages/*"$SR_TAG"; do
     if [ -f "$pkg" ]; then
-      pkgbase="${pkg##*/}"
+      pkgid="${pkg##*/}"
       [ "${#KEEPINSTALLED[@]}" = 0 ] && log_warning "Packages with tag $SR_TAG are already installed"
-      log_normal "  $pkgbase"
-      KEEPINSTALLED[${pkgbase%-*-*-*}]="$pkgbase"
+      log_normal "  $pkgid"
+      KEEPINSTALLED[${pkgid%-*-*-*}]="$pkgid"
     fi
   done
 fi

@@ -128,7 +128,7 @@ commit;
       done < <(cd "$SR_PKGREPO"; find . -type f -name '*.rev' -o -name '.revision')
       echo "commit;" >>"$MYTMPDIR"/revisions.sql
       sqlite3 "$SR_DATABASE" < "$MYTMPDIR"/revisions.sql || return 1
-      rm "$MYTMPDIR"/revisions.sql
+      rm -f "$MYTMPDIR"/revisions.sql
       log_done
       # (e) convert the backup repo's revision data
       log_normal "Converting backup revision data ... "

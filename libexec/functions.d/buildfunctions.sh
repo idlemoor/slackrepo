@@ -65,12 +65,12 @@ function build_item_packages
   if [ -d "$archsourcedir" ]; then
     SOURCESTASH="$archsourcestash"
     mkdir -p "$SOURCESTASH"
-    find "$SOURCESTASH" -type f -maxdepth 1 -exec rm {} \;
+    find "$SOURCESTASH" -type f -maxdepth 1 -exec rm -f {} \;
     find "$archsourcedir" -type f -maxdepth 1 -exec cp {} "$SOURCESTASH" \;
   elif [ -d "$allsourcedir" ]; then
     SOURCESTASH="$allsourcestash"
     mkdir -p "$SOURCESTASH"
-    find "$SOURCESTASH" -type f -maxdepth 1 -exec rm {} \;
+    find "$SOURCESTASH" -type f -maxdepth 1 -exec rm -f {} \;
     find "$allsourcedir" -type f -maxdepth 1 -exec cp {} "$SOURCESTASH" \;
   fi
   # If there were no actual source files, remove the stash directory:

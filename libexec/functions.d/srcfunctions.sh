@@ -108,7 +108,7 @@ function download_src
 
   if [ -n "$DOWNDIR" ]; then
     mkdir -p "$DOWNDIR"
-    find -H "$DOWNDIR" -maxdepth 1 -type f -exec rm {} \;
+    find -H "$DOWNDIR" -maxdepth 1 -type f -exec rm -f {} \;
   else
     return 0
   fi

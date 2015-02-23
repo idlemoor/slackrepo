@@ -288,7 +288,7 @@ function revert_command
     while read revinfo; do
       db_set_rev $revinfo
     done < "$backuprevfile"
-    rm "$backuprevfile"
+    rm -f "$backuprevfile"
     # revert the previous package
     # (we already know that this exists, so no need for a test)
     mv "$backupdir" "$packagedir"
@@ -445,7 +445,7 @@ function remove_command
       find "$archsourcedir" -type f -maxdepth 1 -print | while read srcpath; do
         srcfile="$(basename "$srcpath")"
         if [ "$OPT_DRY_RUN" != 'y' ]; then
-          rm "$srcpath"
+          rm -f "$srcpath"
           log_normal "Source file $srcfile has been removed"
         else
           log_normal "Source file $srcfile would be removed"
@@ -455,7 +455,7 @@ function remove_command
       find "$allsourcedir" -type f -maxdepth 1 -print | while read srcpath; do
         srcfile="$(basename "$srcpath")"
         if [ "$OPT_DRY_RUN" != 'y' ]; then
-          rm "$srcpath"
+          rm -f "$srcpath"
           log_normal "Source file $srcfile has been removed"
         else
           log_normal "Source file $srcfile would be removed"

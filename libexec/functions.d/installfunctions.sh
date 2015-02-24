@@ -72,7 +72,7 @@ function install_packages
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
-  for arg in "$*"; do
+  for arg in $*; do
 
     if [ -f "$arg" ]; then
       pkgbase="${arg##*/}"
@@ -110,6 +110,8 @@ function install_packages
       done
       [ "${#pkglist[@]}" = 0 ] && { log_error -a "${itemid}: Can't find any packages to install"; return 1; }
     fi
+
+    do_groupadd_useradd "$itemid"
 
     for pkgpath in "${pkglist[@]}"; do
       pkgbase="${pkgpath##*/}"
@@ -182,7 +184,6 @@ function uninstall_packages
   fi
 
   local itemid="$1"
-  local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
   local -a pkglist
   local pkgpath

@@ -575,7 +575,6 @@ function do_groupadd_useradd
 # Return status: always 0
 {
   [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
 
@@ -589,7 +588,7 @@ function do_groupadd_useradd
         esac
       done
       [ -z "$gnum" ] && { log_warning "${itemid}: GROUPADD hint has no GID number" ; break ; }
-      if ! getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
+      if ! ${CHROOTCMD}getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
         gaddcmd="groupadd -g $gnum $gname"
         log_verbose -a "Adding group: $gaddcmd"
         eval "${CHROOTCMD}${SUDO}$gaddcmd"
@@ -615,9 +614,9 @@ function do_groupadd_useradd
         esac
       done
       [ -z "$unum" ] && { log_warning "${itemid}: USERADD hint has no UID number" ; break ; }
-      if ! getent passwd "$uname" | grep -q "^${uname}:" 2>/dev/null ; then
+      if ! ${CHROOTCMD}getent passwd "$uname" | grep -q "^${uname}:" 2>/dev/null ; then
         [ -z "$ugroup" ] && ugroup="$uname"
-        if ! getent group "${ugroup}" | grep -q "^${ugroup}:" 2>/dev/null ; then
+        if ! ${CHROOTCMD}getent group "${ugroup}" | grep -q "^${ugroup}:" 2>/dev/null ; then
           gaddcmd="groupadd -g $unum $ugroup"
           log_verbose -a "Adding group: $gaddcmd"
           eval "${CHROOTCMD}${SUDO}$gaddcmd"

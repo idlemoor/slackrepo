@@ -439,8 +439,6 @@ function build_ok
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
-  STATUS[$itemid]="ok"
-
   [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$MYTMPIN"
 
   # ---- Store the packages ----
@@ -495,6 +493,7 @@ function build_ok
   buildopt=''
   [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
   [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
+  STATUS[$itemid]="ok"
   STATUSINFO[$itemid]="$CHANGEMSG$buildopt"
   log_itemfinish "${itemid}" 'ok' "${STATUSINFO[$itemid]}"
 
@@ -516,13 +515,13 @@ function build_failed
   local itemfile="${ITEMFILE[$itemid]}"
 
   STATUS[$itemid]="failed"
+  STATUSINFO[$itemid]="See $ITEMLOG"
 
   if [ "$OPT_QUIET" != 'y' ]; then
     errorscan_itemlog | tee -a "$MAINLOG"
   else
     errorscan_itemlog >> "$MAINLOG"
   fi
-  STATUSINFO[$itemid]="See $ITEMLOG"
   log_error -n "${STATUSINFO[$itemid]}"
 
   if [ -n "${CHROOTDIR}" ]; then

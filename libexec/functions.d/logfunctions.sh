@@ -89,7 +89,7 @@ function log_important
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  echo -e "${tputwhite}$*${tputnormal}"
+  echo -e "${tputboldwhite}$*${tputnormal}"
   [ "$A" = 'y' ] && echo -e "$*" >> "$ITEMLOG"
   return 0
 }
@@ -113,7 +113,7 @@ function log_warning
     *)    break ;;
     esac
   done
-  echo -e "${tputyellow}${W}$*${tputnormal}"
+  echo -e "${tputboldyellow}${W}$*${tputnormal}"
   [ "$A" = 'y' ] && echo -e "${W}$*" >> "$ITEMLOG"
   [ -n "$W" ] && WARNINGLIST+=( "$*" )
   return 0
@@ -137,7 +137,7 @@ function log_error
     *)    break ;;
     esac
   done
-  echo -e "${tputred}${E}$*${tputnormal}"
+  echo -e "${tputboldred}${E}$*${tputnormal}"
   [ "$A" = 'y' ] && echo -e "${E}$*" >> "$ITEMLOG"
   return 0
 }
@@ -197,10 +197,10 @@ function log_itemstart
       [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
       padline="----------------------------------------------------------------------"
       if [ ${#message} -ge ${#padline} ]; then
-        echo -e "${padline} $(date +%T)\n${tputwhite}${message}${tputnormal}"
+        echo -e "${padline} $(date +%T)\n${tputboldwhite}${message}${tputnormal}"
       else
         padlen=$(( ${#padline} - ${#message} - 1 ))
-        echo "${tputwhite}${message}${tputnormal} ${padline:0:$padlen} $(date +%T)"
+        echo "${tputboldwhite}${message}${tputnormal} ${padline:0:$padlen} $(date +%T)"
       fi
     fi
     ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"
@@ -242,19 +242,19 @@ function log_itemfinish
   fi
   case "$result" in
     'OK')
-      echo -e "${tputgreen}:-) $message (-:${addmessage}${tputnormal}"
+      echo -e "${tputboldgreen}:-) $message (-:${addmessage}${tputnormal}"
       [ -n "$ITEMLOG" ] && echo -e ":-) $message (-:${addmessage}" >> "$ITEMLOG"
       ;;
     'SKIPPED')
-      echo -e "${tputyellow}:-/ $message /-:${addmessage}${tputnormal}"
+      echo -e "${tputboldyellow}:-/ $message /-:${addmessage}${tputnormal}"
       [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:${addmessage}" >> "$ITEMLOG"
       ;;
     'UNSUPPORTED')
-      echo -e "${tputyellow}:-/ $message /-:${addmessage}${tputnormal}"
+      echo -e "${tputboldyellow}:-/ $message /-:${addmessage}${tputnormal}"
       [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:${addmessage}" >> "$ITEMLOG"
       ;;
     'FAILED' | 'ABORTED')
-      echo -e "${tputred}:-( $message )-:${addmessage}${tputnormal}"
+      echo -e "${tputboldred}:-( $message )-:${addmessage}${tputnormal}"
       [ -n "$ITEMLOG" ] && echo -e ":-( $message )-:${addmessage}" >> "$ITEMLOG"
       ;;
   esac
@@ -276,9 +276,12 @@ function init_colour
 {
   tputbold=''
   tputred=''
+  tputboldred=''
   tputgreen=''
+  tputboldgreen=''
   tputyellow=''
-  tputwhite=''
+  tputboldyellow=''
+  tputboldwhite=''
   tputnormal=''
   DOCOLOUR='n'
   [ "$OPT_COLOR" = 'always'       ] && DOCOLOUR='y'
@@ -286,13 +289,19 @@ function init_colour
   [ "$DOCOLOUR" = 'n' ] && return 1
   tputbold="$(tput bold)"
   [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputred="$tputbold$(tput setaf 1)"
+  tputred="$(tput setaf 1)"
   [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputgreen="$tputbold$(tput setaf 2)"
+  tputboldred="$tputbold$tputred"
   [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputyellow="$tputbold$(tput setaf 3)"
+  tputgreen="$(tput setaf 2)"
   [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputwhite="$tputbold$(tput setaf 7)"
+  tputboldgreen="$tputbold$tputgreen"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputyellow="$(tput setaf 3)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputboldyellow="$tputbold$tputyellow"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputboldwhite="$tputbold$(tput setaf 7)"
   [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
   tputnormal="$(tput sgr0)"
   [ $? != 0 ] && { DOCOLOUR='n'; return 1; }

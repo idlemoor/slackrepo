@@ -136,46 +136,51 @@ function test_download
     log_normal -a "Testing download URLs ..."
     TMP_HEADER="$MYTMPDIR"/curlheader
     for url in "${downlist[@]}"; do
+      # Try to retrieve just the header.
       > "$TMP_HEADER"
-      case "$url" in
-      *.googlecode.com/*)
-        # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
-        # https://code.google.com/p/support/issues/detail?id=660
-        # "Don't be evil, but totally lame is fine"
-        curl -q -f -s -k --connect-timeout 10 --retry 2 --ciphers ALL -J -L -A SlackZilla -o /dev/null "$url" >> "$ITEMLOG" 2>&1
-        curlstat=$?
-        if [ "$curlstat" != 0 ]; then
-          log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat). $url"
+      curl -v -f -s -k --connect-timeout 10 --retry 2 --ciphers ALL -J -L -A SlackZilla -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
+      curlstat=$?
+      if [ "$curlstat" = 0 ]; then
+        remotelength=$(fromdos <"$TMP_HEADER" | grep 'Content-[Ll]ength: ' | tail -n 1 | sed 's/^.* //')
+        # Proceed only if we seem to have extracted a valid content-length.
+        if [ -n "$remotelength" ] && [ "$remotelength" != 0 ]; then
+          # Filenames that have %nn encodings won't get checked.
+          filename=$(fromdos <"$TMP_HEADER" | grep 'Content-[Dd]isposition:.*filename=' | sed -e 's/^.*filename=//' -e 's/^"//' -e 's/"$//' -e 's/\%20/ /g' -e 's/\%7E/~/g')
+          # If no Content-Disposition, we'll have to guess:
+          [ -z "$filename" ] && filename="$(basename "$url")"
+          if [ -f "${SRCDIR[$itemid]}"/"$filename" ]; then
+            cachedlength=$(stat -c '%s' "${SRCDIR[$itemid]}"/"$filename")
+            if [ "$remotelength" != "$cachedlength" ]; then
+              log_warning -a "${itemid}: Source file $filename has been modified upstream."
+            fi
+          fi
         fi
-        ;;
-      *)
-        curl -q -f -s -k --connect-timeout 10 --retry 2 --ciphers ALL -J -L -A SlackZilla -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
+      else
+        # Header failed, try a full download (googlecode, amazonaws, possibly more, are "special")
+        curl -q -f -s -k --connect-timeout 10 --retry 2 --ciphers ALL -J -L -A SlackZilla -o "$MYTMPDIR"/curldownload "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
-        if [ "$curlstat" != 0 ]; then
+        if [ "$curlstat" = 0 ]; then
+          remotemd5=$(md5sum <"$MYTMPDIR"/curldownload); remotemd5="${remotemd5/ */}"
+          found='n'
+          for cachedmd5 in ${INFOMD5LIST[$itemid]}; do
+            if [ "$remotemd5" = "$cachedmd5" ]; then
+              found='y'; break
+            fi
+          done
+          if [ "$found" = 'n' ]; then
+            log_warning -a "${itemid}: Source has apparently been modified upstream."
+            log_warning -a -n "  $url"
+          fi
+        else
           log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat)."
           log_warning -a -n "  $url"
           if [ -s "$TMP_HEADER" ]; then
             echo "The following headers may be informative:" >> "$ITEMLOG"
             cat "$TMP_HEADER" >> "$ITEMLOG"
           fi
-        else
-          remotelength=$(fromdos <"$TMP_HEADER" | grep 'Content-[Ll]ength: ' | tail -n 1 | sed 's/^.* //')
-          # Proceed only if we seem to have extracted a valid content-length.
-          if [ -n "$remotelength" ] && [ "$remotelength" != 0 ]; then
-            # Filenames that have %nn encodings won't get checked.
-            filename=$(fromdos <"$TMP_HEADER" | grep 'Content-[Dd]isposition:.*filename=' | sed -e 's/^.*filename=//' -e 's/^"//' -e 's/"$//' -e 's/\%20/ /g' -e 's/\%7E/~/g')
-            # If no Content-Disposition, we'll have to guess:
-            [ -z "$filename" ] && filename="$(basename "$url")"
-            if [ -f "${SRCDIR[$itemid]}"/"$filename" ]; then
-              cachedlength=$(stat -c '%s' "${SRCDIR[$itemid]}"/"$filename")
-              if [ "$remotelength" != "$cachedlength" ]; then
-                log_warning -a "${itemid}: Source file $filename has been modified upstream."
-              fi
-            fi
-          fi
         fi
-        ;;
-      esac
+        rm -f "$MYTMPDIR"/curldownload
+      fi
     done
     [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_HEADER"
   fi

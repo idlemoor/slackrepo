@@ -21,115 +21,75 @@ function build_command
   [ -z "$1" ] && return 1
 
   local itemid="$1"
-  local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
-  local itemfile="${ITEMFILE[$itemid]}"
 
-  # Quick triage of any cached status:
-  if [ "${STATUS[$itemid]}" = 'ok' ] && [ "$CMD" != 'rebuild' ]; then
-    log_important "$itemid is up-to-date."
-    return 0
-  elif [ "${STATUS[$itemid]}" = 'updated' ]; then
-    STATUS[$itemid]="ok"
-    log_important "$itemid is up-to-date."
-    return 0
-  elif [ "${STATUS[$itemid]}" = 'skipped' ]; then
-    log_itemfinish "$itemid" 'skipped' '' "${STATUSINFO[$itemid]}"
-    return 1
-  elif [ "${STATUS[$itemid]}" = 'unsupported' ]; then
-    log_itemfinish "$itemid" 'unsupported' "on ${SR_ARCH}"
-    return 1
-  elif [ "${STATUS[$itemid]}" = 'failed' ]; then
-    log_error "${itemid} has failed to build."
-    [ -n "${STATUSINFO[$itemid]}" ] && log_always "${STATUSINFO[$itemid]}"
-    return 1
-  elif [ "${STATUS[$itemid]}" = 'aborted' ]; then
-    log_error "Cannot build ${itemid}."
-    [ -n "${STATUSINFO[$itemid]}" ] && log_always "${STATUSINFO[$itemid]}"
-    return 1
-  fi
-
-  # Status is not cached, so work it out
-  log_normal "Calculating dependencies ..."
-  DEPTREE=""
-  NEEDSBUILD=()
-  calculate_deps_and_status "$itemid"
-  if [ "${DIRECTDEPS[$itemid]}" != "" ]; then
-    log_normal "Dependency tree:"
-    [ "$OPT_QUIET" != 'y' ] && echo -n "$DEPTREE"
-  fi
-
-  # Set anything flagged 'updated' back to 'ok' before we go any further
-  for depid in ${FULLDEPS[$itemid]}; do
-    [ "${STATUS[$depid]}" = 'updated' ] && STATUS[$depid]='ok'
-  done
-
-  # Now do almost-but-not-quite-the-same triage on the status
-  if [ "${STATUS[$itemid]}" = 'ok' ] && [ "${#NEEDSBUILD[@]}" = 0 ]; then
-    log_important "$itemid is up-to-date."
-    return 0
-  elif [ "${STATUS[$itemid]}" = 'updated' ]; then
-    STATUS[$itemid]="ok"
-    if [ "${#NEEDSBUILD[@]}" = 0 ]; then
-      log_important "$itemid is up-to-date."
-      return 0
+  TODOLIST=()
+  if [ -z "${STATUS[$itemid]}" ]; then
+    log_normal "Calculating dependencies ..."
+    DEPTREE=""
+    calculate_deps_and_status "$itemid"
+    if [ "${DIRECTDEPS[$itemid]}" != "" ]; then
+      log_normal "Dependency tree:"
+      [ "$OPT_QUIET" != 'y' ] && echo -n "$DEPTREE"
     fi
-  elif [ "${STATUS[$itemid]}" = 'skipped' ]; then
-    log_itemfinish "$itemid" 'skipped' '' "${STATUSINFO[$itemid]}"
-    return 1
-  elif [ "${STATUS[$itemid]}" = 'unsupported' ]; then
-    log_itemfinish "$itemid" 'unsupported' "on ${SR_ARCH}"
-    return 1
-  elif [ "${STATUS[$itemid]}" = 'failed' ]; then
-    # this can't happen
-    log_error "${itemid} status=${STATUS[$itemid]}"
-    return 1
-  #else
-    # fall through:
-    # ok but something way down the dep tree needs a rebuild => do that
-    # add/update/rebuild => do that
-    # aborted => build what we can, and log errors about the rest
-  fi
-
-  for todo in "${NEEDSBUILD[@]}"; do
     log_normal ""
-    if [ "${STATUS[$todo]}" = 'skipped' ] && [ "$todo" != "$itemid" ]; then
-      log_warning -n "$todo has been skipped."
-      continue
-    elif [ "${STATUS[$todo]}" = 'unsupported' ] && [ "$todo" != "$itemid" ]; then
-      log_warning -n "$todo is unsupported."
-      continue
-    elif [ "${STATUS[$todo]}" = 'failed' ]; then
-      log_error "${todo} has failed to build."
-      [ -n "${STATUSINFO[$todo]}" ] && log_always "${STATUSINFO[$todo]}"
-      continue
-    fi
-
-    missingdeps=()
-    for dep in ${DIRECTDEPS[$todo]}; do
-      if [ "${STATUS[$dep]}" != 'ok' ] && [ "${STATUS[$dep]}" != 'updated' ]; then
-       missingdeps+=( "$dep" )
-      fi
+    [ "${STATUS[$itemid]}" = 'updated' ] && STATUS[$itemid]="ok"
+    for depid in ${FULLDEPS[$itemid]}; do
+      [ "${STATUS[$depid]}" = 'updated' ] && STATUS[$depid]='ok'
     done
-    if [ "${#missingdeps[@]}" != '0' ]; then
-      log_error "Cannot build ${todo}."
-      if [ "${#missingdeps[@]}" = '1' ]; then
-        STATUSINFO[$todo]="Missing dependency: ${missingdeps[0]}"
-      else
-        STATUSINFO[$todo]="Missing dependencies:\n$(printf '  %s\n' "${missingdeps[@]}")"
-      fi
-      STATUS[$todo]='aborted'
-      log_itemfinish "$todo" "aborted" '' "${STATUSINFO[$todo]}"
-      continue
+  fi
+
+  if [ "${#TODOLIST[@]}" = 0 ]; then
+    # Nothing is going to be built.  Log the final outcome.
+    if [ "${STATUS[$itemid]}" = 'ok' ]; then
+      log_important "$itemid is up-to-date."
+    elif [ "${STATUS[$itemid]}" = 'skipped' ]; then
+      log_warning -n "$itemid has been skipped."
+    elif [ "${STATUS[$itemid]}" = 'unsupported' ]; then
+      log_warning -n "$itemid is unsupported on ${SR_ARCH}."
+    elif [ "${STATUS[$itemid]}" = 'failed' ]; then
+      log_error "${itemid} has failed to build."
+      [ -n "${STATUSINFO[$itemid]}" ] && log_always "${STATUSINFO[$itemid]}"
+    elif [ "${STATUS[$itemid]}" = 'aborted' ]; then
+      log_error "Cannot build ${itemid}."
+      [ -n "${STATUSINFO[$itemid]}" ] && log_always "${STATUSINFO[$itemid]}"
+    else
+      log_warning "$itemid has unexpected status ${STATUS[$itemid]}"
     fi
-
-    buildopt=''
-    [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
-    [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
-    log_itemstart "$todo" "Starting $todo (${STATUSINFO[$todo]})$buildopt"
-    build_item_packages "$todo"
-
-  done
+    log_normal ""
+  else
+    # Process TODOLIST.
+    for todo in "${TODOLIST[@]}"; do
+      if [ "${STATUS[$todo]}" = 'skipped' ]; then
+        log_itemfinish "$todo" 'skipped' '' "${STATUSINFO[$todo]}"
+      elif [ "${STATUS[$todo]}" = 'unsupported' ]; then
+        log_itemfinish "$todo" 'unsupported' "on ${SR_ARCH}" ''
+      elif [ "${STATUS[$todo]}" = 'failed' ]; then
+        log_error "${todo} has failed to build."
+        [ -n "${STATUSINFO[$todo]}" ] && log_always "${STATUSINFO[$todo]}"
+      else
+        missingdeps=()
+        for dep in ${DIRECTDEPS[$todo]}; do
+          if [ "${STATUS[$dep]}" != 'ok' ] && [ "${STATUS[$dep]}" != 'updated' ]; then
+           missingdeps+=( "$dep" )
+          fi
+        done
+        if [ "${#missingdeps[@]}" = '0' ]; then
+          build_item_packages "$todo"
+        else
+          log_error "Cannot build ${todo}."
+          if [ "${#missingdeps[@]}" = '1' ]; then
+            STATUSINFO[$todo]="Missing dependency: ${missingdeps[0]}"
+          else
+            STATUSINFO[$todo]="Missing dependencies:\n$(printf '  %s\n' "${missingdeps[@]}")"
+          fi
+          STATUS[$todo]='aborted'
+          log_itemfinish "$todo" "aborted" '' "${STATUSINFO[$todo]}"
+        fi
+      fi
+      log_normal ""
+    done
+  fi
 
   return 0
 }
@@ -478,7 +438,7 @@ function remove_command
 
   # Changelog, and exit with a smile
   if [ "$OPT_DRY_RUN" != 'y' ]; then
-    changelog "$itemid" "Removed" "" "${pkglist[@]}"
+    changelog "$itemid" "Removed" "" "${packagelist[@]}"
     log_itemfinish "$itemid" 'ok' "Removed"
   else
     log_itemfinish "$itemid" 'ok' "Removed [dry run]"

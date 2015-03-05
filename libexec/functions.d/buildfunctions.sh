@@ -36,6 +36,11 @@ function build_item_packages
   local itemfile="${ITEMFILE[$itemid]}"
   local -a pkglist tempdownlist
 
+  buildopt=''
+  [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
+  [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
+  log_itemstart "$todo" "Starting $todo (${STATUSINFO[$todo]})$buildopt"
+
   MYTMPIN="$MYTMPDIR/slackbuild_$itemprgnam"
   # initial wipe of $MYTMPIN, even if $OPT_KEEP_TMP is set
   rm -rf "$MYTMPIN"

@@ -653,9 +653,10 @@ function chroot_setup
   # ${SUDO}mount -t devpts  devpts  -ogid=5,mode=620 "$CHROOTDIR"/dev/pts
   # ${SUDO}mount -t sysfs   sysfs   "$CHROOTDIR"/sys
   if [ -n "$SUDO" ] && [ ! -d "${CHROOTDIR}/${HOME}" ]; then
-    # create $HOME as an empty directory
+    # create $HOME as a (mostly) empty directory
     ${SUDO}mkdir -p "${CHROOTDIR}/${HOME}"
     ${SUDO}chown "${EUID}" "${CHROOTDIR}/${HOME}"
+    [ -f ~/.Xauthority ] && cp -a ~/.Xauthority "${CHROOTDIR}/${HOME}"
   fi
   CHROOTCMD="chroot ${CHROOTDIR} "  # note the trailing space
   [ -n "$SUDO" ] && CHROOTCMD="sudo chroot --userspec=${USER} ${CHROOTDIR} "

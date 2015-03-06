@@ -119,58 +119,60 @@ function calculate_deps_and_status
     calculate_item_status "$itemid" "$parentid"
   fi
 
-  # Verify all the dependencies in the info+hints, and make a list of them
-  local dep
-  local -a deplist=()
-  for dep in ${INFOREQUIRES[$itemid]}; do
-    if [ "$dep" = '%README%' ]; then
-      log_warning "${itemid}: Unhandled %README% in ${itemprgnam}.info"
-    elif [ "$dep" = "$itemprgnam" ]; then
-      log_warning "${itemid}: Ignoring dependency of ${itemprgnam} on itself"
-    else
-      find_slackbuild "$dep"
-      fstat=$?
-      if [ $fstat = 0 ]; then
-        deplist+=( "${R_SLACKBUILD}" )
-      elif [ $fstat = 1 ]; then
-        log_warning "${itemid}: Dependency $dep does not exist"
-      elif [ $fstat = 2 ]; then
-        log_warning "${itemid}: Dependency $dep matches more than one SlackBuild"
+  if [ "${DIRECTDEPS[$itemid]-unset}" = 'unset' ]; then
+    # Verify all the dependencies in the info+hints, and make a list of them
+    local dep
+    local -a deplist=()
+    for dep in ${INFOREQUIRES[$itemid]}; do
+      if [ "$dep" = '%README%' ]; then
+        log_warning "${itemid}: Unhandled %README% in ${itemprgnam}.info"
+      elif [ "$dep" = "$itemprgnam" ]; then
+        log_warning "${itemid}: Ignoring dependency of ${itemprgnam} on itself"
+      else
+        find_slackbuild "$dep"
+        fstat=$?
+        if [ $fstat = 0 ]; then
+          deplist+=( "${R_SLACKBUILD}" )
+        elif [ $fstat = 1 ]; then
+          log_warning "${itemid}: Dependency $dep does not exist"
+        elif [ $fstat = 2 ]; then
+          log_warning "${itemid}: Dependency $dep matches more than one SlackBuild"
+        fi
       fi
-    fi
-  done
+    done
 
-  # Canonicalise the list of deps so we can detect changes in the future.
-  local -a deplist=( $(printf '%s\n' ${deplist[*]} | sort -u) )
-  DIRECTDEPS[$itemid]="${deplist[*]}"
+    # Canonicalise the list of deps so we can detect changes in the future.
+    local -a deplist=( $(printf '%s\n' ${deplist[*]} | sort -u) )
+    DIRECTDEPS[$itemid]="${deplist[*]}"
 
-  # Recursively walk the whole dependency tree for the item.
-  if [ -z "${DIRECTDEPS[$itemid]}" ]; then
-    # if there are no direct deps, then there are no recursive deps ;-)
-    FULLDEPS[$itemid]=''
-  else
-    local dep newdep olddep alreadygotnewdep
-    local -a myfulldeps=()
-    for dep in "${deplist[@]}"; do
-      calculate_deps_and_status "$dep" "$itemid" "$indent  "
-      for newdep in ${FULLDEPS[$dep]} "$dep"; do
-        alreadygotnewdep='n'
-        for olddep in "${myfulldeps[@]}"; do
-          if [ "$newdep" = "$olddep" ]; then
-            alreadygotnewdep='y'
-            break
-          elif [ "$newdep" = "$itemid" ]; then
-            alreadygotnewdep='y'
-            log_error "${itemid}: Circular dependency via $dep (ignored)"
-            break
+    # Recursively walk the whole dependency tree for the item.
+    if [ -z "${DIRECTDEPS[$itemid]}" ]; then
+      # if there are no direct deps, then there are no recursive deps ;-)
+      FULLDEPS[$itemid]=''
+    else
+      local dep newdep olddep alreadygotnewdep
+      local -a myfulldeps=()
+      for dep in "${deplist[@]}"; do
+        calculate_deps_and_status "$dep" "$itemid" "$indent  "
+        for newdep in ${FULLDEPS[$dep]} "$dep"; do
+          alreadygotnewdep='n'
+          for olddep in "${myfulldeps[@]}"; do
+            if [ "$newdep" = "$olddep" ]; then
+              alreadygotnewdep='y'
+              break
+            elif [ "$newdep" = "$itemid" ]; then
+              alreadygotnewdep='y'
+              log_error "${itemid}: Circular dependency via $dep (ignored)"
+              break
+            fi
+          done
+          if [ "$alreadygotnewdep" = 'n' ]; then
+            myfulldeps+=( "$newdep" )
           fi
         done
-        if [ "$alreadygotnewdep" = 'n' ]; then
-          myfulldeps+=( "$newdep" )
-        fi
       done
-    done
-    FULLDEPS[$itemid]="${myfulldeps[*]}"
+      FULLDEPS[$itemid]="${myfulldeps[*]}"
+    fi
   fi
 
   # Now that we know about the deps, adjust the item's status:

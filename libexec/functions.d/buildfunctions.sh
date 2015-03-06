@@ -398,15 +398,15 @@ function build_item_packages
   fi
 
   # update pkgnam to itemid table (do this before any attempt to install)
-  if [ "$OPT_DRY_RUN" != 'y' ]; then
-    db_del_itemid_pkgnam "$itemid"
-    for pkgpath in "${pkglist[@]}"; do
-      pkgbasename=$(basename "$pkgpath")
-      log_important "Built ok:  $pkgbasename"
+  [ "$OPT_DRY_RUN" != 'y' ] && db_del_itemid_pkgnam "$itemid"
+  for pkgpath in "${pkglist[@]}"; do
+    pkgbasename=$(basename "$pkgpath")
+    log_important "Built ok:  $pkgbasename"
+    if [ "$OPT_DRY_RUN" != 'y' ]; then
       pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
       db_set_pkgnam_itemid "$pkgnam" "$itemid"
-    done
-  fi
+    fi
+  done
 
   [ "$OPT_CHROOT" = 'y' ] && chroot_report
 

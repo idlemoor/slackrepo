@@ -33,7 +33,8 @@ function build_command
       [ "$OPT_QUIET" != 'y' ] && echo -n "$DEPTREE"
     fi
     log_normal ""
-    [ "${STATUS[$itemid]}" = 'updated' ] && STATUS[$itemid]="ok"
+  elif [ "${STATUS[$itemid]}" = 'updated' ]; then
+    STATUS[$itemid]="ok"
     for depid in ${FULLDEPS[$itemid]}; do
       [ "${STATUS[$depid]}" = 'updated' ] && STATUS[$depid]='ok'
     done

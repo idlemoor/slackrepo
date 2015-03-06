@@ -114,10 +114,8 @@ function calculate_deps_and_status
   fi
 
   # Examine the current item
-  if [ -z "${STATUS[$itemid]}" ]; then
-    parse_info_and_hints "$itemid"
-    calculate_item_status "$itemid" "$parentid"
-  fi
+  [ -z "${STATUS[$itemid]}" ] && parse_info_and_hints "$itemid"
+  calculate_item_status "$itemid" "$parentid"
 
   if [ "${DIRECTDEPS[$itemid]-unset}" = 'unset' ]; then
     # Verify all the dependencies in the info+hints, and make a list of them
@@ -140,39 +138,38 @@ function calculate_deps_and_status
         fi
       fi
     done
-
     # Canonicalise the list of deps so we can detect changes in the future.
-    local -a deplist=( $(printf '%s\n' ${deplist[*]} | sort -u) )
+    deplist=( $(printf '%s\n' ${deplist[*]} | sort -u) )
     DIRECTDEPS[$itemid]="${deplist[*]}"
+  fi
 
-    # Recursively walk the whole dependency tree for the item.
-    if [ -z "${DIRECTDEPS[$itemid]}" ]; then
-      # if there are no direct deps, then there are no recursive deps ;-)
-      FULLDEPS[$itemid]=''
-    else
-      local dep newdep olddep alreadygotnewdep
-      local -a myfulldeps=()
-      for dep in "${deplist[@]}"; do
-        calculate_deps_and_status "$dep" "$itemid" "$indent  "
-        for newdep in ${FULLDEPS[$dep]} "$dep"; do
-          alreadygotnewdep='n'
-          for olddep in "${myfulldeps[@]}"; do
-            if [ "$newdep" = "$olddep" ]; then
-              alreadygotnewdep='y'
-              break
-            elif [ "$newdep" = "$itemid" ]; then
-              alreadygotnewdep='y'
-              log_error "${itemid}: Circular dependency via $dep (ignored)"
-              break
-            fi
-          done
-          if [ "$alreadygotnewdep" = 'n' ]; then
-            myfulldeps+=( "$newdep" )
+  # Recursively walk the whole dependency tree for the item.
+  if [ -z "${DIRECTDEPS[$itemid]}" ]; then
+    # if there are no direct deps, then there are no recursive deps ;-)
+    FULLDEPS[$itemid]=''
+  else
+    local dep newdep olddep alreadygotnewdep
+    local -a myfulldeps=()
+    for dep in ${DIRECTDEPS[$itemid]}; do
+      calculate_deps_and_status "$dep" "$itemid" "$indent  "
+      for newdep in ${FULLDEPS[$dep]} "$dep"; do
+        alreadygotnewdep='n'
+        for olddep in "${myfulldeps[@]}"; do
+          if [ "$newdep" = "$olddep" ]; then
+            alreadygotnewdep='y'
+            break
+          elif [ "$newdep" = "$itemid" ]; then
+            alreadygotnewdep='y'
+            log_error "${itemid}: Circular dependency via $dep (ignored)"
+            break
           fi
         done
+        if [ "$alreadygotnewdep" = 'n' ]; then
+          myfulldeps+=( "$newdep" )
+        fi
       done
-      FULLDEPS[$itemid]="${myfulldeps[*]}"
-    fi
+    done
+    FULLDEPS[$itemid]="${myfulldeps[*]}"
   fi
 
   # Now that we know about the deps, adjust the item's status:
@@ -230,14 +227,16 @@ function calculate_deps_and_status
   fi
 
   # Add this item to the dependency tree and TODOLIST.
-  # Everything except 'ok' is added to TODOLIST for logging purposes.
+  # Everything except 'ok' and 'updated' is added to TODOLIST for logging purposes.
 
   if [ "${STATUS[$itemid]}" = 'ok' ]; then
     prettystatus=' (ok)'
+  elif [ "${STATUS[$itemid]}" = 'updated' ]; then
+    prettystatus=" ${tputyellow}(${STATUS[$itemid]})${tputnormal}"
   else
     if [ "${STATUS[$itemid]}" = 'add' ] || [ "${STATUS[$itemid]}" = 'update' ] || [ "${STATUS[$itemid]}" = 'rebuild' ] || [ "${STATUS[$itemid]}" = 'updated+rebuild' ]; then
       prettystatus=" ${tputgreen}(${STATUSINFO[$itemid]})${tputnormal}"
-    elif [ "${STATUS[$itemid]}" = 'updated' ] || [ "${STATUS[$itemid]}" = 'skipped' ] || [ "${STATUS[$itemid]}" = 'unsupported' ]; then
+    elif [ "${STATUS[$itemid]}" = 'skipped' ] || [ "${STATUS[$itemid]}" = 'unsupported' ]; then
       prettystatus=" ${tputyellow}(${STATUS[$itemid]})${tputnormal}"
     else # failed, aborted, and other not-yet-invented catastrophes
       prettystatus=" ${tputred}(${STATUS[$itemid]})${tputnormal}"
@@ -467,7 +466,7 @@ function write_pkg_metadata
   [ "$OPT_DRY_RUN" = 'y' ] && myrepo="$DRYREPO"
   pkglist=( "$myrepo"/"$itemdir"/*.t?z )
 
-  operation="$(echo "${STATUSINFO[$itemid]}" | sed -e 's/^add/Added/' -e 's/^updated + //' -e 's/^update/Updated/' -e 's/^rebuild/Rebuilt/' )"
+  operation="$(echo "${STATUSINFO[$itemid]}" | sed -e 's/^add/Added/' -e 's/^updated + //' -e 's/^update /Updated /' -e 's/^rebuild/Rebuilt/' )"
   extrastuff=''
   if [ "${STATUSINFO[$itemid]:0:3}" = 'add' ]; then
     # append short description from slack-desc (if there's no slack-desc, this should be null)

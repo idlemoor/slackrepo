@@ -197,6 +197,8 @@ function uninstall_packages
       for cleancmd in ${HINT_CLEANUP[$itemid]}; do
         if [ "${cleancmd:0:7}" = 'depmod ' ]; then
           eval "${SUDO}${cleancmd}" >> "$ITEMLOG" 2>&1
+        elif [ "${cleancmd:0:6}" = 'unset ' ]; then
+          eval "${cleancmd}"        >> "$ITEMLOG" 2>&1
         fi
       done
       unset IFS

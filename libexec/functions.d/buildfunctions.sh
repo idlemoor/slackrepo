@@ -366,7 +366,7 @@ function build_item_packages
           if [ "$currtag" != "$SR_TAG" ]; then
             # retag it. If it's not found, sod it...
             pkgtype=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
-            mv "${CHROOTDIR}$pkgpath" "$MYTMPOUT"/"${pkgnam/%$currtag.$pkgtype/${SR_TAG}.$pkgtype}"
+            mv "${CHROOTDIR}$pkgpath" "$MYTMPOUT"/"${pkgnam/$currtag.$pkgtype/${SR_TAG}.$pkgtype}"
           else
             mv "${CHROOTDIR}$pkgpath" "$MYTMPOUT"/
           fi

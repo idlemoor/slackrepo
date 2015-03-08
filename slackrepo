@@ -536,7 +536,8 @@ fi
 # Changelog:
 CHANGELOG="$SR_PKGREPO"/.changelog
 if [ -s "$CHANGELOG" ]; then
-  log_normal "Continuing changelog from previous run."
+  log_important "Continuing changelog from previous run."
+  log_always ""
 else
   mkdir -p "$(basename "$CHANGELOG")"
   > "$CHANGELOG"

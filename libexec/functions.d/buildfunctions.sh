@@ -678,7 +678,7 @@ function chroot_report
   [ -z "$CHROOTDIR" ] && return 0
 
   if [ -f "$MYTMPDIR"/start ]; then
-    crap=$(cd "$MYTMPDIR"/changes; find . -path './tmp' -prune -o -newer ../start -print 2>/dev/null)
+    crap=$(cd "$MYTMPDIR"/changes; find . -path './tmp' -prune -o  -path ".$HOME/.*/*" -prune -o -newer ../start -print 2>/dev/null)
     if [ -n "$crap" ]; then
       excludes="^/dev/ttyp|^$HOME/.distcc|^$HOME/.cache/g-ir-scanner|^$HOME\$"
       significant="$(echo "$crap" | sed -e "s#^\./#/#" | grep -v -E "$excludes" | sort)"

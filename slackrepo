@@ -77,7 +77,8 @@ starttime=$(date +%s)
 # To define an extended option '--bar', do OPTIONLIST+=( 'BAR' )
 
 # Initialise OPTIONLIST first so that any extended options are at the end
-OPTIONLIST=( 'REPO' 'QUIET' 'VERBOSE' 'VERY_VERBOSE' 'MAKE_VERBOSE' 'TEST' 'DRY_RUN' 'INSTALL' 'KEEP_TMP' 'TRACE' 'CHROOT' 'COLOR' )
+OPTIONLIST=( 'REPO' 'QUIET' 'VERBOSE' 'VERY_VERBOSE' 'MAKE_VERBOSE' \
+  'TEST' 'DRY_RUN' 'INSTALL' 'KEEP_TMP' 'TRACE' 'CHROOT' 'COLOR' 'NICE' )
 
 # Get the support functions
 for f in /usr/libexec/$(basename "$0")/functions.d/*.sh; do
@@ -93,8 +94,9 @@ for opt in "${OPTIONLIST[@]}" ; do
 done
 # Initialise OPT_REPO from env var $REPO:
 OPT_REPO="$REPO"
-# Default for OPT_COLOR:
+# Defaults for OPT_COLOR and OPT_NICE:
 OPT_COLOR='auto'
+OPT_NICE='5'
 # No default for the processing mode (build/rebuild/update/remove):
 CMD=''
 
@@ -150,6 +152,9 @@ while [ $# != 0 ]; do
           found='y'; break
         elif [ "$1" = "--no-${arg}" -o "$1" = "--${arg}=no" -o "$1" = "--${arg}=n" ]; then
           eval OPT_"${opt}"='n'
+          found='y'; break
+        elif [ "${1/=*/=}" = "--${arg}=" ]; then
+          eval OPT_"${opt}"="${1#*=}"
           found='y'; break
         fi
       done
@@ -324,6 +329,8 @@ if [ "$OPT_CHROOT" = 'y' ] && [ "$SYS_OVERLAYFS" != 'y' ]; then
   OPT_CHROOT='n'
   echo "$(basename "$0"): Warning: cannot enable --chroot (overlayfs is not available in your kernel)"
 fi
+# accept null niceness, map to zero
+[ -z "$OPT_NICE" ] && OPT_NICE='0'
 
 # If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly
 if [ -z "$SR_NUMJOBS" ]; then
@@ -382,6 +389,7 @@ fi
 [        "$OPT_TRACE" = 'y' ] && log_verbose "  --trace"
 [       "$OPT_CHROOT" = 'y' ] && log_verbose "  --chroot"
 [    "$OPT_COLOR" != 'auto' ] && log_verbose "  --color=$OPT_COLOR"
+[        "$OPT_NICE" != '5' ] && log_verbose "  --nice=$OPT_NICE"
 
 for name in $varnames; do
   srvar="SR_$name"

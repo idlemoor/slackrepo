@@ -174,6 +174,7 @@ function build_item_packages
     NUMJOBS="$SR_NUMJOBS"
 
   SLACKBUILDCMD="sh ./$itemfile"
+  [ "${OPT_NICE:-0}" != '0' ] && SLACKBUILDCMD="nice -n $OPT_NICE $SLACKBUILDCMD"
   [ -n "$SUDO" ] && [ -x /usr/bin/fakeroot ] && SLACKBUILDCMD="fakeroot $SLACKBUILDCMD"
   [ "$OPT_VERY_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && SLACKBUILDCMD="/usr/libexec/slackrepo/unbuffer $SLACKBUILDCMD"
 

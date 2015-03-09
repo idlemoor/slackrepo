@@ -665,7 +665,7 @@ function chroot_setup
     [ -f ~/.Xauthority ] && cp -a ~/.Xauthority "${CHROOTDIR}/${HOME}"
   fi
   CHROOTCMD="chroot ${CHROOTDIR} "  # note the trailing space
-  [ -n "$SUDO" ] && CHROOTCMD="sudo chroot --userspec=${USER} ${CHROOTDIR} "
+  [ -n "$SUDO" ] && CHROOTCMD="${SUDO} chroot --userspec=${USER} ${CHROOTDIR} "
   return 0
 }
 

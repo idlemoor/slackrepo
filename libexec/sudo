@@ -1,0 +1,10 @@
+#!/bin/sh
+# This script is part of slackrepo.
+# Copyright 2015 David Spencer, Baildon, West Yorkshire, U.K.
+# All rights reserved.  For licence details, see the file 'LICENCE'.
+#-------------------------------------------------------------------------------
+# Wrapper script to prevent builds from explicitly invoking sudo.
+# If an upstream build in a fakeroot tries to use sudo, THEY SHALL NOT PASS!
+#-------------------------------------------------------------------------------
+
+exec "$@"

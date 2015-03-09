@@ -194,7 +194,7 @@ if [ "$EUID" != 0 ]; then
     exit_cleanup
     exit 3
   fi
-  SUDO="sudo "
+  SUDO="/usr/bin/sudo "
   export PATH="/usr/libexec/$(basename "$0"):/usr/local/sbin:/usr/sbin:/sbin:$PATH"
   # We need to launch a dbus session instance for root outside the chroot, to prevent
   # commands like gconftool-2 (in doinst.sh) launching a dbus in the chroot that

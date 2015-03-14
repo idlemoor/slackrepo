@@ -2,7 +2,7 @@
 # Copyright 2015 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
-# slackpkg_reinstall - reinstall a package via slackpkg
+# s_reinstall - reinstall a package via slackpkg
 #-------------------------------------------------------------------------------
 # This script is part of slackrepo.
 # Arguments: a list of bare package names without version/arch/build/tag.
@@ -17,7 +17,7 @@ while [ $# != 0 ]; do
     varlogpkgbase="${varlogpkgpath##*/}"
     varlogpkgnam="${varlogpkgbase%-*-*-*}"
     if [ -f "$varlogpkgpath" ] && [ "$varlogpkgnam" = "$reinstallpkgnam" ]; then
-      echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall "$varlogpkgbase"
+      echo y | /usr/bin/sudo /usr/libexec/slackrepo/slackpkg -dialog=off -only_new_dotnew=on reinstall "$varlogpkgbase"
     fi
   done
 done

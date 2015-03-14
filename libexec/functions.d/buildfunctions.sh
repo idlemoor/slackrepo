@@ -621,7 +621,7 @@ function do_groupadd_useradd
       [ -z "$unum" ] && { log_warning "${itemid}: USERADD hint has no UID number" ; break ; }
       if ! ${CHROOTCMD}getent passwd "$uname" | grep -q "^${uname}:" 2>/dev/null ; then
         [ -z "$ugroup" ] && ugroup="$uname"
-        if ! ${CHROOTCMD}getent group "${ugroup}" | grep -q "^${ugroup}:" 2>/dev/null ; then
+        if ! ${CHROOTCMD}getent group "${ugroup}" | grep -q -E "(^${ugroup}:)|(:${ugroup}:)" 2>/dev/null ; then
           gaddcmd="groupadd -g $unum $ugroup"
           log_verbose -a "Adding group: $gaddcmd"
           eval "${CHROOTCMD}${SUDO}$gaddcmd"

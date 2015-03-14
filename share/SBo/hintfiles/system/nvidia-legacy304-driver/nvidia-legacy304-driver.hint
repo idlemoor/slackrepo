@@ -1,1 +1,1 @@
-CLEANUP="s_reinstall mesa xorg-server"
+CLEANUP="rm -f /usr/lib*/libGL.so* /usr/lib*/libEGL.so*; s_reinstall mesa xorg-server"

@@ -1,0 +1,2 @@
+GROUPADD="302:nsca"
+USERADD="302:nsca:-d/dev/null:-s/bin/false:-gnsca"

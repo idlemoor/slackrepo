@@ -1,1 +1,1 @@
-USERADD="215:vboxadd:-d/var/run/vboxadd:-s/bin/sh:-g1"
+USERADD="215:vboxadd:-d/var/run/vboxadd:-s/bin/sh:-g215"

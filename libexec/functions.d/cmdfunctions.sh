@@ -33,11 +33,22 @@ function build_command
       [ "$OPT_QUIET" != 'y' ] && echo -n "$DEPTREE"
     fi
     log_normal ""
-  elif [ "${STATUS[$itemid]}" = 'updated' ]; then
+  elif [ "${STATUS[$itemid]}" = 'ok' ] || [ "${STATUS[$itemid]}" = 'updated' ]; then
     STATUS[$itemid]="ok"
     for depid in ${FULLDEPS[$itemid]}; do
       [ "${STATUS[$depid]}" = 'updated' ] && STATUS[$depid]='ok'
     done
+    if [ "$CMD" = 'rebuild' ]; then
+      found='n'
+      for previously in "${OKLIST[@]}"; do
+        if [ "$previously" = "$itemid" ]; then found='y'; break; fi
+      done
+      if [ "$found" = 'n' ]; then
+        STATUS[$itemid]="rebuild"
+        STATUSINFO[$itemid]="rebuild"
+        TODOLIST=( "$itemid" )
+      fi
+    fi
   fi
 
   if [ "${#TODOLIST[@]}" = 0 ]; then

@@ -41,7 +41,7 @@ function log_verbose
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
   [ "$OPT_VERBOSE" = 'y' ] && echo -e "$*"
-  [ "$A" = 'y' ] && echo -e "$*" >> "$ITEMLOG"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "$*" >> "$ITEMLOG"
   return 0
 }
 
@@ -60,7 +60,7 @@ function log_normal
   eval lastarg=\"\${$#}\"
   [ "${lastarg: -4:4}" = '... ' ] && { nonewline='-n'; NEEDNEWLINE='y'; }
   [ "$OPT_QUIET" != 'y' ] && echo -e $nonewline "$*"
-  [ "$A" = 'y' ] && echo -e $nonewline "$*" >> "$ITEMLOG"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e $nonewline "$*" >> "$ITEMLOG"
   return 0
 }
 
@@ -75,7 +75,7 @@ function log_always
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
   echo -e "$*"
-  [ "$A" = 'y' ] && echo -e "$*" >> "$ITEMLOG"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "$*" >> "$ITEMLOG"
   return 0
 }
 
@@ -90,7 +90,7 @@ function log_important
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
   echo -e "${tputboldwhite}$*${tputnormal}"
-  [ "$A" = 'y' ] && echo -e "$*" >> "$ITEMLOG"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "$*" >> "$ITEMLOG"
   return 0
 }
 
@@ -114,7 +114,7 @@ function log_warning
     esac
   done
   echo -e "${tputboldyellow}${W}$*${tputnormal}"
-  [ "$A" = 'y' ] && echo -e "${W}$*" >> "$ITEMLOG"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${W}$*" >> "$ITEMLOG"
   [ -n "$W" ] && WARNINGLIST+=( "$*" )
   return 0
 }
@@ -138,7 +138,7 @@ function log_error
     esac
   done
   echo -e "${tputboldred}${E}$*${tputnormal}"
-  [ "$A" = 'y' ] && echo -e "${E}$*" >> "$ITEMLOG"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${E}$*" >> "$ITEMLOG"
   return 0
 }
 
@@ -152,7 +152,7 @@ function log_done
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
   echo "done."
-  [ "$A" = 'y' ] && echo "done." >> "$ITEMLOG"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo "done." >> "$ITEMLOG"
   return 0
 }
 

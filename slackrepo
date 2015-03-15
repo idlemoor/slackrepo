@@ -97,7 +97,7 @@ OPT_REPO="$REPO"
 # Defaults for OPT_COLOR and OPT_NICE:
 OPT_COLOR='auto'
 OPT_NICE='5'
-# No default for the processing mode (build/rebuild/update/remove):
+# No default for the command (build/rebuild/update/remove/...):
 CMD=''
 
 while [ $# != 0 ]; do
@@ -161,7 +161,14 @@ while [ $# != 0 ]; do
       [ "$found" = 'n' ] && echo "$(basename "$0"): Warning: invalid control argument: $1" >&2
       shift; continue ;;
     * )
-      break ;;
+      if [ "$(type -t "${1}_command")" = 'function' ]; then
+        [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+        CMD="$1"
+        shift; continue
+      else
+        break
+      fi
+      ;;
   esac
 done
 

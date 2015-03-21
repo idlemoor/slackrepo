@@ -221,7 +221,7 @@ function log_itemstart
 function log_itemfinish
 # Log the finish of an item to standard output, and to ITEMLOG
 # $1 = itemid
-# $2 = result ('ok', 'skipped', 'unsupported', 'failed', or 'aborted')
+# $2 = result ('ok', 'warning', 'skipped', 'unsupported', 'failed', or 'aborted')
 # $3 = message (optional)
 # $4 = additional message for display on the next line (optional)
 # Return status: always 0
@@ -230,7 +230,7 @@ function log_itemfinish
   local result="${2^^}"
   local message="$itemid"
   [ "$result" = 'UNSUPPORTED' ] && message="$message is"
-  [ "$result" != 'OK' ] && message="$message $result"
+  [ "$result" != 'OK' ] && [ "$result" != 'WARNING' ] && message="$message $result"
   [ -n "$3" ] && message="$message $3"
   addmessage=""
   [ -n "$4" ] && addmessage=$'\n'"$4"
@@ -241,24 +241,23 @@ function log_itemfinish
   fi
   case "$result" in
     'OK')
-      echo -e "${tputboldgreen}:-) $message (-:${addmessage}${tputnormal}"
-      [ -n "$ITEMLOG" ] && echo -e ":-) $message (-:${addmessage}" >> "$ITEMLOG"
+      echo -e "${tputboldgreen}:-) $message (-:${addmessage}${tputnormal}\n"
+      [ -n "$ITEMLOG" ] && echo -e ":-) $message (-:${addmessage}\n" >> "$ITEMLOG"
       ;;
-    'SKIPPED')
-      echo -e "${tputboldyellow}:-/ $message /-:${addmessage}${tputnormal}"
-      [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:${addmessage}" >> "$ITEMLOG"
-      ;;
-    'UNSUPPORTED')
-      echo -e "${tputboldyellow}:-/ $message /-:${addmessage}${tputnormal}"
-      [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:${addmessage}" >> "$ITEMLOG"
+    'WARNING' | 'SKIPPED' | 'UNSUPPORTED')
+      echo -e "${tputboldyellow}:-/ $message /-:${addmessage}${tputnormal}\n"
+      [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:${addmessage}\n" >> "$ITEMLOG"
       ;;
     'FAILED' | 'ABORTED')
-      echo -e "${tputboldred}:-( $message )-:${addmessage}${tputnormal}"
-      [ -n "$ITEMLOG" ] && echo -e ":-( $message )-:${addmessage}" >> "$ITEMLOG"
+      echo -e "${tputboldred}:-( $message )-:${addmessage}${tputnormal}\n"
+      [ -n "$ITEMLOG" ] && echo -e ":-( $message )-:${addmessage}\n" >> "$ITEMLOG"
       ;;
   esac
-  eval "${result}LIST+=( ${itemid} )"
-  db_set_buildresults "$itemid" "$2"
+  # WARNINGLIST is populated by grepping the log, so don't set it here
+  [ "$result" != 'WARNING' ] && eval "${result}LIST+=( ${itemid} )"
+  if [ "$CMD" = 'build' ] || [ "$CMD" = 'update' ] || [ "$CMD" = 'rebuild' ]; then
+    db_set_buildresults "$itemid" "$2"
+  fi
   unset ITEMLOG
   return 0
 }

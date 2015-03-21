@@ -8,6 +8,7 @@
 #   update_item
 #   revert_command
 #   remove_item
+#   lint_command
 #-------------------------------------------------------------------------------
 
 function build_command
@@ -68,7 +69,7 @@ function build_command
     else
       log_warning "$itemid has unexpected status ${STATUS[$itemid]}"
     fi
-    log_normal ""
+    log_always ""
   else
     # Process TODOLIST.
     for todo in "${TODOLIST[@]}"; do
@@ -79,6 +80,7 @@ function build_command
       elif [ "${STATUS[$todo]}" = 'failed' ]; then
         log_error "${todo} has failed to build."
         [ -n "${STATUSINFO[$todo]}" ] && log_always "${STATUSINFO[$todo]}"
+        log_always ""
       else
         missingdeps=()
         for dep in ${DIRECTDEPS[$todo]}; do
@@ -99,7 +101,6 @@ function build_command
           log_itemfinish "$todo" "aborted" '' "${STATUSINFO[$todo]}"
         fi
       fi
-      log_normal ""
     done
   fi
 
@@ -459,4 +460,52 @@ function remove_command
 
   return 0
 
+}
+
+#-------------------------------------------------------------------------------
+
+function lint_command
+# Test an item without building or installing it
+# $1 = itemid
+# Return status: always 0
+{
+  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
+
+  local itemid="$1"
+  local itemdir="${ITEMDIR[$itemid]}"
+
+  log_itemstart "$itemid"
+  parse_info_and_hints "$itemid"
+  if [ $? != 0 ]; then
+    log_itemfinish "$itemid" "unsupported" "on $SR_ARCH"
+    return 0
+  fi
+
+  test_slackbuild "$itemid"
+  tsbstat=$?
+  test_download "$itemid"
+  tdlstat=$?
+
+  tpkstat=0
+  for pkgnam in $(db_get_itemid_pkgnams "$itemid"); do
+    pkgpathlist=( "${SR_PKGREPO}"/"$itemdir"/"$pkgnam"-*-*-*.t?z )
+    for pkgpath in "${pkgpathlist[@]}"; do
+      if [ -f "$pkgpath" ]; then
+        test_package -n "$itemid" "$pkgpath"
+        pstat=$?
+        [ $pstat -gt $tpkstat ] && tpkstat=$pstat
+      fi
+    done
+  done
+
+  log_normal ""
+  if [ "$tsbstat" = 0 ] && [ "$tdlstat" = 0 ] && [ "$tpkstat" = 0 ]; then
+    log_itemfinish "$itemid" "ok" "lint OK"
+  elif [ "$tsbstat" -le 1 ] && [ "$tdlstat" -le 1 ] && [ "$tpkstat" -le 1 ]; then
+    log_itemfinish "$itemid" "warning" "lint completed with warnings"
+  else
+    log_itemfinish "$itemid" "failed" "lint"
+  fi
+
+  return 0
 }

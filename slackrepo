@@ -491,7 +491,6 @@ cd "$SR_SBREPO" || { log_error "Failed to access SlackBuilds repository"; exit_c
 
 # Initialise git (only if this is a build or rebuild or update)
 if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
-
   # git: initialise, or check and update
   if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
     if [ -n "${SR_INIT_GITCLONE}" ]; then
@@ -531,28 +530,23 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
       fi
     fi
   fi
-
   # git: log a summary
   GOTGIT='n'
   if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
     GOTGIT='y'
     [ -n "$(git status -s .)" ] && dirty=' (DIRTY)'
-    log_verbose ""
     log_verbose "Git repo:   $SR_SBREPO"
     log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"
     log_verbose "  date:     $(date --date=@"$(git log -n 1 --format=%ct)")"
     log_verbose "  revision: $(git rev-parse HEAD)$dirty"
     log_verbose "  title:    $(git log -n 1 --format=%s)"
-    log_normal ""
   fi
-
 fi
 
 # Changelog:
 CHANGELOG="$SR_PKGREPO"/.changelog
 if [ -s "$CHANGELOG" ]; then
   log_important "Continuing changelog from previous run."
-  log_always ""
 else
   mkdir -p "$(basename "$CHANGELOG")"
   > "$CHANGELOG"
@@ -570,6 +564,8 @@ if [ -n "$SR_TAG" ] && [ "$OPT_INSTALL" != 'y' ] && [ "$CMD" != 'remove' ]; then
     fi
   done
 fi
+
+log_always ""
 
 #-------------------------------------------------------------------------------
 # Main loop
@@ -590,7 +586,7 @@ while [ $# != 0 ]; do
   arg="$1"
   shift
   unset PARSEDLIST UNPARSEDLIST
-  if [ "$CMD" = 'build' -o "$CMD" = 'rebuild' -o "$CMD" = 'revert' ]; then
+  if [ "$CMD" = 'build' -o "$CMD" = 'rebuild' -o "$CMD" = 'revert' -o "$CMD" = 'lint' ]; then
     parse_args -s "$arg"
     [ $? != 0 ] && continue
   else # 'update' or 'remove'

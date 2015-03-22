@@ -419,9 +419,11 @@ function calculate_item_status
     return 0
   fi
 
-  # It seems to be up to date!
-  STATUS[$itemid]="ok"
-  STATUSINFO[$itemid]="ok"
+  # It seems to be up to date! although it may have been updated (see above)
+  if [ "${STATUS[$itemid]}" != 'updated' ]; then
+    STATUS[$itemid]="ok"
+    STATUSINFO[$itemid]="ok"
+  fi
   return 0
 
 }

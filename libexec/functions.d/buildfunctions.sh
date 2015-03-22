@@ -47,7 +47,8 @@ function build_item_packages
   cp -a "$SR_SBREPO/$itemdir" "$MYTMPIN"
 
   if [ "$OPT_TEST" = 'y' ]; then
-    test_slackbuild "$itemid" || return 7
+    test_slackbuild "$itemid"
+    [ $? -gt 1 ] && return 7
   fi
 
   # Apply version hint
@@ -411,7 +412,8 @@ function build_item_packages
   [ "$OPT_CHROOT" = 'y' ] && chroot_report
 
   if [ "$OPT_TEST" = 'y' ]; then
-    test_package "$itemid" "${pkglist[@]}" || { build_failed "$itemid"; return 7; }
+    test_package "$itemid" "${pkglist[@]}"
+    [ $? -gt 1 ] && { build_failed "$itemid"; return 7; }
   fi
 
   [ "$OPT_CHROOT" = 'y' ] && chroot_destroy

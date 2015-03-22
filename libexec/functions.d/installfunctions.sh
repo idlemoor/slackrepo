@@ -121,19 +121,14 @@ function install_packages
       istat=$?
       if [ "$istat" = 0 ]; then
         # already installed, same version/arch/build/tag
-        log_verbose -a "$R_INSTALLED is already installed"
+        log_normal -a "$R_INSTALLED is already installed"
         KEEPINSTALLED[$pkgnam]="$pkgid"
       elif [ "$istat" = 2 ]; then
         # nothing similar currently installed
-        if [ "$OPT_VERBOSE" = 'y' -o "$OPT_INSTALL" = 'y' ]; then
-          set -o pipefail
-          ROOT=${CHROOTDIR:-/} ${SUDO}installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
-          pstat=$?
-          set +o pipefail
-        else
-          ROOT=${CHROOTDIR:-/} ${SUDO}installpkg --terse "$pkgpath" >> "$ITEMLOG" 2>&1
-          pstat=$?
-        fi
+        set -o pipefail
+        ROOT=${CHROOTDIR:-/} ${SUDO}installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
+        pstat=$?
+        set +o pipefail
         [ "$pstat" = 0 ] || { log_error -a "${itemid}: installpkg $pkgbase failed (status $pstat)"; return 1; }
         dotprofilizer "$pkgpath"
         [ "$OPT_INSTALL" = 'y' -o "${HINT_INSTALL[$itemid]}" = 'y' ] && KEEPINSTALLED[$pkgnam]="$pkgid"
@@ -234,7 +229,7 @@ function uninstall_packages
         etcnewfiles=$(grep '^etc/.*\.new$' "${CHROOTDIR}"/var/log/packages/"$R_INSTALLED")
         etcdirs=$(grep '^etc/.*/$' "${CHROOTDIR}"/var/log/packages/"$R_INSTALLED")
         # Run removepkg
-        log_verbose -a "Uninstalling $R_INSTALLED ..."
+        log_normal -a "Uninstalling $R_INSTALLED ..."
         #### if very verbose, we should really splurge this
         ROOT=${CHROOTDIR:-/} ${SUDO}removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
         # Remove any surviving detritus (do nothing if not root)

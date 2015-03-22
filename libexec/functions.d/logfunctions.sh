@@ -40,7 +40,7 @@ function log_verbose
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  [ "$OPT_VERBOSE" = 'y' ] && echo -e "$*"
+  [ "$OPT_VERBOSE" = 'y' ] && echo -e "${tputcyan}$*${tputnormal}"
   [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "$*" >> "$ITEMLOG"
   return 0
 }
@@ -298,6 +298,10 @@ function init_colour
   tputyellow="$(tput setaf 3)"
   [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
   tputboldyellow="$tputbold$tputyellow"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputcyan="$(tput setaf 6)"
+  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  tputboldcyan="$tputbold$tputcyan"
   [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
   tputboldwhite="$tputbold$(tput setaf 7)"
   [ $? != 0 ] && { DOCOLOUR='n'; return 1; }

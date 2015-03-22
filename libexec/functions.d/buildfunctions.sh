@@ -54,7 +54,7 @@ function build_item_packages
   NEWVERSION="${HINT_VERSION[$itemid]}"
   if [ -n "$NEWVERSION" -a "${INFOVERSION[$itemid]}" != "$NEWVERSION" ]; then
     # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
-    log_verbose -a "Note: $itemid: setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]})"
+    log_verbose -a "Setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]})"
     sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$MYTMPIN/$itemfile"
     # Let's assume shell globbing chars won't appear in any sane VERSION ;-)
     INFODOWNLIST[$itemid]="${INFODOWNLIST[$itemid]//${INFOVERSION[$itemid]}/$NEWVERSION}"
@@ -304,7 +304,6 @@ function build_item_packages
   if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
     echo ''
     echo '---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---'
-    echo ''
     set -o pipefail
     if [ "$SYS_MULTILIB" = "y" ] && [ "$ARCH" = 'i486' -o "$ARCH" = 'i686' ]; then
       ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" 2>&1 | tee -a "$ITEMLOG"

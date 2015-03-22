@@ -535,11 +535,11 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
   if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
     GOTGIT='y'
     [ -n "$(git status -s .)" ] && dirty=' (DIRTY)'
-    log_verbose "Git repo:   $SR_SBREPO"
-    log_verbose "  branch:   $(git rev-parse --abbrev-ref HEAD)"
-    log_verbose "  date:     $(date --date=@"$(git log -n 1 --format=%ct)")"
-    log_verbose "  revision: $(git rev-parse HEAD)$dirty"
-    log_verbose "  title:    $(git log -n 1 --format=%s)"
+    log_normal "Git repo:   $SR_SBREPO"
+    log_normal "  branch:   $(git rev-parse --abbrev-ref HEAD)"
+    log_normal "  date:     $(date --date=@"$(git log -n 1 --format=%ct)")"
+    log_normal "  revision: $(git rev-parse HEAD)$dirty"
+    log_normal "  title:    $(git log -n 1 --format=%s)"
   fi
 fi
 

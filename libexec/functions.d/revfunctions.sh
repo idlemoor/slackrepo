@@ -232,7 +232,7 @@ function calculate_deps_and_status
   if [ "${STATUS[$itemid]}" = 'ok' ]; then
     prettystatus=' (ok)'
   elif [ "${STATUS[$itemid]}" = 'updated' ]; then
-    prettystatus=" ${tputyellow}(${STATUS[$itemid]})${tputnormal}"
+    prettystatus=" ${tputcyan}(${STATUS[$itemid]})${tputnormal}"
   else
     if [ "${STATUS[$itemid]}" = 'add' ] || [ "${STATUS[$itemid]}" = 'update' ] || [ "${STATUS[$itemid]}" = 'rebuild' ] || [ "${STATUS[$itemid]}" = 'updated+rebuild' ]; then
       prettystatus=" ${tputgreen}(${STATUSINFO[$itemid]})${tputnormal}"

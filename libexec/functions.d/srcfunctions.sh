@@ -46,7 +46,7 @@ function verify_src
     # if wrong version, return 6 (nodownload hint) or 4 (version mismatch)
     if [ -f .version ]; then
       if [ "$VERSION" != "$(cat .version)" ]; then
-        log_verbose -a "Removing old source files"
+        log_normal -a "Removing old source files ..."
         find . -maxdepth 1 -type f -exec rm -f {} \;
         [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
         return 4
@@ -62,7 +62,7 @@ function verify_src
     # or if we have not got the right number of sources, return 2 (or 6)
     numwant=$(echo "$DOWNLIST" | wc -w)
     if [ "$numgot" != "$numwant" ]; then
-      log_verbose -a "Note: need $numwant source files, but have $numgot"
+      log_normal -a "$numgot source files found, $numwant required"
       [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
       return 2
     fi

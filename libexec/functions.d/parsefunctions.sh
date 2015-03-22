@@ -297,7 +297,7 @@ function scan_queuefile
             log_warning "${itemid}: Queuefile ${sqfitem:1}.sqf not found"
           fi
           ;;
-      -*) log_verbose "Note: ignoring unselected queuefile item ${sqfitem:1}"
+      -*) log_verbose "Ignoring unselected queuefile item ${sqfitem:1}"
           ;;
       * ) find_slackbuild "$sqfitem"
           fstat=$?

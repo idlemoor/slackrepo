@@ -124,16 +124,31 @@ function download_src
     for url in $DOWNLIST; do
       if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
         set -o pipefail
-        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A SlackZilla -O "$url" 2>&1 | tee -a "$ITEMLOG"
+        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A slackrepo -O "$url" 2>&1 | tee -a "$ITEMLOG"
         curlstat=$?
         set +o pipefail
       else
-        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A SlackZilla -O "$url" >> "$ITEMLOG" 2>&1
+        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A slackrepo -O "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
       fi
       if [ $curlstat != 0 ]; then
-        log_error -a "Download failed: $(print_curl_status $curlstat).\n  $url"
-        return 1
+        # Try SlackBuilds Direct :D
+        sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
+        if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
+          set -o pipefail
+          curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A slackrepo -O "$sbdurl" 2>&1 | tee -a "$ITEMLOG"
+          curlstat=$?
+          set +o pipefail
+        else
+          curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A slackrepo -O "$sbdurl" >> "$ITEMLOG" 2>&1
+          curlstat=$?
+        fi
+        if [ $curlstat != 0 ]; then
+          # use the original url in the error message
+          log_error -a "Download failed: $(print_curl_status $curlstat).\n  $url"
+          return 1
+        fi
+        log_normal "  Downloaded from SBo direct links: ${url##*/}"
       fi
     done
     echo "$VERSION" > "$DOWNDIR"/.version

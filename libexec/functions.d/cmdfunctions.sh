@@ -55,7 +55,7 @@ function build_command
   if [ "${#TODOLIST[@]}" = 0 ]; then
     # Nothing is going to be built.  Log the final outcome.
     if [ "${STATUS[$itemid]}" = 'ok' ]; then
-      log_important "$itemid is up-to-date."
+      log_important "$itemid is up-to-date (version ${INFOVERSION[$itemid]})."
     elif [ "${STATUS[$itemid]}" = 'skipped' ]; then
       log_warning -n "$itemid has been skipped."
     elif [ "${STATUS[$itemid]}" = 'unsupported' ]; then

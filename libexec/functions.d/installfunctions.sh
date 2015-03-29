@@ -111,15 +111,16 @@ function install_packages
       [ "${#pkglist[@]}" = 0 ] && { log_error -a "${itemid}: Can't find any packages to install"; return 1; }
     fi
 
-    if [ -n "${HINT_GROUPADD[$itemid]}" ]; then
-      log_verbose -a "Adding groups:"
-      log_verbose -a "  ${HINT_GROUPADD[$itemid]}"
-      eval $(echo "${HINT_GROUPADD[$itemid]}" | sed "s#groupadd #${CHROOTCMD}${SUDO}groupadd #g")
-    fi
-    if [ -n "${HINT_USERADD[$itemid]}" ]; then
-      log_verbose -a "Adding users:"
-      log_verbose -a "  ${HINT_USERADD[$itemid]}"
-      eval $(echo "${HINT_USERADD[$itemid]}" | sed "s#useradd #${CHROOTCMD}${SUDO}useradd #g")
+    if [ -n "${HINT_GROUPADD[$itemid]}" ] || [ -n "${HINT_USERADD[$itemid]}" ]; then
+      log_verbose -a "Adding groups and users:"
+      if [ -n "${HINT_GROUPADD[$itemid]}" ]; then
+        log_verbose -a "  ${HINT_GROUPADD[$itemid]}"
+        eval $(echo "${HINT_GROUPADD[$itemid]}" | sed "s#groupadd #${CHROOTCMD}${SUDO}groupadd #g")
+      fi
+      if [ -n "${HINT_USERADD[$itemid]}" ]; then
+        log_verbose -a "  ${HINT_USERADD[$itemid]}"
+        eval $(echo "${HINT_USERADD[$itemid]}" | sed "s#useradd #${CHROOTCMD}${SUDO}useradd #g")
+      fi
     fi
 
     for pkgpath in "${pkglist[@]}"; do

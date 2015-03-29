@@ -249,6 +249,7 @@ else
   exit_cleanup
   exit 4
 fi
+SYS_KERNEL=$(uname -r)
 SYS_ARCH=$(uname -m)
 SYS_MULTILIB='n'
 [ "$SYS_ARCH" = 'x86_64' -a -f /etc/profile.d/32dev.sh ] && SYS_MULTILIB='y'
@@ -371,6 +372,7 @@ fi
 # Log the config
 log_verbose ""
 log_verbose "OS: ${SYS_OSNAME}${SYS_OSVER}"
+log_verbose "kernel: ${SYS_KERNEL}"
 log_verbose "arch: ${SYS_ARCH}"
 [ "$SYS_MULTILIB" = 'y' ] && log_verbose "multilib: yes"
 log_verbose "nproc: ${SYS_NPROC}"
@@ -424,7 +426,7 @@ log_verbose ""
 #-------------------------------------------------------------------------------
 
 # Arrays for tracking outcomes:
-declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST
+declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST BADLIST
 
 # Create directories:
 [ -d "$SR_SBREPO" ]   || \
@@ -581,7 +583,6 @@ if [ $# = 0 ]; then
   fi
 fi
 
-BLAME="$(basename "$0")"
 while [ $# != 0 ]; do
   arg="$1"
   shift
@@ -673,6 +674,7 @@ if [ "$abortedcount" != 0 ]; then
   log_always "Aborted:     $abortedcount"
   [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${ABORTEDLIST[@]}"
 fi
+# Don't bother enumerating 'bad' items (not found, etc)
 uniquewarnings=()
 [ "${#WARNINGLIST[@]}" != 0 ] && while read warning; do uniquewarnings+=( "$warning" ); done < <(printf '%s\n' "${WARNINGLIST[@]}" | sort -u )
 warningcount="${#uniquewarnings[@]}"

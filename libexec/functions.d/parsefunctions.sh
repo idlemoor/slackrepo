@@ -19,7 +19,6 @@ function parse_args
 # Parse item names
 # $1 = -s => look up in SlackBuild repo, or -p => look up in Package repo
 # $* = the item names to be parsed :-)
-# Also uses $BLAME which the caller can set to prefix errors and warnings
 # PARSEDLIST and UNPARSEDLIST must be unset before calling parse_args
 #
 # Results are returned in the following global arrays:
@@ -39,8 +38,6 @@ function parse_args
   local itemid
   local searchtype toplevel
   local errstat=0
-  local blamemsg=''
-  [ -n "$BLAME" ] && blamemsg="${BLAME}: "
 
   if [ "$1" = '-s' ]; then
     searchtype='-s'
@@ -73,10 +70,13 @@ function parse_args
       find_queuefile "$item"
       if [ $? = 0 ]; then
         scan_queuefile "$R_QUEUEFILE"
+        continue
       else
-        log_warning "${itemid}: Queuefile $item not found"
+        log_start "$item"
+        log_itemfinish "$item" "bad" "" "Queuefile $item not found"
+        errstat=1
+        continue
       fi
-      continue
     fi
 
     # Absolute path?
@@ -87,7 +87,8 @@ function parse_args
         item="${item:$(( ${#toplevel} + 1 ))}"
       else
         # not in the repo => complain
-        log_error "${blamemsg}Item $item is not in $toplevel"
+        log_start "$item"
+        log_itemfinish "$item" "bad" "" "Item $item is not in $toplevel"
         errstat=1
         continue
       fi
@@ -107,7 +108,8 @@ function parse_args
       scan_dir "$searchtype" "$item"
       continue
     elif [ -n "$(echo "$item" | sed 's:[^/]::g')" ]; then
-      log_error "${blamemsg}Item $item not found"
+      log_start "$item"
+      log_itemfinish "$item" "bad" "" "Item $item not found"
       errstat=1
       continue
     fi
@@ -115,7 +117,8 @@ function parse_args
     # Search for anything with the right name
     gotitems=( $(find -L . -name "$item" -print | sed 's:^\./::') )
     if [ "${#gotitems}" = 0 ]; then
-      log_error "${blamemsg}Item $item not found"
+      log_start "$item"
+      log_itemfinish "$item" "bad" "" "Item $item not found"
       errstat=1
       continue
     elif [ "${#gotitems[@]}" = 1 ]; then
@@ -127,7 +130,8 @@ function parse_args
         continue
       fi
     else
-      log_error "${blamemsg}Multiple matches for $item in $toplevel: ${gotitems[*]}"
+      log_start "$item"
+      log_itemfinish "$item" "bad" "" "Multiple matches for $item in $toplevel: ${gotitems[*]}"
       errstat=1
       continue
     fi
@@ -368,7 +372,7 @@ function scan_dir
   # (eg. for patches) that need to be ignored
   subdirlist=( $(find -L "$dir" -mindepth 1 -maxdepth 1 -type d -not -name '.*' | sort | sed 's:^\./::') )
   if [ "${#subdirlist[@]}" = 0 ]; then
-    log_normal "${blamemsg}${dir} does not contain a SlackBuild"
+    log_normal "${dir} does not contain a SlackBuild"
     return 0
   fi
   # don't recurse (which would take a long time), just return the list of subdirectories

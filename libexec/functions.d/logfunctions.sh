@@ -221,7 +221,7 @@ function log_itemstart
 function log_itemfinish
 # Log the finish of an item to standard output, and to ITEMLOG
 # $1 = itemid
-# $2 = result ('ok', 'warning', 'skipped', 'unsupported', 'failed', or 'aborted')
+# $2 = result ('ok', 'warning', 'skipped', 'unsupported', 'failed', 'aborted', or 'bad')
 # $3 = message (optional)
 # $4 = additional message for display on the next line (optional)
 # Return status: always 0
@@ -229,9 +229,17 @@ function log_itemfinish
   local itemid="$1"
   local result="${2^^}"
   local message="$itemid"
-  [ "$result" = 'UNSUPPORTED' ] && message="$message is"
-  [ "$result" != 'OK' ] && [ "$result" != 'WARNING' ] && message="$message $result"
+  case "$result" in
+    'OK') message="$itemid" ;;
+    'WARNING') message="$itemid" ;;
+    'SKIPPED') message="$itemid SKIPPED" ;;
+    'UNSUPPORTED') message="$itemid is UNSUPPORTED" ;;
+    'FAILED') message="$itemid FAILED" ;;
+    'ABORTED') message="$itemid ABORTED" ;;
+    'BAD') message="BAD ARGUMENT $itemid" ;;
+  esac
   [ -n "$3" ] && message="$message $3"
+
   addmessage=""
   [ -n "$4" ] && addmessage=$'\n'"$4"
   if [ -z "$ITEMLOG" ]; then
@@ -248,7 +256,7 @@ function log_itemfinish
       echo -e "${tputboldyellow}:-/ $message /-:${addmessage}${tputnormal}\n"
       [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:${addmessage}\n" >> "$ITEMLOG"
       ;;
-    'FAILED' | 'ABORTED')
+    'FAILED' | 'ABORTED' | 'BAD')
       echo -e "${tputboldred}:-( $message )-:${addmessage}${tputnormal}\n"
       [ -n "$ITEMLOG" ] && echo -e ":-( $message )-:${addmessage}\n" >> "$ITEMLOG"
       ;;

@@ -477,7 +477,14 @@ function lint_command
   log_itemstart "$itemid"
   parse_info_and_hints "$itemid"
   if [ $? != 0 ]; then
-    log_itemfinish "$itemid" "unsupported" "on $SR_ARCH"
+    if [ "${STATUS[$itemid]}" = "unsupported" ]; then
+      log_itemfinish "$itemid" "${STATUSINFO[$itemid]}"
+    elif [ "${STATUS[$itemid]}" = "skipped" ]; then
+      log_itemfinish "$itemid" "Skipped"
+    else
+      log_itemfinish "$itemid" "${STATUS[$itemid]}"
+    fi
+    #### (Actually, we could do most of the tests...)
     return 0
   fi
 
@@ -487,6 +494,7 @@ function lint_command
   tdlstat=$?
 
   tpkstat=0
+  pstat=''
   for pkgnam in $(db_get_itemid_pkgnams "$itemid"); do
     pkgpathlist=( "${SR_PKGREPO}"/"$itemdir"/"$pkgnam"-*-*-*.t?z )
     for pkgpath in "${pkgpathlist[@]}"; do
@@ -497,6 +505,7 @@ function lint_command
       fi
     done
   done
+  [ -z "$pstat" ] && log_always "No packages found."
 
   log_normal ""
   if [ "$tsbstat" = 0 ] && [ "$tdlstat" = 0 ] && [ "$tpkstat" = 0 ]; then

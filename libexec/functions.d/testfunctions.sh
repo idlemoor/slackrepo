@@ -64,7 +64,7 @@ function test_slackbuild
     [ "$(grep "^${itemprgnam}:" "$slackdesc" | sed "s/^${itemprgnam}://" | wc -L)" -gt 80 ] && \
       { log_warning -a "${itemid}: slack-desc: description lines too long"; retstat=1; }
     # check appname (i.e. $itemprgnam)
-    grep -q -v -e '^#' -e "^${itemprgnam}:" -e '^$' -e '^[[:blank:]]*|-.*-|$' "$slackdesc" && \
+    grep -q -v -e '^#' -e "^${itemprgnam}:" -e '^[[:blank:]]*$' -e '^[[:blank:]]*|-.*-|$' -e 'THIS FILE' "$slackdesc"  && \
       { log_warning -a "${itemid}: slack-desc: unrecognised text (appname wrong?)"; retstat=1; }
   else
     { log_warning -a "${itemid}: slack-desc not found"; retstat=1; }
@@ -243,25 +243,59 @@ function test_package
     shift
     log_normal -a "Testing package $pkgbasename ..."
 
-    # check the package name
+    # check the prgnam
     parse_package_name "$pkgbasename"
     [ "$PN_PRGNAM" != "$itemprgnam" ] && \
       { log_warning -a "${itemid}: ${pkgbasename}: PRGNAM is \"$PN_PRGNAM\" (expected \"$itemprgnam\")"; retstat=1; }
-    [ "$PN_VERSION" != "${INFOVERSION[$itemid]}" -a \
-      "$PN_VERSION" != "${INFOVERSION[$itemid]}_$(uname -r | tr - _)" ] && \
-      { log_warning -a "${itemid}: ${pkgbasename}: VERSION is \"$PN_VERSION\" (expected \"${INFOVERSION[$itemid]}\")"; retstat=1; }
-    [ "$PN_ARCH" != "$SR_ARCH" -a \
-      "$PN_ARCH" != "noarch" -a \
-      "$PN_ARCH" != "fw" ] && \
-      { log_warning -a "${itemid}: ${pkgbasename}: ARCH is $PN_ARCH (expected $SR_ARCH)"; retstat=1; }
+
+    # check the version
+    if [ "$CMD" = 'lint' ]; then
+      # for the lint command, use the database (in case the package is out of date w.r.t. the .info file)
+      checkversion=$(db_get_rev "$itemid" | cut -f2 -d" ")
+    else
+      # otherwise, it should be the same as INFOVERSION
+      checkversion="${INFOVERSION[$itemid]}"
+    fi
+    [ "$PN_VERSION" != "${checkversion}" ] && [ "$PN_VERSION" != "${checkversion}_$(uname -r | tr - _)" ] && \
+      { log_warning -a "${itemid}: ${pkgbasename}: VERSION is \"$PN_VERSION\" (expected \"${checkversion}\")"; retstat=1; }
+
+    # check the arch
+    okarch='n'
+    if [ "$PN_ARCH" = "$SR_ARCH" ]; then
+      okarch='y'
+    else
+      case "$PN_ARCH" in
+        i386 | i486 | i586 | i686 )
+          case "$SR_ARCH" in
+            i386 | i486 | i586 | i686 ) okarch='y' ;;
+          esac
+          ;;
+        arm )
+          [ "${SR_ARCH:0:3}" = 'arm' ] && okarch='y'
+          ;;
+        arm* )
+          [ "$SR_ARCH" = 'arm' ] && okarch='y'
+          ;;
+        noarch | fw )
+          okarch='y'
+          ;;
+      esac
+    fi
+    [ "$okarch" != 'y' ] && { log_warning -a "${itemid}: ${pkgbasename}: ARCH is $PN_ARCH (expected $SR_ARCH)"; retstat=1; }
+
+    # check the build
     [ -n "$SR_BUILD" ] && [ "$PN_BUILD" != "$SR_BUILD" ] && \
       { log_warning -a "${itemid}: ${pkgbasename}: BUILD is $PN_BUILD (expected $SR_BUILD)"; retstat=1; }
+
+    # check the tag
     [ "$PN_TAG" != "$SR_TAG" ] && \
       { log_warning -a "${itemid}: ${pkgbasename}: TAG is \"$PN_TAG\" (expected \"$SR_TAG\")"; retstat=1; }
+
+    # check the pkgtype
     [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && \
       { log_warning -a "${itemid}: ${pkgbasename}: Package type is .$PN_PKGTYPE (expected .$SR_PKGTYPE)"; retstat=1; }
 
-    # check that the compression type matches the suffix
+    # check that the actual compression type matches the suffix
     filetype=$(file -b "$pkgpath")
     case "$filetype" in
       'gzip compressed data'*)  [ "$PN_PKGTYPE" = 'tgz' ] || { log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .tgz"; retstat=1; } ;;
@@ -272,50 +306,71 @@ function test_package
     esac
 
     # list what's in the package (and check if it's really a tarball)
+    # we'll reuse this file several times to analyse the contents
     TMP_PKGCONTENTS="$MYTMPDIR"/pkgcontents_"$pkgbasename"
     tar tvf "$pkgpath" > "$TMP_PKGCONTENTS" || { log_error -a "${itemid}: ${pkgbasename} is not a tar archive"; return 2; }
 
-    # we'll reuse this file several times to analyse the contents:
-    TMP_PKGJUNK="$MYTMPDIR"/pkgjunk_"$pkgbasename"
-
     # check where the files will be installed
-    awk '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/' "$TMP_PKGCONTENTS" > "$TMP_PKGJUNK"
-    if [ -s "$TMP_PKGJUNK" ]; then
+    wrongstuff=$(awk \
+      '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/ {printf "  %s\n",$0}' <"$TMP_PKGCONTENTS")
+    if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: ${pkgbasename} installs to unusual locations"
-      cat "$TMP_PKGJUNK" >> "$ITEMLOG"
+      echo "$wrongstuff"
       retstat=1
     fi
     baddirlist=( 'usr/local/' 'usr/share/man/' )
     [ "$PN_ARCH"  = 'x86_64' ] && baddirlist+=( 'usr/lib/' ) # but not /lib (e.g. modules)
     [ "$PN_ARCH" != 'x86_64' ] && baddirlist+=( 'lib64/' 'usr/lib64/' )
     for baddir in "${baddirlist[@]}"; do
-      awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' "$TMP_PKGCONTENTS" > "$TMP_PKGJUNK"
-      if [ -s "$TMP_PKGJUNK" ]; then
-        { log_warning -a "${itemid}: $pkgbasename uses $baddir"; retstat=1; }
+      wrongstuff=$(awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' <"$TMP_PKGCONTENTS")
+      if [ -n "$wrongstuff" ]; then
+        log_warning -a "${itemid}: $pkgbasename uses /$baddir"
+        echo "$wrongstuff"
+        retstat=1
       fi
     done
 
     # check if it contains a slack-desc
     if ! grep -q ' install/slack-desc$' "$TMP_PKGCONTENTS"; then
-      { log_warning -a "${itemid}: ${pkgbasename} has no slack-desc"; retstat=1; }
+      log_warning -a "${itemid}: ${pkgbasename} has no slack-desc"
+      retstat=1
     fi
 
-    # check top level
-    if ! head -n 1 "$TMP_PKGCONTENTS" | grep -q '^drwxr-xr-x root/root .* \./$' ; then
-      { log_warning -a "${itemid}: ${pkgbasename} has wrong top level directory (not tar-1.13?)"; retstat=1; }
+    # check top level directory
+    topdir=$(head -n 1 "$TMP_PKGCONTENTS")
+    if ! echo "$topdir" | grep -q '^drwxr-xr-x root/root .* \./$' ; then
+      log_warning -a "${itemid}: ${pkgbasename} has a bad top level directory"
+      echo "  $topdir"
+      retstat=1
     fi
 
-    # check for non root/root ownership (allow root/audio in usr/bin)
-    if ! awk '$2!="root/root" && $6~/^(bin\/|lib\/|lib64\/|sbin\/|usr\/|\.\/$)/ && ! ($2=="root/audio" && $6~/^usr\/bin\//) {exit 1}' "$TMP_PKGCONTENTS" ; then
-      { log_warning -a "${itemid}: ${pkgbasename} has files or dirs with owner not root/root"; retstat=1; }
+    # check groups and/or users
+    okgroups='root'
+    if [ -n "${VALID_GROUPS[$itemid]}" ]; then
+      okgroups="(${okgroups}|${VALID_GROUPS[$itemid]})"
+    fi
+    okusers='root'
+    if [ -n "${VALID_USERS[$itemid]}" ]; then
+      okusers="(${okusers}|${VALID_USERS[$itemid]})"
+    fi
+    wrongstuff=$(awk \
+      "\$2~/^$okusers\/$okgroups\$/ {next};
+       \$2~/^[[:alpha:]]+\/[[:alpha:]]+\$/ {next};
+       {printf \"  %s\\n\",\$0}" <"$TMP_PKGCONTENTS")
+    if [ -n "$wrongstuff" ]; then
+      log_warning -a "${itemid}: ${pkgbasename} has files or dirs with unusual owner or group"
+      echo "$wrongstuff"
+      retstat=1
     fi
 
     # check for uncompressed man pages (usr/share/man warning is handled above)
-    if grep -E '^-.* usr/(share/)?man/' "$TMP_PKGCONTENTS" | grep -q -v '\.gz$'; then
-      { log_warning -a "${itemid}: ${pkgbasename} has uncompressed man pages"; retstat=1; }
+    wrongstuff=$(grep -E '^-.* usr/(share/)?man/' "$TMP_PKGCONTENTS" | grep -v '\.gz$')
+    if [ -n "$wrongstuff" ]; then
+      log_warning -a "${itemid}: ${pkgbasename} has uncompressed man pages"
+      echo "$wrongstuff"
+      retstat=1
     fi
 
-    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_PKGJUNK"
     # Note! Don't remove TMP_PKGCONTENTS yet, create_metadata will use it.
 
     # Install it to see what happens (but not if --dry-run)

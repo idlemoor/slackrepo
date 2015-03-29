@@ -7,7 +7,6 @@
 #   build_ok
 #   build_failed
 #   build_skipped
-#   do_groupadd_useradd
 #   chroot_setup
 #   chroot_report
 #   chroot_destroy
@@ -264,9 +263,6 @@ function build_item_packages
   # (to be destroyed below, or by build_failed if necessary)
   chroot_setup
 
-  # Process GROUPADD and USERADD hints, preferably inside the chroot :-)
-  do_groupadd_useradd "$itemid"
-
   # Get all dependencies installed
   install_deps "$itemid" || { build_failed "$itemid"; return 1; }
 
@@ -275,6 +271,18 @@ function build_item_packages
   # (... this might not be entirely appropriate for gcc or glibc ...)
   if [ "$noremove" != 'y' ]; then
     uninstall_packages "$itemid"
+  fi
+
+  # Process GROUPADD and USERADD hints, preferably inside the chroot :-)
+  if [ -n "${HINT_GROUPADD[$itemid]}" ]; then
+    log_verbose -a "Adding groups:"
+    log_verbose -a "  ${HINT_GROUPADD[$itemid]}"
+    eval $(echo "${HINT_GROUPADD[$itemid]}" | sed "s#groupadd #${CHROOTCMD}${SUDO}groupadd #g")
+  fi
+  if [ -n "${HINT_USERADD[$itemid]}" ]; then
+    log_verbose -a "Adding users:"
+    log_verbose -a "  ${HINT_USERADD[$itemid]}"
+    eval $(echo "${HINT_USERADD[$itemid]}" | sed "s#useradd #${CHROOTCMD}${SUDO}useradd #g")
   fi
 
   # Remember the build start time and estimate the build finish time
@@ -567,75 +575,6 @@ function build_skipped
     rm -rf "$MYTMPIN" "$MYTMPOUT"
     rm -rf "${SR_TMP:?NotSetSR_TMP}"/"$itemprgnam"* "${SR_TMP:?NotSetSR_TMP}"/package-"$itemprgnam"
   fi
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function do_groupadd_useradd
-# If there is a GROUPADD or USERADD hint for this item, set up the group and username.
-# GROUPADD hint format: GROUPADD="<gnum>:<gname> ..."
-# USERADD hint format:  USERADD="<unum>:<uname>:[-g<ugroup>:][-d<udir>:][-s<ushell>:][-uargs:...] ..."
-#   but if the USERADD hint is messed up, we can take a wild guess or two, see below ;-)
-# $1 = itemid
-# Return status: always 0
-{
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-  local itemid="$1"
-  local itemprgnam="${ITEMPRGNAM[$itemid]}"
-
-  if [ -n "${HINT_GROUPADD[$itemid]}" ]; then
-    for groupstring in ${HINT_GROUPADD[$itemid]}; do
-      gnum=''; gname="$itemprgnam"
-      for gfield in $(echo "$groupstring" | tr ':' ' '); do
-        case "$gfield" in
-          [0-9]* ) gnum="$gfield" ;;
-          * ) gname="$gfield" ;;
-        esac
-      done
-      [ -z "$gnum" ] && { log_warning "${itemid}: GROUPADD hint has no GID number" ; break ; }
-      if ! ${CHROOTCMD}getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
-        gaddcmd="groupadd -g $gnum $gname"
-        log_verbose -a "Adding group: $gaddcmd"
-        eval "${CHROOTCMD}${SUDO}$gaddcmd"
-      else
-        log_verbose -a "Group $gname already exists."
-      fi
-    done
-  fi
-
-  if [ -n "${HINT_USERADD[$itemid]}" ]; then
-    for userstring in ${HINT_USERADD[$itemid]}; do
-      unum=''; uname="$itemprgnam"; ugroup=""
-      udir='/dev/null'; ushell='/bin/false'; uargs=''
-      for ufield in $(echo "$userstring" | tr ':' ' '); do
-        case "$ufield" in
-          -g* ) ugroup="${ufield:2}" ;;
-          -d* ) udir="${ufield:2}" ;;
-          -s* ) ushell="${ufield:2}" ;;
-          -*  ) uargs="$uargs ${ufield:0:2} ${ufield:2}" ;;
-          /*  ) if [ -x "$ufield" ]; then ushell="$ufield"; else udir="$ufield"; fi ;;
-          [0-9]* ) unum="$ufield" ;;
-          *   ) uname="$ufield" ;;
-        esac
-      done
-      [ -z "$unum" ] && { log_warning "${itemid}: USERADD hint has no UID number" ; break ; }
-      if ! ${CHROOTCMD}getent passwd "$uname" | grep -q "^${uname}:" 2>/dev/null ; then
-        [ -z "$ugroup" ] && ugroup="$uname"
-        if ! ${CHROOTCMD}getent group "${ugroup}" | grep -q -E "(^${ugroup}:)|(:${ugroup}:)" 2>/dev/null ; then
-          gaddcmd="groupadd -g $unum $ugroup"
-          log_verbose -a "Adding group: $gaddcmd"
-          eval "${CHROOTCMD}${SUDO}$gaddcmd"
-        fi
-        uaddcmd="useradd  -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname"
-        log_verbose -a "Adding user:  $uaddcmd"
-        eval "${CHROOTCMD}${SUDO}$uaddcmd"
-      else
-        log_verbose -a "User $uname already exists."
-      fi
-    done
-  fi
-
   return 0
 }
 

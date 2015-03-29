@@ -410,6 +410,8 @@ declare -A \
   HINT_ARCH HINT_CLEANUP HINT_USERADD HINT_GROUPADD HINT_ANSWER HINT_NODOWNLOAD \
   HINT_PREREMOVE HINT_CONFLICTS \
   HINT_OPTIONS HINT_VERSION HINT_SUMMARY HINTFILE
+# and for validation in test_*
+declare -A VALID_USERS VALID_GROUPS
 
 #-------------------------------------------------------------------------------
 
@@ -560,8 +562,6 @@ function parse_info_and_hints
     # Process the hint file's variables individually (looping for each variable would need
     # 'eval', which would mess up the payload, so we don't do that).
     [ -n "$OPTIONS"   ] &&   HINT_OPTIONS[$itemid]="$OPTIONS"
-    [ -n "$GROUPADD"  ] &&  HINT_GROUPADD[$itemid]="$GROUPADD"
-    [ -n "$USERADD"   ] &&   HINT_USERADD[$itemid]="$USERADD"
     [ -n "$PREREMOVE" ] && HINT_PREREMOVE[$itemid]="$PREREMOVE"
     [ -n "$CONFLICTS" ] && HINT_CONFLICTS[$itemid]="$CONFLICTS"
     [ -n "$NUMJOBS"   ] &&   HINT_NUMJOBS[$itemid]="$NUMJOBS"
@@ -607,6 +607,62 @@ function parse_info_and_hints
     elif [ -n "$SHA256SUM" ]; then
       INFOSHA256LIST[$itemid]="$SHA256SUM"
       HINT_SHA256IGNORE[$itemid]=''
+    fi
+
+    # Process hint file's GROUPADD and USERADD together:
+    # GROUPADD hint format: GROUPADD="<gnum>:<gname> ..."
+    # USERADD hint format:  USERADD="<unum>:<uname>:[-g<ugroup>:][-d<udir>:][-s<ushell>:][-uargs:...] ..."
+    # VALID_GROUPS and VALID_USERS are needed for test_package
+    if [ -n "$GROUPADD}" ]; then
+      for groupstring in $GROUPADD; do
+        gnum=''; gname="$itemprgnam"
+        for gfield in $(echo "$groupstring" | tr ':' ' '); do
+          case "$gfield" in
+            [0-9]* ) gnum="$gfield" ;;
+            * ) gname="$gfield" ;;
+          esac
+        done
+        [ -z "$gnum" ] && { log_warning "${itemid}: GROUPADD hint has no GID number" ; break ; }
+        if ! getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
+          HINT_GROUPADD[$itemid]="${HINT_GROUPADD[$itemid]}groupadd -g $gnum $gname; "
+        else
+          log_verbose -a "Group $gname already exists."
+        fi
+        if [ -z "${VALID_GROUPS[$itemid]}" ]; then
+          VALID_GROUPS[$itemid]="$gnum|$gname"
+        else
+          VALID_GROUPS[$itemid]="${VALID_GROUPS[$itemid]}|$gnum|$gname"
+        fi
+      done
+    fi
+    if [ -n "$USERADD" ]; then
+      for userstring in $USERADD; do
+        unum=''; uname="$itemprgnam"; ugroup=""
+        udir='/dev/null'; ushell='/bin/false'; uargs=''
+        for ufield in $(echo "$userstring" | tr ':' ' '); do
+          case "$ufield" in
+            -g* ) ugroup="${ufield:2}" ;;
+            -d* ) udir="${ufield:2}" ;;
+            -s* ) ushell="${ufield:2}" ;;
+            -*  ) uargs="$uargs ${ufield:0:2} ${ufield:2}" ;;
+            /*  ) if [ -x "$ufield" ]; then ushell="$ufield"; else udir="$ufield"; fi ;;
+            [0-9]* ) unum="$ufield" ;;
+            *   ) uname="$ufield" ;;
+          esac
+        done
+        [ -z "$unum" ] && { log_warning "${itemid}: USERADD hint has no UID number" ; break ; }
+        if ! getent passwd "$uname" | grep -q "^${uname}:" 2>/dev/null ; then
+          [ -z "$ugroup" ] && ugroup="$uname"
+          HINT_USERADD[$itemid]="${HINT_USERADD[$itemid]}useradd  -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname; "
+        else
+          log_verbose -a "User $uname already exists."
+        fi
+        if [ -z "${VALID_USERS[$itemid]}" ]; then
+          VALID_USERS[$itemid]="$unum|$uname"
+        else
+          VALID_USERS[$itemid]="${VALID_USERS[$itemid]}|$unum|$uname"
+        fi
+      done
     fi
 
     # Process SKIP and ADDREQUIRES in the Fixup department below.

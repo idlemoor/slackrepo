@@ -204,7 +204,7 @@ function log_itemstart
     fi
     ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"
     mkdir -p "$ITEMLOGDIR"
-    ITEMLOG="$ITEMLOGDIR"/"$itemprgnam".log
+    ITEMLOG="$ITEMLOGDIR"/"$CMD".log
     if [ -f "$ITEMLOG" ]; then
       oldlog="${ITEMLOG%.log}.1.log"
       mv "$ITEMLOG" "$oldlog"

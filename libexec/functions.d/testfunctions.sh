@@ -16,8 +16,6 @@ function test_slackbuild
 # 1 = the test found something
 # 2 = significant error
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -31,7 +29,7 @@ function test_slackbuild
 
   local slackdesc hr linecount
 
-  log_normal -a "Testing SlackBuild files ..."
+  log_normal -a "Testing SlackBuild files ... "
 
 
   #-----------------------------#
@@ -116,7 +114,7 @@ function test_slackbuild
     { log_warning -a "${itemid}: README not found"; retstat=1; }
   fi
 
-
+  [ "$retstat" = 0 ] && log_done
   return $retstat
 }
 
@@ -130,8 +128,6 @@ function test_download
 # 1 = the test found something
 # 2 = significant error
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local -a downlist
   local TMP_HEADER url curlstat
@@ -139,7 +135,7 @@ function test_download
 
   downlist=( ${INFODOWNLIST[$itemid]} )
   if [ "${#downlist[@]}" != 0 ]; then
-    log_normal -a "Testing download URLs ..."
+    log_normal -a "Testing download URLs ... "
     TMP_HEADER="$MYTMPDIR"/curlheader
     for url in "${downlist[@]}"; do
       # Try to retrieve just the header.
@@ -207,6 +203,7 @@ function test_download
     [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_HEADER"
   fi
 
+  [ "$retstat" = 0 ] && log_done
   return $retstat
 }
 
@@ -222,8 +219,6 @@ function test_package
 # 1 = the test found something
 # 2 = significant error
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local tryinstall='y'
   if [ "$1" = '-n' ]; then
     tryinstall='n'
@@ -241,7 +236,7 @@ function test_package
     pkgpath="$1"
     pkgbasename=$(basename "$pkgpath")
     shift
-    log_normal -a "Testing package $pkgbasename ..."
+    log_normal -a "Testing package $pkgbasename ... "
 
     # check the prgnam
     parse_package_name "$pkgbasename"
@@ -315,7 +310,7 @@ function test_package
       '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/ {printf "  %s\n",$0}' <"$TMP_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: ${pkgbasename} installs to unusual locations"
-      echo "$wrongstuff"
+      log_normal -a "$wrongstuff"
       retstat=1
     fi
     baddirlist=( 'usr/local/' 'usr/share/man/' )
@@ -325,7 +320,7 @@ function test_package
       wrongstuff=$(awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' <"$TMP_PKGCONTENTS")
       if [ -n "$wrongstuff" ]; then
         log_warning -a "${itemid}: $pkgbasename uses /$baddir"
-        echo "$wrongstuff"
+        log_normal -a "$wrongstuff"
         retstat=1
       fi
     done
@@ -340,7 +335,7 @@ function test_package
     topdir=$(head -n 1 "$TMP_PKGCONTENTS")
     if ! echo "$topdir" | grep -q '^drwxr-xr-x root/root .* \./$' ; then
       log_warning -a "${itemid}: ${pkgbasename} has a bad top level directory"
-      echo "  $topdir"
+      log_normal -a "  $topdir"
       retstat=1
     fi
 
@@ -359,7 +354,7 @@ function test_package
        {printf \"  %s\\n\",\$0}" <"$TMP_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: ${pkgbasename} has files or dirs with unusual owner or group"
-      echo "$wrongstuff"
+      log_normal -a "$wrongstuff"
       retstat=1
     fi
 
@@ -367,14 +362,17 @@ function test_package
     wrongstuff=$(grep -E '^-.* usr/(share/)?man/' "$TMP_PKGCONTENTS" | grep -v '\.gz$')
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: ${pkgbasename} has uncompressed man pages"
-      echo "$wrongstuff"
+      log_normal -a "$wrongstuff"
       retstat=1
     fi
+
+    [ "$retstat" = 0 ] && log_done
 
     # Note! Don't remove TMP_PKGCONTENTS yet, create_metadata will use it.
 
     # Install it to see what happens (but not if --dry-run)
     if [ "$OPT_DRY_RUN" != 'y' ] && [ "$tryinstall" != 'n' ]; then
+      log_normal -a "Test installing $pkgbasename ..."
       install_packages "$pkgpath" || return 1
     fi
 

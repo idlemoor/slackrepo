@@ -27,8 +27,6 @@ function build_item_packages
 # 7 = excessively dramatic qa test fail
 # 8 = package install fail
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -54,7 +52,7 @@ function build_item_packages
   NEWVERSION="${HINT_VERSION[$itemid]}"
   if [ -n "$NEWVERSION" -a "${INFOVERSION[$itemid]}" != "$NEWVERSION" ]; then
     # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
-    log_verbose -a "Setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]})"
+    log_info -a "Setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]})"
     sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$MYTMPIN/$itemfile"
     # Let's assume shell globbing chars won't appear in any sane VERSION ;-)
     INFODOWNLIST[$itemid]="${INFODOWNLIST[$itemid]//${INFOVERSION[$itemid]}/$NEWVERSION}"
@@ -176,7 +174,7 @@ function build_item_packages
   SLACKBUILDCMD="sh ./$itemfile"
   [ "${OPT_NICE:-0}" != '0' ] && SLACKBUILDCMD="nice -n $OPT_NICE $SLACKBUILDCMD"
   [ -n "$SUDO" ] && [ -x /usr/bin/fakeroot ] && SLACKBUILDCMD="fakeroot $SLACKBUILDCMD"
-  [ "$OPT_VERY_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && SLACKBUILDCMD="/usr/libexec/slackrepo/unbuffer $SLACKBUILDCMD"
+  [ "$OPT_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && SLACKBUILDCMD="/usr/libexec/slackrepo/unbuffer $SLACKBUILDCMD"
 
   # Process other hints for the build:
 
@@ -198,7 +196,7 @@ function build_item_packages
     'multilib_ldflags' )
       if [ "$SYS_MULTILIB" = 'y' ]; then
         # This includes the rare case when an i486 cross-compile on x86_64 needs -L/usr/lib
-        log_verbose "Special action: multilib_ldflags"
+        log_info "Special action: multilib_ldflags"
         libdirsuffix=''
         [ "$SR_ARCH" = 'x86_64' ] && libdirsuffix='64'
         sed -i -e "s;^\./configure ;LDFLAGS=\"-L/usr/lib$libdirsuffix\" &;" "$MYTMPIN/$itemfile"
@@ -206,7 +204,7 @@ function build_item_packages
       ;;
     'stubs-32' )
       if [ "$SYS_ARCH" = 'x86_64' -a "$SYS_MULTILIB" = 'n' -a ! -e /usr/include/gnu/stubs-32.h ]; then
-        log_verbose "Special action: stubs-32"
+        log_info "Special action: stubs-32"
         ln -s /usr/include/gnu/stubs-64.h /usr/include/gnu/stubs-32.h
         if [ -z "${HINT_CLEANUP[$itemid]}" ]; then
           HINT_CLEANUP[$itemid]="rm /usr/include/gnu/stubs-32.h"
@@ -216,7 +214,7 @@ function build_item_packages
       fi
       ;;
     'download_basename' )
-      log_verbose "Special action: download_basename"
+      log_info "Special action: download_basename"
       # We're going to guess that the timestamps in the source repo indicate the
       # order in which files were downloaded and therefore the order in INFODOWNLIST.
       # Most of the current bozo downloaders only download one file anyway :-)
@@ -233,16 +231,16 @@ function build_item_packages
       done < <(ls -rt "$SR_SRCREPO"/"$itemdir" 2>/dev/null)
       ;;
     'no_make_test' )
-      log_verbose "Special action: no_make_test"
+      log_info "Special action: no_make_test"
       sed -i -e "s/make test/: # make test/" "$MYTMPIN"/"$itemfile"
       ;;
     'noexport_ARCH' )
-      log_verbose "Special action: noexport_ARCH"
+      log_info "Special action: noexport_ARCH"
       sed -i -e "s/^PRGNAM=.*/&; ARCH='$SR_ARCH'/" "$MYTMPIN"/"$itemfile"
       unset ARCH
       ;;
     'noexport_BUILD' )
-      log_verbose "Special action: noexport_BUILD"
+      log_info "Special action: noexport_BUILD"
       sed -i -e "s/^BUILD=.*/BUILD='$BUILD'/" "$MYTMPIN"/"$itemfile"
       unset BUILD
       ;;
@@ -250,7 +248,7 @@ function build_item_packages
       eval "${special/_/ }"
       ;;
     'noremove' )
-      log_verbose "Special action: noremove"
+      log_info "Special action: noremove"
       noremove='y'
       ;;
     * )
@@ -275,13 +273,13 @@ function build_item_packages
 
   # Process GROUPADD and USERADD hints, preferably inside the chroot :-)
   if [ -n "${HINT_GROUPADD[$itemid]}" ] || [ -n "${HINT_USERADD[$itemid]}" ]; then
-    log_verbose -a "Adding groups and users:"
+    log_info -a "Adding groups and users:"
     if [ -n "${HINT_GROUPADD[$itemid]}" ]; then
-      log_verbose -a "  ${HINT_GROUPADD[$itemid]}"
+      log_info -a "  ${HINT_GROUPADD[$itemid]}"
       eval $(echo "${HINT_GROUPADD[$itemid]}" | sed "s#groupadd #${CHROOTCMD}${SUDO}groupadd #g")
     fi
     if [ -n "${HINT_USERADD[$itemid]}" ]; then
-      log_verbose -a "  ${HINT_USERADD[$itemid]}"
+      log_info -a "  ${HINT_USERADD[$itemid]}"
       eval $(echo "${HINT_USERADD[$itemid]}" | sed "s#useradd #${CHROOTCMD}${SUDO}useradd #g")
     fi
   fi
@@ -311,9 +309,8 @@ function build_item_packages
   runmsg=$(format_left_right "Running $itemfile ..." "$eta")
   log_normal -a "$runmsg"
   log_verbose -a "$SLACKBUILDCMD"
-  if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
-    echo ''
-    echo '---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---'
+  if [ "$OPT_VERBOSE" = 'y' ]; then
+    log_verbose '\n---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---\n'
     set -o pipefail
     if [ "$SYS_MULTILIB" = "y" ] && [ "$ARCH" = 'i486' -o "$ARCH" = 'i686' ]; then
       ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" 2>&1 | tee -a "$ITEMLOG"
@@ -323,8 +320,7 @@ function build_item_packages
       buildstat=$?
     fi
     set +o pipefail
-    echo '----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<---'
-    echo ''
+    log_verbose '\n----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<---\n'
   else
     if [ "$SYS_MULTILIB" = "y" -a "$ARCH" = 'i486' ]; then
       ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" >> "$ITEMLOG" 2>&1
@@ -448,8 +444,6 @@ function build_ok
 # $1 = itemid
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -491,7 +485,7 @@ function build_ok
       # log what happened
       for backpack in "$backupdir"/*.t?z; do
         [ -e "$backpack" ] || break
-        log_verbose "Backed up: $(basename "$backpack")"
+        log_info "Backed up: $(basename "$backpack")"
       done
     else
       rm -rf "${SR_PKGREPO:?NotSetSR_PKGREPO}"/"$itemdir"/*
@@ -523,8 +517,6 @@ function build_failed
 # $1 = itemid
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -532,12 +524,7 @@ function build_failed
 
   STATUS[$itemid]="failed"
   STATUSINFO[$itemid]="See $ITEMLOG"
-
-  if [ "$OPT_QUIET" != 'y' ]; then
-    errorscan_itemlog | tee -a "$MAINLOG"
-  else
-    errorscan_itemlog >> "$MAINLOG"
-  fi
+  errorscan_itemlog | tee -a "$MAINLOG"
   log_error -n "${STATUSINFO[$itemid]}"
 
   if [ -n "${CHROOTDIR}" ]; then
@@ -566,7 +553,6 @@ function build_skipped
 # $3 = extra message for next line (optional -- supplied to log_itemfinish as $4)
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
 
@@ -588,7 +574,6 @@ function chroot_setup
 # 0 = it worked
 # 1 = OPT_CHROOT is not set, or could not mount the overlay
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   CHROOTCMD=''
   [ "$OPT_CHROOT" != 'y' ] && return 1
   mkdir -p "$MYTMPDIR"/{changes,workdir,chroot}
@@ -616,7 +601,6 @@ function chroot_report
 # Warn about modified files and directories in the chroot
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$CHROOTDIR" ] && return 0
 
   if [ -f "$MYTMPDIR"/start ]; then
@@ -625,8 +609,8 @@ function chroot_report
       excludes="^/dev/ttyp|^$HOME/.distcc|^$HOME/.cache/g-ir-scanner|^$HOME\$"
       significant="$(echo "$crap" | sed -e "s#^\./#/#" | grep -v -E "$excludes" | sort)"
       if [ -n "$significant" ]; then
-        log_warning "$itemid: Files/directories were modified during the build"
-        printf "  %s\n" ${significant}
+        log_warning -a "$itemid: Files/directories were modified during the build"
+        log_normal -a "$(printf "  %s\n" ${significant})"
       fi
     fi
   fi
@@ -640,16 +624,15 @@ function chroot_destroy
 # Unmount the chroot, copy any wanted files, and then destroy it
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$CHROOTDIR" ] && return 0
-  log_normal "Unmounting chroot ... "
+  log_normal -a "Unmounting chroot ... "
   ${SUDO}umount "$CHROOTDIR"/dev/shm || return 0
   ${SUDO}umount "$CHROOTDIR"/proc || return 0
   ${SUDO}umount -l "$CHROOTDIR" || return 0
   if [ "$OPT_KEEP_TMP" = 'y' ] && [ -d "$MYTMPDIR"/changes/"$SR_TMP" ]; then
     rsync -rlptgo "$MYTMPDIR"/changes/"$SR_TMP"/ "$SR_TMP"/
   fi
-  log_done
+  log_done -a
   ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes/{"$SR_TMP","${MYTMPDIR:?NotSetMYTMPDIR}"}
   ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes
   unset CHROOTCMD CHROOTDIR

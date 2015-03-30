@@ -18,7 +18,6 @@ function db_init
 # Return status:
 # 1 = any error, otherwise 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -n "$SR_DATABASE" ] || return 1
 
   latestschema='2.1'
@@ -188,7 +187,6 @@ function db_error
 # $1 = sqlite status code
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   local warntext="Internal error in ${FUNCNAME[1]}"
   case "$1" in
   1)   log_warning -n "${warntext}: SQL error or missing database" ;;
@@ -243,7 +241,6 @@ function db_set_buildsecs
 # $2 = elapsed seconds
 # (mhzsum is always set to $SYS_MHz, and guessflag is always set to '=')
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" -o -z "$2" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "insert or replace into buildsecs ( itemid, secs, mhzsum, guessflag ) values ( '$1', '$2', $SYS_MHz, '=' );"
@@ -258,7 +255,6 @@ function db_get_buildsecs
 # Prints "secs mhzsum guessflag" on standard output
 # (prints nothing if itemid is not in the table)
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "select secs, mhzsum, guessflag from buildsecs where itemid='$1';" | tr '|' ' '
@@ -271,7 +267,6 @@ function db_del_buildsecs
 # Delete a build time
 # $1 = itemid
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "delete from buildsecs where itemid='$1';"
@@ -292,7 +287,6 @@ function db_set_pkgnam_itemid
 # $1 = pkgnam
 # $2 = itemid
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" -o -z "$2" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "insert or replace into packages ( pkgnam, itemid ) values ( '$1', '$2' );"
@@ -305,7 +299,6 @@ function db_get_pkgnam_itemid
 # Print the itemid for a given pkgnam on standard output.
 # $1 = pkgnam
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "select itemid from packages where pkgnam='$1';"
@@ -318,7 +311,6 @@ function db_get_itemid_pkgnams
 # Print the pkgnams for a given itemid on standard output.
 # $1 = itemid
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "select pkgnam from packages where itemid='$1';"
@@ -331,7 +323,6 @@ function db_del_pkgnam
 # Delete all records for a specified pkgnam.
 # $1 = pkgnam
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "delete from packages where pkgnam='$1';"
@@ -344,7 +335,6 @@ function db_del_itemid_pkgnam
 # Delete all records for a specified itemid.
 # $1 = itemid
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "delete from packages where itemid='$1';"
@@ -365,7 +355,6 @@ function db_set_misc
 # $1 = key
 # $2 = value (optional, default null)
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "insert or replace into misc ( key, value ) values ( '$1', '$2' );"
@@ -380,7 +369,6 @@ function db_get_misc
 # $2 = default if not found (optional)
 # $3 = default if error (optional -- error is suppressed)
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   local value dbstat
   value=$(sqlite3 "$SR_DATABASE" "select value from misc where key='$1';" 2>/dev/null)
@@ -403,7 +391,6 @@ function db_del_misc
 # Delete a misc key/value pair
 # $1 = key
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "delete from misc where key='$1';"
@@ -448,7 +435,6 @@ function db_set_rev
 # $3...$8 = deplist, version, built, rev, os, hintcksum
 # (all eight arguments must be specified, although only the first two are checked)
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" -o -z "$2" ] && return 1
   local itemid="$1"
   local dep="${2:-/}"
@@ -467,7 +453,6 @@ function db_get_rev
 # $1 = itemid
 # $2 = dep, default '/'
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   local itemid="$1"
   local dep="${2:-/}"
@@ -489,7 +474,6 @@ function db_get_dependers
 # Print a list of itemids where the packages currently depend on the given item
 # $1 = itemid of dependee
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   local itemid="$1"
   sqlite3 "$SR_DATABASE" \
@@ -503,7 +487,6 @@ function db_del_rev
 # Delete all revision records for an item
 # $1 = itemid
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   unset REVCACHE[$itemid]
   sqlite3 "$SR_DATABASE" \
@@ -524,7 +507,6 @@ function db_set_buildresults
 # $1 = itemid
 # $2 = result (ok, skipped, unsupported, failed, or aborted)
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
   [ -z "$2" ] && return 1
   sqlite3 "$SR_DATABASE" \

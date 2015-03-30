@@ -18,8 +18,6 @@ function install_deps
 # 0 = all installs succeeded
 # 1 = any install failed
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local mydep
   local allinstalled='y'
@@ -48,7 +46,6 @@ function uninstall_deps
 # $1 = itemid
 # Return status always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   local itemid="$1"
   local mydep
 
@@ -70,8 +67,6 @@ function install_packages
 # 0 = installed ok or already installed
 # 1 = any install failed or not found (bail out after first error)
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   for arg in $*; do
 
     if [ -f "$arg" ]; then
@@ -112,13 +107,13 @@ function install_packages
     fi
 
     if [ -n "${HINT_GROUPADD[$itemid]}" ] || [ -n "${HINT_USERADD[$itemid]}" ]; then
-      log_verbose -a "Adding groups and users:"
+      log_info -a "Adding groups and users:"
       if [ -n "${HINT_GROUPADD[$itemid]}" ]; then
-        log_verbose -a "  ${HINT_GROUPADD[$itemid]}"
+        log_info -a "  ${HINT_GROUPADD[$itemid]}"
         eval $(echo "${HINT_GROUPADD[$itemid]}" | sed "s#groupadd #${CHROOTCMD}${SUDO}groupadd #g")
       fi
       if [ -n "${HINT_USERADD[$itemid]}" ]; then
-        log_verbose -a "  ${HINT_USERADD[$itemid]}"
+        log_info -a "  ${HINT_USERADD[$itemid]}"
         eval $(echo "${HINT_USERADD[$itemid]}" | sed "s#useradd #${CHROOTCMD}${SUDO}useradd #g")
       fi
     fi
@@ -147,7 +142,7 @@ function install_packages
         # or istat=3 (broken /var/log/packages) or istat=whatever
         [ "$istat" = 1 ] && log_normal -a "Upgrading $R_INSTALLED ..."
         [ "$istat" = 3 ] && log_warning -n "Attempting to upgrade or reinstall $R_INSTALLED ..."
-        if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
+        if [ "$OPT_VERBOSE" = 'y' ]; then
           set -o pipefail
           ROOT=${CHROOTDIR:-/} ${SUDO}upgradepkg --reinstall "$pkgpath" 2>&1 | tee -a "$ITEMLOG"
           pstat=$?
@@ -180,7 +175,6 @@ function uninstall_packages
 # Extra cleanup is only performed for 'vanilla' uninstalls.
 # If OPT_CHROOT is set, the packages will not be removed, but a bit of cleanup will be done.
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
 
   local force='n'
   if [ "$1" = '-f' ]; then
@@ -330,8 +324,6 @@ function dotprofilizer
 # $1 = path of package
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local pkgpath="$1"
   local varlogpkg script
   # examine /var/log/packages/xxxx because it's quicker than looking inside a .t?z
@@ -339,10 +331,10 @@ function dotprofilizer
   if grep -q -E '^etc/profile\.d/.*\.sh(\.new)?' "$varlogpkg"; then
     while read script; do
       if [ -f "${CHROOTDIR}"/"$script" ]; then
-        log_verbose -a "  Running profile script: /$script"
+        log_info -a "  Running profile script: /$script"
         . "${CHROOTDIR}"/"$script"
       elif [ -f "${CHROOTDIR}"/"$script".new ]; then
-        log_verbose -a "  Running profile script: /$script.new"
+        log_info -a "  Running profile script: /$script.new"
         . "${CHROOTDIR}"/"$script".new
       fi
     done < <(grep '^etc/profile\.d/.*\.sh' "$varlogpkg" | sed 's/.new$//')

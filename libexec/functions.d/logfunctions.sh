@@ -10,9 +10,9 @@
 #-------------------------------------------------------------------------------
 # logfunctions.sh - logging functions for slackrepo
 # Progress:
-#   log_verbose
 #   log_normal
-#   log_always
+#   log_verbose
+#   log_info
 #   log_important
 #   log_warning
 #   log_error
@@ -32,6 +32,30 @@
 # PROGRESS
 #-------------------------------------------------------------------------------
 
+function log_normal
+# Log a message to standard output.
+# Log a message to ITEMLOG if '-a' is specified.
+# If the message ends with "... " (note the space), no newline is written.
+# $* = message
+# Return status: always 0
+{
+  A='n'
+  [ "$1" = '-a' ] && { A='y'; shift; }
+  nonewline=''
+  eval lastarg=\"\${$#}\"
+  [ "${lastarg: -4:4}" = '... ' ] && nonewline='-n'
+  echo -e $nonewline "${NL}$*"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e $nonewline "${NL}$*" >> "$ITEMLOG"
+  if [ "$nonewline" = '-n' ]; then
+    NL='\n'
+  else
+    NL=''
+  fi
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
 function log_verbose
 # Log a message to standard output if OPT_VERBOSE is set.
 # Log a message to ITEMLOG if '-a' is specified.
@@ -47,35 +71,17 @@ function log_verbose
 
 #-------------------------------------------------------------------------------
 
-function log_normal
-# Log a message to standard output unless OPT_QUIET is set.
-# Log a message to ITEMLOG if '-a' is specified.
-# If the message ends with "... " (note the space), no newline is written.
-# $* = message
-# Return status: always 0
-{
-  A='n'
-  [ "$1" = '-a' ] && { A='y'; shift; }
-  nonewline=''
-  eval lastarg=\"\${$#}\"
-  [ "${lastarg: -4:4}" = '... ' ] && { nonewline='-n'; NEEDNEWLINE='y'; }
-  [ "$OPT_QUIET" != 'y' ] && echo -e $nonewline "$*"
-  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e $nonewline "$*" >> "$ITEMLOG"
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function log_always
-# Log a message to standard output.
+function log_info
+# Log a message to standard output in unhighlighted cyan.
 # Log a message to ITEMLOG if '-a' is specified.
 # $* = message
 # Return status: always 0
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  echo -e "$*"
-  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "$*" >> "$ITEMLOG"
+  echo -e "${NL}${tputcyan}$*${tputnormal}"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}$*" >> "$ITEMLOG"
+  NL=''
   return 0
 }
 
@@ -89,8 +95,9 @@ function log_important
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  echo -e "${tputboldwhite}$*${tputnormal}"
-  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "$*" >> "$ITEMLOG"
+  echo -e "${NL}${tputboldwhite}$*${tputnormal}"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}$*" >> "$ITEMLOG"
+  NL=''
   return 0
 }
 
@@ -113,8 +120,9 @@ function log_warning
     *)    break ;;
     esac
   done
-  echo -e "${tputboldyellow}${W}$*${tputnormal}"
-  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${W}$*" >> "$ITEMLOG"
+  echo -e "${NL}${tputboldyellow}${W}$*${tputnormal}"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${W}$*" >> "$ITEMLOG"
+  NL=''
   [ -n "$W" ] && WARNINGLIST+=( "$*" )
   return 0
 }
@@ -137,8 +145,9 @@ function log_error
     *)    break ;;
     esac
   done
-  echo -e "${tputboldred}${E}$*${tputnormal}"
-  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${E}$*" >> "$ITEMLOG"
+  echo -e "${NL}${tputboldred}${E}$*${tputnormal}"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${E}$*" >> "$ITEMLOG"
+  NL=''
   return 0
 }
 
@@ -153,6 +162,7 @@ function log_done
   [ "$1" = '-a' ] && { A='y'; shift; }
   echo "done."
   [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo "done." >> "$ITEMLOG"
+  NL=''
   return 0
 }
 
@@ -193,7 +203,6 @@ function log_itemstart
 
   if [ -n "$itemid" ]; then
     if [ -n "$message" ]; then
-      [ "$OPT_VERY_VERBOSE" = 'y' ] && echo ""
       padline="----------------------------------------------------------------------"
       if [ ${#message} -ge ${#padline} ]; then
         echo -e "${padline} $(date +%T)\n${tputboldwhite}${message}${tputnormal}"

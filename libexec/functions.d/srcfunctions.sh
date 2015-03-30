@@ -20,8 +20,6 @@ function verify_src
 # 5 - .info says item is unsupported/untested on this arch
 # 6 - not in source cache and there is a nodownload hint
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local -a srcfilelist
 
@@ -79,7 +77,7 @@ function verify_src
         ok='n'
         # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
         for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
-        [ "$ok" = 'y' ] || { log_important -a "Failed md5sum: $f"; log_verbose -a "  actual md5sum is $mf"; allok='n'; }
+        [ "$ok" = 'y' ] || { log_important -a "Failed md5sum: $f"; log_info -a "  actual md5sum is $mf"; allok='n'; }
       done
     fi
     if [ "${HINT_SHA256IGNORE[$itemid]}" != 'y' -a -n "$SHA256LIST" ]; then
@@ -88,7 +86,7 @@ function verify_src
         ok='n'
         # The next bit checks all files have a good sha256sum, but not vice versa, so it's not perfect :-/
         for sinfo in $SHA256LIST; do if [ "$sf" = "$sinfo" ]; then ok='y'; break; fi; done
-        [ "$ok" = 'y' ] || { log_important -a "Failed sha256sum: $f"; log_verbose -a "  actual sha256sum is $sf"; allok='n'; }
+        [ "$ok" = 'y' ] || { log_important -a "Failed sha256sum: $f"; log_info -a "  actual sha256sum is $sf"; allok='n'; }
       done
     fi
     [ "$allok" = 'y' ] || { if [ -n "${HINT_NODOWNLOAD[$itemid]}" ]; then return 6; else return 1; fi; }
@@ -104,8 +102,6 @@ function download_src
 # Return status:
 # 1 - curl failed
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   if [ -n "$DOWNDIR" ]; then
     mkdir -p "$DOWNDIR"
     find -H "$DOWNDIR" -maxdepth 1 -type f -exec rm -f {} \;
@@ -122,7 +118,7 @@ function download_src
   log_normal -a "Downloading source files ..."
   ( cd "$DOWNDIR"
     for url in $DOWNLIST; do
-      if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
+      if [ "$OPT_VERBOSE" = 'y' ]; then
         set -o pipefail
         curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A slackrepo -O "$url" 2>&1 | tee -a "$ITEMLOG"
         curlstat=$?
@@ -134,7 +130,7 @@ function download_src
       if [ $curlstat != 0 ]; then
         # Try SlackBuilds Direct :D
         sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
-        if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
+        if [ "$OPT_VERBOSE" = 'y' ]; then
           set -o pipefail
           curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A slackrepo -O "$sbdurl" 2>&1 | tee -a "$ITEMLOG"
           curlstat=$?
@@ -148,7 +144,7 @@ function download_src
           log_error -a "Download failed: $(print_curl_status $curlstat).\n  $url"
           return 1
         fi
-        log_normal "  Downloaded from SBo direct links: ${url##*/}"
+        log_normal -a "  Downloaded from SBo direct links: ${url##*/}"
       fi
     done
     echo "$VERSION" > "$DOWNDIR"/.version
@@ -169,7 +165,6 @@ function print_curl_status
 # $1 = curl status code
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   case $1 in
   1)   echo "Unsupported protocol" ;;
   2)   echo "Failed to initialize" ;;

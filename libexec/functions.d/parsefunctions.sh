@@ -33,8 +33,6 @@ function parse_args
 # 1 = errors logged
 #
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid
   local searchtype toplevel
   local errstat=0
@@ -158,8 +156,6 @@ function add_parsed_file
 # $2 = pathname (relative to the repo) of the file to add as an item
 # Returns: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local searchtype="$1"
   local id="$2"
   local dir=$(dirname "$id")
@@ -196,8 +192,6 @@ function find_slackbuild
 # 1 = not found
 # 2 = multiple matches
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   unset R_SLACKBUILD
   local prgnam="$1"
   local file="${prgnam}.SlackBuild"
@@ -232,8 +226,6 @@ function find_queuefile
 # 1 = not found
 # 2 = multiple matches
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   unset R_QUEUEFILE
   local qpath="$1"
   # try a quick win
@@ -275,8 +267,6 @@ function scan_queuefile
 # $1 = pathname of the queuefile to scan
 # Return status: always 0 (any bad slackbuilds are ignored)
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local sqfile="$1"
   local -a fakedeps
   local depid
@@ -335,8 +325,6 @@ function scan_dir
 # $2 = pathname (relative to the repo) of the directory to scan
 # Returns: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local searchtype="$1"
   local dir="$2"
   local dirbase
@@ -391,7 +379,6 @@ function parse_package_name
 # Returns global variables PN_{PRGNAM,VERSION,ARCH,BUILD,TAG,PKGTYPE}
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   local pkgnam=$(basename "$1")
   PN_PRGNAM=$(echo "$pkgnam" | rev | cut -f4- -d- | rev)
   PN_VERSION=$(echo "$pkgnam" | rev | cut -f3 -d- | rev)
@@ -427,8 +414,6 @@ function parse_info_and_hints
 # 0 = normal
 # 1 = skipped/unsupported/untested
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -630,7 +615,7 @@ function parse_info_and_hints
         if ! getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
           HINT_GROUPADD[$itemid]="${HINT_GROUPADD[$itemid]}groupadd -g $gnum $gname; "
         else
-          log_verbose -a "Group $gname already exists."
+          log_info -a "Group $gname already exists."
         fi
         if [ -z "${VALID_GROUPS[$itemid]}" ]; then
           VALID_GROUPS[$itemid]="$gnum|$gname"
@@ -659,7 +644,7 @@ function parse_info_and_hints
           [ -z "$ugroup" ] && ugroup="$uname"
           HINT_USERADD[$itemid]="${HINT_USERADD[$itemid]}useradd  -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname; "
         else
-          log_verbose -a "User $uname already exists."
+          log_info -a "User $uname already exists."
         fi
         if [ -z "${VALID_USERS[$itemid]}" ]; then
           VALID_USERS[$itemid]="$unum|$uname"
@@ -673,8 +658,8 @@ function parse_info_and_hints
     briefskip="${SKIP:0:20}"
     [ "${#SKIP}" -gt 20 ] && briefskip="${SKIP:0:17}..."
 
-    log_verbose "Hints for $itemid:"
-    log_verbose "$(printf '  %s\n' \
+    log_info "Hints for $itemid:"
+    log_info "$(printf '  %s\n' \
       ${SKIP+"SKIP=\"${briefskip}\""} \
       ${VERSION+"VERSION=\"$VERSION\""} \
       ${OPTIONS+"OPTIONS=\"$OPTIONS\""} \

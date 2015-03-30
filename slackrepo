@@ -34,7 +34,7 @@ function print_usage
   echo "  $(basename "$0") revert  [--control_args] item..."
   echo 'Control args:'
   echo '  --repo=ID'
-  echo '  --quiet | --verbose | --very-verbose'
+  echo '  --verbose | --very-verbose'
   echo '  --test'
   echo '  --dry-run | --install'
   echo '  --keep-tmp'
@@ -77,8 +77,8 @@ starttime=$(date +%s)
 # To define an extended option '--bar', do OPTIONLIST+=( 'BAR' )
 
 # Initialise OPTIONLIST first so that any extended options are at the end
-OPTIONLIST=( 'REPO' 'QUIET' 'VERBOSE' 'VERY_VERBOSE' 'MAKE_VERBOSE' \
-  'TEST' 'DRY_RUN' 'INSTALL' 'KEEP_TMP' 'TRACE' 'CHROOT' 'COLOR' 'NICE' )
+OPTIONLIST=( 'REPO' 'VERBOSE' 'VERY_VERBOSE' \
+  'TEST' 'DRY_RUN' 'INSTALL' 'KEEP_TMP' 'CHROOT' 'COLOR' 'NICE' )
 
 # Get the support functions
 for f in /usr/libexec/$(basename "$0")/functions.d/*.sh; do
@@ -126,19 +126,12 @@ while [ $# != 0 ]; do
     --repo=* )
       OPT_REPO="${1/--repo=/}"
       shift; continue ;;
-    --quiet | -q )
-      OPT_QUIET='y'
-      shift; continue ;;
     --verbose | -v )
       [ "$OPT_VERBOSE" = 'y' ] && OPT_VERY_VERBOSE='y'
       OPT_VERBOSE='y'
       shift; continue ;;
     --very-verbose | -vv )
       OPT_VERY_VERBOSE='y'
-      shift; continue ;;
-    -vvv )
-      OPT_VERY_VERBOSE='y'
-      OPT_MAKE_VERBOSE='y'
       shift; continue ;;
     --color=* | --colour=* )
       OPT_COLOR="${1/--colo*r=/}"
@@ -326,12 +319,10 @@ done
 # Resolve conflicting options:
 # --very-verbose implies --verbose
 [ "$OPT_VERY_VERBOSE" = 'y' ] && OPT_VERBOSE='y'
-# --verbose overrides --quiet
-[ "$OPT_VERBOSE" = 'y' ] && OPT_QUIET='n'
 # --dry-run overrides --install
 [ "$OPT_DRY_RUN" = 'y' ] && OPT_INSTALL='n'
-# lazy implementation of --make-verbose ;-)
-[ "$OPT_MAKE_VERBOSE" = 'y' ] && export VERBOSE=1 V=1
+# lazy implementation of --very-verbose ;-)
+[ "$OPT_VERY_VERBOSE" = 'y' ] && export VERBOSE=1 V=1
 # chroot will only work if overlayfs is available
 if [ "$OPT_CHROOT" = 'y' ] && [ "$SYS_OVERLAYFS" != 'y' ]; then
   OPT_CHROOT='n'
@@ -370,15 +361,15 @@ else
 fi
 
 # Log the config
-log_verbose ""
-log_verbose "OS: ${SYS_OSNAME}${SYS_OSVER}"
-log_verbose "kernel: ${SYS_KERNEL}"
-log_verbose "arch: ${SYS_ARCH}"
-[ "$SYS_MULTILIB" = 'y' ] && log_verbose "multilib: yes"
-log_verbose "nproc: ${SYS_NPROC}"
-log_verbose "total MHz: ${SYS_MHz}"
-[ "$SYS_OVERLAYFS" = 'y' ] && log_verbose "overlayfs: yes"
-[ "$EUID" != 0 ] && log_verbose "username: $USER"
+log_info ""
+log_info "OS: ${SYS_OSNAME}${SYS_OSVER}"
+log_info "kernel: ${SYS_KERNEL}"
+log_info "arch: ${SYS_ARCH}"
+[ "$SYS_MULTILIB" = 'y' ] && log_info "multilib: yes"
+log_info "nproc: ${SYS_NPROC}"
+log_info "total MHz: ${SYS_MHz}"
+[ "$SYS_OVERLAYFS" = 'y' ] && log_info "overlayfs: yes"
+[ "$EUID" != 0 ] && log_info "username: $USER"
 log_verbose ""
 log_verbose "Configuration:"
 log_verbose "  $CMD"
@@ -387,15 +378,11 @@ if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
   log_verbose "  --very-verbose"
 elif [ "$OPT_VERBOSE" = 'y' ]; then
   log_verbose "  --verbose"
-elif [ "$OPT_QUIET" = 'y' ]; then
-  log_verbose "  --quiet"
 fi
-[ "$OPT_MAKE_VERBOSE" = 'y' ] && log_verbose "  --make-verbose"
 [      "$OPT_DRY_RUN" = 'y' ] && log_verbose "  --dry-run"
 [      "$OPT_INSTALL" = 'y' ] && log_verbose "  --install"
 [         "$OPT_TEST" = 'y' ] && log_verbose "  --test"
 [     "$OPT_KEEP_TMP" = 'y' ] && log_verbose "  --keep-tmp"
-[        "$OPT_TRACE" = 'y' ] && log_verbose "  --trace"
 [       "$OPT_CHROOT" = 'y' ] && log_verbose "  --chroot"
 [    "$OPT_COLOR" != 'auto' ] && log_verbose "  --color=$OPT_COLOR"
 [        "$OPT_NICE" != '5' ] && log_verbose "  --nice=$OPT_NICE"
@@ -419,7 +406,7 @@ fi
 for name in AR AS CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS LD LDFLAGS DISTCC_HOSTS; do
   [ -n "${!name}" ] && log_verbose "  $name=\"${!name}\""
 done
-log_verbose ""
+log_info ""
 
 #-------------------------------------------------------------------------------
 # Initialisation
@@ -514,21 +501,14 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
     currbranch=$(git rev-parse --abbrev-ref HEAD)
     if [ -z "$muck" -a "$currbranch" = "${SYS_OSVER:-master}" ]; then
       if [ -n "$(find "$(git rev-parse --show-toplevel)"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
-        if [ "$OPT_QUIET" = 'y' ]; then
-          log_normal "Updating git ... "
-          git fetch --quiet
-          git merge --quiet --ff-only origin/"$currbranch"
-          log_done
+        log_normal "Updating git."
+        git fetch
+        if [ "$DOCOLOUR"  = 'y' -a -x /usr/bin/unbuffer ]; then
+          unbuffer git merge --ff-only origin/"$currbranch"
         else
-          log_normal "Updating git."
-          git fetch
-          if [ "$DOCOLOUR"  = 'y' -a -x /usr/bin/unbuffer ]; then
-            unbuffer git merge $quietarg --ff-only origin/"$currbranch"
-          else
-            git merge $quietarg --ff-only origin/"$currbranch"
-          fi
-          log_normal "Finished updating git."
+          git merge --ff-only origin/"$currbranch"
         fi
+        log_normal "Finished updating git."
       fi
     fi
   fi
@@ -567,7 +547,7 @@ if [ -n "$SR_TAG" ] && [ "$OPT_INSTALL" != 'y' ] && [ "$CMD" != 'remove' ]; then
   done
 fi
 
-log_always ""
+log_normal ""
 
 #-------------------------------------------------------------------------------
 # Main loop
@@ -616,7 +596,7 @@ done
 #-------------------------------------------------------------------------------
 
 log_start "SUMMARY"
-log_always "Logfile:     $MAINLOG"
+log_normal "Logfile:     $MAINLOG"
 secs=$(( $(date +%s) - starttime ))
 h=$(( secs / 3600 )); m=$(( ( secs / 60) % 60 )); s=$(( secs % 60 ))
 log_normal "Runtime:     ${h}h ${m}m ${s}s"
@@ -624,63 +604,58 @@ log_normal "Runtime:     ${h}h ${m}m ${s}s"
 if [ "$OPT_DRY_RUN" = 'y' ]; then
   OKLIST=( $(printf '%s\n' "${OKLIST[@]}" | sort -u) )
   okcount="${#OKLIST[@]}"
-  log_always "Dry run OK:  $okcount"
-  [ "$OPT_QUIET" != 'y' -a "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}"
+  log_normal "Dry run OK:  $okcount"
+  [ "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}"
 else
   if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
-    log_always "Added:       $(grep -c ': Added'   "$CHANGELOG")"
-    [ "$OPT_QUIET" != 'y' ] && \
-      grep ': Added'    "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-    log_always "Updated:     $(grep -c ': Updated' "$CHANGELOG")"
-    [ "$OPT_QUIET" != 'y' ] && \
-      grep ': Updated'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
-    log_always "Rebuilt:     $(grep -c ': Rebuilt' "$CHANGELOG")"
-    [ "$OPT_QUIET" != 'y' ] && \
-      grep ': Rebuilt'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_normal "Added:       $(grep -c ': Added'   "$CHANGELOG")"
+    grep ': Added'    "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_normal "Updated:     $(grep -c ': Updated' "$CHANGELOG")"
+    grep ': Updated'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_normal "Rebuilt:     $(grep -c ': Rebuilt' "$CHANGELOG")"
+    grep ': Rebuilt'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
   fi
   if [ "$CMD" = 'update' ] || [ "$CMD" = 'remove' ]; then
-    log_always "Removed:     $(grep -c ': Removed' "$CHANGELOG")"
-    [ "$OPT_QUIET" != 'y' ] && \
-      grep ': Removed'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_normal "Removed:     $(grep -c ': Removed' "$CHANGELOG")"
+    grep ': Removed'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
   fi
   if [ "$CMD" = 'revert' ]; then
-    log_always "Reverted:    $(grep -c ': Reverted' "$CHANGELOG")"
-    [ "$OPT_QUIET" != 'y' ] && \
-      grep ': Reverted' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_normal "Reverted:    $(grep -c ': Reverted' "$CHANGELOG")"
+    grep ': Reverted' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
   fi
 fi
 
 SKIPPEDLIST=( $(printf '%s\n' "${SKIPPEDLIST[@]}" | sort -u) )
 skippedcount="${#SKIPPEDLIST[@]}"
 if [ "$skippedcount" != 0 ]; then
-  log_always "Skipped:     $skippedcount"
-  [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${SKIPPEDLIST[@]}"
+  log_normal "Skipped:     $skippedcount"
+  printf '  %s\n' "${SKIPPEDLIST[@]}"
 fi
 UNSUPPORTEDLIST=( $(printf '%s\n' "${UNSUPPORTEDLIST[@]}" | sort -u) )
 unsupportedcount="${#UNSUPPORTEDLIST[@]}"
 if [ "$unsupportedcount" != 0 ]; then
-  log_always "Unsupported: $unsupportedcount"
-  [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${UNSUPPORTEDLIST[@]}"
+  log_normal "Unsupported: $unsupportedcount"
+  printf '  %s\n' "${UNSUPPORTEDLIST[@]}"
 fi
 FAILEDLIST=( $(printf '%s\n' "${FAILEDLIST[@]}" | sort -u) )
 failedcount="${#FAILEDLIST[@]}"
 if [ "$failedcount" != 0 ]; then
-  log_always "Failed:      $failedcount"
-  [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${FAILEDLIST[@]}"
+  log_normal "Failed:      $failedcount"
+  printf '  %s\n' "${FAILEDLIST[@]}"
 fi
 ABORTEDLIST=( $(printf '%s\n' "${ABORTEDLIST[@]}" | sort -u) )
 abortedcount="${#ABORTEDLIST[@]}"
 if [ "$abortedcount" != 0 ]; then
-  log_always "Aborted:     $abortedcount"
-  [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${ABORTEDLIST[@]}"
+  log_normal "Aborted:     $abortedcount"
+  printf '  %s\n' "${ABORTEDLIST[@]}"
 fi
 # Don't bother enumerating 'bad' items (not found, etc)
 uniquewarnings=()
 [ "${#WARNINGLIST[@]}" != 0 ] && while read warning; do uniquewarnings+=( "$warning" ); done < <(printf '%s\n' "${WARNINGLIST[@]}" | sort -u )
 warningcount="${#uniquewarnings[@]}"
 if [ "$warningcount" != 0 ]; then
-  log_always "Warnings:    $warningcount"
-  [ "$OPT_QUIET" != 'y' ] && printf '  %s\n' "${uniquewarnings[@]}"
+  log_normal "Warnings:    $warningcount"
+  printf '  %s\n' "${uniquewarnings[@]}"
 fi
 
 #-------------------------------------------------------------------------------

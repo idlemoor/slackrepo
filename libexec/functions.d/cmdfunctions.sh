@@ -18,7 +18,6 @@ function build_command
 # 0 = build ok, or already up-to-date so not built, or dry run
 # 1 = build failed, or sub-build failed => abort parent, or any other error
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
   [ -z "$1" ] && return 1
 
   local itemid="$1"
@@ -31,7 +30,7 @@ function build_command
     calculate_deps_and_status "$itemid"
     if [ "${DIRECTDEPS[$itemid]}" != "" ]; then
       log_normal "Dependency tree:"
-      [ "$OPT_QUIET" != 'y' ] && echo -n "$DEPTREE"
+      echo -n "$DEPTREE"
     fi
     log_normal ""
   elif [ "${STATUS[$itemid]}" = 'ok' ] || [ "${STATUS[$itemid]}" = 'updated' ]; then
@@ -62,14 +61,14 @@ function build_command
       log_warning -n "$itemid is unsupported on ${SR_ARCH}."
     elif [ "${STATUS[$itemid]}" = 'failed' ]; then
       log_error "${itemid} has failed to build."
-      [ -n "${STATUSINFO[$itemid]}" ] && log_always "${STATUSINFO[$itemid]}"
+      [ -n "${STATUSINFO[$itemid]}" ] && log_normal "${STATUSINFO[$itemid]}"
     elif [ "${STATUS[$itemid]}" = 'aborted' ]; then
       log_error "Cannot build ${itemid}."
-      [ -n "${STATUSINFO[$itemid]}" ] && log_always "${STATUSINFO[$itemid]}"
+      [ -n "${STATUSINFO[$itemid]}" ] && log_normal "${STATUSINFO[$itemid]}"
     else
       log_warning "$itemid has unexpected status ${STATUS[$itemid]}"
     fi
-    log_always ""
+    log_normal ""
   else
     # Process TODOLIST.
     for todo in "${TODOLIST[@]}"; do
@@ -79,8 +78,8 @@ function build_command
         log_itemfinish "$todo" 'unsupported' "on ${SR_ARCH}" ''
       elif [ "${STATUS[$todo]}" = 'failed' ]; then
         log_error "${todo} has failed to build."
-        [ -n "${STATUSINFO[$todo]}" ] && log_always "${STATUSINFO[$todo]}"
-        log_always ""
+        [ -n "${STATUSINFO[$todo]}" ] && log_normal "${STATUSINFO[$todo]}"
+        log_normal ""
       else
         missingdeps=()
         for dep in ${DIRECTDEPS[$todo]}; do
@@ -150,8 +149,6 @@ function revert_command
 # 1 = backups not configured
 # Problems: (1) messes up build number, (2) messes up deps & dependers
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="${1:-$ITEMID}"
   local itemdir="${ITEMDIR[$itemid]}"
 
@@ -313,8 +310,6 @@ function remove_command
 # $1 = itemid
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="${1:-$ITEMID}"
   local itemdir="${ITEMDIR[$itemid]}"
   local packagedir="$SR_PKGREPO"/"$itemdir"
@@ -469,8 +464,6 @@ function lint_command
 # $1 = itemid
 # Return status: always 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local itemdir="${ITEMDIR[$itemid]}"
 
@@ -505,7 +498,7 @@ function lint_command
       fi
     done
   done
-  [ -z "$pstat" ] && log_always "No packages found."
+  [ -z "$pstat" ] && log_normal "No packages found."
 
   log_normal ""
   if [ "$tsbstat" = 0 ] && [ "$tdlstat" = 0 ] && [ "$tpkstat" = 0 ]; then

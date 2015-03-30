@@ -35,8 +35,6 @@ function print_current_revinfo
 #   os                   (<osname><osversion>)
 #   hintcksum            (md5sum, or / if no hintfile)
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local itemdir="${ITEMDIR[$itemid]}"
 
@@ -96,8 +94,6 @@ function calculate_deps_and_status
 # Return status: always 0.
 #   If anything really bad happened, TODOLIST will be empty ;-)
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local parentid="${2:-}"
   local indent="${3:-}"
@@ -262,8 +258,6 @@ function calculate_item_status
 # $2 = parentid (or null)
 # Return status: always 0, sets STATUS[$itemid] and STATUSINFO[$itemid]
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -436,8 +430,6 @@ function write_pkg_metadata
 # Return status:
 # 9 = bizarre existential error, otherwise 0
 {
-  [ "$OPT_TRACE" = 'y' ] && echo -e ">>>> ${FUNCNAME[*]}\n     $*" >&2
-
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"

@@ -171,26 +171,24 @@ function build_item_packages
     PKGTYPE="$SR_PKGTYPE" \
     NUMJOBS="$SR_NUMJOBS"
 
-  SLACKBUILDCMD="sh ./$itemfile"
-  [ "${OPT_NICE:-0}" != '0' ] && SLACKBUILDCMD="nice -n $OPT_NICE $SLACKBUILDCMD"
-  [ -n "$SUDO" ] && [ -x /usr/bin/fakeroot ] && SLACKBUILDCMD="fakeroot $SLACKBUILDCMD"
-  [ "$OPT_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && SLACKBUILDCMD="/usr/libexec/slackrepo/unbuffer $SLACKBUILDCMD"
+  SLACKBUILDOPTS="env"
+  SLACKBUILDRUN="sh ./$itemfile"
 
-  # Process other hints for the build:
+  # Process options and hints for the build:
 
-  # NUMJOBS (with MAKEFLAGS and NUMJOBS env vars) ...
+  # ... NUMJOBS (with MAKEFLAGS and NUMJOBS env vars) ...
   NUMJOBS="${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS}"
-  tempmakeflags="MAKEFLAGS='${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS}'"
+  SLACKBUILDOPTS="${SLACKBUILDOPTS} MAKEFLAGS='${HINT_NUMJOBS[$itemid]:-$SR_NUMJOBS}'"
 
   # ... OPTIONS ...
-  options="${HINT_OPTIONS[$itemid]}"
-  [ -n "$tempmakeflags" -o -n "$options" ] && SLACKBUILDCMD="env $tempmakeflags $options $SLACKBUILDCMD"
+  [ -n "${HINT_OPTIONS[$itemid]}" ] && SLACKBUILDOPTS="${SLACKBUILDOPTS} ${HINT_OPTIONS[$itemid]}"
 
   # ... ANSWER ...
-  [ -n "${HINT_ANSWER[$itemid]}" ] && SLACKBUILDCMD="echo -e '${HINT_ANSWER[$itemid]}' | $SLACKBUILDCMD"
+  [ -n "${HINT_ANSWER[$itemid]}" ] && SLACKBUILDOPTS="echo -e '${HINT_ANSWER[$itemid]}' | $SLACKBUILDOPTS"
 
-  # ... and SPECIAL.
-  noremove='n'
+  # ... SPECIAL ...
+  hintnoremove='n'
+  hintnofakeroot='n'
   for special in ${HINT_SPECIAL[$itemid]}; do
     case "$special" in
     'multilib_ldflags' )
@@ -249,13 +247,35 @@ function build_item_packages
       ;;
     'noremove' )
       log_info "Special action: noremove"
-      noremove='y'
+      hintnoremove='y'
+      ;;
+    'nofakeroot' )
+      log_info "Special action: nofakeroot"
+      hintnofakeroot='y'
       ;;
     * )
       log_warning "${itemid}: Hint SPECIAL=\"$special\" not recognised"
       ;;
     esac
   done
+
+  # ... fakeroot ...
+  if [ -n "$SUDO" ] && [ -x /usr/bin/fakeroot ]; then
+    if [ "$hintnofakeroot" = 'y' ]; then
+      SLACKBUILDRUN="${SUDO}${SLACKBUILDRUN}"
+    else
+      SLACKBUILDRUN="fakeroot ${SLACKBUILDRUN}"
+    fi
+  fi
+
+  # ... nice ...
+  [ "${OPT_NICE:-0}" != '0' ] && SLACKBUILDRUN="nice -n $OPT_NICE $SLACKBUILDRUN"
+
+  # ... and finally, VERBOSE/--color
+  [ "$OPT_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && SLACKBUILDRUN="/usr/libexec/slackrepo/unbuffer $SLACKBUILDRUN"
+
+  # Finished assembling the command line.
+  SLACKBUILDCMD="${SLACKBUILDOPTS} ${SLACKBUILDRUN}"
 
   # Setup the chroot
   # (to be destroyed below, or by build_failed if necessary)
@@ -267,7 +287,7 @@ function build_item_packages
   # Remove any existing packages for the item to be built
   # (some builds fail if already installed)
   # (... this might not be entirely appropriate for gcc or glibc ...)
-  if [ "$noremove" != 'y' ]; then
+  if [ "$hintnoremove" != 'y' ]; then
     uninstall_packages "$itemid"
   fi
 
@@ -308,7 +328,7 @@ function build_item_packages
   touch "$MYTMPDIR"/start
   runmsg=$(format_left_right "Running $itemfile ..." "$eta")
   log_normal -a "$runmsg"
-  log_verbose -a "$SLACKBUILDCMD"
+  log_info -a "$SLACKBUILDCMD"
   if [ "$OPT_VERBOSE" = 'y' ]; then
     log_verbose '\n---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---\n'
     set -o pipefail
@@ -322,7 +342,7 @@ function build_item_packages
     set +o pipefail
     log_verbose '\n----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<---\n'
   else
-    if [ "$SYS_MULTILIB" = "y" -a "$ARCH" = 'i486' ]; then
+    if [ "$SYS_MULTILIB" = "y" ] && [ "$ARCH" = 'i486' -o "$ARCH" = 'i686' ]; then
       ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" >> "$ITEMLOG" 2>&1
       buildstat=$?
     else

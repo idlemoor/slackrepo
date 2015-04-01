@@ -242,6 +242,11 @@ function build_item_packages
       sed -i -e "s/^BUILD=.*/BUILD='$BUILD'/" "$MYTMPIN"/"$itemfile"
       unset BUILD
       ;;
+    'noexport_TAG' )
+      log_info "Special action: noexport_TAG"
+      sed -i -e "s/^TAG=.*/TAG='$TAG'/" "$MYTMPIN"/"$itemfile"
+      unset TAG
+      ;;
     'unset'* )
       eval "${special/_/ }"
       ;;

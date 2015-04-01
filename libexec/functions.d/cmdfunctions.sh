@@ -471,11 +471,11 @@ function lint_command
   parse_info_and_hints "$itemid"
   if [ $? != 0 ]; then
     if [ "${STATUS[$itemid]}" = "unsupported" ]; then
-      log_itemfinish "$itemid" "unsupported" "${STATUSINFO[$itemid]}"
+      log_itemfinish "$itemid" "unsupported" "on ${SR_ARCH}"
     elif [ "${STATUS[$itemid]}" = "skipped" ]; then
       log_itemfinish "$itemid" "skipped" ""
     else
-      log_itemfinish "$itemid" "${STATUS[$itemid]}" ""
+      log_itemfinish "$itemid" "${STATUS[$itemid]}" ''
     fi
     #### (Actually, we could do most of the tests...)
     return 0

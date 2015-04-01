@@ -79,7 +79,11 @@ function log_info
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  echo -e "${NL}${tputcyan}$*${tputnormal}"
+  infostuff="$*"
+  if [ "$OPT_VERBOSE" != 'y' ]; then
+    [ ${#infostuff} -gt 4000 ] && infostuff="${infostuff:0:4000}\n[...]"
+  fi
+  echo -e "${NL}${tputcyan}${infostuff}${tputnormal}"
   [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}$*" >> "$ITEMLOG"
   NL=''
   return 0

@@ -272,7 +272,7 @@ function build_item_packages
   [ "${OPT_NICE:-0}" != '0' ] && SLACKBUILDRUN="nice -n $OPT_NICE $SLACKBUILDRUN"
 
   # ... and finally, VERBOSE/--color
-  [ "$OPT_VERBOSE" = 'y' ] && [ "$DOCOLOUR"  = 'y' ] && SLACKBUILDRUN="/usr/libexec/slackrepo/unbuffer $SLACKBUILDRUN"
+  [ "$OPT_VERBOSE" = 'y' ] && [ "$DOCOLOUR" = 'y' ] && SLACKBUILDRUN="/usr/libexec/slackrepo/unbuffer $SLACKBUILDRUN"
 
   # Finished assembling the command line.
   SLACKBUILDCMD="${SLACKBUILDOPTS} ${SLACKBUILDRUN}"
@@ -544,7 +544,7 @@ function build_failed
 
   STATUS[$itemid]="failed"
   STATUSINFO[$itemid]="See $ITEMLOG"
-  errorscan_itemlog | tee -a "$MAINLOG"
+  log_info "$(errorscan_itemlog)"
   log_error -n "${STATUSINFO[$itemid]}"
 
   if [ -n "${CHROOTDIR}" ]; then
@@ -630,7 +630,7 @@ function chroot_report
       significant="$(echo "$crap" | sed -e "s#^\./#/#" | grep -v -E "$excludes" | sort)"
       if [ -n "$significant" ]; then
         log_warning -a "$itemid: Files/directories were modified during the build"
-        log_normal -a "$(printf "  %s\n" ${significant})"
+        log_info -a "${significant}"
       fi
     fi
   fi

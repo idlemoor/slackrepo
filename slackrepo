@@ -137,7 +137,7 @@ while [ $# != 0 ]; do
     --color=* | --colour=* )
       OPT_COLOR="${1/--colo*r=/}"
       shift; continue ;;
-    --* )
+    -* )
       found='n'
       for opt in "${OPTIONLIST[@]}"; do
         arg=$(echo "$opt" | tr '_' '-' | tr '[:upper:]' '[:lower:]')

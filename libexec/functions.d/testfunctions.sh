@@ -145,14 +145,14 @@ function test_download
         # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
         # https://code.google.com/p/support/issues/detail?id=660
         # "Don't be evil, but totally lame is fine"
-        curl -q -f -s -k --connect-timeout 10 --retry 2 --ciphers ALL -J -L -A slackrepo -o /dev/null "$url" >> "$ITEMLOG" 2>&1
+        curl --connect-timeout 10 --retry 2 -q -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -o /dev/null "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
           { log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat). $url"; retstat=1; }
         fi
         ;;
       *)
-        curl -v -f -s -k --connect-timeout 10 --retry 2 --ciphers ALL -J -L -A slackrepo -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
+        curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" = 0 ]; then
           remotelength=$(fromdos <"$TMP_HEADER" | grep 'Content-[Ll]ength: ' | tail -n 1 | sed 's/^.* //')
@@ -171,7 +171,7 @@ function test_download
           fi
         else
           # Header failed, try a full download (amazonaws is "special"... possibly more...)
-          curl -q -f -s -k --connect-timeout 10 --retry 2 --ciphers ALL -J -L -A slackrepo -o "$MYTMPDIR"/curldownload "$url" >> "$ITEMLOG" 2>&1
+          curl --connect-timeout 10 --retry 2 -q -f -s -k --ciphers ALL -J -L -A slackrepo -o "$MYTMPDIR"/curldownload "$url" >> "$ITEMLOG" 2>&1
           curlstat=$?
           if [ "$curlstat" = 0 ]; then
             remotemd5=$(md5sum <"$MYTMPDIR"/curldownload); remotemd5="${remotemd5/ */}"
@@ -183,12 +183,12 @@ function test_download
             done
             if [ "$found" = 'n' ]; then
               log_warning -a "${itemid}: Source has apparently been modified upstream."
-              log_warning -a -n "  $url"
+              log_info -a "$url"
               retstat=1
             fi
           else
             log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat)."
-            log_warning -a -n "  $url"
+            log_info -a "$url"
             retstat=1
             if [ -s "$TMP_HEADER" ]; then
               echo "The following headers may be informative:" >> "$ITEMLOG"
@@ -307,10 +307,10 @@ function test_package
 
     # check where the files will be installed
     wrongstuff=$(awk \
-      '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/ {printf "  %s\n",$0}' <"$TMP_PKGCONTENTS")
+      '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/ {printf "%s\n",$0}' <"$TMP_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: ${pkgbasename} installs to unusual locations"
-      log_normal -a "$wrongstuff"
+      log_info -a "$wrongstuff"
       retstat=1
     fi
     baddirlist=( 'usr/local/' 'usr/share/man/' )
@@ -320,7 +320,7 @@ function test_package
       wrongstuff=$(awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' <"$TMP_PKGCONTENTS")
       if [ -n "$wrongstuff" ]; then
         log_warning -a "${itemid}: $pkgbasename uses /$baddir"
-        log_normal -a "$wrongstuff"
+        log_info -a "$wrongstuff"
         retstat=1
       fi
     done
@@ -335,7 +335,7 @@ function test_package
     topdir=$(head -n 1 "$TMP_PKGCONTENTS")
     if ! echo "$topdir" | grep -q '^drwxr-xr-x root/root .* \./$' ; then
       log_warning -a "${itemid}: ${pkgbasename} has a bad top level directory"
-      log_normal -a "  $topdir"
+      log_info -a "$topdir"
       retstat=1
     fi
 
@@ -351,10 +351,10 @@ function test_package
     wrongstuff=$(awk \
       "\$2~/^$okusers\/$okgroups\$/ {next};
        \$2~/^[[:alpha:]]+\/[[:alpha:]]+\$/ {next};
-       {printf \"  %s\\n\",\$0}" <"$TMP_PKGCONTENTS")
+       {printf \"%s\\n\",\$0}" <"$TMP_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: ${pkgbasename} has files or dirs with unusual owner or group"
-      log_normal -a "$wrongstuff"
+      log_info -a "$wrongstuff"
       retstat=1
     fi
 
@@ -362,7 +362,7 @@ function test_package
     wrongstuff=$(grep -E '^-.* usr/(share/)?man/' "$TMP_PKGCONTENTS" | grep -v '\.gz$')
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: ${pkgbasename} has uncompressed man pages"
-      log_normal -a "$wrongstuff"
+      log_info -a "$wrongstuff"
       retstat=1
     fi
 

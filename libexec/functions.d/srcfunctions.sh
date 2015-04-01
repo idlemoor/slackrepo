@@ -44,8 +44,9 @@ function verify_src
     # if wrong version, return 6 (nodownload hint) or 4 (version mismatch)
     if [ -f .version ]; then
       if [ "$VERSION" != "$(cat .version)" ]; then
-        log_normal -a "Removing old source files ..."
+        log_normal -a "Removing old source files ... "
         find . -maxdepth 1 -type f -exec rm -f {} \;
+        log_done
         [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
         return 4
       fi
@@ -100,7 +101,7 @@ function download_src
 # Download sources into the source cache
 # No arguments -- uses $DOWNDIR, $DOWNLIST and $VERSION previously set by verify_src
 # Return status:
-# 1 - curl failed
+# 1 - download failed
 {
   if [ -n "$DOWNDIR" ]; then
     mkdir -p "$DOWNDIR"
@@ -116,15 +117,16 @@ function download_src
   fi
 
   log_normal -a "Downloading source files ..."
+
   ( cd "$DOWNDIR"
     for url in $DOWNLIST; do
       if [ "$OPT_VERBOSE" = 'y' ]; then
         set -o pipefail
-        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A slackrepo -O "$url" 2>&1 | tee -a "$ITEMLOG"
+        curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$url" 2>&1 | tee -a "$ITEMLOG"
         curlstat=$?
         set +o pipefail
       else
-        curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A slackrepo -O "$url" >> "$ITEMLOG" 2>&1
+        curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
       fi
       if [ $curlstat != 0 ]; then
@@ -132,11 +134,11 @@ function download_src
         sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
         if [ "$OPT_VERBOSE" = 'y' ]; then
           set -o pipefail
-          curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A slackrepo -O "$sbdurl" 2>&1 | tee -a "$ITEMLOG"
+          curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$sbdurl" 2>&1 | tee -a "$ITEMLOG"
           curlstat=$?
           set +o pipefail
         else
-          curl -q -f '-#' -k --connect-timeout 30 --retry 4 --ciphers ALL -J -L -A slackrepo -O "$sbdurl" >> "$ITEMLOG" 2>&1
+          curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$sbdurl" >> "$ITEMLOG" 2>&1
           curlstat=$?
         fi
         if [ $curlstat != 0 ]; then
@@ -144,7 +146,7 @@ function download_src
           log_error -a "Download failed: $(print_curl_status $curlstat).\n  $url"
           return 1
         fi
-        log_normal -a "  Downloaded from SBo direct links: ${url##*/}"
+        log_info -a "Downloaded from SlackBuilds Direct Links: ${url##*/}"
       fi
     done
     echo "$VERSION" > "$DOWNDIR"/.version

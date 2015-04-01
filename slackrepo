@@ -32,9 +32,10 @@ function print_usage
   echo "  $(basename "$0") update  [--control_args] [item...]"
   echo "  $(basename "$0") remove  [--control_args] item..."
   echo "  $(basename "$0") revert  [--control_args] item..."
+  echo "  $(basename "$0") lint    [--control_args] [item...]"
   echo 'Control args:'
   echo '  --repo=ID'
-  echo '  --verbose | --very-verbose'
+  echo '  --verbose (-v)'
   echo '  --test'
   echo '  --dry-run | --install'
   echo '  --keep-tmp'

@@ -125,7 +125,7 @@ function test_download
 # $1 = itemid
 # Return status:
 # 0 = all good
-# 1 = the test found something
+# 1 = not found, found but modified, or otherwise failed
 # 2 = significant error
 {
   local itemid="$1"
@@ -148,7 +148,11 @@ function test_download
         curl --connect-timeout 10 --retry 2 -q -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -o /dev/null "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
-          { log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat). $url"; retstat=1; }
+          log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat). $url"
+          sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
+          curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
+          [ $? = 0 ] && log_info "(available at Slackbuilds Direct Links)"
+          retstat=1
         fi
         ;;
       *)
@@ -165,7 +169,8 @@ function test_download
             if [ -f "${SRCDIR[$itemid]}"/"$filename" ]; then
               cachedlength=$(stat -c '%s' "${SRCDIR[$itemid]}"/"$filename")
               if [ "$remotelength" != "$cachedlength" ]; then
-                { log_warning -a "${itemid}: Source file $filename has been modified upstream."; retstat=1; }
+                log_warning -a "${itemid}: Source file $filename has been modified upstream."
+                retstat=1
               fi
             fi
           fi
@@ -194,6 +199,9 @@ function test_download
               echo "The following headers may be informative:" >> "$ITEMLOG"
               cat "$TMP_HEADER" >> "$ITEMLOG"
             fi
+            sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
+            curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
+            [ $? = 0 ] && log_info "(available from Slackbuilds Direct Links)"
           fi
           rm -f "$MYTMPDIR"/curldownload
         fi
@@ -205,6 +213,7 @@ function test_download
 
   [ "$retstat" = 0 ] && log_done
   return $retstat
+
 }
 
 #-------------------------------------------------------------------------------

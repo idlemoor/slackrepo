@@ -483,8 +483,12 @@ function lint_command
 
   test_slackbuild "$itemid"
   tsbstat=$?
-  test_download "$itemid"
-  tdlstat=$?
+
+  tdlstat=0
+  if [ "${HINT_NODOWNLOAD[$itemid]}" != 'y' ]; then
+    test_download "$itemid"
+    tdlstat=$?
+  fi
 
   tpkstat=0
   pstat=''

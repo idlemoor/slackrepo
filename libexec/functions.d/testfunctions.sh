@@ -151,7 +151,7 @@ function test_download
           log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat). $url"
           sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
           curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
-          [ $? = 0 ] && log_info "(available at Slackbuilds Direct Links)"
+          [ $? = 0 ] && log_info -a "(available at Slackbuilds Direct Links)"
           retstat=1
         fi
         ;;
@@ -201,7 +201,7 @@ function test_download
             fi
             sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
             curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
-            [ $? = 0 ] && log_info "(available from Slackbuilds Direct Links)"
+            [ $? = 0 ] && log_info -a "(available from Slackbuilds Direct Links)"
           fi
           rm -f "$MYTMPDIR"/curldownload
         fi
@@ -306,7 +306,7 @@ function test_package
       'XZ compressed data'*)    [ "$PN_PKGTYPE" = 'txz' ] || { log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .txz"; retstat=1; } ;;
       'bzip2 compressed data'*) [ "$PN_PKGTYPE" = 'tbz' ] || { log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .tbz"; retstat=1; } ;;
       'LZMA compressed data'*)  [ "$PN_PKGTYPE" = 'tlz' ] || { log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .tlz"; retstat=1; } ;;
-      *) log_error "${itemid}: ${pkgbasename} is \"$filetype\", not a package" ; return 2 ;;
+      *) log_error -a "${itemid}: ${pkgbasename} is \"$filetype\", not a package" ; return 2 ;;
     esac
 
     # list what's in the package (and check if it's really a tarball)

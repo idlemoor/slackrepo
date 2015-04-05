@@ -331,11 +331,10 @@ function build_item_packages
 
   # Build it
   touch "$MYTMPDIR"/start
-  runmsg=$(format_left_right "Running $itemfile ..." "$eta")
-  log_normal -a "$runmsg"
+  log_normal -a "Running $itemfile ..." "$eta"
   log_info -a "$SLACKBUILDCMD"
   if [ "$OPT_VERBOSE" = 'y' ]; then
-    log_verbose '\n---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8---\n'
+    log_verbose '\n---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8----\n'
     set -o pipefail
     if [ "$SYS_MULTILIB" = "y" ] && [ "$ARCH" = 'i486' -o "$ARCH" = 'i686' ]; then
       ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" 2>&1 | tee -a "$ITEMLOG"
@@ -345,7 +344,7 @@ function build_item_packages
       buildstat=$?
     fi
     set +o pipefail
-    log_verbose '\n----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<---\n'
+    log_verbose '\n----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<----\n'
   else
     if [ "$SYS_MULTILIB" = "y" ] && [ "$ARCH" = 'i486' -o "$ARCH" = 'i686' ]; then
       ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" >> "$ITEMLOG" 2>&1
@@ -365,7 +364,7 @@ function build_item_packages
   fi
 
   if [ "$buildstat" != 0 ]; then
-    log_error -a "${itemid}: $itemfile failed (status $buildstat)"
+    log_error -a "${itemid}: $itemfile failed (status $buildstat)" "$(date +%T)"
     build_failed "$itemid"
     return 1
   fi
@@ -432,7 +431,7 @@ function build_item_packages
   [ "$OPT_DRY_RUN" != 'y' ] && db_del_itemid_pkgnam "$itemid"
   for pkgpath in "${pkglist[@]}"; do
     pkgbasename=$(basename "$pkgpath")
-    log_important "Built ok:  $pkgbasename"
+    log_important "Built ok:  $pkgbasename" "$(date +%T)"
     if [ "$OPT_DRY_RUN" != 'y' ]; then
       pkgnam=$(echo "$pkgbasename" | rev | cut -f4- -d- | rev)
       db_set_pkgnam_itemid "$pkgnam" "$itemid"

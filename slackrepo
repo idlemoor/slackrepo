@@ -361,8 +361,8 @@ else
   exec &> >( tee "$MAINLOG" )
 fi
 
-# Log the config
-log_info ""
+# Log the system info
+log_normal ""
 log_info "OS: ${SYS_OSNAME}${SYS_OSVER}"
 log_info "kernel: ${SYS_KERNEL}"
 log_info "arch: ${SYS_ARCH}"
@@ -371,7 +371,9 @@ log_info "nproc: ${SYS_NPROC}"
 log_info "total MHz: ${SYS_MHz}"
 [ "$SYS_OVERLAYFS" = 'y' ] && log_info "overlayfs: yes"
 [ "$EUID" != 0 ] && log_info "username: $USER"
-log_verbose ""
+log_normal ""
+
+# Log the config
 log_verbose "Configuration:"
 log_verbose "  $CMD"
 log_verbose "  --repo=$OPT_REPO"
@@ -400,14 +402,13 @@ if [ "$SR_USE_GENREPOS" = 1 ]; then
 else
   log_verbose "  USE_GENREPOS=\"$SR_USE_GENREPOS\""
 fi
-
 # Log significant environment variables. This is not a comprehensive list (see
 # https://www.gnu.org/software/make/manual/html_node/Implicit-Variables.html)
 # and upstream builds don't always use them properly.
 for name in AR AS CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS LD LDFLAGS DISTCC_HOSTS; do
   [ -n "${!name}" ] && log_verbose "  $name=\"${!name}\""
 done
-log_info ""
+log_verbose ""
 
 #-------------------------------------------------------------------------------
 # Initialisation

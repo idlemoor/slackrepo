@@ -148,11 +148,14 @@ function test_download
         curl --connect-timeout 10 --retry 2 -q -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -o /dev/null "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
-          log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat)."
-          log_info -a "$url"
           sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
           curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
-          [ $? = 0 ] && log_info -a "(available at Slackbuilds Direct Links)"
+          if [ $? = 0 ]; then
+            log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat). (Available at SBoDL)"
+          else
+            log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat)."
+          fi
+          log_info -a "$url"
           retstat=1
         fi
         ;;
@@ -170,7 +173,8 @@ function test_download
             if [ -f "${SRCDIR[$itemid]}"/"$filename" ]; then
               cachedlength=$(stat -c '%s' "${SRCDIR[$itemid]}"/"$filename")
               if [ "$remotelength" != "$cachedlength" ]; then
-                log_warning -a "${itemid}: Source file has been modified upstream. $filename"
+                log_warning -a "${itemid}: Source has been modified upstream."
+                log_info -a "$url"
                 retstat=1
               fi
             fi
@@ -193,16 +197,19 @@ function test_download
               retstat=1
             fi
           else
-            log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat)."
+            sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
+            curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
+            if [ $? = 0 ]; then
+              log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat). (Available at SBoDL)"
+            else
+              log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat)."
+            fi
             log_info -a "$url"
             retstat=1
             if [ -s "$TMP_HEADER" ]; then
               echo "The following headers may be informative:" >> "$ITEMLOG"
               cat "$TMP_HEADER" >> "$ITEMLOG"
             fi
-            sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
-            curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
-            [ $? = 0 ] && log_info -a "(available from Slackbuilds Direct Links)"
           fi
           rm -f "$MYTMPDIR"/curldownload
         fi

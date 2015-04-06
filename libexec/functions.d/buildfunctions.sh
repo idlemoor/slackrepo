@@ -80,7 +80,7 @@ function build_item_packages
   [ -n "$SOURCESTASH" ] && rmdir --ignore-fail-on-non-empty "$SOURCESTASH"
 
   # Get the source (including check for unsupported/untested/nodownload)
-  verify_src "$itemid"
+  verify_src "$itemid" "log_important"
   case $? in
     0) # already got source, and it's good
        [ "$OPT_TEST" = 'y' -a -z "${HINT_NODOWNLOAD[$itemid]}" ] && test_download "$itemid"
@@ -88,7 +88,7 @@ function build_item_packages
     1|2|3|4)
        # already got source but it's bad, or not got source, or wrong version => get it
        download_src "$itemid" || { build_failed "$itemid"; return 2; }
-       verify_src "$itemid" || { log_error -a "${itemid}: Downloaded source is bad"; build_failed "$itemid"; return 3; }
+       verify_src "$itemid" "log_error" || { build_failed "$itemid"; return 3; }
        ;;
     5) # unsupported/untested
        STATUS[$itemid]='unsupported'

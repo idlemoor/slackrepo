@@ -11,6 +11,9 @@
 function verify_src
 # Verify item's source files in the source cache
 # $1 = itemid
+# $2 = (optional) logging level (default="log_important")
+#      This allows us to log errors after retrying the download
+#      and to log warnings when we're doing a lint :D
 # Return status:
 # 0 - all files passed, or md5/sha256sum check suppressed, or DOWNLIST is empty
 # 1 - one or more files had a bad md5sum or sha256sum
@@ -21,6 +24,7 @@ function verify_src
 # 6 - not in source cache and there is a nodownload hint
 {
   local itemid="$1"
+  local loglevel="${2:-log_important}"
   local -a srcfilelist
 
   VERSION="${INFOVERSION[$itemid]}"
@@ -39,60 +43,66 @@ function verify_src
   [ ! -d "$DOWNDIR" ] && return 3
 
   # More complex checks:
-  ( cd "$DOWNDIR"
 
-    # if wrong version, return 6 (nodownload hint) or 4 (version mismatch)
-    if [ -f .version ]; then
-      if [ "$VERSION" != "$(cat .version)" ]; then
+  # if wrong version, return 6 (nodownload hint) or 4 (version mismatch)
+  if [ -f "$DOWNDIR"/.version ]; then
+    if [ "$VERSION" != "$(cat "$DOWNDIR"/.version)" ]; then
+      if [ "$CMD" != 'lint' ]; then
         log_normal -a "Removing old source files ... "
-        find . -maxdepth 1 -type f -exec rm -f {} \;
+        find "$DOWNDIR" -maxdepth 1 -type f -exec rm -f {} \;
         log_done
-        [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
-        return 4
       fi
-    fi
-
-    # check files in this dir only (arch-specific subdirectories may exist, ignore them)
-    IFS=$'\n'; srcfilelist=( $(find . -maxdepth 1 -type f \! -name .version -print 2>/dev/null | sed 's#^\./##') ); unset IFS
-    numgot=${#srcfilelist[@]}
-    # no files, empty directory => return 3 (same as no directory) or 6
-    [ $numgot = 0 -a -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
-    [ $numgot = 0 ] && return 3
-    # or if we have not got the right number of sources, return 2 (or 6)
-    numwant=$(echo "$DOWNLIST" | wc -w)
-    if [ "$numgot" != "$numwant" ]; then
-      log_normal -a "$numgot source files found, $numwant required"
       [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
-      return 2
+      return 4
     fi
+  fi
 
-    # if we're ignoring the md5sums and sha256sums, we've finished! => return 0
-    [ "${HINT_MD5IGNORE[$itemid]}" = 'y' -a "${HINT_SHA256IGNORE[$itemid]}" = 'y' ] && return 0
+  # check files in this dir only (arch-specific subdirectories may exist, ignore them)
+  IFS=$'\n'; srcfilelist=( $(find "$DOWNDIR" -maxdepth 1 -type f \! -name .version -print 2>/dev/null) ); unset IFS
+  numgot=${#srcfilelist[@]}
+  # no files, empty directory => return 3 (same as no directory) or 6
+  [ $numgot = 0 -a -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
+  [ $numgot = 0 ] && return 3
+  # or if we have not got the right number of sources, return 2 (or 6)
+  numwant=$(echo "$DOWNLIST" | wc -w)
+  if [ "$numgot" != "$numwant" ]; then
+    ${loglevel} -a "${itemid}: Found ${numgot} source file(s), but ${numwant} required"
+    [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
+    return 2
+  fi
 
-    # run the md5 and/or sha256 check on all the files (don't give up at the first error)
-    log_normal -a "Verifying source files ..."
-    allok='y'
-    if [ "${HINT_MD5IGNORE[$itemid]}" != 'y' -a -n "$MD5LIST" ]; then
-      for f in "${srcfilelist[@]}"; do
-        mf=$(md5sum "$f"); mf="${mf/ */}"
-        ok='n'
-        # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
-        for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
-        [ "$ok" = 'y' ] || { log_important -a "Failed md5sum: $f"; log_info -a "  actual md5sum is $mf"; allok='n'; }
-      done
-    fi
-    if [ "${HINT_SHA256IGNORE[$itemid]}" != 'y' -a -n "$SHA256LIST" ]; then
-      for f in "${srcfilelist[@]}"; do
-        sf=$(sha256sum "$f"); sf="${sf/ */}"
-        ok='n'
-        # The next bit checks all files have a good sha256sum, but not vice versa, so it's not perfect :-/
-        for sinfo in $SHA256LIST; do if [ "$sf" = "$sinfo" ]; then ok='y'; break; fi; done
-        [ "$ok" = 'y' ] || { log_important -a "Failed sha256sum: $f"; log_info -a "  actual sha256sum is $sf"; allok='n'; }
-      done
-    fi
-    [ "$allok" = 'y' ] || { if [ -n "${HINT_NODOWNLOAD[$itemid]}" ]; then return 6; else return 1; fi; }
-  )
-  return $?  # status comes directly from subshell
+  # if we're ignoring the md5sums and sha256sums, we've finished! => return 0
+  [ "${HINT_MD5IGNORE[$itemid]}" = 'y' -a "${HINT_SHA256IGNORE[$itemid]}" = 'y' ] && return 0
+
+  # run the md5 and/or sha256 check on all the files (don't give up at the first error)
+  log_normal -a "Verifying source files ... "
+  allok='y'
+  if [ "${HINT_MD5IGNORE[$itemid]}" != 'y' -a -n "$MD5LIST" ]; then
+    for f in "${srcfilelist[@]}"; do
+      mf=$(md5sum "$f"); mf="${mf/ */}"
+      ok='n'
+      # The next bit checks all files have a good md5sum, but not vice versa, so it's not perfect :-/
+      for minfo in $MD5LIST; do if [ "$mf" = "$minfo" ]; then ok='y'; break; fi; done
+      [ "$ok" = 'y' ] || { ${loglevel} -a "${itemid}: Failed md5sum: $(basename "$f")"; log_info -a "  actual md5sum is $mf"; allok='n'; }
+    done
+  fi
+  if [ "${HINT_SHA256IGNORE[$itemid]}" != 'y' -a -n "$SHA256LIST" ]; then
+    for f in "${srcfilelist[@]}"; do
+      sf=$(sha256sum "$f"); sf="${sf/ */}"
+      ok='n'
+      # The next bit checks all files have a good sha256sum, but not vice versa, so it's not perfect :-/
+      for sinfo in $SHA256LIST; do if [ "$sf" = "$sinfo" ]; then ok='y'; break; fi; done
+      [ "$ok" = 'y' ] || { ${loglevel} -a "${itemid}: Failed sha256sum: $(basename "$f")"; log_info -a "  actual sha256sum is $sf"; allok='n'; }
+    done
+  fi
+  if [ "$allok" = 'y' ]; then
+    log_done
+  else
+    [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
+    return 1
+  fi
+
+  return 0
 }
 
 #-------------------------------------------------------------------------------
@@ -118,45 +128,43 @@ function download_src
 
   log_normal -a "Downloading source files ..."
 
-  ( cd "$DOWNDIR"
-    for url in $DOWNLIST; do
-      if [ "$OPT_VERBOSE" = 'y' ]; then
-        set -o pipefail
-        curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$url" 2>&1 | tee -a "$ITEMLOG"
-        curlstat=$?
-        set +o pipefail
-      else
-        curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$url" >> "$ITEMLOG" 2>&1
-        curlstat=$?
-      fi
+  cd "$DOWNDIR"
+
+  for url in $DOWNLIST; do
+    set -o pipefail
+    curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$url" 2>&1 | tee -a "$ITEMLOG"
+    curlstat=$?
+    set +o pipefail
+    if [ $curlstat != 0 ]; then
+      # Try SlackBuilds Direct :D
+      sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
+      set -o pipefail
+      curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$sbdurl" 2>&1 | tee -a "$ITEMLOG"
+      curlstat=$?
+      set +o pipefail
       if [ $curlstat != 0 ]; then
-        # Try SlackBuilds Direct :D
-        sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
-        if [ "$OPT_VERBOSE" = 'y' ]; then
-          set -o pipefail
-          curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$sbdurl" 2>&1 | tee -a "$ITEMLOG"
-          curlstat=$?
-          set +o pipefail
+        # use the original url in the error message
+        if [ "$CMD" = 'lint' ]; then
+          log_warning -a "${itemid}: Download failed: $(print_curl_status $curlstat)."
+          log_info -a "$url"
         else
-          curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$sbdurl" >> "$ITEMLOG" 2>&1
-          curlstat=$?
-        fi
-        if [ $curlstat != 0 ]; then
-          # use the original url in the error message
           log_error -a "Download failed: $(print_curl_status $curlstat).\n  $url"
-          return 1
         fi
-        log_info -a "Downloaded from SlackBuilds Direct Links: ${url##*/}"
+        cd - >/dev/null
+        return 1
       fi
-    done
-    echo "$VERSION" > "$DOWNDIR"/.version
-    # curl content-disposition can't undo %-encoding.
-    # If it's too hard for curl, we'll just zap the obvious ones:
-    for urltrouble in *%*; do
-      [ -e "$urltrouble" ] || break
-      mv "$urltrouble" "$(echo "$urltrouble" | sed -e 's/\%20/ /g' -e 's/\%7E/~/g' -e 's/\%28/(/g' -e 's/\%29/)/g')"
-    done
-  )
+      log_info -a "Downloaded from SlackBuilds Direct Links: ${url##*/}"
+    fi
+  done
+  echo "$VERSION" > "$DOWNDIR"/.version
+  # curl content-disposition can't undo %-encoding.
+  # If it's too hard for curl, we'll just zap the obvious ones:
+  for urltrouble in *%*; do
+    [ -e "$urltrouble" ] || break
+    mv "$urltrouble" "$(echo "$urltrouble" | sed -e 's/\%20/ /g' -e 's/\%7E/~/g' -e 's/\%28/(/g' -e 's/\%29/)/g')"
+  done
+
+  cd - >/dev/null
   return 0
 }
 

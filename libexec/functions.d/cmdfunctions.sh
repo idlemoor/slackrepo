@@ -477,7 +477,6 @@ function lint_command
     else
       log_itemfinish "$itemid" "${STATUS[$itemid]}" ''
     fi
-    #### (Actually, we could do most of the tests...)
     return 0
   fi
 
@@ -485,10 +484,34 @@ function lint_command
   tsbstat=$?
 
   tdlstat=0
-  if [ "${HINT_NODOWNLOAD[$itemid]}" != 'y' ]; then
-    test_download "$itemid"
-    tdlstat=$?
-  fi
+  verify_src "$itemid" "log_important"
+  case $? in
+    0)  # already got source, and it's good
+        test_download "$itemid"
+        tdlstat=$?
+        ;;
+    1|2|3)
+        # already got source but it's bad, or not got source => get it and try again
+        download_src "$itemid"
+        if [ "$?" = 0 ]; then
+          verify_src "$itemid" "log_warning"
+          [ $? != 0 ] && tdlstat=1
+        else
+          tdlstat=1
+        fi
+        ;;
+    4)
+        # version mismatch: we don't know the md5sums for the old source, and
+        # we don't want to replace the old source with the new source, so we
+        # can't do the test.
+        log_important -a "Source is out-of-date."
+        ;;
+    5|6)
+        # unsupported/untested/nodownload (actually, unsupported/untested was
+        # filtered out earlier, so this is really just nodownload)
+        :
+        ;;
+  esac
 
   tpkstat=0
   pstat=''
@@ -502,9 +525,9 @@ function lint_command
       fi
     done
   done
-  [ -z "$pstat" ] && log_normal "No packages found."
+  [ -z "$pstat" ] && log_important -a "No packages found."
 
-  log_normal ""
+  log_normal -a ""
   if [ "$tsbstat" = 0 ] && [ "$tdlstat" = 0 ] && [ "$tpkstat" = 0 ]; then
     log_itemfinish "$itemid" "ok" "lint OK"
   elif [ "$tsbstat" -le 1 ] && [ "$tdlstat" -le 1 ] && [ "$tpkstat" -le 1 ]; then

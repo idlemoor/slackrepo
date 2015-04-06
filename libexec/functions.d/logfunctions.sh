@@ -92,6 +92,7 @@ function log_info
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
   infostuff="$1"
+  [ -z "$infostuff" ] && return 0
   if [ "$OPT_VERBOSE" != 'y' ]; then
     [ ${#infostuff} -gt 4000 ] && infostuff="${infostuff:0:4000}\n[...]"
   fi

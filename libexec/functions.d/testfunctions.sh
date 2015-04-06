@@ -148,7 +148,8 @@ function test_download
         curl --connect-timeout 10 --retry 2 -q -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -o /dev/null "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
-          log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat). $url"
+          log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat)."
+          log_info -a "$url"
           sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
           curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
           [ $? = 0 ] && log_info -a "(available at Slackbuilds Direct Links)"
@@ -169,7 +170,7 @@ function test_download
             if [ -f "${SRCDIR[$itemid]}"/"$filename" ]; then
               cachedlength=$(stat -c '%s' "${SRCDIR[$itemid]}"/"$filename")
               if [ "$remotelength" != "$cachedlength" ]; then
-                log_warning -a "${itemid}: Source file $filename has been modified upstream."
+                log_warning -a "${itemid}: Source file has been modified upstream. $filename"
                 retstat=1
               fi
             fi
@@ -192,7 +193,7 @@ function test_download
               retstat=1
             fi
           else
-            log_warning -a "${itemid}: Download test failed: $(print_curl_status $curlstat)."
+            log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat)."
             log_info -a "$url"
             retstat=1
             if [ -s "$TMP_HEADER" ]; then
@@ -250,7 +251,7 @@ function test_package
     # check the prgnam
     parse_package_name "$pkgbasename"
     [ "$PN_PRGNAM" != "$itemprgnam" ] && \
-      { log_warning -a "${itemid}: ${pkgbasename}: PRGNAM is \"$PN_PRGNAM\" (expected \"$itemprgnam\")"; retstat=1; }
+      { log_warning -a "${itemid}: Package PRGNAM is \"$PN_PRGNAM\" (expected \"$itemprgnam\"). ${pkgbasename}"; retstat=1; }
 
     # check the version
     if [ "$CMD" = 'lint' ]; then
@@ -261,7 +262,7 @@ function test_package
       checkversion="${INFOVERSION[$itemid]}"
     fi
     [ "$PN_VERSION" != "${checkversion}" ] && [ "$PN_VERSION" != "${checkversion}_$(uname -r | tr - _)" ] && \
-      { log_warning -a "${itemid}: ${pkgbasename}: VERSION is \"$PN_VERSION\" (expected \"${checkversion}\")"; retstat=1; }
+      { log_warning -a "${itemid}: Package VERSION is \"$PN_VERSION\" (expected \"${checkversion}\"). ${pkgbasename}"; retstat=1; }
 
     # check the arch
     okarch='n'
@@ -285,40 +286,40 @@ function test_package
           ;;
       esac
     fi
-    [ "$okarch" != 'y' ] && { log_warning -a "${itemid}: ${pkgbasename}: ARCH is $PN_ARCH (expected $SR_ARCH)"; retstat=1; }
+    [ "$okarch" != 'y' ] && { log_warning -a "${itemid}: Package ARCH is $PN_ARCH (expected $SR_ARCH). ${pkgbasename}"; retstat=1; }
 
     # check the build
     [ -n "$SR_BUILD" ] && [ "$PN_BUILD" != "$SR_BUILD" ] && \
-      { log_warning -a "${itemid}: ${pkgbasename}: BUILD is $PN_BUILD (expected $SR_BUILD)"; retstat=1; }
+      { log_warning -a "${itemid}: Package BUILD is $PN_BUILD (expected $SR_BUILD). ${pkgbasename}"; retstat=1; }
 
     # check the tag
     [ "$PN_TAG" != "$SR_TAG" ] && \
-      { log_warning -a "${itemid}: ${pkgbasename}: TAG is \"$PN_TAG\" (expected \"$SR_TAG\")"; retstat=1; }
+      { log_warning -a "${itemid}: Package TAG is \"$PN_TAG\" (expected \"$SR_TAG\"). ${pkgbasename}"; retstat=1; }
 
     # check the pkgtype
     [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && \
-      { log_warning -a "${itemid}: ${pkgbasename}: Package type is .$PN_PKGTYPE (expected .$SR_PKGTYPE)"; retstat=1; }
+      { log_warning -a "${itemid}: Package type is .$PN_PKGTYPE (expected .$SR_PKGTYPE). ${pkgbasename}"; retstat=1; }
 
     # check that the actual compression type matches the suffix
     filetype=$(file -b "$pkgpath")
     case "$filetype" in
-      'gzip compressed data'*)  [ "$PN_PKGTYPE" = 'tgz' ] || { log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .tgz"; retstat=1; } ;;
-      'XZ compressed data'*)    [ "$PN_PKGTYPE" = 'txz' ] || { log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .txz"; retstat=1; } ;;
-      'bzip2 compressed data'*) [ "$PN_PKGTYPE" = 'tbz' ] || { log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .tbz"; retstat=1; } ;;
-      'LZMA compressed data'*)  [ "$PN_PKGTYPE" = 'tlz' ] || { log_warning -a "${itemid}: ${pkgbasename} has wrong suffix, should be .tlz"; retstat=1; } ;;
-      *) log_error -a "${itemid}: ${pkgbasename} is \"$filetype\", not a package" ; return 2 ;;
+      'gzip compressed data'*)  [ "$PN_PKGTYPE" = 'tgz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .tgz). ${pkgbasename}"; retstat=1; } ;;
+      'XZ compressed data'*)    [ "$PN_PKGTYPE" = 'txz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .txz). ${pkgbasename}"; retstat=1; } ;;
+      'bzip2 compressed data'*) [ "$PN_PKGTYPE" = 'tbz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .tbz). ${pkgbasename}"; retstat=1; } ;;
+      'LZMA compressed data'*)  [ "$PN_PKGTYPE" = 'tlz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .tlz). ${pkgbasename}"; retstat=1; } ;;
+      *) log_error -a "${itemid}: Not a package (\"$filetype\"). ${pkgbasename}" ; return 2 ;;
     esac
 
     # list what's in the package (and check if it's really a tarball)
     # we'll reuse this file several times to analyse the contents
     TMP_PKGCONTENTS="$MYTMPDIR"/pkgcontents_"$pkgbasename"
-    tar tvf "$pkgpath" > "$TMP_PKGCONTENTS" || { log_error -a "${itemid}: ${pkgbasename} is not a tar archive"; return 2; }
+    tar tvf "$pkgpath" > "$TMP_PKGCONTENTS" || { log_error -a "${itemid}: Not a tar archive. ${pkgbasename}"; return 2; }
 
     # check where the files will be installed
     wrongstuff=$(awk \
       '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/ {printf "%s\n",$0}' <"$TMP_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
-      log_warning -a "${itemid}: ${pkgbasename} installs to unusual locations"
+      log_warning -a "${itemid}: Unexpected directory. ${pkgbasename}"
       log_info -a "$wrongstuff"
       retstat=1
     fi
@@ -328,7 +329,7 @@ function test_package
     for baddir in "${baddirlist[@]}"; do
       wrongstuff=$(awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' <"$TMP_PKGCONTENTS")
       if [ -n "$wrongstuff" ]; then
-        log_warning -a "${itemid}: $pkgbasename uses /$baddir"
+        log_warning -a "${itemid}: Inappropriate directory. $pkgbasename"
         log_info -a "$wrongstuff"
         retstat=1
       fi
@@ -336,14 +337,14 @@ function test_package
 
     # check if it contains a slack-desc
     if ! grep -q ' install/slack-desc$' "$TMP_PKGCONTENTS"; then
-      log_warning -a "${itemid}: ${pkgbasename} has no slack-desc"
+      log_warning -a "${itemid}: No slack-desc. ${pkgbasename}"
       retstat=1
     fi
 
     # check top level directory
     topdir=$(head -n 1 "$TMP_PKGCONTENTS")
     if ! echo "$topdir" | grep -q '^drwxr-xr-x root/root .* \./$' ; then
-      log_warning -a "${itemid}: ${pkgbasename} has a bad top level directory"
+      log_warning -a "${itemid}: Bad root directory. ${pkgbasename}"
       log_info -a "$topdir"
       retstat=1
     fi
@@ -362,7 +363,7 @@ function test_package
        \$2~/^[[:alpha:]]+\/[[:alpha:]]+\$/ {next};
        {printf \"%s\\n\",\$0}" <"$TMP_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
-      log_warning -a "${itemid}: ${pkgbasename} has files or dirs with unusual owner or group"
+      log_warning -a "${itemid}: Unexpected owner/group. ${pkgbasename}"
       log_info -a "$wrongstuff"
       retstat=1
     fi
@@ -370,7 +371,7 @@ function test_package
     # check for uncompressed man pages (usr/share/man warning is handled above)
     wrongstuff=$(grep -E '^-.* usr/(share/)?man/' "$TMP_PKGCONTENTS" | grep -v '\.gz$')
     if [ -n "$wrongstuff" ]; then
-      log_warning -a "${itemid}: ${pkgbasename} has uncompressed man pages"
+      log_warning -a "${itemid}: Uncompressed man pages. ${pkgbasename}"
       log_info -a "$wrongstuff"
       retstat=1
     fi

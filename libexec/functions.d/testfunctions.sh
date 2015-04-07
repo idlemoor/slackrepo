@@ -173,7 +173,11 @@ function test_download
             if [ -f "${SRCDIR[$itemid]}"/"$filename" ]; then
               cachedlength=$(stat -c '%s' "${SRCDIR[$itemid]}"/"$filename")
               if [ "$remotelength" != "$cachedlength" ]; then
-                log_warning -a "${itemid}: Source has been modified upstream."
+                if [ "${HINT_MD5IGNORE[$itemid]}" = 'y' ] || [ "${HINT_SHA256IGNORE[$itemid]}" = 'y' ]; then
+                  log_important -a "${itemid}: Source has been modified upstream."
+                else
+                  log_warning -a "${itemid}: Source has been modified upstream."
+                fi
                 log_info -a "$url"
                 retstat=1
               fi
@@ -192,7 +196,11 @@ function test_download
               fi
             done
             if [ "$found" = 'n' ]; then
-              log_warning -a "${itemid}: Source has apparently been modified upstream."
+              if [ "${HINT_MD5IGNORE[$itemid]}" = 'y' ] || [ "${HINT_SHA256IGNORE[$itemid]}" = 'y' ]; then
+                log_important -a "${itemid}: Source has been modified upstream."
+              else
+                log_warning -a "${itemid}: Source has been modified upstream."
+              fi
               log_info -a "$url"
               retstat=1
             fi

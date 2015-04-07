@@ -43,7 +43,7 @@ function build_item_packages
   rm -rf "$MYTMPIN"
   cp -a "$SR_SBREPO/$itemdir" "$MYTMPIN"
 
-  if [ "$OPT_TEST" = 'y' ]; then
+  if [ "$OPT_LINT" = 'y' ]; then
     test_slackbuild "$itemid"
     [ $? -gt 1 ] && return 7
   fi
@@ -83,7 +83,7 @@ function build_item_packages
   verify_src "$itemid" "log_important"
   case $? in
     0) # already got source, and it's good
-       [ "$OPT_TEST" = 'y' -a -z "${HINT_NODOWNLOAD[$itemid]}" ] && test_download "$itemid"
+       [ "$OPT_LINT" = 'y' -a -z "${HINT_NODOWNLOAD[$itemid]}" ] && test_download "$itemid"
        ;;
     1|2|3|4)
        # already got source but it's bad, or not got source, or wrong version => get it
@@ -440,7 +440,7 @@ function build_item_packages
 
   [ "$OPT_CHROOT" = 'y' ] && chroot_report
 
-  if [ "$OPT_TEST" = 'y' ]; then
+  if [ "$OPT_LINT" = 'y' ]; then
     test_package "$itemid" "${pkglist[@]}"
     [ $? -gt 1 ] && { build_failed "$itemid"; return 7; }
   fi

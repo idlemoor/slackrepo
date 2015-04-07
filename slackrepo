@@ -36,8 +36,8 @@ function print_usage
   echo 'Control args:'
   echo '  --repo=ID'
   echo '  --verbose (-v)'
-  echo '  --test'
   echo '  --dry-run | --install'
+  echo '  --lint'
   echo '  --keep-tmp'
   return
 }
@@ -79,7 +79,7 @@ starttime=$(date +%s)
 
 # Initialise OPTIONLIST first so that any extended options are at the end
 OPTIONLIST=( 'REPO' 'VERBOSE' 'VERY_VERBOSE' \
-  'TEST' 'DRY_RUN' 'INSTALL' 'KEEP_TMP' 'CHROOT' 'COLOR' 'NICE' )
+  'DRY_RUN' 'INSTALL' 'LINT' 'KEEP_TMP' 'CHROOT' 'COLOR' 'NICE' )
 
 # Get the support functions
 for f in /usr/libexec/$(basename "$0")/functions.d/*.sh; do
@@ -120,7 +120,7 @@ while [ $# != 0 ]; do
       [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
       CMD='remove'
       shift; continue ;;
-    revert | --revert )
+    revert | --revert | restore | --restore )
       [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
       CMD='revert'
       shift; continue ;;
@@ -384,7 +384,7 @@ elif [ "$OPT_VERBOSE" = 'y' ]; then
 fi
 [      "$OPT_DRY_RUN" = 'y' ] && log_verbose "  --dry-run"
 [      "$OPT_INSTALL" = 'y' ] && log_verbose "  --install"
-[         "$OPT_TEST" = 'y' ] && log_verbose "  --test"
+[         "$OPT_LINT" = 'y' ] && log_verbose "  --lint"
 [     "$OPT_KEEP_TMP" = 'y' ] && log_verbose "  --keep-tmp"
 [       "$OPT_CHROOT" = 'y' ] && log_verbose "  --chroot"
 [    "$OPT_COLOR" != 'auto' ] && log_verbose "  --color=$OPT_COLOR"

@@ -1,7 +1,7 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO.CONF 5 "2014-06-01" slackrepo-0.1.0
+.TH SLACKREPO.CONF 5 "2015-04-12" slackrepo-0.2.0
 .
 .
 .
@@ -69,7 +69,7 @@ supplied configuration file for the
 .P
 The following configuration variable can be set only in
 .IR ~/.slackreporc ,
-but can be overridden by an environment variable or
+but can be overridden by the REPO environment variable or
 by the command line option '--repo=ID'.
 .
 .TP
@@ -79,7 +79,7 @@ The default repo ID. This determines the configuration file
 from which other configuration variables will be read.
 .br
 Example:
-.B REPO=SBo
+.B REPO=\(dqSBo\(dq
 .
 .SS Repository filestore locations
 .P
@@ -96,7 +96,14 @@ or can be overridden by environment variables.
 Filestore location of the local SlackBuilds repository.
 .br
 Example:
-.B SBREPO=/var/lib/slackrepo/%REPO%/slackbuilds
+.B SBREPO=\(dq/var/lib/slackrepo/%REPO%/slackbuilds\(dq
+.
+.TP
+.B SRCREPO
+Where to store cached sources. (You will need plenty of space.)
+.br
+Example:
+.B SRCREPO=\(dq/var/lib/slackrepo/%REPO%/source\(dq
 .
 .TP
 .B PKGREPO
@@ -104,40 +111,49 @@ Filestore location of the local package repository, i.e., where to store
 built packages. (You will need plenty of space.)
 .br
 Example:
-.B PKGREPO=/var/lib/slackrepo/%REPO%/packages
+.B PKGREPO=\(dq/var/lib/slackrepo/%REPO%/packages\(dq
 .IP
 If you intend to use the package repository with slackpkg+,
-you may wish to change this to a location accessible by a
+you may wish to change this path or symlink it to a location accessible by a
 local web server (e.g., somewhere under
 .IR /var/www/htdocs/ ).
 .
 .TP
-.B SRCREPO
-Where to store cached sources. (You will need plenty of space.)
+.B PKGBACKUP
+Where to keep backups. (You will need plenty of space.) For example:
 .br
 Example:
-.B SRCREPO=/var/lib/slackrepo/%REPO%/source
+.B PKGBACKUP=\(dq/var/lib/slackrepo/%REPO%/backups/%SLACKVER%/%ARCH%\(dq
+.IP
+You can disable backups by commenting out or deleting this line.
 .
 .TP
 .B HINTDIR
 Where to find hintfiles for this repository.
 .br
 Example:
-.B HINTDIR=/etc/slackrepo/%REPO%/hintfiles
+.B HINTDIR=\(dq/etc/slackrepo/%REPO%/hintfiles\(dq
 .
 .TP
 .B LOGDIR
 Where to store log files.
 .br
 Example:
-.B LOGDIR=/var/log/slackrepo/%REPO%
+.B LOGDIR=\(dq/var/log/slackrepo/%REPO%\(dq
+.
+.TP
+.B DATABASE
+Where to keep the database for this repository.
+.br
+Example:
+.B DATABASE=\(dq/var/lib/slackrepo/%REPO%/database_%REPO%.sqlite3\(dq
 .
 .TP
 .B TMP
 Where to store temporary files. (You will need plenty of space.)
 .br
 Example:
-.B TMP=/tmp/%REPO%
+.B TMP=\(dq/tmp/%REPO%\(dq
 .
 .
 .SS Building packages
@@ -149,6 +165,15 @@ These variables can be set in
 or
 .IR /etc/slackrepo/slackrepo_ID.conf ,
 or can be overridden by environment variables.
+.
+.TP
+.B NUMJOBS
+Number of make jobs to set in MAKEFLAGS (e.g., '-j2').
+Leave blank to have this automatically determined as one more than
+the number of processors on the build host.
+.br
+Example:
+.B NUMJOBS=''
 .
 .TP
 .B ARCH
@@ -163,7 +188,7 @@ Example:
 Tag for built packages.
 .br
 Example:
-.B TAG=_SBo
+.B TAG=\(dq_SBo\(dq
 .IP
 If you are publishing packages from SlackBuilds.org,
 please change
@@ -183,16 +208,42 @@ Package compression type. This can be
 (lzma).
 .br
 Example:
-.B PKGTYPE=tgz
+.B PKGTYPE=\(dqtgz\(dq
 .
-.TP
-.B NUMJOBS
-Number of make jobs to set in MAKEFLAGS (e.g., '-j2').
-Leave blank to have this automatically determined as one more than
-the number of processors on the build host.
+.
+.SS Defaults for control arguments
+.P
+The configuration variables
+.BR VERBOSE ,
+.BR VERY_VERBOSE ,
+.BR DRY_RUN ,
+.BR INSTALL ,
+.BR CHROOT ,
+.BR LINT ,
+.BR KEEP_TMP ,
+.BR COLOR " and "
+.B NICE
+set the defaults for slackrepo's command line control arguments.
+These variables can be set in
+.I ~/.slackreporc
+or
+.IR /etc/slackrepo/slackrepo_ID.conf .
 .br
-Example:
-.B NUMJOBS=''
+Examples:
+.P
+.RS +4n
+.EX
+.B VERBOSE='n'
+.B VERY_VERBOSE='n'
+.B DRY_RUN='n'
+.B INSTALL='n'
+.B CHROOT='n'
+.B LINT='n'
+.B KEEP_TMP='n'
+.B COLOR='auto'
+.B NICE='5'
+.EE
+.RE
 .
 .
 .SS Calling gen_repos_files.sh
@@ -362,39 +413,6 @@ Example:
 .B REPO_EXCLUDES=\(dq.revision\(dq
 .
 .
-.SS Defaults for control arguments
-.P
-The configuration variables
-.BR QUIET ,
-.BR VERBOSE ,
-.BR VERY_VERBOSE ,
-.BR MAKE_VERBOSE ,
-.BR TEST ,
-.BR DRY_RUN ,
-.BR INSTALL " and "
-.B KEEP_TMP
-set the defaults for slackrepo's command line control arguments.
-These variables can be set in
-.I ~/.slackreporc
-or
-.IR /etc/slackrepo/slackrepo_ID.conf .
-.br
-Examples:
-.P
-.RS +4n
-.EX
-.B QUIET='n'
-.B VERBOSE='n'
-.B VERY_VERBOSE='n'
-.B MAKE_VERBOSE='n'
-.B TEST='n'
-.B DRY_RUN='n'
-.B INSTALL='n'
-.B KEEP_TMP='n'
-.EE
-.RE
-.
-.
 .SS Initial setup
 .P
 The following configuration variables determine how the SlackBuilds
@@ -410,7 +428,7 @@ is run.
 The remote git repository to be cloned.
 .br
 Example:
-.B INIT_GITCLONE=git://slackbuilds.org/slackbuilds
+.B INIT_GITCLONE='git://slackbuilds.org/slackbuilds'
 .
 .TP
 .B INIT_GITBRANCH
@@ -419,6 +437,22 @@ same name.
 .br
 Example:
 .B INIT_GITBRANCH='%SLACKVER%'
+.
+.
+.SS Environment variables
+.P
+The slackrepo configuration file can be a useful place to set environment variables for the build process.
+You can simply add export commands at the end of the configuration file.
+.P
+For example, you can add the following commands to compile everything with clang instead of gcc 
+(but please note, there are a few packages do not build correctly with clang).
+.P
+.RS +4n
+.EX
+.B export CC=clang
+.B export CXX=clang++
+.EE
+.RE
 .
 .
 .

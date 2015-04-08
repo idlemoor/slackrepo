@@ -1,7 +1,7 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO.HINT 5 "2014-06-01" slackrepo-0.1.0
+.TH SLACKREPO.HINT 5 "2015-04-12" slackrepo-0.2.0
 .
 .
 .
@@ -31,19 +31,22 @@ configuration file (see
 By default this will be
 .IR /etc/slackrepo/ID/hintfiles .
 .P
-The hintfiles directory should contain a structure of subdirectories that is the
-same as the subdirectories in the SlackBuilds repository.
+The hintfiles directory can optionally contain a structure of subdirectories
+that is the same as the subdirectories in the SlackBuilds repository.
 For example, if the SBo repository's SlackBuild file for wxPython is
 .IR libraries/wxPython/wxPython.SlackBuild ,
-then its hintfile will be
+then its hintfile would be
 .IR /etc/slackrepo/hints_SBo/libraries/wxPython/wxPython.hint .
 .P
-Alternatively, hintfiles can be placed in the top level hintfiles directory.
+Alternatively, hintfiles can be placed in the top level directory, for example
+.IR /etc/slackrepo/SBo/hintfiles/wxPython.hint .
+A hintfile in the top level directory takes precedence over a hintfiles of the
+same name in a subdirectory.
 .P
-A set of example hintfiles for SlackBuilds.org are supplied in the directory
+A comprehensive set of example hintfiles for SlackBuilds.org is supplied in the directory
 .IR /usr/share/slackrepo/SBo/hintfiles .
 .B The example hintfiles are ignored.
-You must copy the example hintfiles to
+You must copy or symlink the example hintfiles into
 .IR /etc/slackrepo/SBo/hintfiles ,
 then review the README files of the packages you are
 building, and then edit the hintfiles in 
@@ -59,8 +62,10 @@ The entries that can be defined are as follows:
 VERSION=\(dqnewversion\(dq
 DOWNLOAD=\(dqnew urls\(dq
 MD5SUM=\(dqnew md5sums\(dq
+SHA256SUM=\(dqsha256sum\(dq
 DOWNLOAD_arch=\(dqnew urls\(dq
 MD5SUM_arch=\(dqnew md5sums\(dq
+SHA256SUM_arch=\(dqsha256sum\(dq
 ADDREQUIRES=\(dqadditional dependencies\(dq
 OPTIONS=\(dqOPT1=yes OPT2=no ...\(dq
 GROUPADD=\(dqgid:groupname ...\(dq
@@ -83,9 +88,9 @@ This hint can be specified to attempt an automatic patch of the version number
 in both the SlackBuild and info files. The automatic patch is done by a simple text substitution.
 This often won't work (particularly if the old version number is something like '1', or
 if the download URL has not been patched correctly and you have not supplied a new
-download URL in the hint file). The md5sum of the source archive will not be checked,
-unless you have also supplied a new md5sum in the hint file.
-The patched SlackBuild and info files are not kept.
+download URL in the hint file). The md5sum and/or sha256sum of the source archive will not be checked, unless you have
+also supplied a new md5sum and/or sha256sum in the hint file. The patched SlackBuild and info
+files are not kept.
 .
 .
 .SS DOWNLOAD=\(dqnew urls\(dq
@@ -114,9 +119,15 @@ this hint indicates that the source md5sums are not reliable
 (for example, because of an unversioned archive) and should not be checked.
 .
 .
-.SS DOWNLOAD_arch=\(dqnew urls\(dq and MD5SUM_arch=\(dqnew md5sums\(dq
+.SS SHA256SUM=\(dqsha256sums\(dq
 .P
-These hints redefine DOWNLOAD and MD5SUM, as above, for the specified arch.
+This hint specifies an sha256sum that will be checked (in addition to any md5sum).
+.
+.
+.SS DOWNLOAD_arch=\(dqnew urls\(dq and MD5SUM_arch=\(dqnew md5sums\(dq and SHA256SUM_arch=\(dqsha256sums\(dq
+.P
+These hints redefine DOWNLOAD and MD5SUM, and specify SHA256SUM, as above,
+for the specified arch.
 .
 .
 .SS ADDREQUIRES=\(dqadditional dependencies\(dq
@@ -124,7 +135,8 @@ These hints redefine DOWNLOAD and MD5SUM, as above, for the specified arch.
 This hint should define a list of dependencies, separated by spaces.
 Dependencies in this list will be added to the dependencies defined by the
 REQUIRES= list defined in the .info file. If the .info file specifies %README%,
-you should set this hint to stop slackrepo displaying a warning.
+you should set this hint (possibly as an empty string)
+to stop slackrepo displaying a warning.
 .
 .
 .SS OPTIONS=\(dqOPT1=yes OPT2=no ...\(dq
@@ -222,20 +234,22 @@ ANSWERS=\(dqok\\nyes\(dq
 .P 
 This hint can be specified if the package needs extra cleanup when it is uninstalled
 (e.g. packages that replace standard Slackware packages or install kernel modules).
-The hint should define an appropriate shell command pipeline. For example, to
-reinstall Slackware packages:
-.P
-.RS
-.EX
-CLEANUP=\(dqecho y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex-doc\(dq
-.EE
-.RE
-.P
-or to clean up after a kernel module is uninstalled:
+The hint should define an appropriate shell command line.
+to clean up after a kernel module is uninstalled:
 .P
 .RS
 .EX
 CLEANUP=\(dqdepmod -a\(dq
+.EE
+.RE
+.P
+For your convenience, slackrepo provides a command
+.B s_reinstall
+that reinstalls the specified Slackware packages, for example:
+.P
+.RS
+.EX
+CLEANUP=\(dqs_reinstall tetex tetex-doc\(dq
 .EE
 .RE
 .
@@ -248,22 +262,43 @@ The following special actions are available:
 .B multilib_ldflags
 .P
 On a multilib host, attempt to patch the SlackBuild to specify LDFLAGS,
-as described in SlackBuilds.org FAQ 18. This is not guaranteed to work!
+as described in SlackBuilds.org FAQ 18.
 .P
 .B download_basename
 .P
 Provide a symlink for source downloads using the URL's basename,
 for the benefit of SlackBuilds that don't expect content-disposition to be respected. 
 .P
-.BR noexport_ARCH " and " noexport_BUILD
+.B unset_ARCH
 .P
-Set ARCH or BUILD by patching the SlackBuild instead of exporting it to the environment.
+Unset the value of ARCH, overriding the value given in the configuration file
+or environment.
+.P
+.BR noexport_ARCH " and " noexport_BUILD " and " noexport_TAG
+.P
+Set ARCH or BUILD or TAG by patching the SlackBuild instead of exporting it
+to the environment.
 .P
 .B noremove
 .P
 Do not remove (uninstall) packages before building the item.
 This is particularly useful for gcc, glibc, etc.
 .P
+.B nofakeroot
+.P
+Override building the package as a non-root user with fakeroot.
+Build the package as root, using
+.BR sudo .
+.P
+.B no_make_test
+.P
+Patch the SlackBuild to comment out any 'make test' command.
+.P
+.B stubs-32
+.P
+Temporarily provide
+.I /usr/include/gnu/stubs-32.h
+as described in the memtest86+ README and xen SlackBuild.
 .
 .
 .SH SEE ALSO

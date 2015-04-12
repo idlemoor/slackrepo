@@ -335,7 +335,7 @@ function test_package
       '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/ {printf "%s\n",$0}' <"$TMP_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: Unexpected directory. ${pkgbasename}"
-      log_info -a "$wrongstuff"
+      log_info -t -a "$wrongstuff"
       retstat=1
     fi
     baddirlist=( 'usr/local/' 'usr/share/man/' )
@@ -345,7 +345,7 @@ function test_package
       wrongstuff=$(awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' <"$TMP_PKGCONTENTS")
       if [ -n "$wrongstuff" ]; then
         log_warning -a "${itemid}: Inappropriate directory. $pkgbasename"
-        log_info -a "$wrongstuff"
+        log_info -t -a "$wrongstuff"
         retstat=1
       fi
     done
@@ -379,7 +379,7 @@ function test_package
        {printf \"%s\\n\",\$0}" <"$TMP_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: Unexpected owner/group. ${pkgbasename}"
-      log_info -a "$wrongstuff"
+      log_info -t -a "$wrongstuff"
       retstat=1
     fi
 
@@ -387,7 +387,7 @@ function test_package
     wrongstuff=$(grep -E '^-.* usr/(share/)?man/' "$TMP_PKGCONTENTS" | grep -v '\.gz$')
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: Uncompressed man pages. ${pkgbasename}"
-      log_info -a "$wrongstuff"
+      log_info -t -a "$wrongstuff"
       retstat=1
     fi
 

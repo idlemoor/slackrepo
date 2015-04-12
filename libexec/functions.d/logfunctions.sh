@@ -85,19 +85,27 @@ function log_verbose
 
 function log_info
 # Log a message to standard output in unhighlighted cyan.
+# If '-t' is specified, truncate it at 3000 chars unless OPT_VERBOSE is set.
 # Log a message to ITEMLOG if '-a' is specified.
 # Usage: log_info [-a] messagestring
 # Return status: always 0
 {
+  T='n'
   A='n'
-  [ "$1" = '-a' ] && { A='y'; shift; }
+  while [ $# != 0 ]; do
+    case "$1" in
+    '-t') T='y';  shift; continue ;;
+    '-a') A='y'; shift; continue ;;
+    *)    break ;;
+    esac
+  done
   infostuff="$1"
   [ -z "$infostuff" ] && return 0
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}" >> "$ITEMLOG"
   if [ "$OPT_VERBOSE" != 'y' ]; then
-    [ ${#infostuff} -gt 4000 ] && infostuff="${infostuff:0:4000}\n[...]"
+    [ "$T" = 'y' ] && [ ${#infostuff} -gt 3000 ] && infostuff="${infostuff:0:3000}\n[...]"
   fi
   echo -e "${NL}${tputcyan}${infostuff}${tputnormal}"
-  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}" >> "$ITEMLOG"
   NL=''
   return 0
 }

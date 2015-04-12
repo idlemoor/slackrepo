@@ -519,11 +519,11 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
   if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
     GOTGIT='y'
     [ -n "$(git status -s .)" ] && dirty=' (DIRTY)'
-    log_info "Git repo:   $SR_SBREPO"
-    log_info "  branch:   $(git rev-parse --abbrev-ref HEAD)"
-    log_info "  date:     $(date --date=@"$(git log -n 1 --format=%ct)")"
-    log_info "  revision: $(git rev-parse HEAD)$dirty"
-    log_info "  title:    $(git log -n 1 --format=%s)"
+    log_info "Git repo: $SR_SBREPO"
+    log_info "branch:   $(git rev-parse --abbrev-ref HEAD)"
+    log_info "date:     $(date --date=@"$(git log -n 1 --format=%ct)")"
+    log_info "revision: $(git rev-parse HEAD)$dirty"
+    log_info "title:    $(git log -n 1 --format=%s)"
   fi
 fi
 
@@ -611,19 +611,19 @@ if [ "$OPT_DRY_RUN" = 'y' ]; then
 else
   if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
     log_normal "Added:       $(grep -c ': Added'   "$CHANGELOG")"
-    grep ': Added'    "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_info "$(grep ': Added'    "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort)"
     log_normal "Updated:     $(grep -c ': Updated' "$CHANGELOG")"
-    grep ': Updated'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_info "$(grep ': Updated'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort)"
     log_normal "Rebuilt:     $(grep -c ': Rebuilt' "$CHANGELOG")"
-    grep ': Rebuilt'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_info "$(grep ': Rebuilt'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort)"
   fi
   if [ "$CMD" = 'update' ] || [ "$CMD" = 'remove' ]; then
     log_normal "Removed:     $(grep -c ': Removed' "$CHANGELOG")"
-    grep ': Removed'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_info "$(grep ': Removed'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort)"
   fi
   if [ "$CMD" = 'revert' ]; then
     log_normal "Reverted:    $(grep -c ': Reverted' "$CHANGELOG")"
-    grep ': Reverted' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort
+    log_info "$(grep ': Reverted' "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort)"
   fi
 fi
 
@@ -631,25 +631,25 @@ SKIPPEDLIST=( $(printf '%s\n' "${SKIPPEDLIST[@]}" | sort -u) )
 skippedcount="${#SKIPPEDLIST[@]}"
 if [ "$skippedcount" != 0 ]; then
   log_normal "Skipped:     $skippedcount"
-  printf '  %s\n' "${SKIPPEDLIST[@]}"
+  log_info "$(printf '  %s\n' "${SKIPPEDLIST[@]}")"
 fi
 UNSUPPORTEDLIST=( $(printf '%s\n' "${UNSUPPORTEDLIST[@]}" | sort -u) )
 unsupportedcount="${#UNSUPPORTEDLIST[@]}"
 if [ "$unsupportedcount" != 0 ]; then
   log_normal "Unsupported: $unsupportedcount"
-  printf '  %s\n' "${UNSUPPORTEDLIST[@]}"
+  log_info "$(printf '  %s\n' "${UNSUPPORTEDLIST[@]}")"
 fi
 FAILEDLIST=( $(printf '%s\n' "${FAILEDLIST[@]}" | sort -u) )
 failedcount="${#FAILEDLIST[@]}"
 if [ "$failedcount" != 0 ]; then
   log_normal "Failed:      $failedcount"
-  printf '  %s\n' "${FAILEDLIST[@]}"
+  log_info "$(printf '  %s\n' "${FAILEDLIST[@]}")"
 fi
 ABORTEDLIST=( $(printf '%s\n' "${ABORTEDLIST[@]}" | sort -u) )
 abortedcount="${#ABORTEDLIST[@]}"
 if [ "$abortedcount" != 0 ]; then
   log_normal "Aborted:     $abortedcount"
-  printf '  %s\n' "${ABORTEDLIST[@]}"
+  log_info "$(printf '  %s\n' "${ABORTEDLIST[@]}")"
 fi
 # Don't bother enumerating 'bad' items (not found, etc)
 uniquewarnings=()
@@ -657,7 +657,7 @@ uniquewarnings=()
 warningcount="${#uniquewarnings[@]}"
 if [ "$warningcount" != 0 ]; then
   log_normal "Warnings:    $warningcount"
-  printf '  %s\n' "${uniquewarnings[@]}"
+  log_info "$(printf '  %s\n' "${uniquewarnings[@]}")"
 fi
 
 #-------------------------------------------------------------------------------

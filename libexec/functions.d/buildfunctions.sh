@@ -548,7 +548,7 @@ function build_failed
 
   STATUS[$itemid]="failed"
   STATUSINFO[$itemid]="See $ITEMLOG"
-  log_info "$(errorscan_itemlog)"
+  log_info -t "$(errorscan_itemlog)"
   log_error -n "${STATUSINFO[$itemid]}"
 
   if [ -n "${CHROOTDIR}" ]; then
@@ -634,7 +634,7 @@ function chroot_report
       significant="$(echo "$crap" | sed -e "s#^\./#/#" | grep -v -E "$excludes" | sort)"
       if [ -n "$significant" ]; then
         log_warning -a "$itemid: Files/directories were modified during the build"
-        log_info -a "${significant}"
+        log_info -t -a "${significant}"
       fi
     fi
   fi

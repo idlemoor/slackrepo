@@ -1,1 +1,1 @@
-ADDREQUIRES="pygtksourceview mate-common mate-desktop mate-dialogs yelp-tools"
+ADDREQUIRES="pygtksourceview mate-common mate-desktop yelp-tools zenity"

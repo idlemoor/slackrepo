@@ -1,0 +1,1 @@
+ADDREQUIRES="libgtop mate-icon-theme gtkmm glibmm"

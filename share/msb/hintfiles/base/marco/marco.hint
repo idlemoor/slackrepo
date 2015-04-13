@@ -1,1 +1,1 @@
-ADDREQUIRES="libgtop mate-common mate-desktop mate-dialogs yelp-tools"
+ADDREQUIRES="libgtop mate-common mate-desktop yelp-tools zenity"

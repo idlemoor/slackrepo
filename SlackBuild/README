@@ -7,8 +7,14 @@ Features:
   - Highly automated (no interaction required)
   - Output repositories suitable for use with slackpkg+
 
-If you want to build packages as a non-root user, you will need fakeroot
-(this is an optional runtime requirement).
+If you want to build packages as a non-root user, you must install fakeroot
+(this is an optional runtime requirement). You must also create the file
+/etc/sudoers.d/slackrepo containing these lines (replacing "user1,user2,user3"
+with a list of the users to authorize):
+
+  User_Alias SLACKREPOERS = user1,user2,user3
+  Defaults:SLACKREPOERS !env_reset,!env_delete
+  SLACKREPOERS ALL=(ALL) NOPASSWD: /usr/libexec/slackrepo/*
 
 Homepage: http://idlemoor.github.io/slackrepo/index.html
 Feedback: email David Spencer <baildon.research@googlemail.com>

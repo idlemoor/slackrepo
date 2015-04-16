@@ -341,7 +341,8 @@ for name in $varnames $genrepnames $initnames; do
 done
 
 # Setup locking and logging:
-LOCKFILE="/var/run/$(basename "$0")_${OPT_REPO}.lock"
+LOCKFILE="$(dirname "$SR_SBREPO")/.lock"
+mkdir -p "$(dirname "$LOCKFILE")"
 touch "$LOCKFILE"
 mkdir -p "$SR_LOGDIR"
 MAINLOG="$SR_LOGDIR"/$(basename "$0")_$(date '+%F_%T').log

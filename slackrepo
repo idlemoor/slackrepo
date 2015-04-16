@@ -465,16 +465,6 @@ if [ "$OPT_DRY_RUN" = 'y' ]; then
   mkdir -p "$DRYREPO"
 fi
 
-# Initialise the crazy estimator from the database :D
-eval $(db_get_misc bogostuff)
-BOGOCOUNT=${BOGOCOUNT:-0}
-BOGOSUMX=${BOGOSUMX:-0}
-BOGOSUMY=${BOGOSUMY:-0}
-BOGOSUMX2=${BOGOSUMX2:-0}
-BOGOSUMXY=${BOGOSUMXY:-0}
-BOGOSLOPE=${BOGOSLOPE:-1.0}
-BOGOCONST=${BOGOCONST:-0.0}
-
 # We will use $SR_SBREPO as the working directory; it simplifies lots of git stuff.
 cd "$SR_SBREPO" || { log_error "Failed to access SlackBuilds repository"; exit_cleanup; exit 4; }
 

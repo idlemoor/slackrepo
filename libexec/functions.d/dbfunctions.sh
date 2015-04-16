@@ -347,7 +347,6 @@ function db_del_itemid_pkgnam
 # Set, get or delete a record in the 'misc' table.
 # The 'misc' table stores key/value pairs:
 #   schema      (version number of the database schema)
-#   bogostuff   (fudge factor for estimating build times)
 #-------------------------------------------------------------------------------
 
 function db_set_misc

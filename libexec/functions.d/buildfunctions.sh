@@ -313,20 +313,14 @@ function build_item_packages
   estbuildsecs=''
   read prevsecs prevmhz guessflag < <(db_get_buildsecs "$itemid")
   if [ -n "$prevsecs" ] && [ -n "$prevmhz" ]; then
-    if [ "$guessflag" = '=' ] || [ "$prevsecs" -lt 120 ] || [ "${BOGOCOUNT:-0}" -lt 5 ]; then
-      estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevmhz}/${SYS_MHz}+1" | bc | sed 's/\..*//')
-    elif [ "$guessflag" = '~' ]; then
-      BOGOSLOPE=$(echo "scale=3; (($BOGOCOUNT*$BOGOSUMXY)-($BOGOSUMX*$BOGOSUMY))/(($BOGOCOUNT*$BOGOSUMX2)-($BOGOSUMX*$BOGOSUMX))" | bc)
-      BOGOCONST=$(echo "scale=3; ($BOGOSUMY - ($BOGOSLOPE*$BOGOSUMX))/$BOGOCOUNT*60.0" | bc)
-      estbuildsecs=$(echo "scale=3; $BOGOSLOPE*(${prevsecs}*${prevmhz}/${SYS_MHz})+$BOGOCONST+1" | bc | sed 's/\..*//')
-    fi
+    estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevmhz}/${SYS_MHz}+1" | bc | sed 's/\..*//')
   fi
   buildstarttime="$(date '+%s')"
   eta=""
   if [ -n "$estbuildsecs" ]; then
     eta="ETA $(date --date=@"$(( buildstarttime + estbuildsecs + 30 ))" '+%H:%M'):??"
-    [ "$guessflag" = '~' ] && [ "$estbuildsecs" -gt "600" ] && eta="${eta:0:8}?:??"
-    [ "$guessflag" = '~' ] && eta="eta ~${eta:4:4}?:??"
+    [ "$guessflag" = '~' ] && [ "$estbuildsecs" -gt "1200" ] && eta="${eta:0:8}?:??"
+    [ "$guessflag" = '~' ] && eta="eta ~${eta:4:8}"
   fi
 
   # Build it
@@ -414,18 +408,6 @@ function build_item_packages
   # add 1 to round it up so it's never zero
   actualsecs=$(( buildfinishtime - buildstarttime + 1 ))
   db_set_buildsecs "$itemid" "$actualsecs"
-  if [ -n "$estbuildsecs" ]; then
-    secsdiff=$(( actualsecs - estbuildsecs ))
-    if [ "$guessflag" = '~' ] && [ "${estbuildsecs:-0}" -gt 120 ] && [ "${secsdiff//-/}" -gt 30 ] && [ "${BOGOCOUNT:-0}" -lt 200 ]; then
-      # yes, this is crazy :P ... 200 data points should be enough. We use minutes to prevent the numbers getting enormous.
-      BOGOCOUNT=$(( BOGOCOUNT + 1 ))
-      BOGOSUMX=$(echo "scale=3; $BOGOSUMX+$estbuildsecs/60.0" | bc)
-      BOGOSUMY=$(echo "scale=3; $BOGOSUMY+$actualsecs/60.0"   | bc)
-      BOGOSUMX2=$(echo "scale=3; $BOGOSUMX2 + ($estbuildsecs/60.0)*($estbuildsecs/60.0)" | bc)
-      BOGOSUMXY=$(echo "scale=3; $BOGOSUMXY + ($estbuildsecs/60.0)*($actualsecs/60.0)"   | bc)
-      db_set_misc bogostuff "BOGOCOUNT=$BOGOCOUNT; BOGOSUMX=$BOGOSUMX; BOGOSUMY=$BOGOSUMY; BOGOSUMX2=$BOGOSUMX2; BOGOSUMXY=$BOGOSUMXY;"
-    fi
-  fi
 
   # update pkgnam to itemid table (do this before any attempt to install)
   #### [ "$OPT_DRY_RUN" != 'y' ] && db_del_itemid_pkgnam "$itemid" ####

@@ -55,7 +55,6 @@ function exit_cleanup
     ${SUDO}umount -l "$CHROOTDIR"/proc
     ${SUDO}umount -l "$CHROOTDIR"
   fi
-  [ -n "$PIDFILE" ] && rm -f "$PIDFILE" 2>/dev/null
 }
 
 #-------------------------------------------------------------------------------
@@ -205,16 +204,6 @@ if [ "$EUID" != 0 ]; then
 else
   SUDO=''
   export PATH="/usr/libexec/$(basename "$0"):$PATH"
-  #### temporary solution, until we do locking properly
-  PIDFILE="/var/run/$(basename "$0").pid"
-  oldpid=$(cat "$PIDFILE" 2>/dev/null)
-  if [ -z "$oldpid" -o -z "$(pgrep -u root "$(basename "$0")" | grep -v $$)" ]; then
-    echo $$ > "$PIDFILE"
-  else
-    echo "$(basename "$0"): Another instance is already running." >&2
-    exit_cleanup
-    exit 3
-  fi
   # If there is no existing dbus session instance for root, create one
   if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
     dbuscrap="$(DISPLAY='' dbus-launch --sh-syntax 2>/dev/null)"
@@ -351,14 +340,22 @@ for name in $varnames $genrepnames $initnames; do
   eval "$srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_OSVER/g" -e "s/%ARCH%/$SR_ARCH/g")\""
 done
 
-# Setup logging:
+# Setup locking and logging:
+LOCKFILE="/var/run/$(basename "$0")_${OPT_REPO}.lock"
+touch "$LOCKFILE"
 mkdir -p "$SR_LOGDIR"
 MAINLOG="$SR_LOGDIR"/$(basename "$0")_$(date '+%F_%T').log
 init_colour
 if [ "$DOCOLOUR" = 'y' ]; then
-  exec &> >( tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >"$MAINLOG") )
+  exec 40>"$LOCKFILE" &> >( tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >"$MAINLOG") )
 else
-  exec &> >( tee "$MAINLOG" )
+  exec 40>"$LOCKFILE" &> >( tee "$MAINLOG" )
+fi
+flock -x --nb 40
+if [ $? != 0 ]; then
+  echo "$(basename "$0"): Repository ${OPT_REPO} is locked by another process." >&2
+  exit_cleanup
+  exit 3
 fi
 
 # Log the system info

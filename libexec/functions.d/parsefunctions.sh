@@ -501,7 +501,8 @@ function parse_info_and_hints
       local PRGNAM SRCNAM
       eval "$(grep 'PRGNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
       eval "$(grep 'SRCNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
-      eval "INFODOWNLIST[$itemid]=$(sed ':x; /\\$/ { N; s/\\\n//; tx }' <"$SR_SBREPO"/"$itemdir"/"$itemfile" | grep 'wget -c ' | sed 's/wget -c //')"
+      eval "INFODOWNLIST[$itemid]=\"$(sed ':x; /\\$/ { N; s/\\\n//; tx }' <"$SR_SBREPO"/"$itemdir"/"$itemfile" | grep 'wget  *-c  *' | sed 's/wget  *-c  *//')\""
+      #### Ideally if this sneaky download failed we would run the whole SlackBuild anyway...
       HINT_MD5IGNORE[$itemid]='y'
       HINT_SHA256IGNORE[$itemid]='y'
     fi

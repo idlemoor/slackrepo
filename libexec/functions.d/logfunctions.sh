@@ -30,8 +30,10 @@
 
 # Globals:
 PADBLANK="                                                                                "
-PADLINE="-----------------------------------------------------------------------"
-
+PADLINE="--------------------------------------------------------------------------------"
+DBLLINE="================================================================================"
+LINEWIDTH=80
+LINEUSABLE=$(( LINEWIDTH - 9 ))    # 9 is the length of <space>HH:MM:SS
 
 #-------------------------------------------------------------------------------
 # PROGRESS MESSAGES
@@ -220,10 +222,9 @@ function log_start
 # Return status: always 0
 {
   msg="${1}                                                                         "
-  line="================================================================================"
-  echo "$line"
-  echo "${msg:0:71} $(date +%T)"
-  echo "$line"
+  echo "${DBLLINE:0:$LINEWIDTH}"
+  echo "${msg:0:$LINEUSABLE} $(date +%T)"
+  echo "${DBLLINE:0:$LINEWIDTH}"
   echo ""
   return 0
 }
@@ -243,10 +244,10 @@ function log_itemstart
 
   if [ -n "$itemid" ]; then
     if [ -n "$message" ]; then
-      if [ ${#message} -ge ${#PADLINE} ]; then
-        echo -e "${PADLINE} $(date +%T)\n${tputboldwhite}${message}${tputnormal}"
+      if [ ${#message} -gt "$LINEUSABLE" ]; then
+        echo -e "${PADLINE:0:$LINEUSABLE} $(date +%T)\n${tputboldwhite}${message}${tputnormal}"
       else
-        padlen=$(( ${#PADLINE} - ${#message} - 1 ))
+        padlen=$(( LINEUSABLE - ${#message} - 1 ))
         echo "${tputboldwhite}${message}${tputnormal} ${PADLINE:0:$padlen} $(date +%T)"
       fi
     fi
@@ -433,15 +434,14 @@ function format_left_right
   local llen=${#lmsg}
   local plen=$pmin
   local rlen=${#rmsg}
-  local linewidth=80
   local lmin=1  # minimum width of left part
   local pmin=1  # minimum amount of padding
   # If rlen is too long, reduce it:
-  [ "$rlen" -gt $(( linewidth - lmin - pmin )) ] && rlen=$(( linewidth - lmin - pmin ))
+  [ "$rlen" -gt $(( LINEWIDTH - lmin - pmin )) ] && rlen=$(( LINEWIDTH - lmin - pmin ))
   # If llen is too long, reduce it:
-  [ "$llen" -gt $(( linewidth - pmin - rlen )) ] && llen=$(( linewidth - pmin - rlen ))
+  [ "$llen" -gt $(( LINEWIDTH - pmin - rlen )) ] && llen=$(( LINEWIDTH - pmin - rlen ))
   # If llen is too short, increase the padding:
-  [ $(( llen + plen + rlen )) -lt "$linewidth" ] && plen=$(( linewidth - llen - rlen ))
+  [ $(( llen + plen + rlen )) -lt "$LINEWIDTH" ] && plen=$(( LINEWIDTH - llen - rlen ))
   echo $llen $plen $rlen
   return 0
 }

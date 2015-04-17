@@ -359,19 +359,8 @@ if [ $? != 0 ]; then
   exit 3
 fi
 
-# Log the system info
-log_normal ""
-log_info "OS: ${SYS_OSNAME}${SYS_OSVER}"
-log_info "kernel: ${SYS_KERNEL}"
-log_info "arch: ${SYS_ARCH}"
-[ "$SYS_MULTILIB" = 'y' ] && log_info "multilib: yes"
-log_info "nproc: ${SYS_NPROC}"
-log_info "total MHz: ${SYS_MHz}"
-[ "$SYS_OVERLAYFS" = 'y' ] && log_info "overlayfs: yes"
-[ "$EUID" != 0 ] && log_info "username: $USER"
-log_normal ""
-
 # Log the config
+log_verbose ""
 log_verbose "Configuration:"
 log_verbose "  $CMD"
 log_verbose "  --repo=$OPT_REPO"
@@ -406,6 +395,17 @@ fi
 for name in AR AS CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS LD LDFLAGS DISTCC_HOSTS; do
   [ -n "${!name}" ] && log_verbose "  $name=\"${!name}\""
 done
+log_verbose ""
+
+# Log the system info
+log_verbose "OS: ${SYS_OSNAME}${SYS_OSVER}"
+log_verbose "kernel: ${SYS_KERNEL}"
+log_verbose "arch: ${SYS_ARCH}"
+[ "$SYS_MULTILIB" = 'y' ] && log_verbose "multilib: yes"
+log_verbose "nproc: ${SYS_NPROC}"
+log_verbose "total MHz: ${SYS_MHz}"
+[ "$SYS_OVERLAYFS" = 'y' ] && log_verbose "overlayfs: yes"
+[ "$EUID" != 0 ] && log_info "username: $USER"
 log_verbose ""
 
 #-------------------------------------------------------------------------------
@@ -507,7 +507,7 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
   if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
     GOTGIT='y'
     [ -n "$(git status -s .)" ] && dirty=' (DIRTY)'
-    log_info "Git repo: $SR_SBREPO"
+    log_info "git repo: $SR_SBREPO"
     log_info "branch:   $(git rev-parse --abbrev-ref HEAD)"
     log_info "date:     $(date --date=@"$(git log -n 1 --format=%ct)")"
     log_info "revision: $(git rev-parse HEAD)$dirty"

@@ -479,6 +479,7 @@ function build_ok
       rm -rf "$backupdir".prev
       # if there's a stashed source, save it to the backup repo
       if [ -d "$SOURCESTASH" ]; then
+        rm -rf "$backupdir"/"$(basename "${SOURCESTASH/prev_/}")"
         mv "$SOURCESTASH" "$backupdir"/"$(basename "${SOURCESTASH/prev_/}")"
       fi
       # save old revision data to a file in the backup repo

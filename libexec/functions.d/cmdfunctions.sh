@@ -194,7 +194,7 @@ function revert_command
         mybuildtime="${b_built}"
       else
         deprevdata=( $(db_get_rev "${b_depid}") )
-        if [ "${deprevdata[2]}" -gt "$mybuildtime" ]; then
+        if [ "${deprevdata[2]:-0}" -gt "$mybuildtime" ]; then
           log_warning "${b_depid} may need to be reverted"
         fi
       fi

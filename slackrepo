@@ -481,18 +481,21 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
       if [ "$(git rev-parse --abbrev-ref HEAD)" != "$mybranch" ]; then
         git checkout -b "$mybranch" -t origin/"$mybranch"
       fi
+      db_set_misc "git_fetch_${SR_INIT_GITBRANCH}" "$(date +%s)"
       log_normal "Finished cloning SlackBuilds repository."
     fi
   elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
-    # Is git clean, and is the current branch SBo's stable branch?
+    # Is git clean, and is the current branch $SR_INIT_GITBRANCH?
     log_normal "Checking git ... "
     muck="$(git status -s .)"
     log_done
     currbranch=$(git rev-parse --abbrev-ref HEAD)
-    if [ -z "$muck" -a "$currbranch" = "${SYS_OSVER:-master}" ]; then
-      if [ -n "$(find "$(git rev-parse --show-toplevel)"/.git/FETCH_HEAD -mtime +1 2>/dev/null)" ]; then
+    if [ -z "$muck" -a "$currbranch" = "${SR_INIT_GITBRANCH:-master}" ]; then
+      prevfetch=$(db_get_misc "git_fetch_${currbranch}")
+      if [ -n "$prevfetch" ] && [ $(( $(date +%s) - prevfetch )) -gt 86400 ]; then
         log_normal "Updating git..."
         git fetch
+        db_set_misc "git_fetch_${currbranch}" "$(date +%s)"
         if [ "$DOCOLOUR"  = 'y' -a -x /usr/bin/unbuffer ]; then
           unbuffer git merge --ff-only origin/"$currbranch"
         else

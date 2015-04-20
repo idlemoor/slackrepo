@@ -53,7 +53,7 @@ function log_normal
     nonewline=''
     [ "${1: -4:4}" = '... ' ] && nonewline='-n'
     echo -e $nonewline "${NL}${1}"
-    [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e $nonewline "${NL}${1}" >> "$ITEMLOG"
+    [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}" >> "$ITEMLOG"
     if [ "$nonewline" = '-n' ]; then
       NL='\n'
     else
@@ -108,7 +108,7 @@ function log_info
   done
   infostuff="$1"
   [ -z "$infostuff" ] && return 0
-  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}" >> "$ITEMLOG"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}" >> "$ITEMLOG"
   if [ "$OPT_VERBOSE" != 'y' ]; then
     [ "$T" = 'y' ] && [ ${#infostuff} -gt 3000 ] && infostuff="${infostuff:0:3000}\n[...]"
   fi
@@ -131,15 +131,15 @@ function log_important
   [ "$1" = '-a' ] && { A='y'; shift; }
   if [ -z "${2}" ]; then
     echo -e "${NL}${tputboldwhite}${1}${tputnormal}"
-    [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}" >> "$ITEMLOG"
+    [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}" >> "$ITEMLOG"
   else
     if [ $(( ${#1} + ${#2} )) -lt "$LINEWIDTH" ]; then
       read llen plen rlen < <(format_left_right "$1" "$2")
       echo -e "${NL}${tputboldwhite}${1:0:$llen}${tputnormal}${PADBLANK:0:$plen}${2:0:$rlen}"
-      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
+      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
     else
       echo -e "${NL}${tputboldwhite}${1}${tputnormal}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}"
-      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}" >> "$ITEMLOG"
+      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}" >> "$ITEMLOG"
     fi
   fi
   NL=''
@@ -166,7 +166,7 @@ function log_warning
     esac
   done
   echo -e "${NL}${tputboldyellow}${W}${1}${tputnormal}"
-  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${W}${1}" >> "$ITEMLOG"
+  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${W}${1}" >> "$ITEMLOG"
   NL=''
   [ -n "$W" ] && WARNINGLIST+=( "${1}" )
   return 0
@@ -194,15 +194,15 @@ function log_error
   done
   if [ -z "${2}" ]; then
     echo -e "${NL}${tputboldred}${E}${1}${tputnormal}"
-    [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${E}${1}" >> "$ITEMLOG"
+    [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${E}${1}" >> "$ITEMLOG"
   else
     if [ $(( ${#1} + ${#2} )) -lt "$LINEWIDTH" ]; then
       read llen plen rlen < <(format_left_right "$1" "$2")
       echo -e "${NL}${tputboldred}${1:0:$llen}${tputnormal}${PADBLANK:0:$plen}${2:0:$rlen}"
-      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
+      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
     else
       echo -e "${NL}${tputboldred}${1}${tputnormal}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}"
-      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}" >> "$ITEMLOG"
+      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}" >> "$ITEMLOG"
     fi
   fi
   NL=''
@@ -212,15 +212,11 @@ function log_error
 #-------------------------------------------------------------------------------
 
 function log_done
-# Log the message "done" to standard output.
-# Log the message "done" to ITEMLOG if '-a' is specified.
-# Usage: log_done [-a]
+# Log the message "done." to standard output (but not ITEMLOG).
+# Usage: log_done
 # Return status: always 0
 {
-  A='n'
-  [ "$1" = '-a' ] && { A='y'; shift; }
   echo "done."
-  [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo "done." >> "$ITEMLOG"
   NL=''
   return 0
 }

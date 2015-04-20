@@ -642,7 +642,7 @@ function chroot_destroy
   if [ "$OPT_KEEP_TMP" = 'y' ] && [ -d "$MYTMPDIR"/changes/"$SR_TMP" ]; then
     rsync -rlptgo "$MYTMPDIR"/changes/"$SR_TMP"/ "$SR_TMP"/
   fi
-  log_done -a
+  log_done
   ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes/{"$SR_TMP","${MYTMPDIR:?NotSetMYTMPDIR}"}
   ${SUDO}rm -rf "${MYTMPDIR:?NotSetMYTMPDIR}"/changes
   unset CHROOTCMD CHROOTDIR

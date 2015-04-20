@@ -145,11 +145,11 @@ function test_download
         # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
         # https://code.google.com/p/support/issues/detail?id=660
         # "Don't be evil, but totally lame is fine"
-        curl --connect-timeout 10 --retry 2 -q -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -o /dev/null "$url" >> "$ITEMLOG" 2>&1
+        curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -o /dev/null "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
           sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
-          curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
+          curl -q --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
           if [ $? = 0 ]; then
             log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat). (Available at SBoDL)"
           else
@@ -160,7 +160,7 @@ function test_download
         fi
         ;;
       *)
-        curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
+        curl -q --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" = 0 ]; then
           remotelength=$(fromdos <"$TMP_HEADER" | grep 'Content-[Ll]ength: ' | tail -n 1 | sed 's/^.* //')
@@ -185,7 +185,7 @@ function test_download
           fi
         else
           # Header failed, try a full download (amazonaws is "special"... possibly more...)
-          curl --connect-timeout 10 --retry 2 -q -f -s -k --ciphers ALL -J -L -A slackrepo -o "$MYTMPDIR"/curldownload "$url" >> "$ITEMLOG" 2>&1
+          curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL -J -L -A slackrepo -o "$MYTMPDIR"/curldownload "$url" >> "$ITEMLOG" 2>&1
           curlstat=$?
           if [ "$curlstat" = 0 ]; then
             remotemd5=$(md5sum <"$MYTMPDIR"/curldownload); remotemd5="${remotemd5/ */}"
@@ -206,7 +206,7 @@ function test_download
             fi
           else
             sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
-            curl --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
+            curl -q --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
             if [ $? = 0 ]; then
               log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat). (Available at SBoDL)"
             else

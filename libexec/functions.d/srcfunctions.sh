@@ -6,6 +6,7 @@
 #   verify_src
 #   download_src
 #   print_curl_status
+#   print_wget_status
 #-------------------------------------------------------------------------------
 
 function verify_src
@@ -126,29 +127,46 @@ function download_src
     return 0
   fi
 
+  curlprogress='-#'
+  [ "$OPT_VERBOSE" = 'y' ]  && curlprogress=''
+  wgetprogress='--quiet --progress=bar:force'
+  [ "$OPT_VERBOSE" = 'y' ]  && wgetprogress='--progress=bar:force'
+  [ "$SYS_GOODMAKE" = 'y' ] && wgetprogress="${wgetprogress}:noscroll --show-progress"  # probably -current ;-)
+
   log_normal -a "Downloading source files ..."
-
   cd "$DOWNDIR"
-
   for url in $DOWNLIST; do
+    curlstat=0
+    wgetstat=0
     set -o pipefail
-    curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$url" 2>&1 | tee -a "$ITEMLOG"
-    curlstat=$?
+    case "${HINT_SPECIAL[$itemid]}" in
+    *download_basename*)
+      # use wget instead of curl, because energia :-/
+      wget --timeout=30 --tries=4 $wgetprogress --no-check-certificate --content-disposition -U slackrepo "$url" 2>&1 | tee -a "$ITEMLOG"
+      wgetstat=$?
+      ;;
+    *)
+      curl -q --connect-timeout 30 --retry 4 -f $curlprogress -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$url" 2>&1 | tee -a "$ITEMLOG"
+      curlstat=$?
+      ;;
+    esac
     set +o pipefail
-    if [ $curlstat != 0 ]; then
-      # Try SlackBuilds Direct :D
+    if [ $curlstat != 0 ] || [ $wgetstat != 0 ]; then
+      # Try SlackBuilds Direct :D quietly ;-)
       sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
       set -o pipefail
-      curl --connect-timeout 30 --retry 4 -q -f '-#' -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$sbdurl" 2>&1 | tee -a "$ITEMLOG"
-      curlstat=$?
+      curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$sbdurl" 2>&1 | tee -a "$ITEMLOG"
+      sbdstat=$?
       set +o pipefail
-      if [ $curlstat != 0 ]; then
-        # use the original url in the error message
+      if [ $sbdstat != 0 ]; then
+        # use the original url and status in the error message
+        [ "$curlstat" != 0 ] && failmsg="$(print_curl_status $curlstat)"
+        [ "$wgetstat" != 0 ] && failmsg="$(print_wget_status $wgetstat)"
         if [ "$CMD" = 'lint' ]; then
-          log_warning -a "${itemid}: Download failed: $(print_curl_status $curlstat)."
+          log_warning -a "${itemid}: Download failed: ${failmsg}."
           log_info -a "$url"
         else
-          log_error -a "Download failed: $(print_curl_status $curlstat).\n  $url"
+          log_error -a "Download failed: ${failmsg}.\n  $url"
         fi
         cd - >/dev/null
         return 1
@@ -156,6 +174,7 @@ function download_src
       log_info -a "Downloaded from SlackBuilds Direct Links: ${url##*/}"
     fi
   done
+
   echo "$VERSION" > "$DOWNDIR"/.version
   # curl content-disposition can't undo %-encoding.
   # If it's too hard for curl, we'll just zap the obvious ones:
@@ -172,6 +191,7 @@ function download_src
 
 function print_curl_status
 # Print a friendly error message for curl status code on standard output
+# http://curl.haxx.se/docs/manpage.html#EXIT
 # $1 = curl status code
 # Return status: always 0
 {
@@ -254,6 +274,29 @@ function print_curl_status
   89)  echo "No connection available, the session will be queued " ;;
   '')  echo "curl status is null" ;;
   *)   echo "curl status $1" ;;
+  esac
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function print_wget_status
+# Print a friendly error message for wget status code on standard output
+# https://www.gnu.org/software/wget/manual/wget.html#Exit-Status
+# $1 = wget status code
+# Return status: always 0
+{
+  case $1 in
+  1)   echo "Generic error code" ;;
+  2)   echo "Parse error - for instance, when parsing command-line options or .wgetrc or .netrc" ;;
+  3)   echo "File I/O error" ;;
+  4)   echo "Network failure" ;;
+  5)   echo "SSL verification failure" ;;
+  6)   echo "Username/password authentication failure" ;;
+  7)   echo "Protocol errors" ;;
+  8)   echo "Server issued an error response" ;;
+  '')  echo "wget status is null" ;;
+  *)   echo "wget status $1" ;;
   esac
   return 0
 }

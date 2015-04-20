@@ -405,7 +405,7 @@ log_verbose "arch: ${SYS_ARCH}"
 log_verbose "nproc: ${SYS_NPROC}"
 log_verbose "total MHz: ${SYS_MHz}"
 [ "$SYS_OVERLAYFS" = 'y' ] && log_verbose "overlayfs: yes"
-[ "$EUID" != 0 ] && log_info "username: $USER"
+[ "$EUID" != 0 ] && log_verbose "username: $USER"
 log_verbose ""
 
 #-------------------------------------------------------------------------------
@@ -601,12 +601,21 @@ if [ "$OPT_DRY_RUN" = 'y' ]; then
   [ "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}"
 else
   if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
-    log_normal "Added:       $(grep -c ': Added'   "$CHANGELOG")"
-    log_info "$(grep ': Added'    "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort)"
-    log_normal "Updated:     $(grep -c ': Updated' "$CHANGELOG")"
-    log_info "$(grep ': Updated'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort)"
-    log_normal "Rebuilt:     $(grep -c ': Rebuilt' "$CHANGELOG")"
-    log_info "$(grep ': Rebuilt'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort)"
+    addedcount=$(grep -c ': Added'   "$CHANGELOG")
+    if [ "$addedcount" != 0 ]; then
+      log_normal "Added:       $addedcount"
+      log_info "$(grep ': Added'    "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort)"
+    fi
+    updatedcount=$(grep -c ': Updated' "$CHANGELOG")
+    if [ "$updatedcount" != 0 ]; then
+      log_normal "Updated:     $updatedcount"
+      log_info "$(grep ': Updated'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort)"
+    fi
+    rebuiltcount=$(grep -c ': Rebuilt' "$CHANGELOG")
+    if [ "$rebuiltcount" != 0 ]; then
+      log_normal "Rebuilt:     $rebuiltcount"
+      log_info "$(grep ': Rebuilt'  "$CHANGELOG" | sed -e 's/^/  /' -e 's/:.*//' | sort)"
+    fi
   fi
   if [ "$CMD" = 'update' ] || [ "$CMD" = 'remove' ]; then
     log_normal "Removed:     $(grep -c ': Removed' "$CHANGELOG")"

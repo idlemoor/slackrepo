@@ -597,8 +597,10 @@ log_normal "Runtime:     ${h}h ${m}m ${s}s"
 if [ "$OPT_DRY_RUN" = 'y' ]; then
   OKLIST=( $(printf '%s\n' "${OKLIST[@]}" | sort -u) )
   okcount="${#OKLIST[@]}"
-  log_normal "Dry run OK:  $okcount"
-  [ "$okcount" != 0 ] && printf '  %s\n' "${OKLIST[@]}"
+  if [ "$okcount" != 0 ]; then
+    log_normal "Dry run OK:  $okcount"
+    log_info "$(printf '  %s\n' "${OKLIST[@]}")"
+  fi
 else
   if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
     addedcount=$(grep -c ': Added'   "$CHANGELOG")

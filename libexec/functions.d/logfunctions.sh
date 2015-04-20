@@ -60,9 +60,14 @@ function log_normal
       NL=''
     fi
   else
-    read llen plen rlen < <(format_left_right "$1" "$2")
-    echo -e "${NL}${tputboldwhite}${1:0:llen}${tputnormal}${PADBLANK:0:plen}${2:0:rlen}"
-    [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}${PADBLANK:0:plen}${2}" >> "$ITEMLOG"
+    if [ $(( ${#1} + ${#2} )) -lt "$LINEWIDTH" ]; then
+      read llen plen rlen < <(format_left_right "$1" "$2")
+      echo -e "${NL}${1:0:$llen}${PADBLANK:0:$plen}${2:0:$rlen}"
+      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
+    else
+      echo -e "${NL}${1}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}"
+      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}" >> "$ITEMLOG"
+    fi
     NL=''
   fi
   return 0
@@ -128,9 +133,14 @@ function log_important
     echo -e "${NL}${tputboldwhite}${1}${tputnormal}"
     [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}" >> "$ITEMLOG"
   else
-    read llen plen rlen < <(format_left_right "$1" "$2")
-    echo -e "${NL}${tputboldwhite}${1:0:llen}${tputnormal}${PADBLANK:0:plen}${2:0:rlen}"
-    [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}${PADBLANK:0:plen}${2}" >> "$ITEMLOG"
+    if [ $(( ${#1} + ${#2} )) -lt "$LINEWIDTH" ]; then
+      read llen plen rlen < <(format_left_right "$1" "$2")
+      echo -e "${NL}${tputboldwhite}${1:0:$llen}${tputnormal}${PADBLANK:0:$plen}${2:0:$rlen}"
+      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
+    else
+      echo -e "${NL}${tputboldwhite}${1}${tputnormal}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}"
+      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}" >> "$ITEMLOG"
+    fi
   fi
   NL=''
   return 0
@@ -186,9 +196,14 @@ function log_error
     echo -e "${NL}${tputboldred}${E}${1}${tputnormal}"
     [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${E}${1}" >> "$ITEMLOG"
   else
-    read llen plen rlen < <(format_left_right "${E}${1}" "$2")
-    echo -e "${NL}${tputboldred}${E}${1:0:llen}${tputnormal}${PADBLANK:0:plen}${2:0:rlen}"
-    [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${E}${1}${PADBLANK:0:plen}${2}" >> "$ITEMLOG"
+    if [ $(( ${#1} + ${#2} )) -lt "$LINEWIDTH" ]; then
+      read llen plen rlen < <(format_left_right "$1" "$2")
+      echo -e "${NL}${tputboldred}${1:0:$llen}${tputnormal}${PADBLANK:0:$plen}${2:0:$rlen}"
+      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
+    else
+      echo -e "${NL}${tputboldred}${1}${tputnormal}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}"
+      [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}" >> "$ITEMLOG"
+    fi
   fi
   NL=''
   return 0
@@ -431,11 +446,11 @@ function format_left_right
 {
   local lmsg="${1}"
   local rmsg="${2}"
+  local lmin=1  # minimum width of left part
+  local pmin=1  # minimum amount of padding
   local llen=${#lmsg}
   local plen=$pmin
   local rlen=${#rmsg}
-  local lmin=1  # minimum width of left part
-  local pmin=1  # minimum amount of padding
   # If rlen is too long, reduce it:
   [ "$rlen" -gt $(( LINEWIDTH - lmin - pmin )) ] && rlen=$(( LINEWIDTH - lmin - pmin ))
   # If llen is too long, reduce it:

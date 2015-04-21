@@ -1,1 +1,2 @@
+SPECIAL="nofakeroot"
 CLEANUP="rm -rf /etc/zfs/"

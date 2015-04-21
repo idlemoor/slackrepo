@@ -1,2 +1,2 @@
-GROUPADD="215:vboxusers"
+NUMJOBS="-j1"
 SPECIAL="nofakeroot unset_DISTCC_HOSTS"

@@ -237,17 +237,14 @@ function build_item_packages
       sed -i -e "s/^PRGNAM=.*/&; ARCH='$SR_ARCH'/" "$MYTMPIN"/"$itemfile"
       unset ARCH
       ;;
-    'noexport_BUILD' )
-      log_info -a "Special action: noexport_BUILD"
-      sed -i -e "s/^BUILD=.*/BUILD='$BUILD'/" "$MYTMPIN"/"$itemfile"
-      unset BUILD
-      ;;
-    'noexport_TAG' )
-      log_info -a "Special action: noexport_TAG"
-      sed -i -e "s/^TAG=.*/TAG='$TAG'/" "$MYTMPIN"/"$itemfile"
-      unset TAG
+    'noexport_BUILD' | 'noexport_TAG' )
+      log_info -a "Special action: ${special}"
+      var="${special/noexport_/}"
+      sed -i -e "s/^${var}=.*/${var}='${!var}'/" "$MYTMPIN"/"$itemfile"
+      unset "${var}"
       ;;
     'unset'* )
+      log_info -a "Special action: ${special}"
       eval "${special/_/ }"
       ;;
     'noremove' )
@@ -257,6 +254,10 @@ function build_item_packages
     'nofakeroot' )
       log_info -a "Special action: nofakeroot"
       hintnofakeroot='y'
+      ;;
+    'abstar' )
+      log_info -a "Special action: abstar"
+      sed -i -e "s/^tar .*/& --absolute-names/" "$MYTMPIN"/"$itemfile"
       ;;
     * )
       log_warning -a "${itemid}: Hint SPECIAL=\"$special\" not recognised"

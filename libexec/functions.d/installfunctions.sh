@@ -151,7 +151,7 @@ function install_packages
           ROOT=${CHROOTDIR:-/} ${SUDO}upgradepkg --reinstall "$pkgpath" >> "$ITEMLOG" 2>&1
           pstat=$?
         fi
-        [ "$pstat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $stat)"; return 1; }
+        [ "$pstat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $pstat)"; return 1; }
         dotprofilizer "$pkgpath"
         KEEPINSTALLED[$pkgnam]="$pkgid"
       fi

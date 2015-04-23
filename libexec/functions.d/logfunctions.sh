@@ -262,7 +262,7 @@ function log_itemstart
         echo "${tputboldwhite}${message}${tputnormal} ${PADLINE:0:$padlen} $(date +%T)"
       fi
     fi
-    ITEMLOGDIR="$SR_LOGDIR"/"$itemdir"
+    ITEMLOGDIR="$SR_LOGDIR"/"${ITEMDIR[$itemid]}"
     mkdir -p "$ITEMLOGDIR"
     ITEMLOG="$ITEMLOGDIR"/"$CMD".log
     if [ -f "$ITEMLOG" ]; then

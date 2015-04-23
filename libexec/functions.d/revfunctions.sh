@@ -560,7 +560,7 @@ EOF
       pkgsize=$(du -s "$pkgpath" | cut -f1)
       # this uncompressed size is approx, but hopefully good enough ;-)
       uncsize=$(awk '{t+=int($3/1024)+1} END {print t}' "$TMP_PKGCONTENTS")
-      echo "PACKAGE NAME:  $pkgbase" > "$dotmeta"
+      echo "PACKAGE NAME:  $pkgbasename" > "$dotmeta"
       if [ -n "$SR_DL_URL" ]; then
         echo "PACKAGE MIRROR:  $SR_DL_URL" >> "$dotmeta"
       fi

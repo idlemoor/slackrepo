@@ -153,7 +153,7 @@ function download_src
     set +o pipefail
     if [ $curlstat != 0 ] || [ $wgetstat != 0 ]; then
       # Try SlackBuilds Direct :D quietly ;-)
-      sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
+      sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/${ITEMPRGNAM[$itemid]}/${url##*/}"
       set -o pipefail
       curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$sbdurl" 2>&1 | tee -a "$ITEMLOG"
       sbdstat=$?

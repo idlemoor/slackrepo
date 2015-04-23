@@ -3,50 +3,15 @@ TODO
 
 Multi-repo support
 
-slacktrack
-
-locking
-
-Website and manpage update
-
 Share package dirs
 
-Redo argument parsing
-Install already-built packages
-Test already-built packages
-
-Report fails back to SBo maintainers
-
-Queuefiles (factorial deps)
-Templates
+Rewrite argument parsing
 
 More testing for multilib cross-compiles
 
 ARM support
 
-speed up gen_repos
-changelog even if no gen_repos
-
-do a FAQ
-
-progress bar/spinner/'ok'/whatever
-
-Install/uninstall acceleration
+speed up gen_repos_files.sh
+changelog even if no gen_repos_files.sh
 
 Rebuilds to permit circular deps
-
-logrotate
-
-----
-
-[done] sqlite database for package revisions?
-
-[done] sqlite database for expected build times?
-
-[done] After building, don't remove deps that were already installed
-
-[done] Archive/restore upgraded/removed packages and source
-
-[done] Redo dependency calculation and display
-
-[done] non-root building

@@ -269,15 +269,22 @@ as described in SlackBuilds.org FAQ 18.
 Provide a symlink for source downloads using the URL's basename,
 for the benefit of SlackBuilds that don't expect content-disposition to be respected. 
 .P
-.B unset_ARCH
-.P
-Unset the value of ARCH, overriding the value given in the configuration file
-or environment.
-.P
 .BR noexport_ARCH " and " noexport_BUILD " and " noexport_TAG
 .P
 Set ARCH or BUILD or TAG by patching the SlackBuild instead of exporting it
 to the environment.
+.P
+.B unset_ARCH
+.P
+Unset the value of ARCH, overriding the value given in the configuration file
+or environment.
+Other variables can be specified, for example
+.P
+.RS
+.EX
+SPECIAL=\(dqunset_DISTCC_HOSTS\(dq
+.EE
+.RE
 .P
 .B noremove
 .P

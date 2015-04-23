@@ -1,11 +1,11 @@
 BUGS
 ----
 
-This is new, experimental software, it hasn't been tested thoroughly yet,
-it runs as root so it could trash your entire system.  Please only run it on
-systems that you can reinstall or restore from backups easily, eg. a VM.
+This is relatively new software.  If that worries you, please run it on systems
+that you can reinstall or restore from backups easily, eg. a VM or a clean
+Slackware installation, or use the chroot and/or non-root building features.
 
-As new features are added, the man pages will often be out of date.
+As new features are added, the man pages will sometimes be out of date.
 
-Don't use the experimental queuefile support.  Currently, enumerating the fake
-dependencies causes a factorial explosion in complexity.
+You can report bugs to me, David Spencer <baildon.research@googlemail.com>, or
+open issues and pull requests on Github at https://github.com/idlemoor/slackrepo

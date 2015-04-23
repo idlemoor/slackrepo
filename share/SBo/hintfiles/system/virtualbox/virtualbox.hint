@@ -1,2 +1,2 @@
 GROUPADD="215:vboxusers"
-SPECIAL="nofakeroot unset_DISTCC_HOSTS"
+PRAGMA="nofakeroot unset_DISTCC_HOSTS"

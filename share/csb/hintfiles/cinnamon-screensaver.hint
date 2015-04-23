@@ -1,2 +1,2 @@
 ADDREQUIRES="cinnamon-desktop libgnomekbd gnome-common pam"
-SPECIAL="download_basename"
+PRAGMA="download_basename"

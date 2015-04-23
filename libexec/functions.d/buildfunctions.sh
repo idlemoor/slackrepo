@@ -186,16 +186,16 @@ function build_item_packages
   # ... ANSWER ...
   [ -n "${HINT_ANSWER[$itemid]}" ] && SLACKBUILDOPTS="echo -e '${HINT_ANSWER[$itemid]}' | $SLACKBUILDOPTS"
 
-  # ... SPECIAL ...
+  # ... PRAGMA ...
   hintnoremove='n'
   hintnofakeroot='n'
   restorevars=''
-  for special in ${HINT_SPECIAL[$itemid]}; do
-    case "$special" in
+  for pragma in ${HINT_PRAGMA[$itemid]}; do
+    case "$pragma" in
     'multilib_ldflags' )
       if [ "$SYS_MULTILIB" = 'y' ]; then
         # This includes the rare case when an i486 cross-compile on x86_64 needs -L/usr/lib
-        log_info -a "Special action: multilib_ldflags"
+        log_info -a "Pragma: multilib_ldflags"
         libdirsuffix=''
         [ "$SR_ARCH" = 'x86_64' ] && libdirsuffix='64'
         sed -i -e "s;^\./configure ;LDFLAGS=\"-L/usr/lib$libdirsuffix\" &;" "$MYTMPIN/$itemfile"
@@ -203,7 +203,7 @@ function build_item_packages
       ;;
     'stubs-32' )
       if [ "$SYS_ARCH" = 'x86_64' -a "$SYS_MULTILIB" = 'n' -a ! -e /usr/include/gnu/stubs-32.h ]; then
-        log_info -a "Special action: stubs-32"
+        log_info -a "Pragma: stubs-32"
         ln -s /usr/include/gnu/stubs-64.h /usr/include/gnu/stubs-32.h
         if [ -z "${HINT_CLEANUP[$itemid]}" ]; then
           HINT_CLEANUP[$itemid]="rm /usr/include/gnu/stubs-32.h"
@@ -213,7 +213,7 @@ function build_item_packages
       fi
       ;;
     'download_basename' )
-      log_info -a "Special action: download_basename"
+      log_info -a "Pragma: download_basename"
       # We're going to guess that the timestamps in the source repo indicate the
       # order in which files were downloaded and therefore the order in INFODOWNLIST.
       # Most of the current bozo downloaders only download one file anyway :-)
@@ -230,43 +230,43 @@ function build_item_packages
       done < <(ls -rt "$SR_SRCREPO"/"$itemdir" 2>/dev/null)
       ;;
     'no_make_test' )
-      log_info -a "Special action: no_make_test"
+      log_info -a "Pragma: no_make_test"
       sed -i -e "s/make test/: # make test/" "$MYTMPIN"/"$itemfile"
       ;;
     'noexport_ARCH' )
-      log_info -a "Special action: noexport_ARCH"
+      log_info -a "Pragma: noexport_ARCH"
       sed -i -e "s/^PRGNAM=.*/&; ARCH='$SR_ARCH'/" "$MYTMPIN"/"$itemfile"
       unset ARCH
       ;;
     'noexport_BUILD' | 'noexport_TAG' )
-      log_info -a "Special action: ${special}"
-      var="${special/noexport_/}"
+      log_info -a "Pragma: ${pragma}"
+      var="${pragma/noexport_/}"
       sed -i -e "s/^${var}=.*/${var}='${!var}'/" "$MYTMPIN"/"$itemfile"
       unset "${var}"
       ;;
     'unset'* )
-      varname="${special/unset_/}"
+      varname="${pragma/unset_/}"
       assignment="$(env | grep "^${varname}=")"
       if [ -n "$assignment" ]; then
-        log_info -a "Special action: ${special}"
+        log_info -a "Pragma: ${pragma}"
         restorevars="${restorevars}export $(echo "${assignment}" | sed -e 's/^/\"/' -e 's/$/\"/'); "
         eval "unset ${varname}"
       fi
       ;;
     'noremove' )
-      log_info -a "Special action: noremove"
+      log_info -a "Pragma: noremove"
       hintnoremove='y'
       ;;
     'nofakeroot' )
-      log_info -a "Special action: nofakeroot"
+      log_info -a "Pragma: nofakeroot"
       hintnofakeroot='y'
       ;;
     'abstar' )
-      log_info -a "Special action: abstar"
+      log_info -a "Pragma: abstar"
       sed -i -e "s/^tar .*/& --absolute-names/" "$MYTMPIN"/"$itemfile"
       ;;
     * )
-      log_warning -a "${itemid}: Hint SPECIAL=\"$special\" not recognised"
+      log_warning -a "${itemid}: Hint PRAGMA=\"$pragma\" not recognised"
       ;;
     esac
   done

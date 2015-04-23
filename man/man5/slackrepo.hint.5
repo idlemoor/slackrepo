@@ -76,7 +76,7 @@ INSTALL=\(dqyesno\(dq
 NUMJOBS=\(dq-j1\(dq
 ANSWERS=\(dqstrings\(dq
 CLEANUP=\(dqcommands\(dq
-SPECIAL=\(dqactions\(dq
+PRAGMA=\(dqpragmas\(dq
 .EE
 .RE
 .
@@ -254,10 +254,11 @@ CLEANUP=\(dqs_reinstall tetex tetex-doc\(dq
 .RE
 .
 .
-.SS SPECIAL=\(dqactions\(dq
-This hint can be specified to perform one or more special actions.
-.B Special actions are not guaranteed to work!
-The following special actions are available:
+.SS PRAGMA=\(dqpragmas\(dq
+This hint can be specified to perform one or more pragmas.
+.B Pragmas are not guaranteed to work!
+The hint name 'PRAGMA' used to be 'SPECIAL', which is still accepted as a synonym.
+The following pragmas are available:
 .P
 .B multilib_ldflags
 .P
@@ -282,7 +283,7 @@ Other variables can be specified, for example
 .P
 .RS
 .EX
-SPECIAL=\(dqunset_DISTCC_HOSTS\(dq
+PRAGMA=\(dqunset_DISTCC_HOSTS\(dq
 .EE
 .RE
 .P

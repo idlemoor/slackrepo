@@ -256,7 +256,7 @@ function find_queuefile
 
 #-------------------------------------------------------------------------------
 
-# Queuefile processing needs a special hint to stop factorial explosion when
+# Queuefile processing needs a hint to stop factorial explosion when
 # enumerating the fake deps:
 declare -A HINT_Q
 
@@ -397,7 +397,7 @@ declare -A INFOVERSION INFOREQUIRES INFODOWNLIST INFOMD5LIST INFOSHA256LIST
 declare -A SRCDIR GITREV GITDIRTY
 # and to store hints:
 declare -A \
-  HINT_MD5IGNORE HINT_SHA256IGNORE HINT_NUMJOBS HINT_INSTALL HINT_SPECIAL \
+  HINT_MD5IGNORE HINT_SHA256IGNORE HINT_NUMJOBS HINT_INSTALL HINT_PRAGMA \
   HINT_ARCH HINT_CLEANUP HINT_USERADD HINT_GROUPADD HINT_ANSWER HINT_NODOWNLOAD \
   HINT_PREREMOVE HINT_CONFLICTS \
   HINT_OPTIONS HINT_VERSION HINTFILE
@@ -546,7 +546,7 @@ function parse_info_and_hints
   if [ -n "${HINTFILE[$itemid]}" ] && [ -s "${HINTFILE[$itemid]}" ]; then
     local SKIP \
           VERSION ADDREQUIRES OPTIONS GROUPADD USERADD PREREMOVE CONFLICTS INSTALL NUMJOBS ANSWER CLEANUP \
-          SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
+          PRAGMA SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
     . "${HINTFILE[$itemid]}"
 
     # Process the hint file's variables individually (looping for each variable would need
@@ -557,7 +557,8 @@ function parse_info_and_hints
     [ -n "$NUMJOBS"   ] &&   HINT_NUMJOBS[$itemid]="$NUMJOBS"
     [ -n "$ANSWER"    ] &&    HINT_ANSWER[$itemid]="$ANSWER"
     [ -n "$CLEANUP"   ] &&   HINT_CLEANUP[$itemid]="$CLEANUP"
-    [ -n "$SPECIAL"   ] &&   HINT_SPECIAL[$itemid]="$SPECIAL"
+    [ -n "$PRAGMA"    ] &&    HINT_PRAGMA[$itemid]="$PRAGMA"
+    [ -n "$SPECIAL"   ] &&    HINT_PRAGMA[$itemid]="$SPECIAL"
 
     # Process hint file's INSTALL
     if [ -n "$INSTALL" ]; then
@@ -672,7 +673,7 @@ function parse_info_and_hints
       ${NUMJOBS+"NUMJOBS=\"$NUMJOBS\""} \
       ${ANSWER+"ANSWER=\"$ANSWER\""} \
       ${CLEANUP+"CLEANUP=\"$CLEANUP\""} \
-      ${SPECIAL+"SPECIAL=\"$SPECIAL\""} \
+      ${PRAGMA+"PRAGMA=\"$PRAGMA\""} \
       ${ARCH+"ARCH=\"$ARCH\""} \
       ${DOWNLOAD+"DOWNLOAD=\"$DOWNLOAD\""} \
       ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
@@ -682,7 +683,7 @@ function parse_info_and_hints
     unset VERSION OPTIONS GROUPADD USERADD \
           PREREMOVE CONFLICTS \
           INSTALL NUMJOBS ANSWER CLEANUP \
-          SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
+          PRAGMA SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
 
   fi
 

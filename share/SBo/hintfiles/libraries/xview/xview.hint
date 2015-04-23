@@ -1,2 +1,2 @@
-SPECIAL="unset_ARCH"
+PRAGMA="unset_ARCH"
 NUMJOBS="-j1"

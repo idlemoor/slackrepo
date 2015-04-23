@@ -139,7 +139,7 @@ function download_src
     curlstat=0
     wgetstat=0
     set -o pipefail
-    case "${HINT_SPECIAL[$itemid]}" in
+    case "${HINT_PRAGMA[$itemid]}" in
     *download_basename*)
       # use wget instead of curl, because energia :-/
       wget --timeout=30 --tries=4 $wgetprogress --no-check-certificate --content-disposition -U slackrepo "$url" 2>&1 | tee -a "$ITEMLOG"

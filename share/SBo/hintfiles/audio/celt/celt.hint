@@ -1,1 +1,1 @@
-SPECIAL="multilib_ldflags"
+PRAGMA="multilib_ldflags"

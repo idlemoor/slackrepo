@@ -1,2 +1,2 @@
 ADDREQUIRES="gnome-common"
-SPECIAL="download_basename"
+PRAGMA="download_basename"

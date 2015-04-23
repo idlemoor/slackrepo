@@ -36,7 +36,7 @@ function build_item_packages
   buildopt=''
   [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
   [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
-  log_itemstart "$todo" "Starting $todo (${STATUSINFO[$todo]})$buildopt"
+  log_itemstart "$itemid" "Starting $itemid (${STATUSINFO[$itemid]})$buildopt"
 
   MYTMPIN="$MYTMPDIR/slackbuild_$itemprgnam"
   # initial wipe of $MYTMPIN, even if $OPT_KEEP_TMP is set
@@ -189,6 +189,7 @@ function build_item_packages
   # ... SPECIAL ...
   hintnoremove='n'
   hintnofakeroot='n'
+  restorevars=''
   for special in ${HINT_SPECIAL[$itemid]}; do
     case "$special" in
     'multilib_ldflags' )
@@ -244,8 +245,13 @@ function build_item_packages
       unset "${var}"
       ;;
     'unset'* )
-      log_info -a "Special action: ${special}"
-      eval "${special/_/ }"
+      varname="${special/unset_/}"
+      assignment="$(env | grep "^${varname}=")"
+      if [ -n "$assignment" ]; then
+        log_info -a "Special action: ${special}"
+        restorevars="${restorevars}export $(echo "${assignment}" | sed -e 's/^/\"/' -e 's/$/\"/'); "
+        eval "unset ${varname}"
+      fi
       ;;
     'noremove' )
       log_info -a "Special action: noremove"
@@ -288,7 +294,12 @@ function build_item_packages
   chroot_setup
 
   # Get all dependencies installed
-  install_deps "$itemid" || { build_failed "$itemid"; return 1; }
+  install_deps "$itemid"
+  if [ $? != 0 ]; then
+    build_failed "$itemid"
+    [ -n "$restorevars" ] && eval "$restorevars"
+    return 1
+  fi
 
   # Remove any existing packages for the item to be built
   # (some builds fail if already installed)
@@ -349,8 +360,10 @@ function build_item_packages
       buildstat=$?
     fi
   fi
+
   buildfinishtime="$(date '+%s')"
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
+  [ -n "$restorevars" ] && eval "$restorevars"
 
   # If there's a config.log in the obvious place, save it
   configlog="${CHROOTDIR}${SR_TMP}/${itemprgnam}-${INFOVERSION[$itemid]}/config.log"
@@ -477,10 +490,10 @@ function build_ok
         mkdir -p "$(dirname "$backupdir")"
       fi
       mv "$SR_PKGREPO"/"$itemdir" "$backupdir"
-      rm -rf "$backupdir".prev
+      rm -rf "${backupdir:?NotSetBackupdir}".prev
       # if there's a stashed source, save it to the backup repo
       if [ -d "$SOURCESTASH" ]; then
-        rm -rf "$backupdir"/"$(basename "${SOURCESTASH/prev_/}")"
+        rm -rf "${backupdir:?NotSetBackupdir}"/"$(basename "${SOURCESTASH/prev_/}")"
         mv "$SOURCESTASH" "$backupdir"/"$(basename "${SOURCESTASH/prev_/}")"
       fi
       # save old revision data to a file in the backup repo

@@ -1,0 +1,2 @@
+GROUPADD="233:cvsd"
+USERADD="233:cvsd:-d/srv/cvsd"

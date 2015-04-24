@@ -1,0 +1,2 @@
+GROUPADD="208:lighttpd"
+USERADD="208:lighttpd:-d/var/www"

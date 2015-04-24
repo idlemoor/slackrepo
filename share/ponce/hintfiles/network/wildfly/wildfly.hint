@@ -1,0 +1,2 @@
+GROUPADD="281:wildfly"
+USERADD="281:wildfly:-M:-r:-s/bin/bash:-d/usr/share/wildfly"

@@ -1,0 +1,3 @@
+ADDREQUIRES=""
+SKIP="NOTE: You must run lazarus-IDE once to populate the required files
+before building cqrlog."

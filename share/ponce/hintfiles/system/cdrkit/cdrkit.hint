@@ -1,0 +1,2 @@
+ADDREQUIRES="lame"
+CLEANUP="s_reinstall cdrtools"

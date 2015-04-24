@@ -1,0 +1,1 @@
+ADDREQUIRES="GraphicsMagick openjpeg libwebp flickcurl json-glib colord"

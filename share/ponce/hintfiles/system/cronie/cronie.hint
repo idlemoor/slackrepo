@@ -1,0 +1,2 @@
+ADDREQUIRES=""
+CLEANUP="s_reinstall dcron"

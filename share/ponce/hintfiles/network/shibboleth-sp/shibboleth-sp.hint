@@ -1,0 +1,2 @@
+GROUPADD="267:shibd"
+USERADD="267:shibd:-d/var/run/shibboleth"

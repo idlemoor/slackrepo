@@ -1,0 +1,3 @@
+SKIP="Mitsuba requires libglewmx. Slackware ships with GLEW but it has not been compiled
+to include libglewmx, so you will have to re-compile and re-install it manually."
+ADDREQUIRES=""

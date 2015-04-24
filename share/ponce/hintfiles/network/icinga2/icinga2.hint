@@ -1,0 +1,3 @@
+GROUPADD="297:icinga 298:icingacmd"
+USERADD="297:icinga:-d/dev/null:-s/bin/false:-Gicingacmd:-gicinga"
+PRAGMA="download_basename"

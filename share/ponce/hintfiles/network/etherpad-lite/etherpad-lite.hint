@@ -1,0 +1,3 @@
+GROUPADD="264:etherpad"
+USERADD="264:etherpad"
+PRAGMA="download_basename"

@@ -1,0 +1,1 @@
+ADDREQUIRES="gst-ffmpeg gst-plugins-bad avahi ffmpeg2theora gst-plugins-ugly flashplayer-plugin"

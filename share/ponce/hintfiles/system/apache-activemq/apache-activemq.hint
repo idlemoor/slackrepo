@@ -1,0 +1,2 @@
+GROUPADD="253:activemq"
+USERADD="253:activemq:-d/var/lib/activemq:-s/bin/sh"

@@ -1,0 +1,2 @@
+GROUPADD="287:sonar"
+USERADD="287:sonar:-d/usr/share/sonarqube:-s/bin/bash:-r"

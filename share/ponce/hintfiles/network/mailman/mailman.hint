@@ -1,0 +1,2 @@
+GROUPADD="204:mailman"
+USERADD="204:mailman"

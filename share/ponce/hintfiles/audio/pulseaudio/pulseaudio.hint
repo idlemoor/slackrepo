@@ -1,0 +1,3 @@
+GROUPADD="216:pulse"
+USERADD="216:pulse:-d/var/lib/pulse"
+NUMJOBS="-j1"

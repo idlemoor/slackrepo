@@ -1,0 +1,1 @@
+CLEANUP="rm /usr/share/X11/xorg.conf.d/05-qxl.conf"

@@ -1,0 +1,1 @@
+CLEANUP="sed -i '/\/opt\/kde3\/lib64/d' /etc/ld.so.conf; ldconfig"

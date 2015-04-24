@@ -1,0 +1,1 @@
+CLEANUP="rm /etc/webmin/FIRSTRUN; rmdir /etc/webmin"

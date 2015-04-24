@@ -1,0 +1,2 @@
+GROUPADD="239:dkim"
+USERADD="239:dkim:-d/dev/null"

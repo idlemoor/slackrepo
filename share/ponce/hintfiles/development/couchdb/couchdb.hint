@@ -1,0 +1,2 @@
+GROUPADD="231:couchdb"
+USERADD="231:couchdb:-s/bin/sh:-d/var/lib/couchdb"

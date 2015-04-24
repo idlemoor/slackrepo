@@ -1,0 +1,2 @@
+ADDREQUIRES="gsl"
+OPTIONS="GSL=yes FFTW=yes QT=no"

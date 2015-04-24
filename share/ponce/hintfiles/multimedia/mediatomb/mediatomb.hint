@@ -1,0 +1,2 @@
+GROUPADD="241:mediatomb"
+USERADD="241:mediatomb:-d/var/lib/mediatomb"

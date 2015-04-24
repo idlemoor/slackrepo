@@ -1,0 +1,2 @@
+ADDREQUIRES="graphviz apache-ant jdk"
+OPTIONS="BDJAVA=yes"

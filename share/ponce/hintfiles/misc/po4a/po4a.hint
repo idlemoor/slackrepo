@@ -1,0 +1,1 @@
+ADDREQUIRES="perl-TermReadKey perl-Text-WrapI18N perl-Text-CharWidth perl-MIME-Charset perl-Encode-EUCJPASCII perl-Encode-HanExtra perl-Encode-JISX0213 perl-Encode-ISO2022"

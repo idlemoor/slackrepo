@@ -241,8 +241,8 @@ SYS_MHz=$(awk '/^cpu MHz/ {sum+=$4} END {print sum}' < /proc/cpuinfo)
 SYS_OVERLAYFS='n'
 # don't look at the kernel version -- somebody might have the old patchset
 [ -f /lib/modules/"$(uname -r)"/kernel/fs/overlayfs/overlay.ko ] && SYS_OVERLAYFS='y'
-SYS_GOODMAKE='n'
-[ -f /var/log/packages/make-3.82-x86_64-5 ] && SYS_GOODMAKE='y'  #### crude but effective
+SYS_CURRENT='n'
+[ ! -f /var/log/packages/make-3.82-x86_64-4 ] && SYS_CURRENT='y'  # crude but effective
 
 # Next, do the config variables.
 # These config vars are prefixed with SR_ to stop SlackBuilds picking them up.
@@ -270,7 +270,13 @@ if [ -f "$userconf" ]; then
 fi
 
 # If we didn't get a repo id from env or cmd line, drop $REPO from the user config file into $OPT_REPO:
-[ -z "$OPT_REPO" ] && OPT_REPO="${REPO:-SBo}"
+if [ -z "$OPT_REPO" ]; then
+  if [ "$SYS_CURRENT" = "y" ]; then
+    OPT_REPO="${REPO:-ponce}"
+  else
+    OPT_REPO="${REPO:-SBo}"
+  fi
+fi
 # Read the main repo config file, overriding anything that came from the user config file:
 repoconf="${CONFIGDIR:-/etc/slackrepo}/slackrepo_${OPT_REPO}.conf"
 if [ -f "$repoconf" ]; then

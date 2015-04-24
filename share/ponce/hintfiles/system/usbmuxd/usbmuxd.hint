@@ -1,0 +1,1 @@
+USERADD="277:usbmux:-gplugdev:-d/dev/null:-s/bin/false"

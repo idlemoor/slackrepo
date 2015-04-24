@@ -1,0 +1,3 @@
+ARCH=""
+GROUPADD="285:mongo"
+USERADD="285:mongo:-d/var/lib/mongodb:-s/bin/false"

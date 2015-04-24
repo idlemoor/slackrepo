@@ -1,0 +1,4 @@
+ADDREQUIRES=""
+GROUPADD="270:smtpd 271:smtpq"
+USERADD="270:smtpd:-g0:-r:-s/bin/false:-d/var/empty 271:smtpq:-r:-s/bin/false:-d/var/empty"
+CLEANUP="s_reinstall sendmail"

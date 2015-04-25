@@ -502,12 +502,22 @@ if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
         log_normal "Updating git..."
         git fetch
         db_set_misc "git_fetch_${currbranch}" "$(date +%s)"
-        if [ "$DOCOLOUR"  = 'y' -a -x /usr/bin/unbuffer ]; then
-          unbuffer git merge --ff-only origin/"$currbranch"
+        dounbuffer=""
+        [ "$DOCOLOUR"  = 'y' -a -x /usr/bin/unbuffer ] && dounbuffer="unbuffer "
+        if [ "${OPT_REPO}" = 'ponce' ] && [ "$currbranch" = 'current' ]; then
+          $dounbuffer git merge -X theirs origin/"$currbranch"
+          gitstat=$?
         else
-          git merge --ff-only origin/"$currbranch"
+          $dounbuffer git merge --ff-only origin/"$currbranch"
+          gitstat=$?
         fi
-        log_normal "Finished updating git."
+        if [ $gitstat = 0 ]; then
+          log_normal "Finished updating git."
+        else
+          log_error "Failed to update git (status=$gitstat).\nPlease resolve any conflicts and merge manually."
+          exit_cleanup
+          exit 1
+        fi
       fi
     fi
   fi

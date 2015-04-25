@@ -183,6 +183,10 @@ function add_parsed_file
 
 #-------------------------------------------------------------------------------
 
+# Bodge for SBo deps that are in Slackware-current but the package name is different:
+declare -A PKG_IN_CURRENT
+PKG_IN_CURRENT["pysetuptools"]="python"
+
 function find_slackbuild
 # Find a SlackBuild in the repo.  Populates arrays ITEM{DIR,FILE,PRGNAM}, and
 # returns the SlackBuild's itemid (key for ITEM{DIR,FILE,PRGNAM}) in $R_SLACKBUILD.
@@ -191,14 +195,25 @@ function find_slackbuild
 # 0 = all ok
 # 1 = not found
 # 2 = multiple matches
+# 3 = not found, but a package $R_PACKAGE is installed
 {
-  unset R_SLACKBUILD
+  unset R_SLACKBUILD R_PACKAGE
   local prgnam="$1"
   local file="${prgnam}.SlackBuild"
 
   sblist=( $(find -L "$SR_SBREPO" -name "$file" 2>/dev/null) )
   if [ "${#sblist[@]}" = 0 ]; then
-    return 1
+    guesspkgnam="$dep"
+    [ "$SYS_CURRENT" = 'y' ] && [ -n "${PKG_IN_CURRENT[$dep]}" ] && guesspkgnam="${PKG_IN_CURRENT[$dep]}"
+    pkglist=( $(find -L "/var/log/packages" -maxdepth 0 -name "${guesspkgnam}-*-*-*" 2>/dev/null) )
+    if [ "${#pkglist[@]}" = 0 ]; then
+      return 1
+    elif [ "${#pkglist[@]}" = 1 ]; then
+      R_PACKAGE=$(basename "${pkglist[0]}")
+      return 3
+    else
+      return 1
+    fi
   elif [ "${#sblist[@]}" != 1 ]; then
     return 2
   fi

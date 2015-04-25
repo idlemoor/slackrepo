@@ -25,10 +25,12 @@ function build_command
 
   TODOLIST=()
   if [ -z "${STATUS[$itemid]}" ]; then
-    log_normal "Calculating dependencies ..."
+    log_normal "Calculating dependencies ... "
     DEPTREE=""
     calculate_deps_and_status "$itemid"
-    if [ "${DIRECTDEPS[$itemid]}" != "" ]; then
+    if [ "${DIRECTDEPS[$itemid]}" = "" ]; then
+      log_done "none."
+    else
       log_normal "Dependency tree:"
       echo -n "$DEPTREE"
     fi

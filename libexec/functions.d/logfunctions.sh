@@ -212,12 +212,12 @@ function log_error
 #-------------------------------------------------------------------------------
 
 function log_done
-# Log the message "done." to standard output (but not ITEMLOG).
-# Usage: log_done
+# Log the message "done." or a similar message to standard output (but not ITEMLOG).
+# Usage: log_done [message]
+# $1 = optional message to substitute for "done."
 # Return status: always 0
 {
-  echo "done."
-  NL=''
+  [ -n "${NL}" ] && echo "${1:-done.}" && NL=''
   return 0
 }
 

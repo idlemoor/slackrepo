@@ -238,11 +238,13 @@ SYS_MULTILIB='n'
 [ "$SYS_ARCH" = 'x86_64' -a -f /etc/profile.d/32dev.sh ] && SYS_MULTILIB='y'
 SYS_NPROC=$(nproc)
 SYS_MHz=$(awk '/^cpu MHz/ {sum+=$4} END {print sum}' < /proc/cpuinfo)
+# If that's jiggered (stupid Pi kernels), try this. Then give up like W.C. Fields said.
+[ -z "$SYS_MHz" ] && SYS_MHz=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq | sed 's/...$//')
 SYS_OVERLAYFS='n'
 # don't look at the kernel version -- somebody might have the old patchset
 [ -f /lib/modules/"$(uname -r)"/kernel/fs/overlayfs/overlay.ko ] && SYS_OVERLAYFS='y'
 SYS_CURRENT='n'
-[ ! -f /var/log/packages/make-3.82-x86_64-4 ] && SYS_CURRENT='y'  # crude but effective
+[ ! -f /var/log/packages/make-3.82-*-4 ] && SYS_CURRENT='y'  # crude but effective
 
 # Next, do the config variables.
 # These config vars are prefixed with SR_ to stop SlackBuilds picking them up.

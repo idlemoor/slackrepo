@@ -324,7 +324,7 @@ function build_item_packages
   # Remember the build start time and estimate the build finish time
   estbuildsecs=''
   read prevsecs prevmhz guessflag < <(db_get_buildsecs "$itemid")
-  if [ -n "$prevsecs" ] && [ -n "$prevmhz" ]; then
+  if [ -n "$prevsecs" ] && [ -n "$prevmhz" ] && [ -n "$SYS_MHz" ]; then
     estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevmhz}/${SYS_MHz}+1" | bc | sed 's/\..*//')
   fi
   buildstarttime="$(date '+%s')"

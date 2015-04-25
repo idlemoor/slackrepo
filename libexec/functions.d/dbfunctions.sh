@@ -242,6 +242,7 @@ function db_set_buildsecs
 # (mhzsum is always set to $SYS_MHz, and guessflag is always set to '=')
 {
   [ -z "$1" -o -z "$2" ] && return 1
+  [ -z "$SYS_MHz" ] && return 0
   sqlite3 "$SR_DATABASE" \
     "insert or replace into buildsecs ( itemid, secs, mhzsum, guessflag ) values ( '$1', '$2', $SYS_MHz, '=' );"
   dbstat=$?

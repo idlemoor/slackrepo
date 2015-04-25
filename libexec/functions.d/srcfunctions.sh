@@ -177,10 +177,10 @@ function download_src
 
   echo "$VERSION" > "$DOWNDIR"/.version
   # curl content-disposition can't undo %-encoding.
-  # If it's too hard for curl, we'll just zap the obvious ones:
+  # If it's too hard for curl, it's not too hard for us :P
   for urltrouble in *%*; do
     [ -e "$urltrouble" ] || break
-    mv "$urltrouble" "$(echo "$urltrouble" | sed -e 's/\%20/ /g' -e 's/\%7E/~/g' -e 's/\%28/(/g' -e 's/\%29/)/g')"
+    eval mv "$urltrouble" "$(echo "$urltrouble" | sed -e "s/\\%\\(..\\)/\\$'\\\\x\\1'/g")"
   done
 
   cd - >/dev/null

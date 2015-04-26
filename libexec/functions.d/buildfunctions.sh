@@ -202,9 +202,9 @@ function build_item_packages
       fi
       ;;
     'stubs-32' )
-      if [ "$SYS_ARCH" = 'x86_64' -a "$SYS_MULTILIB" = 'n' -a ! -e /usr/include/gnu/stubs-32.h ]; then
+      if [ "$SYS_ARCH" = 'x86_64' ] && [ ! -e /usr/include/gnu/stubs-32.h ]; then
         log_info -a "Pragma: stubs-32"
-        ln -s /usr/include/gnu/stubs-64.h /usr/include/gnu/stubs-32.h
+        cp -a /usr/share/slackrepo/stubs-32.h /usr/include/gnu/
         if [ -z "${HINT_CLEANUP[$itemid]}" ]; then
           HINT_CLEANUP[$itemid]="rm /usr/include/gnu/stubs-32.h"
         else

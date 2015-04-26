@@ -132,7 +132,7 @@ function calculate_deps_and_status
         elif [ $fstat = 2 ]; then
           log_warning "${itemid}: Dependency $dep matches more than one SlackBuild"
         elif [ $fstat = 3 ]; then
-          log_info "${itemid}: Using package ${R_PACKAGE} for dependency ${dep}"
+          log_info "${itemid}: Using ${R_INSTALLED} for dependency ${dep}"
         fi
       fi
     done

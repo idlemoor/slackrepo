@@ -195,9 +195,9 @@ function find_slackbuild
 # 0 = all ok
 # 1 = not found
 # 2 = multiple matches
-# 3 = not found, but a package $R_PACKAGE is installed
+# 3 = not found, but a package $R_INSTALLED is installed
 {
-  unset R_SLACKBUILD R_PACKAGE
+  unset R_SLACKBUILD R_INSTALLED
   local prgnam="$1"
   local file="${prgnam}.SlackBuild"
 
@@ -205,15 +205,12 @@ function find_slackbuild
   if [ "${#sblist[@]}" = 0 ]; then
     guesspkgnam="$dep"
     [ "$SYS_CURRENT" = 'y' ] && [ -n "${PKG_IN_CURRENT[$dep]}" ] && guesspkgnam="${PKG_IN_CURRENT[$dep]}"
-    pkglist=( $(find -L "/var/log/packages" -maxdepth 0 -name "${guesspkgnam}-*-*-*" 2>/dev/null) )
-    if [ "${#pkglist[@]}" = 0 ]; then
-      return 1
-    elif [ "${#pkglist[@]}" = 1 ]; then
-      R_PACKAGE=$(basename "${pkglist[0]}")
-      return 3
-    else
-      return 1
-    fi
+    is_installed "${guesspkgnam}-v-a-bt"
+    iistat=$?
+    case $iistat in
+    0 | 1 ) return 3 ;;
+    * )     return 1 ;;
+    esac
   elif [ "${#sblist[@]}" != 1 ]; then
     return 2
   fi

@@ -324,7 +324,6 @@ done
 # chroot will only work if overlayfs is available
 if [ "$OPT_CHROOT" = 'y' ] && [ "$SYS_OVERLAYFS" != 'y' ]; then
   OPT_CHROOT='n'
-  echo "$(basename "$0"): Warning: cannot enable --chroot (overlayfs is not available in your kernel)"
 fi
 # accept null niceness, map to zero
 [ -z "$OPT_NICE" ] && OPT_NICE='0'

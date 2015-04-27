@@ -120,7 +120,7 @@ function build_item_packages
   # Work out BUILD
   # Get the value from the SlackBuild
   unset BUILD
-  buildassign=$(grep '^BUILD=' "$MYTMPIN"/"$itemfile")
+  buildassign=$(grep -a '^BUILD=' "$MYTMPIN"/"$itemfile")
   if [ -z "$buildassign" ]; then
     buildassign="BUILD=1"
     log_warning -a "${itemid}: no \"BUILD=\" in $itemfile; using 1"
@@ -340,17 +340,17 @@ function build_item_packages
   log_normal -a "Running $itemfile ..." "$eta"
   log_info -a "$SLACKBUILDCMD"
   if [ "$OPT_VERBOSE" = 'y' ]; then
-    log_verbose '\n---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8----\n'
+    log_verbose '\n---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8----\n' >&41
     set -o pipefail
     if [ "$SYS_MULTILIB" = "y" ] && [ "$ARCH" = 'i486' -o "$ARCH" = 'i686' ]; then
-      ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" 2>&1 | tee -a "$ITEMLOG"
+      ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" 2>&1 | tee -a "$ITEMLOG" >&41
       buildstat=$?
     else
-      ${CHROOTCMD}sh -c "cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" 2>&1 | tee -a "$ITEMLOG"
+      ${CHROOTCMD}sh -c "cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" 2>&1 | tee -a "$ITEMLOG" >&41
       buildstat=$?
     fi
     set +o pipefail
-    log_verbose '\n----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<----\n'
+    log_verbose '\n----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<----\n' >&41
   else
     if [ "$SYS_MULTILIB" = "y" ] && [ "$ARCH" = 'i486' -o "$ARCH" = 'i686' ]; then
       ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MYTMPIN}\"; ${SLACKBUILDCMD}" >> "$ITEMLOG" 2>&1
@@ -630,7 +630,7 @@ function chroot_report
   if [ -f "$MYTMPDIR"/start ]; then
     crap=$(cd "$MYTMPDIR"/changes; find . -path './tmp' -prune -o  -path ".$HOME/.*/*" -prune -o -newer ../start -print 2>/dev/null)
     if [ -n "$crap" ]; then
-      excludes="^/dev/ttyp|^$HOME/.distcc|^$HOME/.cache/g-ir-scanner|^$HOME\$"
+      excludes="^/dev/ttyp|^$HOME/.distcc|^$HOME/.cache|^$HOME\$"
       significant="$(echo "$crap" | sed -e "s#^\./#/#" | grep -v -E "$excludes" | sort)"
       if [ -n "$significant" ]; then
         log_warning -a "$itemid: Files/directories were modified during the build"

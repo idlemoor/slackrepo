@@ -1,1 +1,1 @@
-SKIP="Compilation may fail on 64-bit Slackware due to missing\n/usr/include/gnu/stubs-32.h from glibc.  If you experience this problem,\ncopy that file from stubs-64.h in the same directory (or create a symlink),\nand you may delete your copy/symlink after you have created the package."
+PRAGMA="stubs-32"

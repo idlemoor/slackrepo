@@ -190,6 +190,7 @@ function build_item_packages
   hintnoremove='n'
   hintnofakeroot='n'
   restorevars=''
+  removestubs=''
   for pragma in ${HINT_PRAGMA[$itemid]}; do
     case "$pragma" in
     'multilib_ldflags' )
@@ -205,11 +206,7 @@ function build_item_packages
       if [ "$SYS_ARCH" = 'x86_64' ] && [ ! -e /usr/include/gnu/stubs-32.h ]; then
         log_info -a "Pragma: stubs-32"
         cp -a /usr/share/slackrepo/stubs-32.h /usr/include/gnu/
-        if [ -z "${HINT_CLEANUP[$itemid]}" ]; then
-          HINT_CLEANUP[$itemid]="rm /usr/include/gnu/stubs-32.h"
-        else
-          HINT_CLEANUP[$itemid]="${HINT_CLEANUP[$itemid]}; rm /usr/include/gnu/stubs-32.h"
-        fi
+        removestubs='y'
       fi
       ;;
     'download_basename' )
@@ -364,6 +361,7 @@ function build_item_packages
   buildfinishtime="$(date '+%s')"
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
   [ -n "$restorevars" ] && eval "$restorevars"
+  [ -n "$removestubs" ] && rm /usr/include/gnu/stubs-32.h
 
   # If there's a config.log in the obvious place, save it
   configlog="${CHROOTDIR}${SR_TMP}/${itemprgnam}-${INFOVERSION[$itemid]}/config.log"

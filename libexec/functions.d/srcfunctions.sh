@@ -131,7 +131,7 @@ function download_src
   [ "$OPT_VERBOSE" = 'y' ]  && curlprogress=''
   wgetprogress='--quiet --progress=bar:force'
   [ "$OPT_VERBOSE" = 'y' ]  && wgetprogress='--progress=bar:force'
-  [ "$SYS_GOODMAKE" = 'y' ] && wgetprogress="${wgetprogress}:noscroll --show-progress"  # probably -current ;-)
+  [ "$SYS_CURRENT" = 'y' ] && wgetprogress="${wgetprogress}:noscroll --show-progress"
 
   log_normal -a "Downloading source files ..."
   cd "$DOWNDIR"
@@ -146,8 +146,13 @@ function download_src
       wgetstat=$?
       ;;
     *)
-      curl -q --connect-timeout 30 --retry 4 -f $curlprogress -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$url" 2>&1 | tee -a "$ITEMLOG"
-      curlstat=$?
+      if [ "${url:0:3}" = 'ftp' ]; then
+        wget --timeout=30 --tries=4 $wgetprogress --no-check-certificate --content-disposition -U slackrepo "$url" 2>&1 | tee -a "$ITEMLOG"
+        wgetstat=$?
+      else
+        curl -q --connect-timeout 30 --retry 4 -f $curlprogress -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$url" 2>&41 1>/dev/null | tee -a "$ITEMLOG"
+        curlstat=$?
+      fi
       ;;
     esac
     set +o pipefail
@@ -155,7 +160,7 @@ function download_src
       # Try SlackBuilds Direct :D quietly ;-)
       sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/${ITEMPRGNAM[$itemid]}/${url##*/}"
       set -o pipefail
-      curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$sbdurl" 2>&1 | tee -a "$ITEMLOG"
+      curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$sbdurl" 2>&41 1>/dev/null | tee -a "$ITEMLOG"
       sbdstat=$?
       set +o pipefail
       if [ $sbdstat != 0 ]; then

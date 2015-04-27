@@ -186,6 +186,8 @@ function add_parsed_file
 # Bodge for SBo deps that are in Slackware-current but the package name is different:
 declare -A PKG_IN_CURRENT
 PKG_IN_CURRENT["pysetuptools"]="python"
+PKG_IN_CURRENT["gst1-plugins-base"]="gst-plugins-base"
+
 
 function find_slackbuild
 # Find a SlackBuild in the repo.  Populates arrays ITEM{DIR,FILE,PRGNAM}, and

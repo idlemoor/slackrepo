@@ -5,10 +5,8 @@
 # parsefunctions.sh - parse functions for slackrepo
 #   parse_args
 #   scan_dir
-#   scan_queuefile
 #   add_parsed_file
 #   find_slackbuild
-#   find_queuefile
 #   parse_package_name
 #   parse_info_and_hints
 #-------------------------------------------------------------------------------
@@ -61,21 +59,7 @@ function parse_args
     # An item can be an absolute pathname of an object; or a relative pathname
     # of an object; or the basename of an object deep in the repo, provided that
     # there is only one object with that name.  An object can be either a directory
-    # or a file.  Queuefiles are special.
-
-    # Queuefile?
-    if [ "${item##*.}" = 'sqf' ]; then
-      find_queuefile "$item"
-      if [ $? = 0 ]; then
-        scan_queuefile "$R_QUEUEFILE"
-        continue
-      else
-        log_start "$item"
-        log_itemfinish "$item" "bad" "" "Queuefile $item not found"
-        errstat=1
-        continue
-      fi
-    fi
+    # or a file.
 
     # Absolute path?
     if [ "${item:0:1}" = '/' ]; then
@@ -227,107 +211,6 @@ function find_slackbuild
   ITEMFILE[$id]="$file"
   ITEMPRGNAM[$id]="$prgnam"
   R_SLACKBUILD="$id"
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-function find_queuefile
-# Find a queuefile.  Returns its pathname in R_QUEUEFILE.
-# $1 = queuefile pathname (with or without .sqf suffix)
-# Return status:
-# 0 = all ok
-# 1 = not found
-# 2 = multiple matches
-{
-  unset R_QUEUEFILE
-  local qpath="$1"
-  # try a quick win
-  if [ -f "$qpath" ]; then
-    R_QUEUEFILE="$qpath"
-    return 0
-  fi
-
-  local -a qlist
-  local qbase="$(basename "$1")"
-  local qfound=''
-  local -a qsearch=( "$SR_QUEUEDIR" "$SR_HINTDIR" "$SR_SBREPO" )
-  for trydir in "${qsearch[@]}"; do
-    qlist=( $(find -L "$trydir" -name "$qbase" 2>/dev/null) )
-    if [ "${#qlist[@]}" = 0 ]; then
-      continue
-    elif [ "${#qlist[@]}" = 1 ]; then
-      qfound="${qlist[0]}"
-      break
-    else
-      return 2
-    fi
-  done
-  [ "$qfound" = '' ] && return 1
-  R_QUEUEFILE="$qfound"
-  return 0
-}
-
-#-------------------------------------------------------------------------------
-
-# Queuefile processing needs a hint to stop factorial explosion when
-# enumerating the fake deps:
-declare -A HINT_Q
-
-function scan_queuefile
-# Scans a queuefile, finding its slackbuilds (with options and inferred deps).
-# Sets the itemid of the last slackbuild in the queue in $lastinqueuefile so
-# the caller (probably scan_queuefile ;-) can use it as a dep of the next item.
-# $1 = pathname of the queuefile to scan
-# Return status: always 0 (any bad slackbuilds are ignored)
-{
-  local sqfile="$1"
-  local -a fakedeps
-  local depid
-
-  if [ ! -f "$sqfile" ]; then
-    if [ -f "$SR_QUEUEDIR"/"$sqfile" ]; then
-      sqfile="$SR_QUEUEDIR"/"$sqfile"
-    else
-      log_warning "${sqfile}: No such queuefile"
-      return 1
-    fi
-  fi
-
-  while read sqfitem sqfoptions ; do
-    case $sqfitem
-    in
-      @*) find_queuefile "${sqfitem:1}".sqf
-          if [ $? = 0 ]; then
-            scan_queuefile "$R_QUEUEFILE"
-            fakedeps+=( "$lastinqueuefile" )
-          else
-            log_warning "${itemid}: Queuefile ${sqfitem:1}.sqf not found"
-          fi
-          ;;
-      -*) log_verbose "Ignoring unselected queuefile item ${sqfitem:1}"
-          ;;
-      * ) find_slackbuild "$sqfitem"
-          fstat=$?
-          if [ $fstat = 0 ]; then
-            PARSEDLIST+=( "$R_SLACKBUILD" )
-            HINT_Q["$R_SLACKBUILD"]="$queuefile"
-            # add sqfitem to fakedeps *after* adding fakedeps to INFOREQUIRES
-            # so that sqfitem won't depend on itself
-            INFOREQUIRES["$R_SLACKBUILD"]="${fakedeps[*]}"
-            fakedeps+=( "$sqfitem" )
-          elif [ $fstat = 1 ]; then
-            log_warning "${itemid}: Queuefile dep $sqfitem not found"
-          elif [ $fstat = 2 ]; then
-            log_warning "${itemid}: Queuefile dep $sqfitem matches more than one SlackBuild"
-          fi
-          if [ -n "$sqfoptions" ]; then
-            HINT_OPTIONS["$R_SLACKBUILD"]="$(echo "$sqfoptions" | sed 's/^ *| *//')"
-          fi
-          ;;
-    esac
-  done < "$sqfile"
-  lastinqueuefile="$sqfitem"
   return 0
 }
 
@@ -548,6 +431,7 @@ function parse_info_and_hints
   if [ "${HINTFILE[$itemid]+yesitisset}" != 'yesitisset' ]; then
     hintfile=''
     hintsearch=( "$SR_SBREPO"/"$itemdir" "$SR_HINTDIR" "$SR_HINTDIR"/"$itemdir" )
+    [ -n "$SR_DEFAULT_HINTDIR" ] && hintsearch+=( "$SR_DEFAULT_HINTDIR"/"$itemdir" )
     for trydir in "${hintsearch[@]}"; do
       if [ -f "$trydir"/"$itemprgnam".hint ]; then
         hintfile="$trydir"/"$itemprgnam".hint

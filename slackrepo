@@ -250,7 +250,7 @@ SYS_CURRENT='n'
 # These config vars are prefixed with SR_ to stop SlackBuilds picking them up.
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO SRCREPO PKGREPO PKGBACKUP \
-          HINTDIR QUEUEDIR LOGDIR DATABASE TMP \
+          HINTDIR DEFAULT_HINTDIR LOGDIR DATABASE TMP \
           ARCH TAG PKGTYPE NUMJOBS"
 # These config vars don't need to be obfuscated:
 genrepnames="USE_GENREPOS REPOSROOT REPOSOWNER REPOSOWNERGPG DL_URL \
@@ -438,8 +438,8 @@ declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST BADLIST
 [ -d "$SR_HINTDIR" ]  || \
   { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"   || \
   { log_error "Failed to create directory";  exit_cleanup; exit 4; }; }
-[ -d "$SR_QUEUEDIR" ] || \
-  { log_normal "Creating queuefile directory: $SR_QUEUEDIR" ; mkdir -p "$SR_QUEUEDIR"  || \
+[ -z "$SR_DEFAULT_HINTDIR" ] || [ -d "$SR_DEFAULT_HINTDIR" ] || \
+  { log_normal "Creating default hintfile directory: $SR_DEFAULT_HINTDIR"; mkdir -p "$SR_DEFAULT_HINTDIR" || \
   { log_error "Failed to create directory";  exit_cleanup; exit 4; }; }
 [ -d "$SR_LOGDIR" ]   || \
   { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"    || \

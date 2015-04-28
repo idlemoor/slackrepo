@@ -1,7 +1,7 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO.HINT 5 "2015-04-12" slackrepo-0.2.0
+.TH SLACKREPO.HINT 5 "2015-05-01" slackrepo-0.2.0
 .
 .
 .
@@ -25,33 +25,37 @@ A \(dqhintfile\(dq is a file that supplements a SlackBuild's .info file, for
 example to specify options and additional dependencies, to override the version,
 downloads and md5sums, etc.
 .P
-Each repository ID should have its own hint directory, as configured in the
-configuration file (see
+Each repository ID should have a local hintfiles directory, as configured
+by the HINTDIR variable in the configuration file (see
 .BR slackrepo.conf (5)).
 By default this will be
 .IR /etc/slackrepo/ID/hintfiles .
 .P
-The hintfiles directory can optionally contain a structure of subdirectories
+The local hintfiles directory can optionally contain a structure of subdirectories
 that is the same as the subdirectories in the SlackBuilds repository.
 For example, if the SBo repository's SlackBuild file for wxPython is
 .IR libraries/wxPython/wxPython.SlackBuild ,
 then its hintfile would be
-.IR /etc/slackrepo/hints_SBo/libraries/wxPython/wxPython.hint .
-.P
+.IR /etc/slackrepo/SBo/hintfiles/libraries/wxPython/wxPython.hint .
 Alternatively, hintfiles can be placed in the top level directory, for example
 .IR /etc/slackrepo/SBo/hintfiles/wxPython.hint .
-A hintfile in the top level directory takes precedence over a hintfiles of the
-same name in a subdirectory.
+A hintfile in the top level directory takes precedence over a hintfile
+of the same name in a subdirectory.
 .P
-A comprehensive set of example hintfiles for SlackBuilds.org is supplied in the directory
-.IR /usr/share/slackrepo/SBo/hintfiles .
-.B The example hintfiles are ignored.
-You must copy or symlink the example hintfiles into
-.IR /etc/slackrepo/SBo/hintfiles ,
-then review the README files of the packages you are
-building, and then edit the hintfiles in 
-.I /etc/slackrepo/SBo/hintfiles
-for your own choices.
+Each repository ID should also have a default hint directory
+for system supplied hintfiles,
+as configured by the DEFAULT_HINTDIR variable
+in the configuration file (see
+.BR slackrepo.conf (5)).
+For example, the SlackBuilds.org default hintfiles for Slackware 14.1 are
+supplied in the directory
+.IR /usr/share/slackrepo/SBo/default_hintfiles/14.1 .
+The default hintfiles directory contains a structure of subdirectories
+that is the same as the subdirectories in the SlackBuilds repository.
+.P
+Local hintfiles always take precedence over default hintfiles.
+You can disable the default hintfile directory completely by unsetting the
+DEFAULT_HINTDIR variable.
 .P
 The format of a hintfile is based on the format of SlackBuilds.org .info files,
 but all the entries are optional, and any unrecognised entries are ignored.
@@ -203,24 +207,24 @@ This hint is most useful for SlackBuilds that repackage binaries.
 .SS INSTALL=\(dqyesno\(dq
 .P
 This hint temporarily overrides the value of INSTALL given in the configuration
-file or on the command line. Use this hint if you want a specific package to be 
-installed after it has been built (e.g. nvidia-driver). Note that if the control 
+file or on the command line. Use this hint if you want a specific package to be
+installed after it has been built (e.g. nvidia-driver). Note that if the control
 argument --dry-run is specified, this hint will be ignored.
 .
 .
 .SS NUMJOBS=\(dq-j1\(dq
 .P
-This hint temporarily overrides the value of NUMJOBS given in the configuration 
-file or environment. Use this hint if the build process fails when multiple 
+This hint temporarily overrides the value of NUMJOBS given in the configuration
+file or environment. Use this hint if the build process fails when multiple
 'make' jobs are used, so that the build will be executed with MAKEFLAGS='-j1'.
 .
 .
 .SS ANSWERS=\(dqstring\(dq
 .P
-This hint can be specified if the build process wants to read answers to its 
-questions during execution, for example concerning a licence agreement. 
-The string is piped into the SlackBuild's standard input, so it should contain 
-whatever will make the build process happy. Newlines can be specified as \\n, 
+This hint can be specified if the build process wants to read answers to its
+questions during execution, for example concerning a licence agreement.
+The string is piped into the SlackBuild's standard input, so it should contain
+whatever will make the build process happy. Newlines can be specified as \\n,
 for example
 .P
 .RS
@@ -231,7 +235,7 @@ ANSWERS=\(dqok\\nyes\(dq
 .
 .
 .SS CLEANUP=\(dqcommands\(dq
-.P 
+.P
 This hint can be specified if the package needs extra cleanup when it is uninstalled
 (e.g. packages that replace standard Slackware packages or install kernel modules).
 The hint should define an appropriate shell command line.
@@ -268,7 +272,7 @@ as described in SlackBuilds.org FAQ 18.
 .B download_basename
 .P
 Provide a symlink for source downloads using the URL's basename,
-for the benefit of SlackBuilds that don't expect content-disposition to be respected. 
+for the benefit of SlackBuilds that don't expect content-disposition to be respected.
 .P
 .BR noexport_ARCH " and " noexport_BUILD " and " noexport_TAG
 .P

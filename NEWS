@@ -1,0 +1,50 @@
+slackrepo-0.2.0, May 2015
+
+The following new features and improvements have been added since the release
+of slackrepo-0.1.0 last year:
+
+  * Building in a dynamically created and destroyed chroot environment to keep
+    your system absolutely clean, to detect bad builds and to speed up package
+    uninstalls (this feature requires Linux kernel version 3.18 or newer with
+    overlayfs, for example Slackware -current)
+
+  * Building as a non-root user to detect bad builds and keep your system
+    clean (this feature requires the 'fakeroot' package, available from
+    SlackBuilds.org) - see the FAQ
+
+  * Automatic download fallback to Slackbuilds Direct Links if the original 
+    download has gone down
+
+  * On Slackware -current, the default is to build from Matteo Bernardini's
+    forked SBo repository for slackware-current (--repo=ponce)
+
+  * Build time estimates are shown, using a database of known build times, or
+    the last occasion you successfully built the same package
+
+  * Automatic package backup is performed, so you can go back to the previous
+    build of a package
+
+  * New 'lint' command allows you to test or retest SlackBuilds, source
+    download links and package contents without building or rebuilding
+
+  * Coloured output from cmake, git, clang, mono, waf and gcc-4.9 when you
+    build with --verbose
+
+  * System-supplied hintfiles have moved to the directory
+      /etc/slackrepo/<repo>/default_hintfiles/<slackversion>
+    and are now *enabled* by default. Your own local hintfiles override the
+    default hintfiles, and are still read from the directory
+      /etc/slackrepo/<repo>/hintfiles
+    You can disable the default hintfiles by disabling the DEFAULT_HINTDIR
+    configuration variable.
+
+  * The SPECIAL hint has been renamed to PRAGMA (but SPECIAL is still accepted)
+
+  * Revised and additional hintfiles Thanks to Panagiotis Nikolaou for the
+    contributions!
+
+  * sqlite database to track package revision info (the previous release of
+    slackrepo used dotfiles)
+
+  * Simplified --verbose option, --quiet option removed
+

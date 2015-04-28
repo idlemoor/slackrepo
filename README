@@ -2,10 +2,10 @@ slackrepo is a tool for making and managing package repositories on
 Slackware, by building from repositories of SlackBuilds.
 
 Features:
-  - Clean repeatable building, including dependencies
-  - Highly automated (no interaction required)
-  - Package updates detected by tracking upstream git revisions
-  - Output repositories suitable for use with slackpkg+
+  * Clean repeatable building, including dependencies
+  * Highly automated (no interaction required)
+  * Package updates detected by tracking upstream git revisions
+  * Output repositories suitable for use with slackpkg+
 
 Homepage: http://idlemoor.github.io/slackrepo/index.html
 Feedback: email David Spencer <baildon.research@googlemail.com>

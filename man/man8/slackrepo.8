@@ -1,7 +1,7 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO 8 "2015-04-12" slackrepo-0.2.0
+.TH SLACKREPO 8 "2015-05-01" slackrepo-0.2.0
 .
 .
 .
@@ -78,7 +78,7 @@ and packages.
 .I ITEM
 An item specifies
 (in the build, rebuild and lint commands)
-a directory or a SlackBuild file in the SlackBuild repository, or a queuefile,
+a directory or a SlackBuild file in the SlackBuild repository,
 or (in the update, remove and revert commands)
 a directory or a package file in the package repository.
 If no items are specified, all directories in the SlackBuild or package
@@ -187,8 +187,8 @@ The behaviour of
 .B slackrepo
 is affected by the following environment variables:
 .P
-.BR REPO ", " SBREPO ", " PKGREPO ", " PKGBACKUP ", " SRCREPO ,
-.BR HINTDIR ", " LOGDIR ", " DATABASE ", " TMP ,
+.BR REPO ", " CONFIGDIR ", " SBREPO ", " PKGREPO ", " PKGBACKUP ", " SRCREPO ,
+.BR HINTDIR ", " DEFAULT_HINTDIR ", " LOGDIR ", " DATABASE ", " TMP ,
 .BR NUMJOBS ", " ARCH ", " TAG ", " PKGTYPE ", " USE_GENREPOS
 .P
 Each of these environment variables overrides the corresponding configuration

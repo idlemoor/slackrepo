@@ -1,7 +1,7 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO.CONF 5 "2015-04-12" slackrepo-0.2.0
+.TH SLACKREPO.CONF 5 "2015-05-01" slackrepo-0.2.0
 .
 .
 .
@@ -65,21 +65,37 @@ supplied configuration file for the
 .B SBo
 (SlackBuilds.org) repository ID.
 .
-.SS Default repo ID
+.SS Default repo ID and configuration directory
 .P
-The following configuration variable can be set only in
-.IR ~/.slackreporc ,
-but can be overridden by the REPO environment variable or
-by the command line option '--repo=ID'.
+The following configuration variables can be set only in
+.IR ~/.slackreporc .
 .
 .TP
 .B REPO
 The default repo ID. This determines the configuration file
-.I /etc/slackrepo/slackrepo_ID.conf
+.I slackrepo_ID.conf
 from which other configuration variables will be read.
+This variable can be set only in
+.IR ~/.slackreporc ,
+but can be overridden by the REPO environment variable or by the
+command line option
+.BR --repo=ID .
 .br
 Example:
 .B REPO=\(dqSBo\(dq
+.
+.TP
+.B CONFIGDIR
+The configuration directory.
+This specifies an alternative directory to be used instead of
+.I /etc/slackrepo
+to find the configuration files.
+This variable can be set only in
+.IR ~/.slackreporc ,
+but can be overridden by the CONFIGDIR environment variable.
+.br
+Example:
+.B CONFIGDIR=\(dq/etc/slackrepo\(dq
 .
 .SS Repository filestore locations
 .P
@@ -133,6 +149,16 @@ Where to find hintfiles for this repository.
 .br
 Example:
 .B HINTDIR=\(dq/etc/slackrepo/%REPO%/hintfiles\(dq
+.
+.TP
+.B DEFAULT_HINTDIR
+Where to find default hintfiles for this repository.
+.br
+Example:
+.B DEFAULT_HINTDIR=\(dq/etc/slackrepo/%REPO%/default_hintfiles/%SLACKVER%\(dq
+.IP
+You can disable all the default hintfiles for this repository
+by commenting out or deleting this line.
 .
 .TP
 .B LOGDIR
@@ -444,7 +470,7 @@ Example:
 The slackrepo configuration file can be a useful place to set environment variables for the build process.
 You can simply add export commands at the end of the configuration file.
 .P
-For example, you can add the following commands to compile everything with clang instead of gcc 
+For example, you can add the following commands to compile everything with clang instead of gcc
 (but please note, there are a few packages do not build correctly with clang).
 .P
 .RS +4n

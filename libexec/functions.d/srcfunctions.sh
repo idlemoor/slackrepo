@@ -127,8 +127,6 @@ function download_src
     return 0
   fi
 
-  curlprogress='-#'
-  [ "$OPT_VERBOSE" = 'y' ]  && curlprogress=''
   wgetprogress='--quiet --progress=bar:force'
   [ "$OPT_VERBOSE" = 'y' ]  && wgetprogress='--progress=bar:force'
   [ "$SYS_CURRENT" = 'y' ] && wgetprogress="${wgetprogress}:noscroll --show-progress"
@@ -136,36 +134,20 @@ function download_src
   log_normal -a "Downloading source files ..."
   cd "$DOWNDIR"
   for url in $DOWNLIST; do
-    curlstat=0
     wgetstat=0
     set -o pipefail
-    case "${HINT_PRAGMA[$itemid]}" in
-    *download_basename*)
-      # use wget instead of curl, because energia :-/
-      wget --timeout=30 --tries=4 $wgetprogress --no-check-certificate --content-disposition -U slackrepo "$url" 2>&1 | tee -a "$ITEMLOG"
-      wgetstat=$?
-      ;;
-    *)
-      if [ "${url:0:3}" = 'ftp' ]; then
-        wget --timeout=30 --tries=4 $wgetprogress --no-check-certificate --content-disposition -U slackrepo "$url" 2>&1 | tee -a "$ITEMLOG"
-        wgetstat=$?
-      else
-        curl -q --connect-timeout 30 --retry 4 -f $curlprogress -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$url" 2>&41 1>/dev/null | tee -a "$ITEMLOG"
-        curlstat=$?
-      fi
-      ;;
-    esac
+    wget --timeout=30 --tries=4 $wgetprogress --no-check-certificate --content-disposition -U slackrepo "$url" 2>&41
+    wgetstat=$?
     set +o pipefail
-    if [ $curlstat != 0 ] || [ $wgetstat != 0 ]; then
+    if [ $wgetstat != 0 ]; then
       # Try SlackBuilds Direct :D quietly ;-)
       sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/${ITEMPRGNAM[$itemid]}/${url##*/}"
       set -o pipefail
-      curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -O "$sbdurl" 2>&41 1>/dev/null | tee -a "$ITEMLOG"
+      wget --timeout=30 --tries=4 $wgetprogress --no-check-certificate --content-disposition -U slackrepo "$url" 2>&41
       sbdstat=$?
       set +o pipefail
       if [ $sbdstat != 0 ]; then
         # use the original url and status in the error message
-        [ "$curlstat" != 0 ] && failmsg="$(print_curl_status $curlstat)"
         [ "$wgetstat" != 0 ] && failmsg="$(print_wget_status $wgetstat)"
         if [ "$CMD" = 'lint' ]; then
           log_warning -a "${itemid}: Download failed: ${failmsg}."
@@ -179,15 +161,7 @@ function download_src
       log_info -a "Downloaded from SlackBuilds Direct Links: ${url##*/}"
     fi
   done
-
   echo "$VERSION" > "$DOWNDIR"/.version
-  # curl content-disposition can't undo %-encoding.
-  # If it's too hard for curl, it's not too hard for us :P
-  for urltrouble in *%*; do
-    [ -e "$urltrouble" ] || break
-    eval mv "$urltrouble" "$(echo "$urltrouble" | sed -e "s/\\%\\(..\\)/\\$'\\\\x\\1'/g")"
-  done
-
   cd - >/dev/null
   return 0
 }

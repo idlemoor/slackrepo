@@ -6,7 +6,7 @@
 #   parse_args
 #   scan_dir
 #   add_parsed_file
-#   find_slackbuild
+#   find_itemid
 #   parse_package_name
 #   parse_info_and_hints
 #-------------------------------------------------------------------------------
@@ -24,6 +24,7 @@ function parse_args
 #   ITEMFILE -- the filename of the SlackBuild or package to be processed
 #   ITEMDIR -- the path (relative to the repo root) of the directory that contains ITEMFILE
 #   ITEMPRGNAM -- the prgnam of the SlackBuild or package
+#   PRGNAMITEMID -- the itemid of the prgnam
 #   UNPARSEDLIST -- a list of newly discovered subdirectory names that need to be parsed
 #
 # Return status:
@@ -55,6 +56,14 @@ function parse_args
 
     item=$(realpath -m "$1")
     shift
+
+    # Quick win if we've seen this before:
+    if [ -n "${PRGNAMITEMID[$item]}" ]; then
+      # we don't need to set ITEMFILE/ITEMDIR/ITEMPRGNAM/PRGNAMITEMID or UNPARSEDLIST
+      # but we do need to set PARSEDLIST
+      PARSEDLIST+=( "${PRGNAMITEMID[$item]}" )
+      continue
+    fi
 
     # An item can be an absolute pathname of an object; or a relative pathname
     # of an object; or the basename of an object deep in the repo, provided that
@@ -104,10 +113,13 @@ function parse_args
       errstat=1
       continue
     elif [ "${#gotitems[@]}" = 1 ]; then
+      # bullseye!
       if [ -f "${gotitems[0]}" ]; then
+        # it's a file
         add_parsed_file "$searchtype" "${gotitems[0]}"
         continue
       else
+        # it's a directory
         scan_dir "$searchtype" "${gotitems[0]}"
         continue
       fi
@@ -126,7 +138,7 @@ function parse_args
 
 #-------------------------------------------------------------------------------
 
-declare -A ITEMDIR ITEMFILE ITEMPRGNAM
+declare -A ITEMDIR ITEMFILE ITEMPRGNAM PRGNAMITEMID
 
 function add_parsed_file
 # Adds an item ID for the file to the global array $PARSEDLIST. The ID is a
@@ -136,6 +148,7 @@ function add_parsed_file
 # $ITEMDIR[$id] = the directory of the item relative to SR_SBREPO
 # $ITEMFILE[$id] = the full basename of the file (prgnam.SlackBuild, mate-build-base.sh, etc)
 # $ITEMPRGNAM[$id] = the basename of the item with .(SlackBuild|sh) removed
+# $PRGNAMITEMID[$prgnam] = the itemid of the given prgnam (== inverse of ITEMPRGNAM)
 # $1 = -s => look up in SlackBuild repo, or -p => look up in Package repo
 # $2 = pathname (relative to the repo) of the file to add as an item
 # Returns: always 0
@@ -161,6 +174,7 @@ function add_parsed_file
   ITEMDIR[$id]="$dir"
   ITEMFILE[$id]="$file"
   ITEMPRGNAM[$id]="$prgnam"
+  PRGNAMITEMID[$prgnam]="$id"
   PARSEDLIST+=( "$id" )
   return 0
 }
@@ -172,45 +186,67 @@ declare -A PKG_IN_CURRENT
 PKG_IN_CURRENT["pysetuptools"]="python"
 PKG_IN_CURRENT["gst1-plugins-base"]="gst-plugins-base"
 
-
-function find_slackbuild
-# Find a SlackBuild in the repo.  Populates arrays ITEM{DIR,FILE,PRGNAM}, and
-# returns the SlackBuild's itemid (key for ITEM{DIR,FILE,PRGNAM}) in $R_SLACKBUILD.
+function find_itemid
+# Find an itemid in the repo (mapping prgnam to itemid)
+# Populates arrays ITEM{DIR,FILE,PRGNAM},
+# and returns the itemid (key for ITEM{DIR,FILE,PRGNAM}) in $R_ITEMID.
 # $1 = prgnam
 # Return status:
 # 0 = all ok
 # 1 = not found
 # 2 = multiple matches
-# 3 = not found, but a package $R_INSTALLED is installed
+# 3 = substitute package $R_INSTALLED
 {
-  unset R_SLACKBUILD R_INSTALLED
+  unset R_ITEMID R_INSTALLED
   local prgnam="$1"
-  local file="${prgnam}.SlackBuild"
 
-  sblist=( $(find -L "$SR_SBREPO" -name "$file" 2>/dev/null) )
-  if [ "${#sblist[@]}" = 0 ]; then
-    guesspkgnam="$dep"
-    [ "$SYS_CURRENT" = 'y' ] && [ -n "${PKG_IN_CURRENT[$dep]}" ] && guesspkgnam="${PKG_IN_CURRENT[$dep]}"
+  if [ -n "${PRGNAMITEMID[$prgnam]}" ]; then
+    R_ITEMID="${PRGNAMITEMID[$prgnam]}"
+    return 0
+  fi
+
+  if [ "$SYS_CURRENT" = 'y' ]; then
+    # For -current only, prefer packages in Slackware over SlackBuild items
+    guesspkgnam="$prgnam"
+    [ -n "${PKG_IN_CURRENT[$guesspkgnam]}" ] && guesspkgnam="${PKG_IN_CURRENT[$guesspkgnam]}"
     is_installed "${guesspkgnam}-v-a-bt"
     iistat=$?
-    case $iistat in
-    0 | 1 ) return 3 ;;
-    * )     return 1 ;;
-    esac
-  elif [ "${#sblist[@]}" != 1 ]; then
+    if [ $iistat = 0 ] || [ $iistat = 1 ]; then
+      # it's only genuine Slackware if the tag is null :-)
+      parse_package_name "$R_INSTALLED"
+      [ -z "$PN_TAG" ] && return 3
+      unset R_INSTALLED
+    fi
+  fi
+
+  sblist=( $(find -L "$SR_SBREPO" -name "${prgnam}.SlackBuild" 2>/dev/null) )
+  if [ "${#sblist[@]}" = 0 ]; then
+    # no SlackBuild => look for an installed package (poss from another repo)
+    guesspkgnam="$prgnam"
+    is_installed "${guesspkgnam}-v-a-bt"
+    iistat=$?
+    if [ $iistat = 0 ] || [ $iistat = 1 ]; then
+      # $R_INSTALLED was set by is_installed()
+      return 3
+    else
+      # nada :-/
+      return 1
+    fi
+  elif [ "${#sblist[@]}" -ge 2 ]; then
     return 2
   fi
 
   dir=$(dirname "${sblist[0]:$(( ${#SR_SBREPO} + 1 ))}")
   dirbase=$(basename "$dir")
 
-  id="$dir"/"$file"
+  id="$dir"/"$prgnam"
   [ "$prgnam" = "$dirbase" ] && id="$dir"
 
   ITEMDIR[$id]="$dir"
-  ITEMFILE[$id]="$file"
+  ITEMFILE[$id]="${prgnam}.SlackBuild"
   ITEMPRGNAM[$id]="$prgnam"
-  R_SLACKBUILD="$id"
+  PRGNAMITEMID[$prgnam]="$id"
+  R_ITEMID="$id"
   return 0
 }
 
@@ -283,7 +319,7 @@ function parse_package_name
   PN_BUILD=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/[^0-9]*$//')
   PN_TAG=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
   PN_PKGTYPE=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
-  return
+  return 0
 }
 
 #-------------------------------------------------------------------------------

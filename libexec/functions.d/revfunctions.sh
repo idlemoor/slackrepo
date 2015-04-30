@@ -123,10 +123,10 @@ function calculate_deps_and_status
       elif [ "$dep" = "$itemprgnam" ]; then
         log_warning "${itemid}: Ignoring dependency of ${itemprgnam} on itself"
       else
-        find_slackbuild "$dep"
+        find_itemid "$dep"
         fstat=$?
         if [ $fstat = 0 ]; then
-          deplist+=( "${R_SLACKBUILD}" )
+          deplist+=( "${R_ITEMID}" )
         elif [ $fstat = 1 ]; then
           log_warning "${itemid}: Dependency $dep does not exist"
         elif [ $fstat = 2 ]; then

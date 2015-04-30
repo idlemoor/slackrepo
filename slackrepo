@@ -151,7 +151,7 @@ while [ $# != 0 ]; do
           found='y'; break
         fi
       done
-      [ "$found" = 'n' ] && echo "$(basename "$0"): Warning: invalid control argument: $1" >&2
+      [ "$found" = 'n' ] && { echo "$(basename "$0"): Error: invalid control argument: $1" >&2; exit_cleanup; exit 3; }
       shift; continue ;;
     * )
       if [ "$(type -t "${1}_command")" = 'function' ]; then

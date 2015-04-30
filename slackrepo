@@ -351,7 +351,8 @@ done
 LOCKFILE="$(dirname "$SR_SBREPO")/.lock"
 mkdir -p "$(dirname "$LOCKFILE")"
 touch "$LOCKFILE"
-mkdir -p "$SR_LOGDIR"
+mkdir -p "$SR_LOGDIR" || \
+  { echo "$(basename "$0"): Failed to create log directory: $SR_LOGDIR" >&2; exit_cleanup; exit 4; }
 MAINLOG="$SR_LOGDIR"/$(basename "$0")_$(date '+%F_%T').log
 init_colour
 if [ "$DOCOLOUR" = 'y' ]; then
@@ -437,12 +438,6 @@ declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST BADLIST
   { log_error "Failed to create repository"; exit_cleanup; exit 4; }; }
 [ -d "$SR_HINTDIR" ]  || \
   { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"   || \
-  { log_error "Failed to create directory";  exit_cleanup; exit 4; }; }
-[ -z "$SR_DEFAULT_HINTDIR" ] || [ -d "$SR_DEFAULT_HINTDIR" ] || \
-  { log_normal "Creating default hintfile directory: $SR_DEFAULT_HINTDIR"; mkdir -p "$SR_DEFAULT_HINTDIR" || \
-  { log_error "Failed to create directory";  exit_cleanup; exit 4; }; }
-[ -d "$SR_LOGDIR" ]   || \
-  { log_normal "Creating log directory: $SR_LOGDIR"         ; mkdir -p "$SR_LOGDIR"    || \
   { log_error "Failed to create directory";  exit_cleanup; exit 4; }; }
 
 # sqlite database for revision details, package identification, build times etc

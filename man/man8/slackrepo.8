@@ -77,13 +77,12 @@ and packages.
 .TP
 .I ITEM
 An item specifies
-(in the build, rebuild and lint commands)
 a directory or a SlackBuild file in the SlackBuild repository,
-or (in the update, remove and revert commands)
-a directory or a package file in the package repository.
-If no items are specified, all directories in the SlackBuild or package
-repository are processed (except in the remove and revert commands, where it is mandatory
-to specify the items to be removed).
+and/or (in the update, remove and revert commands only) formerly in the SlackBuild repository.
+Shell-style globs (wildcards) are allowed.
+If no items are specified, all directories in the SlackBuild repository are processed
+(except in the remove and revert commands,
+where it is mandatory to specify the items to be removed).
 .
 .
 .

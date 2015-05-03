@@ -30,6 +30,12 @@ of slackrepo-0.1.0 last year:
   * Coloured output from cmake, git, clang, mono, waf and gcc-4.9 when you
     build with --verbose
 
+  * Shell-style globs (wildcards) are now supported in the command arguments,
+    so you can do things like
+      slackrepo build 'xfce4-*-plugin'
+    (As with commands like 'find', you will need to quote them or escape them,
+    to protect them from the shell.)
+
   * System-supplied hintfiles have moved to the directory
       /etc/slackrepo/<repo>/default_hintfiles/<slackversion>
     and are now *enabled* by default. Your own local hintfiles override the

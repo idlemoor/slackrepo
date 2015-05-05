@@ -123,17 +123,8 @@ function calculate_deps_and_status
       elif [ "$dep" = "$itemprgnam" ]; then
         log_warning "${itemid}: Ignoring dependency of ${itemprgnam} on itself"
       else
-        find_itemid "$dep"
-        fstat=$?
-        if [ $fstat = 0 ]; then
-          deplist+=( "${R_ITEMID}" )
-        elif [ $fstat = 1 ]; then
-          log_warning "${itemid}: Dependency $dep does not exist"
-        elif [ $fstat = 2 ]; then
-          log_warning "${itemid}: Dependency $dep matches more than one SlackBuild"
-        elif [ $fstat = 3 ]; then
-          log_info "${itemid}: Using ${R_INSTALLED} for dependency ${dep}"
-        fi
+        parse_arg "${dep}" "${itemid}"
+        [ "${#PARSEDARGS[@]}" != 0 ] && deplist+=( "${PARSEDARGS[@]}" )
       fi
     done
     # Canonicalise the list of deps so we can detect changes in the future.
@@ -202,7 +193,7 @@ function calculate_deps_and_status
         ;;
       # (4) are any of the deps skipped, unsupported, aborted, failed, whatever
       #     => abort the item unless it is skipped/unsupported
-      'skipped' | 'unsupported' | 'aborted' | 'failed' | '*' )
+      'skipped' | 'unsupported' | 'remove' | 'removed' | 'aborted' | 'failed' | '*' )
         if [ "${STATUS[$itemid]}" != "skipped" ] && [ "${STATUS[$itemid]}" != "unsupported" ] ; then
           STATUS[$itemid]="aborted"
           STATUSINFO[$itemid]="aborted"
@@ -234,9 +225,9 @@ function calculate_deps_and_status
   else
     if [ "${STATUS[$itemid]}" = 'add' ] || [ "${STATUS[$itemid]}" = 'update' ] || [ "${STATUS[$itemid]}" = 'rebuild' ] || [ "${STATUS[$itemid]}" = 'updated+rebuild' ]; then
       prettystatus=" ${tputgreen}(${STATUSINFO[$itemid]})${tputnormal}"
-    elif [ "${STATUS[$itemid]}" = 'skipped' ] || [ "${STATUS[$itemid]}" = 'unsupported' ]; then
+    elif [ "${STATUS[$itemid]}" = 'remove' ] || [ "${STATUS[$itemid]}" = 'skipped' ] || [ "${STATUS[$itemid]}" = 'unsupported' ]; then
       prettystatus=" ${tputyellow}(${STATUS[$itemid]})${tputnormal}"
-    else # failed, aborted, and other not-yet-invented catastrophes
+    else # removed, failed, aborted, and other not-yet-invented catastrophes
       prettystatus=" ${tputred}(${STATUS[$itemid]})${tputnormal}"
     fi
     additem='y'
@@ -284,8 +275,17 @@ function calculate_item_status
     STATUS[$itemid]="ok"
     STATUSINFO[$itemid]="ok"
     return 0
-  elif [ "${STATUS[$itemid]}" = "aborted" ] || [ "${STATUS[$itemid]}" = "failed" ] || [ "${STATUS[$itemid]}" = "skipped" ] || [ "${STATUS[$itemid]}" = "unsupported" ]; then
+  elif [ "${STATUS[$itemid]}" = "aborted" ] || [ "${STATUS[$itemid]}" = "failed" ]  || \
+       [ "${STATUS[$itemid]}" = "removed" ] || [ "${STATUS[$itemid]}" = "skipped" ] || \
+       [ "${STATUS[$itemid]}" = "unsupported" ]; then
     # the situation is not going to improve ;-)
+    return 0
+  fi
+
+  # No SlackBuild => remove
+  if [ -z "$itemdir" ] || [ ! -d "$SR_SBREPO"/"$itemdir" ]; then
+    STATUS[$itemid]="remove"
+    STATUSINFO[$itemid]=""
     return 0
   fi
 
@@ -321,7 +321,7 @@ function calculate_item_status
   if [ "$GOTGIT" = 'n' ]; then
 
     # If this isn't a git repo, and any of the files have been modified since the package was built => update
-    modifilelist=( $(find -L "$SR_SBREPO"/"$itemdir" -newermt @"$pkgblt" 2>/dev/null) )
+    readarray -t modifilelist < <(find -L "$SR_SBREPO"/"$itemdir" -newermt @"$pkgblt" 2>/dev/null)
     if [ ${#modifilelist[@]} != 0 ]; then
       STATUS[$itemid]="update"
       STATUSINFO[$itemid]="update for modified files"
@@ -364,7 +364,7 @@ function calculate_item_status
 
     # If git is dirty, and any file has been modified since the package was built => update
     if [ "${GITDIRTY[$itemid]}" = 'y' ]; then
-      modifilelist=( $(find -L "$SR_SBREPO"/"$itemdir" -newermt @"$pkgblt" 2>/dev/null) )
+      readarray -t modifilelist < <(find -L "$SR_SBREPO"/"$itemdir" -newermt @"$pkgblt" 2>/dev/null)
       if [ ${#modifilelist[@]} != 0 ]; then
         STATUS[$itemid]="update"
         STATUSINFO[$itemid]="update for git $shortcurrrev"

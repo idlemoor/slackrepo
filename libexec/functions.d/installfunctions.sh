@@ -67,6 +67,7 @@ function install_packages
 # 0 = installed ok or already installed
 # 1 = any install failed or not found (bail out after first error)
 {
+  local arg
   for arg in $*; do
 
     if [ -f "$arg" ]; then
@@ -103,7 +104,13 @@ function install_packages
           done
         fi
       done
-      [ "${#pkglist[@]}" = 0 ] && { log_error -a "${itemid}: Can't find any packages to install"; return 1; }
+      if [ "${#pkglist[@]}" = 0 ]; then
+        log_error -a "${itemid}: Can't find any packages to install"
+        # if the packages have gone, we'd better wipe the db entries
+        db_del_rev "${itemid}"
+        db_del_itemid_pkgnam "$itemid"
+        return 1
+      fi
     fi
 
     if [ -n "${HINT_GROUPADD[$itemid]}" ] || [ -n "${HINT_USERADD[$itemid]}" ]; then

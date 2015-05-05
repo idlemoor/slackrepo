@@ -59,7 +59,7 @@ function verify_src
   fi
 
   # check files in this dir only (arch-specific subdirectories may exist, ignore them)
-  IFS=$'\n'; srcfilelist=( $(find "$DOWNDIR" -maxdepth 1 -type f \! -name .version -print 2>/dev/null) ); unset IFS
+  readarray -t srcfilelist < <(find "$DOWNDIR" -maxdepth 1 -type f \! -name .version -print 2>/dev/null)
   numgot=${#srcfilelist[@]}
   # no files, empty directory => return 3 (same as no directory) or 6
   [ $numgot = 0 -a -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6

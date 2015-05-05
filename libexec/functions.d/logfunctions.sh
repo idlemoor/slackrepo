@@ -253,15 +253,15 @@ function log_itemstart
   local itemid="$1"
   local message="$2"
 
-  if [ -n "$itemid" ]; then
-    if [ -n "$message" ]; then
-      if [ ${#message} -gt "$LINEUSABLE" ]; then
-        echo -e "${PADLINE:0:$LINEUSABLE} $(date +%T)\n${tputboldwhite}${message}${tputnormal}"
-      else
-        padlen=$(( LINEUSABLE - ${#message} - 1 ))
-        echo "${tputboldwhite}${message}${tputnormal} ${PADLINE:0:$padlen} $(date +%T)"
-      fi
+  if [ -n "$message" ]; then
+    if [ ${#message} -gt "$LINEUSABLE" ]; then
+      echo -e "${PADLINE:0:$LINEUSABLE} $(date +%T)\n${tputboldwhite}${message}${tputnormal}"
+    else
+      padlen=$(( LINEUSABLE - ${#message} - 1 ))
+      echo "${tputboldwhite}${message}${tputnormal} ${PADLINE:0:$padlen} $(date +%T)"
     fi
+  fi
+  if [ -n "$itemid" ] && [ -n "${ITEMDIR[$itemid]}" ]; then
     ITEMLOGDIR="$SR_LOGDIR"/"${ITEMDIR[$itemid]}"
     mkdir -p "$ITEMLOGDIR"
     ITEMLOG="$ITEMLOGDIR"/"$CMD".log
@@ -297,7 +297,7 @@ function log_itemfinish
     'UNSUPPORTED') message="$itemid is UNSUPPORTED" ;;
     'FAILED') message="$itemid FAILED" ;;
     'ABORTED') message="$itemid ABORTED" ;;
-    'BAD') message="BAD ARGUMENT $itemid" ;;
+    'BAD') message="BAD ARGUMENT '$itemid'" ;;
   esac
   [ -n "$3" ] && message="$message $3"
 

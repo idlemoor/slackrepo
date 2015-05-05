@@ -244,7 +244,16 @@ SYS_OVERLAYFS='n'
 # don't look at the kernel version -- somebody might have the old patchset
 [ -f /lib/modules/"$(uname -r)"/kernel/fs/overlayfs/overlay.ko ] && SYS_OVERLAYFS='y'
 SYS_CURRENT='n'
-[ ! -f /var/log/packages/make-3.82-*-4 ] && SYS_CURRENT='y'  # crude but effective
+if [ "${SYS_OSNAME}${SYS_OSVER}" = "slackware14.1" ]; then
+  is_installed "make-3.82-a-bt"
+  iistat=$?
+  if [ "$iistat" = 0 ] || [ "$iistat" = 1 ]; then
+    parse_package_name "$R_INSTALLED"
+    if [ "$PN_VERSION" != 3.82 ] || [ "$PN_BUILD" -ge 5 ]; then
+      SYS_CURRENT='y'
+    fi
+  fi
+fi
 
 # Next, do the config variables.
 # These config vars are prefixed with SR_ to stop SlackBuilds picking them up.
@@ -349,7 +358,8 @@ done
 
 # Setup locking and logging:
 LOCKFILE="$(dirname "$SR_SBREPO")/.lock"
-mkdir -p "$(dirname "$LOCKFILE")"
+mkdir -p "$(dirname "$LOCKFILE")" || \
+  { echo "$(basename "$0"): Failed to create repository root directory: $(dirname "$LOCKFILE")" >&2; exit_cleanup; exit 4; }
 touch "$LOCKFILE"
 mkdir -p "$SR_LOGDIR" || \
   { echo "$(basename "$0"): Failed to create log directory: $SR_LOGDIR" >&2; exit_cleanup; exit 4; }
@@ -444,6 +454,8 @@ declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST BADLIST
 # This is now *required* so here is a default path:
 [ -n "$SR_DATABASE" ] || SR_DATABASE="$(dirname "$SR_SBREPO")/database_${OPT_REPO}.sqlite3"
 db_init || { log_error "Failed to initialise database"; exit_cleanup; exit 4; }
+# we'll also have a locatedb (findutils) database in the same place:
+SR_LOCATEDB="$(dirname "$SR_DATABASE")/locatedb_${OPT_REPO}"
 
 # Temporary directory:
 SR_TMP=${SR_TMP:-/tmp/SBo}
@@ -467,68 +479,97 @@ if [ "$OPT_DRY_RUN" = 'y' ]; then
   mkdir -p "$DRYREPO"
 fi
 
+#-------------------------------------------------------------------------------
+
 # We will use $SR_SBREPO as the working directory; it simplifies lots of git stuff.
 cd "$SR_SBREPO" || { log_error "Failed to access SlackBuilds repository"; exit_cleanup; exit 4; }
 
-# Initialise git (only if this is a build or rebuild or update)
-if [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
-  # git: initialise, or check and update
-  if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
-    if [ -n "${SR_INIT_GITCLONE}" ]; then
-      log_normal "Cloning SlackBuilds repository $SR_SBREPO from ${SR_INIT_GITCLONE}."
-      git clone "${SR_INIT_GITCLONE}" "$SR_SBREPO"
-      git fetch -a
-      git remote update
-      mybranch="${SR_INIT_GITBRANCH:-${SYS_OSVER:-master}}"
-      if [ "$(git rev-parse --abbrev-ref HEAD)" != "$mybranch" ]; then
-        git checkout -b "$mybranch" -t origin/"$mybranch"
-      fi
-      db_set_misc "git_fetch_${SR_INIT_GITBRANCH}" "$(date +%s)"
-      log_normal "Finished cloning SlackBuilds repository."
+# We used to check whether this is a git repo with...
+# if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+# ... but it's painfully slow, so instead we'll just do this:
+GOTGIT=n
+[ -d "$SR_SBREPO/.git" ] && GOTGIT='y'
+
+# git: initialise, or check and update
+if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
+  if [ -n "${SR_INIT_GITCLONE}" ]; then
+    log_normal "Cloning SlackBuilds repository $SR_SBREPO from ${SR_INIT_GITCLONE}."
+    git clone "${SR_INIT_GITCLONE}" "$SR_SBREPO"
+    git fetch -a
+    git remote update
+    mybranch="${SR_INIT_GITBRANCH:-${SYS_OSVER:-master}}"
+    if [ "$(git rev-parse --abbrev-ref HEAD)" != "$mybranch" ]; then
+      git checkout -b "$mybranch" -t origin/"$mybranch"
     fi
-  elif [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
-    # Is git clean, and is the current branch $SR_INIT_GITBRANCH?
-    log_normal "Checking git ... "
-    muck="$(git status -s .)"
-    log_done
-    currbranch=$(git rev-parse --abbrev-ref HEAD)
-    if [ -z "$muck" -a "$currbranch" = "${SR_INIT_GITBRANCH:-master}" ]; then
-      prevfetch=$(db_get_misc "git_fetch_${currbranch}")
-      if [ -n "$prevfetch" ] && [ $(( $(date +%s) - prevfetch )) -gt 86400 ]; then
-        log_normal "Updating git..."
+    db_set_misc "git_fetch_${SR_INIT_GITBRANCH}" "$(date +%s)"
+    log_normal "Finished cloning SlackBuilds repository."
+    GOTGIT='y'
+  fi
+elif [ "$GOTGIT" = 'y' ] && [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ "$CMD" = 'update' ]; then
+  # Update git if git is clean, and the current branch is $SR_INIT_GITBRANCH
+  log_normal "Checking whether git is clean ... "
+  muck="$(git status -s .)"
+  if [ -z "$muck" ]; then
+    log_done "yes."
+  else
+    log_done "no."
+  fi
+  currbranch=$(git rev-parse --abbrev-ref HEAD)
+  if [ -z "$muck" ] && [ "$currbranch" = "${SR_INIT_GITBRANCH:-master}" ]; then
+    prevfetch=$(db_get_misc "git_fetch_${currbranch}")
+    if [ -n "$prevfetch" ] && [ $(( $(date +%s) - prevfetch )) -gt 86400 ]; then
+      log_normal "Updating git ..."
+      if [ "${OPT_REPO}" = 'ponce' ] && [ "$currbranch" = 'current' ]; then
+        git fetch --all --prune
+        db_set_misc "git_fetch_${currbranch}" "$(date +%s)"
+        git checkout --quiet origin/"$currbranch"
+        git branch --quiet -D "$currbranch"
+        git checkout -b "$currbranch"
+        gitstat=$?
+      else
         git fetch
         db_set_misc "git_fetch_${currbranch}" "$(date +%s)"
         dounbuffer=""
-        [ "$DOCOLOUR"  = 'y' -a -x /usr/bin/unbuffer ] && dounbuffer="unbuffer "
-        if [ "${OPT_REPO}" = 'ponce' ] && [ "$currbranch" = 'current' ]; then
-          $dounbuffer git merge -X theirs origin/"$currbranch"
-          gitstat=$?
-        else
-          $dounbuffer git merge --ff-only origin/"$currbranch"
-          gitstat=$?
-        fi
-        if [ $gitstat = 0 ]; then
-          log_normal "Finished updating git."
-        else
-          log_error "Failed to update git (status=$gitstat).\nPlease resolve any conflicts and merge manually."
-          exit_cleanup
-          exit 1
-        fi
+        [ "$DOCOLOUR"  = 'y' ] && dounbuffer="/usr/libexec/slackrepo/unbuffer "
+        $dounbuffer git merge --ff-only origin/"$currbranch"
+        gitstat=$?
+      fi
+      if [ $gitstat = 0 ]; then
+        log_normal "Finished updating git."
+      else
+        log_error "Failed to update git (status=$gitstat).\nPlease resolve any conflicts and merge manually."
+        exit_cleanup
+        exit 1
       fi
     fi
   fi
-  # git: log a summary
-  GOTGIT='n'
-  if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
-    GOTGIT='y'
-    [ -n "$(git status -s .)" ] && dirty=' (DIRTY)'
-    log_info "git repo: $SR_SBREPO"
-    log_info "branch:   $(git rev-parse --abbrev-ref HEAD)"
-    log_info "date:     $(date --date=@"$(git log -n 1 --format=%ct)")"
-    log_info "revision: $(git rev-parse HEAD)$dirty"
-    log_info "title:    $(git log -n 1 --format=%s)"
-  fi
 fi
+
+sbindexed="$(db_get_misc "indexed_slackbuilds")"
+[ "$GOTGIT" = 'y' ] && gitdate="$(git log -n 1 --format=%ct)"
+if [ "$GOTGIT" = 'n' ] || [ -n "$muck" ] || [ "${sbindexed:-0}" != "$gitdate" ]; then
+  log_normal "Indexing SlackBuilds ... "
+  db_index_slackbuilds
+  if [ "$GOTGIT" = 'n' ] || [ -n "$muck" ]; then
+    db_set_misc "indexed_slackbuilds" "$(date +%s)"
+  else
+    db_set_misc "indexed_slackbuilds" "$gitdate"
+  fi
+  log_done
+fi
+
+if [ "$GOTGIT" = 'y' ]; then
+  [ -n "$(git status -s .)" ] && dirty=' (DIRTY)'
+  log_info "git repo: $SR_SBREPO"
+  log_info "branch:   $(git rev-parse --abbrev-ref HEAD)"
+  log_info "date:     $(date --date=@${gitdate})"
+  log_info "revision: $(git rev-parse HEAD)$dirty"
+  log_info "title:    $(git log -n 1 --format=%s)"
+else
+  log_info "SlackBuild repo: $SR_SBREPO (not git)"
+fi
+
+#-------------------------------------------------------------------------------
 
 # Changelog:
 CHANGELOG="$SR_PKGREPO"/.changelog
@@ -559,31 +600,18 @@ log_normal ""
 #-------------------------------------------------------------------------------
 
 if [ $# = 0 ]; then
-  if [ "$CMD" = 'update' ]; then
-    # update mode with no args => process everything in the package repo
-    set -- "$SR_PKGREPO"
-  else
-    # other modes with no args => process everything in the SlackBuilds repo
-    set -- "$SR_SBREPO"
-  fi
+  # no args => process everything
+  set -- '*'
 fi
 
 while [ $# != 0 ]; do
   arg="$1"
   shift
-  unset PARSEDLIST UNPARSEDLIST
-  if [ "$CMD" = 'build' -o "$CMD" = 'rebuild' -o "$CMD" = 'revert' -o "$CMD" = 'lint' ]; then
-    parse_args -s "$arg"
-    [ $? != 0 ] && continue
-  else # 'update' or 'remove'
-    parse_args -p "$arg"
-    [ $? != 0 ] && continue
-  fi
-  set -- "${UNPARSEDLIST[@]}" "$@"
+  parse_arg "$arg"
   # Note that we set the variable $ITEMID (upper case) so that other functions
   # called recursively (which get $itemid as an argument) can test whether they
   # are dealing with the top level item.
-  for ITEMID in "${PARSEDLIST[@]}"; do
+  for ITEMID in "${PARSEDARGS[@]}"; do
     log_start "$ITEMID"
     # Commands are extensible, just put a script defining CMD_command() into functions.d/
     cmdfunction="${CMD}_command"

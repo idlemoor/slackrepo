@@ -5,9 +5,9 @@
 # cmdfunctions.sh - command functions for slackrepo
 #   build_command   (see also build_item_packages in buildfunctions.sh)
 #   rebuild_command
-#   update_item
+#   update_command
 #   revert_command
-#   remove_item
+#   remove_command
 #   lint_command
 #-------------------------------------------------------------------------------
 
@@ -57,6 +57,8 @@ function build_command
     # Nothing is going to be built.  Log the final outcome.
     if [ "${STATUS[$itemid]}" = 'ok' ]; then
       log_important "$itemid is up-to-date (version ${INFOVERSION[$itemid]})."
+    elif [ "${STATUS[$itemid]}" = 'removed' ]; then
+      log_important "$itemid has been removed."
     elif [ "${STATUS[$itemid]}" = 'skipped' ]; then
       log_warning -n "$itemid has been skipped."
     elif [ "${STATUS[$itemid]}" = 'unsupported' ]; then
@@ -74,7 +76,9 @@ function build_command
   else
     # Process TODOLIST.
     for todo in "${TODOLIST[@]}"; do
-      if [ "${STATUS[$todo]}" = 'skipped' ]; then
+      if [ "${STATUS[$todo]}" = 'removed' ]; then
+        log_itemfinish "$todo" 'removed' '' "${STATUSINFO[$todo]}"
+      elif [ "${STATUS[$todo]}" = 'skipped' ]; then
         log_itemfinish "$todo" 'skipped' '' "${STATUSINFO[$todo]}"
       elif [ "${STATUS[$todo]}" = 'unsupported' ]; then
         log_itemfinish "$todo" 'unsupported' "on ${SR_ARCH}" ''
@@ -82,6 +86,9 @@ function build_command
         log_error "${todo} has failed to build."
         [ -n "${STATUSINFO[$todo]}" ] && log_normal "${STATUSINFO[$todo]}"
         log_normal ""
+      elif [ "${STATUS[$todo]}" = 'remove' ]; then
+        remove_command "$todo"
+        STATUS[$todo]='removed'
       else
         missingdeps=()
         for dep in ${DIRECTDEPS[$todo]}; do
@@ -131,7 +138,7 @@ function update_command
 {
   local itemid="${1:-$ITEMID}"
   local itemdir="${ITEMDIR[$itemid]}"
-  if [ -d "$SR_SBREPO"/"$itemdir"/ ]; then
+  if [ -n "$itemdir" ] && [ -d "$SR_SBREPO"/"$itemdir"/ ]; then
     build_command "$itemid"
     return $?
   else
@@ -166,6 +173,8 @@ function revert_command
   archsourcebackupdir="${allsourcebackupdir}_${SR_ARCH}"
   allsourcebackuptempdir="$backuptempdir"/source
   archsourcebackuptempdir="${allsourcebackuptempdir}_${SR_ARCH}"
+
+  #### IMPORTANT #### repopulate 'packages' table after revert
 
   log_itemstart "$itemid"
 
@@ -225,6 +234,8 @@ function revert_command
 
   if [ "$OPT_DRY_RUN" != 'y' ]; then
     # Actually perform the reversion!
+    # With big packages this might take a while, so log a message
+    log_normal "Reverting $itemid ... "
     # move the current package to a temporary backup directory
     if [ -d "$packagedir" ]; then
       mv "$packagedir" "$backuptempdir"
@@ -269,6 +280,7 @@ function revert_command
       mv "$backuptempdir" "$backupdir"
     fi
     # Finished!
+    log_done
   fi
 
   # Log what happened, or what would have happened:
@@ -318,14 +330,24 @@ function remove_command
   local allsourcedir="$SR_SRCREPO"/"$itemdir"
   local archsourcedir="$allsourcedir"/"$SR_ARCH"
 
-  log_itemstart "$itemid"
-
-  # Preliminary warnings and comments:
-  # Log a warning about any dependers
-  dependers=$(db_get_dependers "$itemid")
-  for depender in $dependers; do
-    log_warning "$depender may need to be removed or rebuilt"
-  done
+  # Preliminary messages:
+  if [ "$itemid" = "$ITEMID" ]; then
+    log_itemstart "$itemid"
+    if [ "${STATUS[$itemid]}" = 'removed' ] || [ -z "$itemdir" ] || [ ! -d "$SR_SBREPO"/"$itemdir"/ ]; then
+      log_important "$itemid has been removed."
+      log_normal ""
+      return 0
+    fi
+    # Log a warning about any dependers, unless this is happening within another item
+    dependers=$(db_get_dependers "$itemid")
+    for depender in $dependers; do
+      log_warning "$depender may need to be removed or rebuilt"
+    done
+  else
+    removeopt=''
+    [ "$OPT_DRY_RUN" = 'y' ] && removeopt=' [dry run]'
+    log_itemstart "$itemid" "Removing $itemid$removeopt"
+  fi
   # Log a comment if the packages don't exist
   packagelist=( "$packagedir"/*.t?z )
   if [ ! -f "${packagelist[0]}" ]; then
@@ -347,6 +369,7 @@ function remove_command
     backupdir="$SR_PKGBACKUP"/"$itemdir"
     if [ -d "$packagedir" ]; then
       if [ "$OPT_DRY_RUN" != 'y' ]; then
+        [ -d "$backupdir" ] && rm -rf "$backupdir"
         # move the whole package directory to the backup directory
         mkdir -p "$(dirname "$backupdir")"
         mv "$packagedir" "$backupdir"
@@ -435,16 +458,16 @@ function remove_command
 
   fi
 
-  # Remove the package directory and any empty parent directories
-  # (don't bother with the source directory)
   if  [ "$OPT_DRY_RUN" != 'y' ]; then
+    # Remove the package directory and any empty parent directories
+    # (don't bother with the source directory)
     rm -rf "${SR_PKGREPO:?NotSetSR_PKGREPO}/${itemdir}"
     up="$(dirname "$itemdir")"
     [ "$up" != '.' ] && rmdir --parents --ignore-fail-on-non-empty "${SR_PKGREPO}/${up}"
+    # Delete the revision and package name data
+    db_del_rev "$itemid"
+    db_del_itemid_pkgnam "$itemid"
   fi
-
-  # Delete the revision data
-  db_del_rev "$itemid"
 
   # Changelog, and exit with a smile
   if [ "$OPT_DRY_RUN" != 'y' ]; then

@@ -7,7 +7,7 @@
 #   db_error
 #   db_set_buildsecs, db_get_buildsecs, db_del_buildsecs
 #   db_set_pkgnam_itemid, db_get_pkgnam_itemid, db_get_itemid_pkgnams,
-#     db_del_pkgnam, db_del_itemid_pkgnam
+#     db_get_itemids, db_del_pkgnam, db_del_itemid_pkgnam
 #   db_set_misc, db_get_misc, db_del_misc
 #   db_set_rev, db_get_rev, db_get_dependers, db_del_rev
 #   db_set_buildresults
@@ -308,6 +308,19 @@ function db_get_pkgnam_itemid
   return 0
 }
 
+function db_get_itemids
+# List the itemids matching a given glob on standard output.
+# The itemids must have existing packages.
+# $1 = glob
+{
+  [ -z "$1" ] && return 1
+  sqlite3 "$SR_DATABASE" \
+    "select distinct itemid from packages where '/'||itemid||'/' glob '*/$1/*' order by itemid asc;"
+  dbstat=$?
+  [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
+  return 0
+}
+
 function db_get_itemid_pkgnams
 # Print the pkgnams for a given itemid on standard output.
 # $1 = itemid
@@ -511,6 +524,41 @@ function db_set_buildresults
   [ -z "$2" ] && return 1
   sqlite3 "$SR_DATABASE" \
     "insert or replace into buildresults ( itemid, time, result ) values ( '$1', $(date +%s), '$2' );"
+  dbstat=$?
+  [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+# Set or get records in the 'slackbuilds' table.
+# This is just a list of SlackBuilds in the repo. We use the sqlite db because
+# (1) updatedb/slocate is grotesquely slow and catalogues everything,
+# (2) find is too slow to use every time we need a lookup, and
+# (3) we can't use a flat file because we need to match shell globs, and grep doesn't grok globs.
+#-------------------------------------------------------------------------------
+
+function db_index_slackbuilds
+# List all the SlackBuild pathnames, load them into the db. Any existing table is dropped.
+# Paradoxically, the database table is not indexed :-)
+# No parameters.
+{
+  ( cd "$SR_SBREPO"; find . -name '.git' -prune -o -type f -name '*.SlackBuild' -print | sed 's/^\.\///' > "$MYTMPDIR"/sblist )
+  echo -e \
+    "drop table if exists slackbuilds; create table slackbuilds(relpath text);\n.mode csv\n.import $MYTMPDIR/sblist slackbuilds" \
+    | sqlite3 "$SR_DATABASE"
+  dbstat=$?
+  rm "$MYTMPDIR"/sblist
+  [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
+  return 0
+}
+
+function db_get_slackbuilds
+# Print a list of SlackBuild pathnames that match a glob.
+# $1 = the glob to match
+{
+  [ -z "$1" ] && return 1
+  sqlite3 "$SR_DATABASE" \
+    "select relpath from slackbuilds where '/'||relpath||'/' glob '*/$1/*' order by relpath asc;"
   dbstat=$?
   [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
   return 0

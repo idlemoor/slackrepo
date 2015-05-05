@@ -18,22 +18,26 @@
 <nav>
 <h2><a href="index.html">slackrepo</a></h2>
 <ul>
-<li><a href="download.html">Download</a></li>
+<li><a href="news.html">News</a></li>
+<li><b style="color:red">&bull;</b>&nbsp;<a href="download.html">Download</a></li>
 <li><a href="quickstart.html">Quick start</a></li>
-<li><a href="usagenotes.html">Documentation</a></li>
-<li><a href="slackrepo.8.html">manpages</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
+<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
 </ul>
 </nav>
 
 <div id="main">
 
 <h4>Prebuilt package</h4>
+<p class="scary">This is a release candidate. Expect bugs!</p>
+<p><b><a href="https://dl.dropboxusercontent.com/u/26560685/slackrepo-0.2.0rc1-noarch-1_dbs.txz">slackrepo-0.2.0rc1-noarch-1_dbs.txz</a></b>&emsp;<i>(architecture independent, suitable for i486, x86_64 or arm)</i></p>
 <table>
-<tr><td>version:</td><td>0.1.2</td></tr>
-<tr><td>date:</td><td>2014-06-30</td></tr>
-<tr><td>download:</td><td><code><a href="https://dl.dropboxusercontent.com/u/26560685/slackrepo-0.1.2-noarch-1_dbs.txz">slackrepo-0.1.2-noarch-1_dbs.txz</a></code></td></tr>
-<tr><td>md5sum:</td><td><code>1b11777840cdfc6af2794ef148121952</code></td></tr>
-<tr><td>size:</td><td>60kB</td></tr>
+<tr><td>version:</td><td><b>0.2.0rc1</b></td></tr>
+<tr><td>date:</td><td><b>2015-05-05</b></td></tr>
+<tr><td>md5sum:</td><td><code>e2fa43e02c2b5e07fb98ace582695c16</code></td></tr>
+<tr><td>sha256sum:</td><td><code>b3339615a0c1c097889979dc05e57e427d1d8271e439bb494aceca1744b7b74b</code></td></tr>
+<tr><td>size:</td><td>156kB</td></tr>
 </table>
 
 <h4>Git snapshot</h4>
@@ -47,13 +51,13 @@ gitrev=git$(git log -n 1 --format=format:%h .)
 git archive --format=tar --prefix=slackrepo-$gitrev/ HEAD | gzip > SlackBuild/slackrepo-$gitrev.tar.gz
 cd SlackBuild
 VERSION=$gitrev TAG=_github sh ./slackrepo.SlackBuild
-installpkg /tmp/slackrepo-$gitrev-noarch-1_github.tgz
+upgradepkg --install-new /tmp/slackrepo-$gitrev-noarch-1_github.t?z
 </pre>
 
 <h4>Licence - slackrepo</h4>
 
 <pre class="lic">
-Copyright &copy; 2014 David Spencer, Baildon, West Yorkshire, U.K.
+Copyright &copy; 2014-2015 David Spencer, Baildon, West Yorkshire, U.K.
 All rights reserved.
 
 Redistribution and use of this software, with or without modification, is
@@ -100,6 +104,32 @@ All rights reserved.
    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
    OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
    SUCH DAMAGE.
+</pre>
+
+<h4>Licence - unbuffer</h4>
+
+<p><code><a href="http://sourceforge.net/projects/expect/files/Expect/5.45/expect5.45.tar.gz/download" class="ext">http://sourceforge.net/projects/expect/files/Expect/5.45/expect5.45.tar.gz/download</a></code></p>
+
+<pre class="lic">
+Author: Don Libes, NIST
+
+Expect FAQ <a href="http://expect.sourceforge.net/FAQ.html#q5" class="ext">http://expect.sourceforge.net/FAQ.html#q5</a>
+
+#5. Do we need to pay or ask for permission to distribute Expect?
+
+It is my understanding that you are allowed to do just about anything
+with Expect.  You can even sell it.  You need not ask our permission.
+You need not pay for it.  (Your tax dollars, in effect, already have
+paid for it.)
+
+You should not claim that you wrote it (since this would be a lie), nor
+should you attempt to copyright it (this would be fruitless as it is a
+work of the US government and therefore not subject to copyright).
+
+NIST would appreciate any credit you can give for this work.  One line
+may suffice (as far as I'm concerned) although there should be
+something to the effect that this software was produced for research
+purposes.  No warantee, guarantee, or liability is implied.
 </pre>
 
 </div>

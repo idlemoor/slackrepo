@@ -14,34 +14,36 @@
 <header>
 <h2>Quick start</h2>
 <p><a href="#running">Running</a> &bull;
-<a href="#options">Options</a> &bull;
 <a href="#examples">Examples</a> &bull;
+<a href="#commands">Commands</a> &bull;
+<a href="#options">Options</a> &bull;
 <a href="#logging">Logging</a> &bull;
-<a href="#screenshots">Screenshots</a></p>
 </header>
 
 <nav>
 <h2><a href="index.html">slackrepo</a></h2>
 <ul>
+<li><a href="news.html">News</a></li>
 <li><a href="download.html">Download</a></li>
-<li><a href="quickstart.html">Quick start</a></li>
-<li><a href="usagenotes.html">Documentation</a></li>
-<li><a href="slackrepo.8.html">manpages</a></li>
+<li><b style="color:red">&bull;</b>&nbsp;<a href="quickstart.html">Quick start</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
+<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
 </ul>
 </nav>
 
 <div id="main">
 
-<p class="scary"> Before you use slackrepo to build packages,
-you should read and understand the page about <b><a href="hintfiles.html">hintfiles</a></b>,
-and you should always check the README of each SlackBuild you intend to run.</p>
+<p class="scary">Before you use slackrepo to build packages,
+you should read and understand the page about <b><a href="hintfiles.html">hintfiles</a></b>.
+You should always check the README of each SlackBuild you intend to run.</p>
 
 <h3><a name="running"></a>Running</h3>
 
 <p>Slackrepo runs from the command line.
 It is not interactive and does not have a graphical interface.
-Like other Slackware package management tools, it should be run as the root user,
-for example with <code>su -</code>.  Sources are downloaded on demand (unless already
+You can run it as the root user, or (if you do some additional setup) as a non-root user.
+Sources are downloaded on demand (unless already
 available in the local cache); a well-functioning network connection is
 assumed.</p>
 
@@ -49,15 +51,49 @@ assumed.</p>
 Slackware environment (like a "build box" or a virtual machine), with a full
 installation of Slackware and no additional packages (or very few). You can
 then use the package repository to install the packages on other hosts (e.g.
-with slackpkg+).</p>
+with slackpkg+). To keep your build box safe and clean, slackrepo can build
+in a throw-away chroot environment.</p>
 
-<p>Slackrepo has four modes of operation: build, rebuild, remove, and update.</p>
+<h3><a name="examples"></a>Examples</h4>
 
-<h4>(1) build mode</h4>
+<p>Build graphics/shotwell, with all its dependencies:</p>
+<pre>slackrepo build graphics/shotwell</pre>
+<p>or just</p>
+<pre>slackrepo build shotwell</pre>
+
+<p>Build the whole SBo repository! (You will need about four days and 80Gb of disk space):</p>
+<pre>slackrepo build</pre>
+
+<p>Build and install shotwell and all its dependencies (note, the system will no longer be a clean build environment):</p>
+<pre>slackrepo build --install shotwell</pre>
+
+<p>Update all the academic/ packages in your package repository for SBo's latest
+changes (this WILL NOT add new packages from upstream, unless they are required dependencies):</p>
+<pre>slackrepo update academic</pre>
+
+<p>Build all the academic/ packages in SBo (this WILL add new packages from upstream,
+and will also update for SBo's latest changes):</p>
+<pre>slackrepo build academic</pre>
+
+<p>Do a "dry run" update of all your existing SBo packages:</p>
+<pre>slackrepo update --dry-run</pre>
+
+<p>Remove the package grass (note, its dependencies and dependers will not be removed):</p>
+<pre>slackpkg remove grass</pre>
+
+<p>Test-build colord (in the csb repo), with verbose messages; do not store the built package:</p>
+<pre>slackrepo build -v --repo=csb --lint --dry-run colord</pre>
+
+
+<h3><a name="commands"></a>Commands</h3>
+
+<p>Slackrepo has six commands: build, rebuild, update, remove, revert and lint.</p>
+
+<h5>(1) build command</h5>
 
 <pre>slackrepo build [--options] [item...]</pre>
 
-<p>In build mode, each specified item in the SlackBuild repository is
+<p>Each specified item in the SlackBuild repository is
 built and stored into the package repository if there is no up-to-date
 package already stored.  Missing or out-of-date dependencies are also
 built and stored into the package repository.  If no items are specified,
@@ -68,32 +104,46 @@ or as an individual item in a category (e.g. 'libraries/wxPython'), or as
 an entire category of items (e.g. 'libraries').  Obviously, very large
 amounts of storage will be needed if you build entire categories.</p>
 
-<h4>(2) rebuild mode</h4>
+<h5>(2) rebuild command</h5>
 
 <pre>slackrepo rebuild [--options] [item...]</pre>
 
-<p>Rebuild mode is like build mode, except that packages already in the package
+<p>The rebuild command is like the build command, except that packages already in the package
 repository will be rebuilt, even if they are up-to-date. That is the only difference!</p>
 
-<h4>(3) remove mode</h4>
-
-<pre>slackrepo remove [--options] item...</pre>
-
-<p>In remove mode, each specified item is removed from the package repository.  Also,
-any cached source files are removed.</p>
-
-<h4>(4) update mode</h4>
+<h5>(3) update command</h5>
 
 <pre>slackrepo update [--options] [item...]</pre>
 
-<p>In update mode, each specified package (and its dependencies) in the
-package repository is compared to the SlackBuild repository, and built,
+<p>The update command compares each specified package (and its dependencies) in the
+package repository to the SlackBuild repository. Packages are built,
 rebuilt or removed, as appropriate.  If no items are specified,
 everything in the package repository is compared.</p>
 
+<h5>(4) remove command</h5>
+
+<pre>slackrepo remove [--options] item...</pre>
+
+<p>The remove command removes packages for each specified item from the package repository.
+Also, any cached source files are removed. Backups are made, in case you change your mind later.</p>
+
+<h5>(5) revert command</h5>
+
+<pre>slackrepo revert [--options] item...</pre>
+
+<p>The revert command restores packages (and source files) for each specified item from the backup.
+The existing packages are backed up, in case you change your mind again and again and again...</p>
+
+<h5>(6) lint command</h5>
+
+<pre>slackrepo lint [--options] [item...]</pre>
+
+<p>The lint command performs quality tests on the source download URLs and source files, the SlackBuild,
+and the packages for each specified item.</p>
+
 <h3><a name="options"></a>Options</h3>
 
-<pre>--repo=ID</pre>
+<h5>--repo=ID</h5>
 
 <p>Use the SlackBuild and package repository identified by ID.  The location of
 the SlackBuild and package repositories are determined by the configuration
@@ -101,113 +151,50 @@ file /etc/slackrepo/repo_ID.conf.  The default repository ID is <strong>SBo</str
 (<a href="http://SlackBuilds.org" class="ext">SlackBuilds.org</a>), but others
 supplied include
 <strong>msb</strong> (<a href="https://github.com/mateslackbuilds/msb" class="ext">Mate SlackBuilds</a>) and
-<strong>csb</strong> (<a href="https://github.com/willysr/csb" class="ext">Cinnamon SlackBuilds</a>).</p>
+<strong>csb</strong> (<a href="https://github.com/willysr/csb" class="ext">Cinnamon SlackBuilds</a>).
+On Slackware -current, the default repository is <strong>ponce</strong>
+(<a href="https://github.com/Ponce/slackbuilds" class="ext">SBo repository for slackware-current</a>).</p>
 
-<pre>--test</pre>
+<h5>-v, --verbose</h5>
 
-<p>The SlackBuild files and the built packages will be subjected to additional
-quality assurance tests.</p>
+<p>Display detailed build output on the console during execution.
+See <a href="#logging">Logging</a> (below) for details.</p>
 
-<pre>--dry-run</pre>
+<h5>--dry-run</h5>
 
 <p>Builds, rebuilds and updates will be performed, and removals will be notified,
 but no changes will be made to the package repository.</p>
 
-<pre>--install</pre>
+<h5>--install</h5>
 
 <p>Built, rebuilt and updated packages will be installed on the host system.
 This results in a "queue" style build, and packages may not be 100% clean of
 unexpected dependencies. The default is for packages <strong>not</strong> to
 be installed.</p>
 
-<pre>-v, --verbose
--vv, --very-verbose
--q, --quiet</pre>
+<h5>--lint</h5>
 
-<p>Increase or reduce the messages printed on the console during execution.
-See <a href="#logging">Logging</a> (below) for details.</p>
-
-
-<h3><a name="examples"></a>Examples</h4>
-
-<p>Build the whole SBo repository (you will need about four days and 61Gb of disk space):</p>
-<pre>slackrepo build</pre>
-
-<p>Build graphics/shotwell, with all its dependencies:</p>
-<pre>slackrepo build graphics/shotwell</pre>
-<p>or just</p>
-<pre>slackrepo build shotwell</pre>
-
-<p>Build and install shotwell and all its dependencies (note, the system will no longer be a clean build environment):</p>
-<pre>slackrepo build --install shotwell</pre>
-
-<p>Update all the academic/ packages in your package repository for SBo's latest
-changes (this WILL NOT add new packages from upstream, unless they are required dependencies):</p>
-<pre>slackrepo update academic</pre>
-
-<p>Build all the academic/ packages in SBo (this WILL add new packages from upstream,
-and also will update for SBo's latest changes):</p>
-<pre>slackrepo build academic</pre>
-
-<p>Do a "dry run" update of all your SBo packages:</p>
-<pre>slackrepo update --dry-run</pre>
-
-<p>Remove the package grass (note, its dependencies and dependers will not be removed):</p>
-<pre>slackpkg remove grass</pre>
-
-<p>Test-build colord (in the csb repo), with very verbose messages; do not store the built package:</p>
-<pre>slackrepo build -vv --repo=csb --test --dry-run colord</pre>
+<p>The SlackBuild files, source downloads and packages will be subjected to additional
+quality tests during the build.</p>
 
 
 <h3><a name="logging"></a>Logging</h3>
 
 <p>All messages from slackrepo are sent to a main log file.  Progress messages are
-displayed on the screen.  Control arguments <code>--verbose</code> (<code>-v</code>) and
-<code>--quiet</code> (<code>-q</code>) can be specified, to increase or decrease the details
-that are displayed on the screen.</p>
+displayed on the screen.</p>
 
 <p>Detailed output from each build process is sent to an item-specific log
-file, but is not displayed on the screen unless you specify the <code>--very-verbose</code>
-(<code>-vv</code>) control argument.</p>
+file, but is not displayed on the screen unless you specify the <code>--verbose</code>
+(<code>-v</code>) control argument.</p>
 
 <p>The log files are in a repository-specific directory.  A new main log file is created
 for each run of slackrepo, with a name of the form
 <br><code>/var/log/slackrepo/SBo/slackrepo_YYYY-MM-DD_hh:mm:ss.log</code></p>
 
 <p>Each item-specific log file is in a subdirectory if the SlackBuilds directory
-has subdirectories.  For example, the log file for the SBo item 'graphics/shotwell' is
-<br><code>/var/log/slackrepo/SBo/graphics/shotwell/shotwell.log</code></p>
+has subdirectories.  For example, the log file for building the SBo item 'graphics/shotwell' is
+<br><code>/var/log/slackrepo/SBo/graphics/shotwell/build.log</code></p>
 
-
-<h3><a name="screenshots"></a>Screenshots</h3>
-
-<p>Building the package 'academic/engauge' from SlackBuilds.org is as simple as
-typing <code>slackrepo build engauge</code>. Note that detailed build output is only
-shown when --very-verbose (-vv) is specified. Built packages are only installed if
---install is specified (not recommended). When it has finished, slackrepo
-shows a summary of what was done.</p>
-<img src="screenbuild.png" alt="screenshot of 'slackrepo build engauge'" title="slackrepo build engauge">
-
-<p>Dependencies are automatically built. In this case, scons is already up-to-date in the package repo, but gpsd needs to be added.</p>
-<img src="screendeps.png" alt="screenshot of a build with dependencies: 'slackrepo build viking'" title="slackrepo build viking">
-
-<p>When a build fails, slackrepo attempts to show errors from the item-specific log file,
-using an awesome regular expression devised by Eric Hameleers for his
-<a href="http://www.slackware.com/~alien/tools/checkpkg" class="ext">checkpkg</a>
-script. As shown below, the selected errors are not always complete or relevant,
-but will usually help to locate the problem.  The item-specific log file will always
-contain full details.</p>
-<img src="screenfail.png" alt="screenshot of a build failure: 'slackrepo build facile'" title="slackrepo build facile">
-
-<p>When any of your packages in your package repository has been updated in the
-upstream SlackBuild repository, <code>slackrepo update</code>
-will apply the updates.  This is what happened when the build failure shown
-above was fixed:</p>
-<img src="screenupdate.png" alt="screenshot of an update: 'slackrepo update -v facile'" title="slackrepo update -v facile">
-
-<p>A package will automatically be rebuilt if any of its dependencies have been
-updated:</p>
-<img src="screenrebuild.png" alt="screenshot of updated dependency and rebuild: 'slackrepo update -v THE'" title="slackrepo update -v THE">
 
 </div>
 

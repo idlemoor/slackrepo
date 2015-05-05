@@ -20,20 +20,23 @@
 <nav>
 <h2><a href="index.html">slackrepo</a></h2>
 <ul>
+<li><a href="news.html">News</a></li>
 <li><a href="download.html">Download</a></li>
 <li><a href="quickstart.html">Quick start</a></li>
-<li><a href="usagenotes.html">Documentation</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
 <li>
   <ul>
-  <li><a href="usagenotes.html">Usage notes</a></li>
+  <li><b style="color:red">&bull;</b>&nbsp;<a href="usagenotes.html">Usage notes</a></li>
   <li><a href="hintfiles.html">Hintfiles</a></li>
+  <li><a href="faq.html">FAQ</a></li>
   <li><a href="configuration.html">Configuration</a></li>
   <li><a href="structure.html">Repo structure</a></li>
   <li><a href="tests.html">Tests</a></li>
   <li><a href="links.html">Links</a></li>
   </ul>
 </li>
-<li><a href="slackrepo.8.html">manpages</a></li>
+<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
 </ul>
 </nav>
 
@@ -42,55 +45,58 @@
 <h3><a name="dependencies"></a>Dependencies</h3>
 
 <p>Dependencies are built, installed and removed automatically, according to the
-contents of .info files (<code>REQUIRES="..."</code>) and <a href="hintfiles.html">Hintfiles</a>.
+contents of .info files (<code>REQUIRES="..."</code>) and
+<a href="hintfiles.html">Hintfiles</a> (<code>ADDREQUIRES="..."</code>).
 If a SlackBuild does not have a corresponding .info file or hintfile, dependencies cannot
 be processed.</p>
 
 <p>Except when --install is specified, building, installing and removing is done
 as a 'tree' of dependencies, not a linear 'queue', so dependencies may be
-installed and removed multiple times.  Although time consuming, this
-is necessary in some cases to produce clean packages for redistribution.</p>
+installed and removed multiple times as necessary. This produces clean packages
+that can be redistributed.</p>
 
-<p>In update mode, when a package is found that is older than its dependencies,
-the package may need to be rebuilt. To cause a rebuild, the dependency must have been updated
-significantly, not merely rebuilt: see <a href="#updates">Updates</a> below for details.</p>
+<p>When an existing package in the repository is older than its dependencies,
+it may need to be rebuilt. To cause a rebuild, the dependencies must have been
+significantly updated: see <a href="#updates">Updates</a> below for details.</p>
 
-<p>Remember that dependencies on standard Slackware packages are not (and
-should not be) listed in .info files and hintfiles, and are not tracked by
-slackrepo.</p>
+<p>Remember that dependencies on standard Slackware packages are not listed
+in .info files and hintfiles, and not tracked by slackrepo.</p>
 
 <h3><a name="git"></a>git</h3>
 
-<p>If no SlackBuild Repository exists when slackrepo starts, it will clone the
+<p>If no SlackBuild repository exists when slackrepo starts, it will clone the
 SlackBuilds.org git repository, and a local branch <b>14.1</b> will be created
 that tracks <b>origin/14.1</b> (i.e., the stable branch at SlackBuilds.org).</p>
 
+<p>Otherwise, slackrepo simply uses the git branch and revision that is currently
+checked out. If an item's SlackBuild directory is dirty, a warning is logged.</p>
+
 <p>As a special case, if the local branch is named <b>14.1</b> (as above) and is
-clean, then when slackrepo starts it will automatically update the local
-branch by fast forward (if possible) from its origin, but <strong>only if more than
-one day has elapsed</strong> since the last automatic update.</p>
+clean, then when slackrepo starts, it will automatically fast forward the local
+branch from upstream (if possible), but <strong>only if more than
+one day has elapsed</strong> since the last automatic fast forward.</p>
 
 <h3><a name="updates"></a>Updates</h3>
 
-<p>In build mode and in rebuild mode, packages are updated or rebuilt
-if required. For example, if a package is being built, its dependencies will be
-updated and/or rebuilt if they are out-of-date. Update mode proactively looks for
-packages that are out-of-date, and also removes packages for which the SlackBuilds
+<p>The build and rebuild commands will always update or rebuild packages if necessary.
+For example, if a package is being built, its dependencies will be
+updated and/or rebuilt if they are out-of-date. The update command proactively looks for
+packages that are out-of-date, and removes packages for which the SlackBuilds
 no longer exist.</p>
 
 <p>A package is out-of-date if:</p>
 <ul>
 <li>the git revision in the directory containing the SlackBuild has changed
 since the package was built</li>
-<li>the directory containing the SlackBuilds has untracked/uncommited files
+<li>or the directory containing the SlackBuilds has untracked/uncommited files
 (i.e., git is "dirty") and they are newer than the package</li>
-<li>its hintfile has changed since the package was built</li>
-<li>any of its direct dependencies has been updated since the package was built</li>
-<li>the version of Slackware has changed since the package was built</li>
+<li>or its hintfile has changed since the package was built</li>
+<li>or any of its direct dependencies has been updated since the package was built</li>
+<li>or the version of Slackware has changed since the package was built</li>
 </ul>
 
 <p>Changes in the SlackBuilds directory are classified as 'updates', which will
-cause directly depending items to be rebuilt if and when they are processed.
+cause directly depending items to be rebuilt if/when they are processed.
 Other changes are classified as 'rebuilds' and do not cause
 depending items to be rebuilt.</p>
 
@@ -99,10 +105,12 @@ If x264 is updated, ffmpeg will be rebuilt, but transcode will not be rebuilt.
 If x264 is rebuilt, ffmpeg will not be rebuilt.  If ffmpeg is updated,
 transcode will be rebuilt.</p>
 
-<p>When a package is rebuilt, and when a package is updated but its
-version number is unchanged, the BUILD number in the package repository
-is always incremented (and the BUILD number in the SlackBuild file is
-ignored).</p>
+<p>Changes in the SlackBuilds directory that affect only the slack-desc file,
+README file, and .info file (except for VERSION=) are ignored.</p>
+
+<p>If a package is rebuilt, or if a package is updated but its
+version number is unchanged, then <strong>the package's BUILD number
+is always incremented</strong>, overriding the BUILD number in the SlackBuild file.</p>
 
 <img src="screenrebuild.png" alt="screenshot of updated dependency and rebuild" title="updated dependency and rebuild">
 
@@ -114,8 +122,8 @@ ignored).</p>
 be used to maintain additional package metadata in the package repository,
 such as package signing and a changelog.  Thanks, Eric!  To use it, you will
 need to set a few configuration values in the repository's configuration
-file /etc/slackrepo/slackrepo_SBo.conf (but, if you use gen_repos_files.sh
-already, your existing ~/.genreprc config file will be read).</p>
+file <code>/etc/slackrepo/slackrepo_SBo.conf</code> (but, if you use gen_repos_files.sh
+already, your existing <code>~/.genreprc</code> config file will be read).</p>
 
 <p>Note that you will be prompted for your GPG passphrase when gen_repos_files.sh
 runs (after all the packages have been built).  You can avoid this by using

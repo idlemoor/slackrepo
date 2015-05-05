@@ -18,26 +18,31 @@
 <nav>
 <h2><a href="index.html">slackrepo</a></h2>
 <ul>
+<li><a href="news.html">News</a></li>
 <li><a href="download.html">Download</a></li>
 <li><a href="quickstart.html">Quick start</a></li>
-<li><a href="usagenotes.html">Documentation</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
 <li>
   <ul>
   <li><a href="usagenotes.html">Usage notes</a></li>
   <li><a href="hintfiles.html">Hintfiles</a></li>
+  <li><a href="faq.html">FAQ</a></li>
   <li><a href="configuration.html">Configuration</a></li>
   <li><a href="structure.html">Repo structure</a></li>
-  <li><a href="tests.html">Tests</a></li>
+  <li><b style="color:red">&bull;</b>&nbsp;<a href="tests.html">Tests</a></li>
   <li><a href="links.html">Links</a></li>
   </ul>
 </li>
-<li><a href="slackrepo.8.html">manpages</a></li>
+<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
 </ul>
 </nav>
 
 <div id="main">
 
-<p>The following tests are performed if the <code>--test</code> control argument is specified.
+<p>The following tests are performed by the <code>lint</code> command, and by the
+<code>build</code>, <code>rebuild</code> and <code>update</code>
+commands if the <code>--lint</code> control argument is specified.
 When any tests fail, warnings are displayed and logged, but building continues.</p>
 
 <h4>prgnam.SlackBuild</h4>
@@ -50,7 +55,7 @@ When any tests fail, warnings are displayed and logged, but building continues.<
 
 <ul>
 <li>Should exist</li>
-<li>Should have exactly 11 lines that start with <code>prgnam:</code></li>
+<li>Should have between 1 and 14 lines that start with <code>prgnam:</code></li>
 <li>If the handy-ruler exists, it must be aligned correctly and have the correct format</li>
 <li>No trailing spaces on <code>prgnam:</code> lines, i.e. no lines should match <code>^prgnam:&lt;sp&gt;&lt;sp&gt;*$</code></li>
 <li>No <code>prgnam:</code> lines should have more than 73 chars of description</li>

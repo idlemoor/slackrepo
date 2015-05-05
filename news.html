@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<title>slackrepo - News</title>
+<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
+<link rel="shortcut icon" href="/slackrepo/favicon.ico">
+<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+</head>
+
+<body>
+
+<header>
+<h2>News</h2>
+</header>
+
+<nav>
+<h2><a href="index.html">slackrepo</a></h2>
+<ul>
+<li><b style="color:red">&bull;</b>&nbsp;<a href="news.html">News</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="quickstart.html">Quick start</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
+<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
+</ul>
+</nav>
+
+<div id="main">
+
+<h3>slackrepo-0.2.0, May 2015</h3>
+
+<p>The following new features and improvements have been added since the 
+release of slackrepo-0.1.0 last year:</p>
+
+<ul>
+
+<li><b>Building in a dynamically created and destroyed chroot environment</b>
+to keep your system absolutely clean, to detect bad builds and to speed up package uninstalls
+(this feature requires Linux kernel version 3.18 or newer with overlayfs, for example Slackware -current)</li>
+
+<li><b>Building as a non-root user</b> to detect bad builds and keep your system clean
+(this feature requires the 'fakeroot' package, available from SlackBuilds.org) &mdash; see the <a href="faq.html#usermode">FAQ</a></li>
+
+<li><b>Automatic download fallback to <a href="https://sourceforge.net/projects/slackbuildsdirectlinks/" class="ext">Slackbuilds Direct Links</a></b>
+if the original download has gone down</li>
+
+<li>On Slackware -current, the default is to build from Matteo Bernardini's forked
+<b><a href="https://github.com/Ponce/slackbuilds" class="ext">SBo repository for slackware-current</a> (--repo=ponce)</b></li>
+
+<li><b>Build time estimates</b> are shown, using a database of known build times,
+or the last occasion you successfully built the same package</li>
+
+<li><b>Automatic package backup</b> is performed, so you can go back to the
+previous build of a package</li>
+
+<li><b>New 'lint' command</b> allows you to test or retest SlackBuilds,
+source download links and package contents without building or rebuilding</li>
+
+<li><b>Coloured output</b> from cmake, git, clang, mono, waf and gcc-4.9 
+when you build with --verbose</li>
+
+<li><b>Shell-style globs (wildcards)</b> are now supported in the command arguments, so you can do things like
+<br><code>slackrepo build 'xfce4-*-plugin'</code>
+<br>(As with commands like 'find', you will need to quote them or escape them,
+to protect them from the shell.)</li>
+
+<li><b>System-supplied hintfiles have moved</b> to the directory
+<br><code>/etc/slackrepo/<i>repo</i>/default_hintfiles/<i>slackversion</i></code>
+<br>and are now enabled by default. Your own local hintfiles override the
+default hintfiles, and are still read from the directory
+<code>/etc/slackrepo/<i>repo</i>/hintfiles</code>.
+You can disable the default hintfiles by disabling the DEFAULT_HINTDIR configuration variable.
+
+<li>The SPECIAL hint has been renamed to <b>PRAGMA</b> (but SPECIAL is still accepted)</li>
+
+<li><b>Revised and additional hintfiles</b> Thanks to Panagiotis Nikolaou for the contributions!</li>
+
+<li><b>sqlite database</b> to track package revision info
+(the previous release of slackrepo used dotfiles)</li>
+
+<li><b>Simplified --verbose option</b>, --quiet option removed</li>
+
+</ul>
+
+</body>
+</html>

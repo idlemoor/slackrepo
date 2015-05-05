@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+<title>slackrepo - Screenshots</title>
+<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
+<link rel="shortcut icon" href="/slackrepo/favicon.ico">
+<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+</head>
+
+<body>
+
+<header>
+<h2>Screenshots</h2>
+</header>
+
+<nav>
+<h2><a href="index.html">slackrepo</a></h2>
+<ul>
+<li><a href="news.html">News</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="quickstart.html">Quick start</a></li>
+<li><b style="color:red">&bull;</b>&nbsp;<a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
+<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
+</ul>
+</nav>
+
+<div id="main">
+
+<p class="ssr" style="clear:both">
+<img src="screenbuild.png" alt="screenshot of 'slackrepo build scons'" title="slackrepo build scons">
+Building the package 'development/scons' from SlackBuilds.org is simple.
+Just type
+<br /><code>slackrepo build scons</code></p>
+<p class="ssr">When it has finished, slackrepo shows a summary of what was done.</p>
+
+<p class="ssl" style="clear:both">
+<img src="screendeps.png" alt="screenshot of a build with dependencies: 'slackrepo build viking'" title="slackrepo build viking">
+Dependencies are automatically built.</p>
+<p class="ssl">In this case, we want to build viking. We already have packages for scons and libgexiv2, but gpsd needs to be added.</p>
+
+<p class="ssr" style="clear:both">
+<img src="screenupdate.png" alt="screenshot of an update: 'slackrepo update netcdf'" title="slackrepo update netcdf">
+When your existing packages in your package repository have been updated in the
+upstream SlackBuild repository, 
+<br><code>slackrepo update</code>
+<br>will apply the updates.</p>
+
+<p class="ssl" style="clear:both">
+<img src="screenrebuild.png" alt="screenshot of updated dependency and rebuild: 'slackrepo update gdal'" title="slackrepo update gdal">
+A package will automatically be rebuilt if any of its dependencies have been
+updated.</p>
+
+<p class="ssr" style="clear:both">
+<img src="screenfail.png" alt="screenshot of a build failure: 'slackrepo build xonclock'" title="slackrepo build xonclock">
+When a build fails, slackrepo attempts to show significant errors from the item's log file,
+using an awesome regular expression devised by Eric Hameleers for his
+<a href="http://www.slackware.com/~alien/tools/checkpkg" class="ext">checkpkg</a>
+script.</p>
+<p class="ssr">The selected errors are not always complete or relevant,
+but they will usually help to locate the problem.  The item's log file will always
+contain full details.</p>
+
+<p class="ssl" style="clear:both">
+<img src="screenverbose.png" alt="screenshot of verbose output: 'slackrepo build -v jhead'" title="slackrepo build -v jhead">
+Use -v (--verbose) if you want to see detailed build output (like manual building, sbopkg, etc).</p>
+<p class="ssl">Build output from cmake, git, clang, mono, waf and gcc-4.9 is coloured
+(but if you don't like that, you can disable it).
+Log file output is filtered to remove the colour codes.
+</p>
+<p class="ssl">You can make -v the default by editing the config file,
+setting <code>VERBOSE="y"</code>.
+
+</div>
+
+</body>
+</html>

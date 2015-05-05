@@ -18,62 +18,66 @@
 <nav>
 <h2><a href="index.html">slackrepo</a></h2>
 <ul>
+<li><a href="news.html">News</a></li>
 <li><a href="download.html">Download</a></li>
 <li><a href="quickstart.html">Quick start</a></li>
-<li><a href="usagenotes.html">Documentation</a></li>
-<li><a href="slackrepo.8.html">manpages</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
+<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
 </ul>
 </nav>
 
 <div id="main">
 
-<p>Slackrepo is a highly automated SlackBuild package builder.
-It builds packages from an input repository of SlackBuilds (for example, a clone of
-<a href="http://SlackBuilds.org" class="ext">SlackBuilds.org</a>), and then outputs
-them to a package repository.</p>
+<h3>New version! slackrepo-0.2.0, May 2015</h3>
 
-<p class="scary">This is a new, experimental tool for experienced Slackware users to manage
-their own package repositories. If you don't build your own packages, you don't need slackrepo.
-Most users will find that the existing
-<a href="links.html">popular tools</a> are much better for their needs:
-<a href="http://www.sbopkg.org/" class="ext">sbopkg</a> and
-<a href="http://slackblogs.blogspot.co.uk/2014/01/managing-sbo-dependencies-easily.html" class="ext">sqg</a>,
-<a href="http://alien.slackbook.org/AST/" class="ext">AST</a>,
-<a href="http://www.src2pkg.net/start" class="ext">src2pkg</a>,
-<a href="http://www.dawoodfall.net/files/slackbuilds/noversion/mkslack/" class="ext">mkslack</a>,
-etc.</p>
+<p class="ssl" style="clear:both;font-size:larger">
+<img src="screenmate.png" alt="screenshot of mate being built" title="mate being built">
+This new version has many new features, improvements and of course bug fixes.
+See the <a href="news.html">News</a> page for details.</p>
+<p class="ssl" style="font-size:larger">You can <b><a href="download.html">download a prebuilt package here</a></b>.
+  <!-- or you can build it yourself thanks to <a href="http://slackbuilds.org/repository/14.1/system/slackrepo/" class="ext">SlackBuilds.org</a>. -->
+</p>
+
+<h3 style="clear:both">What is it?</h3>
+
+<p>Slackrepo is a highly automated tool for Slackware users to manage their own
+package repositories. It builds packages from a repository of SlackBuilds
+(for example, a clone of
+<a href="http://SlackBuilds.org" class="ext">SlackBuilds.org</a>),
+and then outputs the packages to a package repository.</p>
+
+<p>Some notable features are:</p>
+<ul>
+<li><b>Automatic updating</b> &mdash; revisions of the SlackBuild repository determine <a href="usagenotes.html#updates">updates</a> and rebuilds of
+packages</li>
+<li><b>Clean building</b> &mdash; <a href="usagenotes.html#dependencies">dependencies</a> are built as a 'tree', not a linear 'queue',
+and packages that are out-of-date with respect to their dependencies are automatically rebuilt;
+slackrepo can create a throw-away chroot environment for each build, to help keep your build box safe and clean.</li>
+<li><b>Quality assurance testing</b> &mdash; optional <a href="tests.html">tests</a> can be performed on the SlackBuild files and built packages</li>
+<li><b>No interaction required</b> &mdash; highly automated and suitable for batch building hundreds or even thousands of packages</li>
+<li>Can build from
+<b><a href="http://SlackBuilds.org" class="ext">SlackBuilds.org</a> (SBo)</b>,
+Chess Griffin and Willy Sudiarto Raharjo's <b><a href="https://github.com/mateslackbuilds/msb" class="ext">Mate SlackBuilds</a> (msb)</b>,
+Willy's <b><a href="https://github.com/willysr/csb" class="ext">Cinnamon SlackBuilds</a> (csb),</b>
+and Matteo Bernardini's forked <b><a href="https://github.com/Ponce/slackbuilds" class="ext">SBo repository for slackware-current</a> (ponce).</b>
+</ul>
 
 <p>For best results, slackrepo is intended to be run on a "clean" standard
 Slackware environment (like a "build box" or a virtual machine), with a
 full installation of Slackware and no additional packages (or very
 few).  You can then use the package repository to install the packages on
 other hosts (e.g. with <a href="https://github.com/zuno/slackpkgplus" class="ext">slackpkg+</a>).
-However, slackrepo can also be used as a simple command-line host-based package builder
+However, it can also be used as a simple command-line package builder
 and installer.</p>
 
-<p>Some notable features are:</p>
-<ul>
-<li>automatic updating - revisions of the SlackBuild repository determine <a href="updates.html">updates</a> and rebuilds of
-packages</li>
-<li>clean building - <a href="dependencies.html">dependencies</a> are built as a 'tree', not a linear 'queue', and packages that are out-of-date with respect to their dependencies are rebuilt</li>
-<li>quality assurance testing - optional <a href="tests.html">tests</a> can be performed on the SlackBuild files and built packages</li>
-<li>no interaction required - highly automated and suitable for bulk testing</li>
-<li>can build from <a href="http://SlackBuilds.org" class="ext">SlackBuilds.org</a> (SBo),
-<a href="https://github.com/mateslackbuilds/msb" class="ext">Mate SlackBuilds</a> (msb) and
-<a href="https://github.com/willysr/csb" class="ext">Cinnamon SlackBuilds</a> (csb)
-</ul>
-
-<p><img src="screenmate.png" alt="screenshot of mate being built" title="mate being built"></p>
-
 <p>Slackrepo is not affiliated with, or endorsed by, SlackBuilds.org or
-Slackware.  The author thanks the awesome people behind those projects
+Slackware Linux, Inc.  The author thanks the awesome people behind those projects
 for their continuing generosity to the community.</p>
+<p>For avoidance of doubt,
+slackrepo is unrelated to the group communication software named Slack.</p>
 
 </div>
-
-<footer>
-<p>Slackware&reg; is a registered trademark of <a href="http://www.slackware.com/">Slackware Linux, Inc.</a></p>
-</footer>
 
 </body>
 </html>

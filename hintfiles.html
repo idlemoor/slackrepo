@@ -18,20 +18,23 @@
 <nav>
 <h2><a href="index.html">slackrepo</a></h2>
 <ul>
+<li><a href="news.html">News</a></li>
 <li><a href="download.html">Download</a></li>
 <li><a href="quickstart.html">Quick start</a></li>
-<li><a href="usagenotes.html">Documentation</a></li>
+<li><a href="screenshots.html">Screenshots</a></li>
+<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
 <li>
   <ul>
   <li><a href="usagenotes.html">Usage notes</a></li>
-  <li><a href="hintfiles.html">Hintfiles</a></li>
+  <li><b style="color:red">&bull;</b>&nbsp;<a href="hintfiles.html">Hintfiles</a></li>
+  <li><a href="faq.html">FAQ</a></li>
   <li><a href="configuration.html">Configuration</a></li>
   <li><a href="structure.html">Repo structure</a></li>
   <li><a href="tests.html">Tests</a></li>
   <li><a href="links.html">Links</a></li>
   </ul>
 </li>
-<li><a href="slackrepo.8.html">manpages</a></li>
+<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
 </ul>
 </nav>
 
@@ -40,85 +43,72 @@
 <p>You are encouraged to take full control of the building process by
 reviewing, customising and creating <strong><em>hintfiles</em></strong>.
 A hintfile is a file that supplements a SlackBuild's
-.info file, for example to specify options and additional dependencies,
-to override the version, downloads and md5sums, etc.</p>
+.info file, for example to specify options and additional dependencies for the
+SlackBuild, to override the version, downloads and md5sums, etc.</p>
 
-<p>Each repository has its own directory for hintfiles.  The hintfiles directory contains a structure of
-subdirectories that is the same as the subdirectories in the SlackBuilds repository.
-For example, if the SBo repository's SlackBuild file for wxPython is
-<code>libraries/wxPython/wxPython.SlackBuild</code>, then its hintfile will be
-<code>/etc/slackrepo/SBo/hintfiles/libraries/wxPython/wxPython.hint</code>. Alternatively, you
-can just put them in <code>/etc/slackrepo/SBo/hintfiles/</code>.</p>
-
-<p class="scary">
-A set of example hintfiles for SlackBuilds.org are supplied in the directory
-<code>/usr/share/slackrepo/SBo/hintfiles</code>.
-<strong>The example hintfiles are ignored.</strong> You must copy the example hintfiles to
-<code>/etc/slackrepo/SBo/hintfiles</code>, then review the README files of the packages you are
-building, and then edit the hintfiles in <code>/etc/slackrepo/SBo/hintfiles</code> for your
-own choices.</p>
-
-<p>The format of a hintfile is based on the format of SlackBuilds.org .info files,
-but all the entries are <strong>optional</strong>, and any unrecognised entries are
-<strong>ignored</strong>. The entries that can be defined are as follows:</p>
+<p>The format of a hintfile is based on the format of the SlackBuilds.org .info file,
+but all the variables are <strong>optional</strong>, and any unrecognised variables are
+<strong>ignored</strong>. Most SlackBuilds do not need hintfiles, and most
+hintfiles will only have one or two variables. The variables you can set are as follows:</p>
 
 <pre>
+OPTIONS="OPT1=yes OPT2=no ..."
+ADDREQUIRES="additional dependencies"
+GROUPADD="gid:groupname ..."
+USERADD="uid:username[:controlargs...] ..."
 VERSION="newversion"
 DOWNLOAD="new urls"
 MD5SUM="new md5sums"
+SHA256SUM="sha256sum"
 DOWNLOAD_<i>arch</i>="new urls"
 MD5SUM_<i>arch</i>="new md5sums"
-ADDREQUIRES="additional dependencies"
-OPTIONS="OPT1=yes OPT2=no ..."
-GROUPADD="gid:groupname ..."
-USERADD="uid:username[:controlargs...] ..."
+SHA256SUM_<i>arch</i>="sha256sum"
 SKIP="yesno"
 ARCH="arch"
 INSTALL="yesno"
 NUMJOBS="-j1"
 ANSWERS="strings"
 CLEANUP="commands"
-SPECIAL="actions"
+PRAGMA="pragmas"
 </pre>
 
-<h4>VERSION="newversion"</h4>
-<p>This hint can be specified to attempt an automatic patch of the version
-number in both the SlackBuild and info files.  The automatic patch is done by a
-simple text substitution. This often won't work
-(particularly if the old version number is something like '1', or if the download
-URL has not been patched correctly and you have not supplied a new download URL in the
-hint file).  The md5sum of the source archive will not be checked, unless you have also supplied a new
-md5sum in the hint file. The patched SlackBuild and info files are
-not kept.</p>
+<p>Each repository has two directories for hintfiles: one for your own local hintfiles,
+and one for system-supplied default hintfiles. For the SBo repository, your own directory is
+<p><code>/etc/slackrepo/SBo/hintfiles</code></p>
+<p>and the default hintfile directory is</p>
+<p><code>/etc/slackrepo/SBo/default_hintfiles/14.1</code>
 
-<h4>DOWNLOAD="new urls"</h4>
-<p>This hint redefines download URLs that replace the URLs specified in the .info file, for
-example if you have also defined VERSION=, or if the upstream URL has changed.</p>
-<p>However, if specified as <code>DOWNLOAD="no"</code>, this hint indicates that the source needs to be downloaded
-manually (for example, because of a licence agreement).  If you have already downloaded
-the source into the source cache, and if the md5sum is correct, then the package will be built.
-Otherwise, a message will be displayed explaining what you should do, and the package will be skipped.</p>
+<p class="scary">
+You should always review the README files of the SlackBuilds that you are building,
+and then consider whether you need to create a hintfile for your own requirements
+in <code>/etc/slackrepo/SBo/hintfiles/</code></p>
 
-<h4>MD5SUM="new md5sums"</h4>
-<p>This hint redefines md5sums that replace the md5sums specified in the .info file, for
-example if you have also redefined VERSION=, or if the upstream source archive has been changed.</p>
-<p>However, if specified as <code>MD5SUM="no"</code>, this hint indicates that the source md5sums are not
-reliable (for example, because of an unversioned archive) and should not be checked.</p>
+<p>The default hintfile directory contains a structure of subdirectories that
+is the same as the subdirectories in the SlackBuilds repository.
+For example, if the SBo repository's SlackBuild file for wxPython is
+<code>libraries/wxPython/wxPython.SlackBuild</code>, then its default hintfile will be
+<code>/etc/slackrepo/SBo/default_hintfiles/14.1/libraries/wxPython/wxPython.hint</code>.
+In your own hintfile directory, you can use the same structure, or you can just
+put your own hintfiles in <code>/etc/slackrepo/SBo/hintfiles/</code>.</p>
 
-<h4>DOWNLOAD_arch="new urls"
-<br>MD5SUM_arch="new md5sums"</h4>
-<p>These hints redefine DOWNLOAD and MD5SUM, as above, for the specified arch.</p>
+<p>Your own local hintfiles override the default hintfiles.</p>
 
-<h4>ADDREQUIRES="additional dependencies"</h4>
-<p>This hint should define a list of dependencies, separated by spaces.
-Dependencies in this list will be added to the dependencies defined by
-the REQUIRES= list defined in the .info file.
-If the .info file specifies %README%, you should set this hint
-to stop slackrepo displaying a warning.</p>
+<p>The default hintfiles will be updated every time you upgrade slackrepo.</p>
+
+<p>If you don't want to use the default hintfiles, you can disable them completely
+by setting the variable DEFAULT_HINTDIR to null or commenting it out
+in the configuration file.</p>
 
 <h4>OPTIONS="OPT1=yes OPT2=no ..."</h4>
-<p>This hint should define options described in the SlackBuild's README file. Note that
-this is the only way in slackrepo that you can define SlackBuild options.</p>
+<p>This hint should define options that are described in the SlackBuild's README file.</p>
+
+<h4>ADDREQUIRES="additional dependencies"</h4>
+<p>To specify the optional requirements that are described in the SlackBuild's README file,
+you should set this variable to a list of dependencies, separated by spaces.
+Dependencies in this list will be added to the dependencies in
+the REQUIRES= list defined in the SlackBuild's .info file.
+If the .info file specifies %README%, you should set this hint
+(possibly with an empty value) to stop slackrepo displaying a warning.</p>
 
 <h4>GROUPADD="gid:groupname ..."</h4>
 <p>This hint defines groups to be added on the host system.  If a group already exists,
@@ -134,6 +124,37 @@ and its argument omitted. If more than one username is required, a space-separat
 specifications can be defined. Examples:</p>
 <pre>USERADD="209:postgres:-d/var/lib/pgsql"
 USERADD="270:smtpd:-g0:-r:-s/bin/false:-d/var/empty 271:smtpq:-r:-s/bin/false:-d/var/empty"</pre>
+
+<h4>VERSION="newversion"</h4>
+<p>This hint can be specified to override the version
+number in both the SlackBuild and .info files. 
+This is done by a simple text substitution, so it is not guaranteed to work
+(particularly if the old version number is something like '1'), and you might need to
+set a new value for the DOWNLOAD variable in the hintfile.
+The md5sum of the source archive will not be checked, unless you have also supplied a new
+md5sum in the hint file. The patched SlackBuild and info files are not kept.</p>
+
+<h4>DOWNLOAD="new urls"</h4>
+<p>This hint redefines download URLs that replace the URLs specified in the .info file, for
+example if you have also defined VERSION=, or if the upstream URL has changed.</p>
+<p>However, if specified as <code>DOWNLOAD="no"</code>, this hint indicates that the source needs to be downloaded
+manually (for example, because of a licence agreement).  If you have already downloaded
+the source into the source cache, and if the md5sum is correct, then the package will be built.
+Otherwise, a message will be displayed explaining what you should do, and the package will be skipped.</p>
+
+<h4>MD5SUM="new md5sums"</h4>
+<p>This hint redefines md5sums that replace the md5sums specified in the .info file, for
+example if you have also redefined VERSION=, or if the upstream source archive has been changed.</p>
+<p>However, if specified as <code>MD5SUM="no"</code>, this hint indicates that the source md5sums are not
+reliable (for example, because of an unversioned archive) and should not be checked.</p>
+
+<h4>SHA256SUM="sha256sums"</h4>
+<p>This hint specifies an sha256sum that will be checked (in addition to any md5sum).</p>
+
+<h4>DOWNLOAD_arch="new urls"
+<br>MD5SUM_arch="new md5sums"
+<br>SHA256SUM_arch="sha256sums"</h4>
+<p>These hints redefine DOWNLOAD and MD5SUM, and specify SHA256SUM, as above, for the specified arch.</p>
 
 <h4>SKIP="yesno"</h4>
 <p>This hint can be specified if you want to skip the package when it would
@@ -160,13 +181,6 @@ configuration file or environment.  Use this hint if the build process fails
 when multiple 'make' jobs are used, so that the build will be executed with
 MAKEFLAGS='-j1'.</p>
 
-<h4>ANSWERS="string"</h4>
-<p>This hint can be specified if the build process wants to read answers to
-its questions during execution, for example concerning a licence agreement. The
-string is piped into the SlackBuild's standard input, so it should contain whatever
-will make the build process happy. Newlines can be specified as \n, for example</p>
-<pre>ANSWERS="ok\nyes"</pre>
-
 <h4>CLEANUP="commands"</h4>
 <p>This hint can be specified if the package needs extra cleanup when it is
 uninstalled (e.g. packages that replace standard Slackware packages or
@@ -180,16 +194,50 @@ CLEANUP="echo y | slackpkg -dialog=off -only_new_dotnew=on reinstall tetex tetex
 CLEANUP="depmod -a"
 </pre>
 
-<h4>SPECIAL="actions"</h4>
-<p>This hint can be specified to perform one or more special actions.  <strong>Special actions are not guaranteed to work!</strong>
-The following special actions are available:</p>
-<p><b>multilib_ldflags</b> &mdash; on a <a href="http://docs.slackware.com/slackware:multilib" class="ext">multilib</a> host, attempt to patch the SlackBuild
-to specify LDFLAGS, as described in
+<h4>ANSWERS="string"</h4>
+<p>This hint can be specified if the build process wants to read answers to
+its questions during execution, for example concerning a licence agreement. The
+string is piped into the SlackBuild's standard input, so it should contain whatever
+will make the build process happy. Newlines can be specified as \n, for example</p>
+<pre>ANSWERS="ok\nyes"</pre>
+
+<h4>PRAGMA="pragmas"</h4>
+<p>This hint can be specified to perform one or more pragmas (i.e. special actions).
+<strong>Pragmas are not guaranteed to work!</strong>
+The following pragmas are available:</p>
+
+<p><b>multilib_ldflags</b>
+&mdash; on a <a href="http://docs.slackware.com/slackware:multilib" class="ext">multilib</a> host,
+attempt to patch the SlackBuild to specify LDFLAGS, as described in
 <a href="http://slackbuilds.org/faq/#multilib" class="ext">SlackBuilds.org FAQ 18</a>.</p>
-<p><b>download_basename</b> &mdash; provide a symlink for source downloads using the URL's basename,
+
+<p><b>download_basename</b>
+&mdash; provide a symlink for source downloads using the URL's basename,
 for the benefit of SlackBuilds that don't expect content-disposition to be respected.</p>
-<p><b>noexport_ARCH</b> and <b>noexport_BUILD</b> &mdash; Set ARCH or BUILD by
-patching the SlackBuild instead of exporting it to the environment.</p>
+
+<p><b>noexport_ARCH</b> and <b>noexport_BUILD</b> and <b>noexport_TAG</b>
+&mdash; Set ARCH or BUILD or TAG by patching the SlackBuild instead of exporting
+it to the environment.</p>
+
+<p><b>unset_ARCH</b>
+&mdash; unset the value of ARCH, overriding the value given in the configuration file or environment.
+Other variables can be specified, for example</p>
+<pre>PRAGMA="unset_DISTCC_HOSTS"</pre>
+
+<p><b>noremove</b>
+&mdash; do not remove (uninstall) packages before building the item. This is particularly useful for gcc, glibc, etc.</p>
+
+<p><b>nofakeroot</b>
+&mdash; override building the package as a non-root user with fakeroot.
+Build the package as root, using <code>sudo.</code></p>
+
+<p><b>no_make_test</b>
+&mdash; patch the SlackBuild to comment out any 'make test' command.</p>
+
+<p><b>stubs-32</b>
+&mdash; temporarily provide <code>/usr/include/gnu/stubs-32.h</code>
+as described in the memtest86+ README and xen SlackBuild.</p>
+
 </div>
 
 </body>

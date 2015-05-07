@@ -350,7 +350,7 @@ function calculate_item_status
           STATUS[$itemid]="update"
           STATUSINFO[$itemid]="update for git $shortcurrrev"
           # get title of the latest commit message
-          title="$(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e 's/.*: //' -e 's/\.$//')"
+          title="$(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e "s/.*${itemprgnam}: //" -e 's/\.$//')"
           [ -n "$title" ] && STATUSINFO[$itemid]="${STATUSINFO[$itemid]} \"$title\""
           return 0
         done

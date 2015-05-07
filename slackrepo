@@ -24,6 +24,14 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #-------------------------------------------------------------------------------
 
+function print_version
+{
+  echo "%PKGID%"
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
 function print_usage
 {
   echo 'Usage:'
@@ -39,7 +47,7 @@ function print_usage
   echo '  --dry-run | --install'
   echo '  --lint'
   echo '  --keep-tmp'
-  return
+  return 0
 }
 
 #-------------------------------------------------------------------------------
@@ -59,7 +67,13 @@ function exit_cleanup
 
 #-------------------------------------------------------------------------------
 
-[ $# = 0 ] && { print_usage; exit_cleanup; exit 0; }
+if [ $# = 0 ] || [ $# = 1 -a \( "$1" = '-?' -o "$1" = '--help' -o "$1" = '-v' \) ]; then
+  print_version
+  echo ""
+  print_usage
+  echo ""
+  exit 0
+fi
 
 starttime=$(date +%s)
 
@@ -356,6 +370,13 @@ for name in $varnames $genrepnames $initnames; do
   eval "$srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_OSVER/g" -e "s/%ARCH%/$SR_ARCH/g")\""
 done
 
+# Do this before initialising the repo:
+[ "${CMD}" = 'info' ] && { info_command; exit 0; }
+
+#-------------------------------------------------------------------------------
+# Initialisation
+#-------------------------------------------------------------------------------
+
 # Setup locking and logging:
 LOCKFILE="$(dirname "$SR_SBREPO")/.lock"
 mkdir -p "$(dirname "$LOCKFILE")" || \
@@ -376,59 +397,6 @@ if [ $? != 0 ]; then
   exit_cleanup
   exit 3
 fi
-
-# Log the config
-log_verbose ""
-log_verbose "Configuration:"
-log_verbose "  $CMD"
-log_verbose "  --repo=$OPT_REPO"
-if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
-  log_verbose "  --very-verbose"
-elif [ "$OPT_VERBOSE" = 'y' ]; then
-  log_verbose "  --verbose"
-fi
-[      "$OPT_DRY_RUN" = 'y' ] && log_verbose "  --dry-run"
-[      "$OPT_INSTALL" = 'y' ] && log_verbose "  --install"
-[         "$OPT_LINT" = 'y' ] && log_verbose "  --lint"
-[     "$OPT_KEEP_TMP" = 'y' ] && log_verbose "  --keep-tmp"
-[       "$OPT_CHROOT" = 'y' ] && log_verbose "  --chroot"
-[    "$OPT_COLOR" != 'auto' ] && log_verbose "  --color=$OPT_COLOR"
-[        "$OPT_NICE" != '5' ] && log_verbose "  --nice=$OPT_NICE"
-
-for name in $varnames; do
-  srvar="SR_$name"
-  log_verbose "  $name=\"${!srvar}\""
-done
-if [ "$SR_USE_GENREPOS" = 1 ]; then
-  for name in $genrepnames; do
-    srvar="SR_$name"
-    [ -n "${!srvar}" ] && log_verbose "  $name=\"${!srvar}\""
-  done
-else
-  log_verbose "  USE_GENREPOS=\"$SR_USE_GENREPOS\""
-fi
-# Log significant environment variables. This is not a comprehensive list (see
-# https://www.gnu.org/software/make/manual/html_node/Implicit-Variables.html)
-# and upstream builds don't always use them properly.
-for name in AR AS CC CFLAGS CXX CXXFLAGS CPP CPPFLAGS LD LDFLAGS DISTCC_HOSTS; do
-  [ -n "${!name}" ] && log_verbose "  $name=\"${!name}\""
-done
-log_verbose ""
-
-# Log the system info
-log_verbose "OS: ${SYS_OSNAME}${SYS_OSVER}"
-log_verbose "kernel: ${SYS_KERNEL}"
-log_verbose "arch: ${SYS_ARCH}"
-[ "$SYS_MULTILIB" = 'y' ] && log_verbose "multilib: yes"
-log_verbose "nproc: ${SYS_NPROC}"
-log_verbose "total MHz: ${SYS_MHz}"
-[ "$SYS_OVERLAYFS" = 'y' ] && log_verbose "overlayfs: yes"
-[ "$EUID" != 0 ] && log_verbose "username: $USER"
-log_verbose ""
-
-#-------------------------------------------------------------------------------
-# Initialisation
-#-------------------------------------------------------------------------------
 
 # Arrays for tracking outcomes:
 declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST BADLIST
@@ -517,7 +485,7 @@ elif [ "$GOTGIT" = 'y' ] && [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ 
   currbranch=$(git rev-parse --abbrev-ref HEAD)
   if [ -z "$muck" ] && [ "$currbranch" = "${SR_INIT_GITBRANCH:-master}" ]; then
     prevfetch=$(db_get_misc "git_fetch_${currbranch}")
-    if [ -n "$prevfetch" ] && [ $(( $(date +%s) - prevfetch )) -gt 86400 ]; then
+    if [ $(( $(date +%s) - ${prevfetch:-0} )) -gt 86400 ]; then
       log_normal "Updating git ..."
       if [ "${OPT_REPO}" = 'ponce' ] && [ "$currbranch" = 'current' ]; then
         git fetch --all --prune
@@ -558,6 +526,7 @@ if [ "$GOTGIT" = 'n' ] || [ -n "$muck" ] || [ "${sbindexed:-0}" != "$gitdate" ];
   log_done
 fi
 
+# Show some info about the repo:
 if [ "$GOTGIT" = 'y' ]; then
   [ -n "$(git status -s .)" ] && dirty=' (DIRTY)'
   log_info "git repo: $SR_SBREPO"

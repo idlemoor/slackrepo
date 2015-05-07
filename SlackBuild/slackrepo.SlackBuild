@@ -57,6 +57,8 @@ mkdir -p $PKG/usr/sbin
 cp -a \
   $PRGNAM \
   $PKG/usr/sbin
+# Who needs smudge filters anyway?
+sed -i -e "s/%PKGID%/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}/" $PKG/usr/sbin/$PRGNAM
 
 mkdir -p $PKG/usr/bin
 ln -sr \

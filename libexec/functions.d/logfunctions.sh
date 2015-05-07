@@ -254,7 +254,8 @@ function log_itemstart
   local message="$2"
 
   if [ -n "$message" ]; then
-    if [ ${#message} -gt "$LINEUSABLE" ]; then
+    # Impose a minimum 5 chars of padding
+    if [ $(( ${#message} + 5 )) -gt "$LINEUSABLE" ]; then
       echo -e "${PADLINE:0:$LINEUSABLE} $(date +%T)\n${tputboldwhite}${message}${tputnormal}"
     else
       padlen=$(( LINEUSABLE - ${#message} - 1 ))

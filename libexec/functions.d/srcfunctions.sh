@@ -128,7 +128,7 @@ function download_src
   fi
 
   wgetprogress='--quiet --progress=bar:force'
-  [ "$OPT_VERBOSE" = 'y' ]  && wgetprogress='--progress=bar:force'
+  [ "$OPT_VERBOSE" = 'y' ] && wgetprogress='--progress=bar:force'
   [ "$SYS_CURRENT" = 'y' ] && wgetprogress="${wgetprogress}:noscroll --show-progress"
 
   log_normal -a "Downloading source files ..."

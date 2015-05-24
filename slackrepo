@@ -67,7 +67,7 @@ function exit_cleanup
 
 #-------------------------------------------------------------------------------
 
-if [ $# = 0 ] || [ $# = 1 -a \( "$1" = '-?' -o "$1" = '--help' -o "$1" = '-v' \) ]; then
+if [ $# = 0 ] || [ $# = 1 -a \( "$1" = '-?' -o "$1" = '-h' -o "$1" = '--help' -o "$1" = '-v' -o "$1" = '--version' \) ]; then
   print_version
   echo ""
   print_usage
@@ -251,9 +251,10 @@ SYS_ARCH=$(uname -m)
 SYS_MULTILIB='n'
 [ "$SYS_ARCH" = 'x86_64' -a -f /etc/profile.d/32dev.sh ] && SYS_MULTILIB='y'
 SYS_NPROC=$(nproc)
-SYS_MHz=$(awk '/^cpu MHz/ {sum+=$4} END {print sum}' < /proc/cpuinfo)
+[ -f /proc/cpuinfo ] && SYS_MHz=$(awk '/^cpu MHz/ {sum+=$4} END {print sum}' < /proc/cpuinfo)
 # If that's jiggered (stupid Pi kernels), try this. Then give up like W.C. Fields said.
-[ -z "$SYS_MHz" ] && SYS_MHz=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq | sed 's/...$//')
+[ -z "$SYS_MHz" ] && [ -f /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq ] \
+  SYS_MHz=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq | sed 's/...$//')
 SYS_OVERLAYFS='n'
 # don't look at the kernel version -- somebody might have the old patchset
 [ -f /lib/modules/"$(uname -r)"/kernel/fs/overlayfs/overlay.ko ] && SYS_OVERLAYFS='y'
@@ -307,7 +308,7 @@ repoconf="${CONFIGDIR:-/etc/slackrepo}/slackrepo_${OPT_REPO}.conf"
 if [ -f "$repoconf" ]; then
   . "$repoconf"
 else
-  echo "$(basename "$0"): Error: repo configuration file not found: $repoconf" >&2; exit_cleanup; exit 2
+  echo "$(basename "$0"): Error: No repo '${OPT_REPO}' (configuration file not found: $repoconf)" >&2; exit_cleanup; exit 2
 fi
 # Read the user config files to override everything in the main repo config file.
 # (Yes, we're reading ~/.slackreporc twice, but that's a lot easier than a proper solution)

@@ -24,6 +24,11 @@ iistat=$?
 if [ $iistat = 0 ] || [ $iistat = 1 ]; then
   PKG_IN_CURRENT["gst1-plugins-base"]="$R_INSTALLED"
 fi
+is_installed "qt-gstreamer-v-a-bt"
+iistat=$?
+if [ $iistat = 0 ] || [ $iistat = 1 ]; then
+  PKG_IN_CURRENT["QtGStreamer"]="$R_INSTALLED"
+fi
 # Deal with SBo categories that have the same name as a Slackware-current package:
 declare -A IGNORE_CURRENT
 IGNORE_CURRENT["perl"]='y'

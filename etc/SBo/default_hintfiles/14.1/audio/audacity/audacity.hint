@@ -1,0 +1,1 @@
+ADDREQUIRES="ffmpeg jack-audio-connection-kit lame lilv soundtouch"

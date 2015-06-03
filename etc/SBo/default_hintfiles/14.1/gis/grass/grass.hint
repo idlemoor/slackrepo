@@ -1,2 +1,2 @@
-ADDREQUIRES="blas lapack netcdf postgresql"
+ADDREQUIRES="blas lapack netcdf postgresql ffmpeg"
 OPTIONS="ENABLE=gmath,netcdf,postgresql,mysql,sqlite"

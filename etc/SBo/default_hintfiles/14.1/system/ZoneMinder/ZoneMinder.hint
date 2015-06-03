@@ -1,0 +1,2 @@
+ADDREQUIRES="ffmpeg perl-Archive-Zip perl-X10 perl-Device-SerialPort perl-MIME-Lite"
+NUMJOBS="-j1"

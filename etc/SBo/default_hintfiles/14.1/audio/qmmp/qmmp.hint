@@ -1,0 +1,1 @@
+ADDREQUIRES="libmms jack-audio-connection-kit libmodplug pulseaudio ffmpeg faad2 libbs2b"

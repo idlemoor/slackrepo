@@ -1,0 +1,1 @@
+ADDREQUIRES="libcec pulseaudio libbluray libnfs libva libdvdcss lirc cwiid pybluez id3lib libvdpau rtmpdump afpfs-ng libmicrohttpd avahi lame SDL2 cryptopp jsoncpp ffmpeg"

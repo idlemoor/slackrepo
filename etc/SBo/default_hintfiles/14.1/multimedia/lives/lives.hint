@@ -1,0 +1,2 @@
+ADDREQUIRES="ffmpeg opencv mjpegtools ladspa_sdk libunicap libdv schroedinger frei0r libavc1394"
+NUMJOBS='-j1'

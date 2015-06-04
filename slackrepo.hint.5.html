@@ -396,8 +396,13 @@ Build the package as root, using <code>sudo</code>.</p>
 <p>Patch the SlackBuild to comment out any 'make test' command.</p>
 
 <p><b>stubs-32</b></p>
-<p>Temporarily provide <i>/usr/include/gnu/stubs-32.h</i> as described in the
+<p>Temporarily provide <code>/usr/include/gnu/stubs-32.h</code> as described in the
 memtest86+ README and xen SlackBuild.</p>
+
+<p><b>abstar</b></p>
+<p>Patch the SlackBuild to use the tar command's <code>--absolute-names</code>
+control argument. Use this if you get the error message
+<br><code>tar: Directory renamed before its status could be extracted</code>.</p>
 
 <p></p>
 </blockquote></p>

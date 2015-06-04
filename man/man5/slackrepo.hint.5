@@ -311,6 +311,18 @@ Patch the SlackBuild to comment out any 'make test' command.
 Temporarily provide
 .I /usr/include/gnu/stubs-32.h
 as described in the memtest86+ README and xen SlackBuild.
+.P
+.B abstar
+.P
+Patch the SlackBuild to use the tar command's
+.I --absolute-names
+control argument. Use this if you get the error message
+.P
+.RS
+.EX
+tar: Directory renamed before its status could be extracted
+.EE
+.RE
 .
 .
 .SH SEE ALSO

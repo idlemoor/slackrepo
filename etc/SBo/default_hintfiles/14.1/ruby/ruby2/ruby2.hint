@@ -1,1 +1,2 @@
+ADDREQUIRES=""
 CLEANUP="s_reinstall ruby"

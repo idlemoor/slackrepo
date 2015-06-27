@@ -1,0 +1,2 @@
+ADDREQUIRES="swh-plugins calf"
+PRAGMA="download_basename"

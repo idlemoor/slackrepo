@@ -1,0 +1,1 @@
+ADDREQUIRES="orc a52dec opencore-amr lame libmpeg2 twolame x264"

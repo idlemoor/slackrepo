@@ -1,1 +1,2 @@
 NUMJOBS="-j1"
+OPTIONS="STATICLIB=yes"

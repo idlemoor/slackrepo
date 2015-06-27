@@ -1,0 +1,2 @@
+ADDREQUIRES="jack-audio-connection-kit pulseaudio"
+OPTIONS="JACK=on PULSEAUDIO=on"

@@ -339,21 +339,28 @@ function calculate_item_status
     # If the git rev has changed => update
     if [ "$pkgrev" != "$currrev" ]; then
       if [ "${GITDIRTY[$itemid]}" != 'y' -a "${pkgrev/*+/+}" != '+dirty' ]; then
-        #   if only README, slack-desc and .info have changed, don't build
-        #   (the VERSION in the .info file has already been checked ;-)
-        modifilelist=( $(cd "$SR_SBREPO"; git diff --name-only "$pkgrev" "$currrev" -- "$itemdir") )
-        for modifile in "${modifilelist[@]}"; do
-          bn="${modifile##*/}"
-          [ "$bn" = "README" ] && continue
-          [ "$bn" = "slack-desc" ] && continue
-          [ "$bn" = "$itemprgnam.info" ] && continue
+        # if only README, slack-desc and .info have changed, don't build
+        # (the VERSION in the .info file has already been checked ;-)
+        modifilelist=( $(cd "$SR_SBREPO"; git diff --name-only "$pkgrev" "$currrev" -- "$itemdir" 2>/dev/null) )
+        if [ $? = 0 ]; then
+          for modifile in "${modifilelist[@]}"; do
+            bn="${modifile##*/}"
+            [ "$bn" = "README" ] && continue
+            [ "$bn" = "slack-desc" ] && continue
+            [ "$bn" = "$itemprgnam.info" ] && continue
+            STATUS[$itemid]="update"
+            STATUSINFO[$itemid]="update for git $shortcurrrev"
+            # get title of the latest commit message
+            title="$(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e "s/.*${itemprgnam}: //" -e 's/\.$//')"
+            [ -n "$title" ] && STATUSINFO[$itemid]="${STATUSINFO[$itemid]} \"$title\""
+            return 0
+          done
+        else
+          # nonzero status means $pkgrev is no longer valid (e.g. upstream has rewritten history) => update
           STATUS[$itemid]="update"
           STATUSINFO[$itemid]="update for git $shortcurrrev"
-          # get title of the latest commit message
-          title="$(cd "$SR_SBREPO"/"$itemdir"; git log --pretty=format:%s -n 1 . | sed -e "s/.*${itemprgnam}: //" -e 's/\.$//')"
-          [ -n "$title" ] && STATUSINFO[$itemid]="${STATUSINFO[$itemid]} \"$title\""
           return 0
-        done
+        fi
       else
         # we can't do the above check if git is or was dirty
         STATUS[$itemid]="update"

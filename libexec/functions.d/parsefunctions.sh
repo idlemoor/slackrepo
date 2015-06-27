@@ -12,28 +12,30 @@
 declare -a PARSEDARGS
 declare -A ITEMDIR ITEMFILE ITEMPRGNAM PRGNAMITEMID
 
-# Deal with SBo deps that are in Slackware-current but the package name is different:
-declare -A PKG_IN_CURRENT
-is_installed "python-v-a-bt"
-iistat=$?
-if [ $iistat = 0 ] || [ $iistat = 1 ]; then
-  PKG_IN_CURRENT["pysetuptools"]="$R_INSTALLED"
-fi
-is_installed "gst-plugins-base-v-a-bt"
-iistat=$?
-if [ $iistat = 0 ] || [ $iistat = 1 ]; then
-  PKG_IN_CURRENT["gst1-plugins-base"]="$R_INSTALLED"
-fi
-is_installed "qt-gstreamer-v-a-bt"
-iistat=$?
-if [ $iistat = 0 ] || [ $iistat = 1 ]; then
-  PKG_IN_CURRENT["QtGStreamer"]="$R_INSTALLED"
-fi
 # Deal with SBo categories that have the same name as a Slackware-current package:
 declare -A IGNORE_CURRENT
 IGNORE_CURRENT["perl"]='y'
 IGNORE_CURRENT["python"]='y'
 IGNORE_CURRENT["ruby"]='y'
+# Deal with SBo deps that are in Slackware-current but the package name is different:
+declare -A PKG_IN_CURRENT
+# "<current>=<SBo>"
+for pp in \
+  "python=pysetuptools" \
+  "gst-plugins-base=gst1-plugins-base" \
+  "gst-plugins-good=gst1-plugins-good" \
+  "gstreamer=gstreamer1" \
+  "qt-gstreamer=QtGStreamer" \
+  "openjpeg=openjpeg2" \
+; do
+  pslack="${pp/=*/}"
+  psbo="${pp/*=/}"
+  is_installed "${pslack}-v-a-bt"
+  iistat=$?
+  if [ $iistat = 0 ] || [ $iistat = 1 ]; then
+    PKG_IN_CURRENT["$psbo"]="$R_INSTALLED"
+  fi
+done
 
 #-------------------------------------------------------------------------------
 

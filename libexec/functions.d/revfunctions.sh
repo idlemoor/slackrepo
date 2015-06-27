@@ -119,6 +119,7 @@ function calculate_deps_and_status
     local -a deplist=()
     for dep in ${INFOREQUIRES[$itemid]}; do
       if [ "$dep" = '%README%' ]; then
+        # %README% is now removed unconditionally, but we'll leave this check here for now:
         log_warning "${itemid}: Unhandled %README% in ${itemprgnam}.info"
       elif [ "$dep" = "$itemprgnam" ]; then
         log_warning "${itemid}: Ignoring dependency of ${itemprgnam} on itself"

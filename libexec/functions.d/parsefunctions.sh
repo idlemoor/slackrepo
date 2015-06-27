@@ -593,8 +593,9 @@ function parse_info_and_hints
   # FIXUP DEPARTMENT
   # ================
 
-  # Fix INFOREQUIRES from ADDREQUIRES, if possible
+  # Fix INFOREQUIRES
   if [ "${INFOREQUIRES[$itemid]+yesitisset}" != 'yesitisset' ]; then
+    # If not set, set it from ADDREQUIRES, if possible
     if [ -v ADDREQUIRES ]; then
       INFOREQUIRES[$itemid]="$ADDREQUIRES"
     else
@@ -602,11 +603,8 @@ function parse_info_and_hints
       INFOREQUIRES[$itemid]=""
     fi
   else
-    # Get rid of %README% if and only if ADDREQUIRES is set.
-    if [ -v ADDREQUIRES ]; then
-      INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]//%README%/} ${ADDREQUIRES})"
-    # Else %README% will remain, and calculate_deps will issue a warning.
-    fi
+    # Get rid of %README% silently, and append ADDREQUIRES
+    INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]//%README%/} ${ADDREQUIRES})"
   fi
 
   # Fix INFOVERSION from hint file's VERSION, or DOWNLOAD, or git, or SlackBuild's modification time
@@ -618,7 +616,7 @@ function parse_info_and_hints
   [ -z "$ver" ] && ver="$(date --date=@"$(stat --format='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile")" '+%Y%m%d')"
   INFOVERSION[$itemid]="$ver"
 
-  # Process SKIP last so that we've got rid of %README%.
+  # Process SKIP last, so we've got rid of %README%.
   if [ -n "$SKIP" ]; then
     if [ "$SKIP" != 'no' ]; then
       STATUS[$itemid]="skipped"

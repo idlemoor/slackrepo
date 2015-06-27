@@ -127,6 +127,10 @@ function download_src
     return 0
   fi
 
+  curlboredom='--connect-timeout 30 --retry 4'
+  curlprogress='-#'
+  [ "$OPT_VERBOSE" = 'y' ] && curlprogress=''
+  wgetboredom='--dns-timeout=30 --connect-timeout=30 --read-timeout=120 --tries=4'
   wgetprogress='--quiet --progress=bar:force'
   [ "$OPT_VERBOSE" = 'y' ] && wgetprogress='--progress=bar:force'
   [ "$SYS_CURRENT" = 'y' ] && wgetprogress="${wgetprogress}:noscroll --show-progress"
@@ -134,21 +138,40 @@ function download_src
   log_normal -a "Downloading source files ..."
   cd "$DOWNDIR"
   for url in $DOWNLIST; do
+    # wget is good for redirects and ftp, but curl's content-disposition is better,
+    # so let's try it this way:
+    dlcmd='wget'
+    case "${HINT_PRAGMA[$itemid]}" in
+      *download_basename*) dlcmd="curl" ;;
+    esac
+    # Some sites refuse to serve documents if the user-agent is wget or curl...
+    # but Dropbox fails to redirect to the actual download if the user-agent *isn't* wget.
+    # (The regex '*dropbox*' gives false positives, but is necessary to cope with
+    # dropboxusercontent.com -- hopefully no false positives refuse wget?)
+    useragent="slackrepo"
+    case "$url" in
+      *dropbox*)  useragent="Wget/1.14" ;;  # this may be a lie, but who cares?
+    esac
     wgetstat=0
-    set -o pipefail
-    wget --timeout=30 --tries=4 $wgetprogress --no-check-certificate --content-disposition -U slackrepo "$url" 2>&41
-    wgetstat=$?
-    set +o pipefail
-    if [ $wgetstat != 0 ]; then
+    curlstat=0
+    if [ "$dlcmd" = 'curl' ]; then
+      curl -q $curlboredom -f $curlprogress -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A "$useragent" -O "$url" 2>&41
+      curlstat=$?
+    else
+      wget $wgetboredom $wgetprogress --no-check-certificate --content-disposition -U "$useragent" "$url" 2>&41
+      wgetstat=$?
+    fi
+    if [ $wgetstat != 0 ] || [ $curlstat != 0 ]; then
       # Try SlackBuilds Direct :D quietly ;-)
       sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/${ITEMPRGNAM[$itemid]}/${url##*/}"
-      set -o pipefail
-      wget --timeout=30 --tries=4 $wgetprogress --no-check-certificate --content-disposition -U slackrepo "$url" 2>&41
+      # use wget, seeing as it's always https from Sourceforge with its redirect mania
+      # wget failures sometimes leave an incomplete file behind, -r should ensure it is clobbered
+      wget -r $wgetboredom $wgetprogress --no-check-certificate --content-disposition -U "$useragent" "$url" 2>&41
       sbdstat=$?
-      set +o pipefail
       if [ $sbdstat != 0 ]; then
         # use the original url and status in the error message
         [ "$wgetstat" != 0 ] && failmsg="$(print_wget_status $wgetstat)"
+        [ "$curlstat" != 0 ] && failmsg="$(print_curl_status $curlstat)"
         if [ "$CMD" = 'lint' ]; then
           log_warning -a "${itemid}: Download failed: ${failmsg}."
           log_info -a "$url"

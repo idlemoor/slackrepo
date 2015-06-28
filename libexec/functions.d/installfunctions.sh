@@ -240,12 +240,13 @@ function uninstall_packages
         etcnewfiles=$(grep '^etc/.*\.new$' "${CHROOTDIR}"/var/log/packages/"$R_INSTALLED")
         etcdirs=$(grep '^etc/.*/$' "${CHROOTDIR}"/var/log/packages/"$R_INSTALLED")
         # Run removepkg
+        #### if verbose, maybe we should show this on the console, but it's usually big and annoying
         log_normal -a "Uninstalling $R_INSTALLED ..."
-        #### if very verbose, we should really splurge this
         ROOT=${CHROOTDIR:-/} ${SUDO}removepkg "$R_INSTALLED" >> "$ITEMLOG" 2>&1
-        # Remove any surviving detritus (do nothing if not root)
-        for etcfile in $etcnewfiles; do
-          rm -f /"$etcfile" /"${etcfile%.new}" 2>/dev/null
+        # Remove any surviving detritus (we now keep files without .new because
+        # of openrc and inittab, but overlayfs is the real long-term solution)
+        for etcnewfile in $etcnewfiles; do
+          rm -f /"$etcnewfile" 2>/dev/null
         done
         for etcdir in $etcdirs; do
           if [ -d /"$etcdir" ]; then

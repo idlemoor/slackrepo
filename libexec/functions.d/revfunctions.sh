@@ -220,16 +220,16 @@ function calculate_deps_and_status
   # Everything except 'ok' and 'updated' is added to TODOLIST for logging purposes.
 
   if [ "${STATUS[$itemid]}" = 'ok' ]; then
-    prettystatus=' (ok)'
+    prettystatus=" ${colour_ok}(ok)${colour_normal}"
   elif [ "${STATUS[$itemid]}" = 'updated' ]; then
-    prettystatus=" ${tputcyan}(${STATUS[$itemid]})${tputnormal}"
+    prettystatus=" ${colour_updated}(${STATUS[$itemid]})${colour_normal}"
   else
     if [ "${STATUS[$itemid]}" = 'add' ] || [ "${STATUS[$itemid]}" = 'update' ] || [ "${STATUS[$itemid]}" = 'rebuild' ] || [ "${STATUS[$itemid]}" = 'updated+rebuild' ]; then
-      prettystatus=" ${tputgreen}(${STATUSINFO[$itemid]})${tputnormal}"
+      prettystatus=" ${colour_build}(${STATUSINFO[$itemid]})${colour_normal}"
     elif [ "${STATUS[$itemid]}" = 'remove' ] || [ "${STATUS[$itemid]}" = 'skipped' ] || [ "${STATUS[$itemid]}" = 'unsupported' ]; then
-      prettystatus=" ${tputyellow}(${STATUS[$itemid]})${tputnormal}"
+      prettystatus=" ${colour_skip}(${STATUS[$itemid]})${colour_normal}"
     else # removed, failed, aborted, and other not-yet-invented catastrophes
-      prettystatus=" ${tputred}(${STATUS[$itemid]})${tputnormal}"
+      prettystatus=" ${colour_fail}(${STATUS[$itemid]})${colour_normal}"
     fi
     additem='y'
     for todo in "${TODOLIST[@]}"; do

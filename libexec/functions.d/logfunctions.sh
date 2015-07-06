@@ -76,14 +76,14 @@ function log_normal
 #-------------------------------------------------------------------------------
 
 function log_verbose
-# Log a message to standard output if OPT_VERBOSE is set.
+# Log an informational message to standard output if OPT_VERBOSE is set.
 # Log a message to ITEMLOG if '-a' is specified.
 # Usage: log_verbose [-a] messagestring
 # Return status: always 0
 {
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
-  [ "$OPT_VERBOSE" = 'y' ] && echo -e "${tputcyan}${1}${tputnormal}"
+  [ "$OPT_VERBOSE" = 'y' ] && echo -e "${colour_info}${1}${colour_normal}"
   [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}" >> "$ITEMLOG"
   return 0
 }
@@ -91,7 +91,7 @@ function log_verbose
 #-------------------------------------------------------------------------------
 
 function log_info
-# Log a message to standard output in unhighlighted cyan.
+# Log an informational message to standard output.
 # If '-t' is specified, truncate it at 3000 chars unless OPT_VERBOSE is set.
 # Log a message to ITEMLOG if '-a' is specified.
 # Usage: log_info [-a] messagestring
@@ -112,7 +112,7 @@ function log_info
   if [ "$OPT_VERBOSE" != 'y' ]; then
     [ "$T" = 'y' ] && [ ${#infostuff} -gt 3000 ] && infostuff="${infostuff:0:3000}\n[...]"
   fi
-  echo -e "${NL}${tputcyan}${infostuff}${tputnormal}"
+  echo -e "${NL}${colour_info}${infostuff}${colour_normal}"
   NL=''
   return 0
 }
@@ -130,15 +130,15 @@ function log_important
   A='n'
   [ "$1" = '-a' ] && { A='y'; shift; }
   if [ -z "${2}" ]; then
-    echo -e "${NL}${tputboldwhite}${1}${tputnormal}"
+    echo -e "${NL}${colour_important}${1}${colour_normal}"
     [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}" >> "$ITEMLOG"
   else
     if [ $(( ${#1} + ${#2} )) -lt "$LINEWIDTH" ]; then
       read llen plen rlen < <(format_left_right "$1" "$2")
-      echo -e "${NL}${tputboldwhite}${1:0:$llen}${tputnormal}${PADBLANK:0:$plen}${2:0:$rlen}"
+      echo -e "${NL}${colour_important}${1:0:$llen}${colour_normal}${PADBLANK:0:$plen}${2:0:$rlen}"
       [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
     else
-      echo -e "${NL}${tputboldwhite}${1}${tputnormal}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}"
+      echo -e "${NL}${colour_important}${1}${colour_normal}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}"
       [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}" >> "$ITEMLOG"
     fi
   fi
@@ -165,7 +165,7 @@ function log_warning
     *)    break ;;
     esac
   done
-  echo -e "${NL}${tputboldyellow}${W}${1}${tputnormal}"
+  echo -e "${NL}${colour_warning}${W}${1}${colour_normal}"
   [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${W}${1}" >> "$ITEMLOG"
   NL=''
   [ -n "$W" ] && WARNINGLIST+=( "${1}" )
@@ -193,15 +193,15 @@ function log_error
     esac
   done
   if [ -z "${2}" ]; then
-    echo -e "${NL}${tputboldred}${E}${1}${tputnormal}"
+    echo -e "${NL}${colour_error}${E}${1}${colour_normal}"
     [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${E}${1}" >> "$ITEMLOG"
   else
     if [ $(( ${#1} + ${#2} )) -lt "$LINEWIDTH" ]; then
       read llen plen rlen < <(format_left_right "$1" "$2")
-      echo -e "${NL}${tputboldred}${1:0:$llen}${tputnormal}${PADBLANK:0:$plen}${2:0:$rlen}"
+      echo -e "${NL}${colour_error}${1:0:$llen}${colour_normal}${PADBLANK:0:$plen}${2:0:$rlen}"
       [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
     else
-      echo -e "${NL}${tputboldred}${1}${tputnormal}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}"
+      echo -e "${NL}${colour_error}${1}${colour_normal}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}"
       [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}\n${PADBLANK:0:$(( LINEWIDTH - ${#2} ))}${2}" >> "$ITEMLOG"
     fi
   fi
@@ -256,10 +256,10 @@ function log_itemstart
   if [ -n "$message" ]; then
     # Impose a minimum 5 chars of padding
     if [ $(( ${#message} + 5 )) -gt "$LINEUSABLE" ]; then
-      echo -e "${PADLINE:0:$LINEUSABLE} $(date +%T)\n${tputboldwhite}${message}${tputnormal}"
+      echo -e "${PADLINE:0:$LINEUSABLE} $(date +%T)\n${colour_important}${message}${colour_normal}"
     else
       padlen=$(( LINEUSABLE - ${#message} - 1 ))
-      echo "${tputboldwhite}${message}${tputnormal} ${PADLINE:0:$padlen} $(date +%T)"
+      echo "${colour_important}${message}${colour_normal} ${PADLINE:0:$padlen} $(date +%T)"
     fi
   fi
   if [ -n "$itemid" ] && [ -n "${ITEMDIR[$itemid]}" ]; then
@@ -311,15 +311,15 @@ function log_itemfinish
   fi
   case "$result" in
     'OK')
-      echo -e "${tputboldgreen}:-) $message (-:${addmessage}${tputnormal}\n"
+      echo -e "${colour_success}:-) $message (-:${addmessage}${colour_normal}\n"
       [ -n "$ITEMLOG" ] && echo -e ":-) $message (-:${addmessage}\n" >> "$ITEMLOG"
       ;;
     'WARNING' | 'SKIPPED' | 'UNSUPPORTED')
-      echo -e "${tputboldyellow}:-/ $message /-:${addmessage}${tputnormal}\n"
+      echo -e "${colour_warning}:-/ $message /-:${addmessage}${colour_normal}\n"
       [ -n "$ITEMLOG" ] && echo -e ":-/ $message /-:${addmessage}\n" >> "$ITEMLOG"
       ;;
     'FAILED' | 'ABORTED' | 'BAD')
-      echo -e "${tputboldred}:-( $message )-:${addmessage}${tputnormal}\n"
+      echo -e "${colour_error}:-( $message )-:${addmessage}${colour_normal}\n"
       [ -n "$ITEMLOG" ] && echo -e ":-( $message )-:${addmessage}\n" >> "$ITEMLOG"
       ;;
   esac
@@ -342,42 +342,44 @@ function init_colour
 # 0 = imax
 # 1 = 405 lines
 {
-  tputbold=''
-  tputred=''
-  tputboldred=''
-  tputgreen=''
-  tputboldgreen=''
-  tputyellow=''
-  tputboldyellow=''
-  tputboldwhite=''
-  tputnormal=''
   DOCOLOUR='n'
   [ "$OPT_COLOR" = 'always'       ] && DOCOLOUR='y'
   [ "$OPT_COLOR" = 'auto' -a -t 1 ] && DOCOLOUR='y'
-  [ "$DOCOLOUR" = 'n' ] && return 1
-  tputbold="$(tput bold)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputred="$(tput setaf 1)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputboldred="$tputbold$tputred"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputgreen="$(tput setaf 2)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputboldgreen="$tputbold$tputgreen"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputyellow="$(tput setaf 3)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputboldyellow="$tputbold$tputyellow"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputcyan="$(tput setaf 6)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputboldcyan="$tputbold$tputcyan"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputboldwhite="$tputbold$(tput setaf 7)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
-  tputnormal="$(tput sgr0)"
-  [ $? != 0 ] && { DOCOLOUR='n'; return 1; }
+  if [ "$DOCOLOUR" = 'n' ]; then
+    colour_error=""
+    colour_warning=""
+    colour_success=""
+    colour_important=""
+    colour_normal=""
+    colour_info=""
+    colour_ok=""
+    colour_build=""
+    colour_skip=""
+    colour_fail=""
+    colour_updated=""
+    return 1
+  fi
+  # we used to use tput, but apparently everything from ls to gcc has abandoned
+  # the wisdom of the old ones and just assumes ansi :-/
+  csi=$'\x1b['
+  colour_error="${csi}1;31m"
+  colour_warning="${csi}1;35m"
+  colour_success="${csi}1;32m"
+  colour_important="${csi}1m"
+  colour_normal="${csi}0m"
+  colour_info="${csi}22;36m"
+  colour_ok="${csi}0m"
+  colour_build="${csi}22;32m"
+  colour_skip="${csi}22;35m"
+  colour_fail="${csi}22;31m"
+  colour_updated="${csi}22;36m"
+  for c in $(echo "${SLACKREPO_COLORS}" | sed 's/:/ /g'); do
+    cname="${c/=*/}"
+    cvalue="${c/*=/}"
+    eval "colour_${cname}=\"${csi}${cvalue}m\""
+  done
   [ -z "$GCC_COLORS" ] && export GCC_COLORS="error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01"
+  echo -n "${colour_normal}"
   return 0
 }
 

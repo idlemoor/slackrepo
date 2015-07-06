@@ -388,7 +388,7 @@ mkdir -p "$SR_LOGDIR" || \
 MAINLOG="$SR_LOGDIR"/$(basename "$0")_$(date '+%F_%T').log
 init_colour
 if [ "$DOCOLOUR" = 'y' ]; then
-  exec 40>"$LOCKFILE" 41>&1 &> >( tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >"$MAINLOG") )
+  exec 40>"$LOCKFILE" 41>&1 &> >( tee >(sed -e 's/\x1b\[[0-9?;]*[a-zA-Z\]]//g' -e 's/\x9b[0-9?;]*[a-zA-Z\]]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >"$MAINLOG") )
 else
   exec 40>"$LOCKFILE" 41>&1 &> >( tee "$MAINLOG" )
 fi

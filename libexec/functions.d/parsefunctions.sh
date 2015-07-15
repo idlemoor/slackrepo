@@ -3,6 +3,7 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # parsefunctions.sh - parse functions for slackrepo
+#   init_current_pkgs
 #   parse_arg
 #   find_items
 #   parse_package_name
@@ -12,30 +13,36 @@
 declare -a PARSEDARGS
 declare -A ITEMDIR ITEMFILE ITEMPRGNAM PRGNAMITEMID
 
-# Deal with SBo categories that have the same name as a Slackware-current package:
-declare -A IGNORE_CURRENT
-IGNORE_CURRENT["perl"]='y'
-IGNORE_CURRENT["python"]='y'
-IGNORE_CURRENT["ruby"]='y'
-# Deal with SBo deps that are in Slackware-current but the package name is different:
+#-------------------------------------------------------------------------------
+
 declare -A PKG_IN_CURRENT
-# "<current>=<SBo>"
-for pp in \
-  "python=pysetuptools" \
-  "gst-plugins-base=gst1-plugins-base" \
-  "gst-plugins-good=gst1-plugins-good" \
-  "gstreamer=gstreamer1" \
-  "qt-gstreamer=QtGStreamer" \
-  "openjpeg=openjpeg2" \
-; do
-  pslack="${pp/=*/}"
-  psbo="${pp/*=/}"
-  is_installed "${pslack}-v-a-bt"
-  iistat=$?
-  if [ $iistat = 0 ] || [ $iistat = 1 ]; then
-    PKG_IN_CURRENT["$psbo"]="$R_INSTALLED"
-  fi
-done
+
+function init_current_pkgs
+# Create a list of SBo deps that are in Slackware-current
+# Return status: always 0
+{
+  for pp in \
+    "python-setuptools=pysetuptools" \
+    "gst-plugins-base=gst1-plugins-base" \
+    "gst-plugins-good=gst1-plugins-good" \
+    "gstreamer=gstreamer1" \
+    "qt-gstreamer=QtGStreamer" \
+    "openjpeg=openjpeg2" \
+    "LibRaw" "a52dec" "eigen3" "jemalloc" "judy" "libdvdnav" "libfakekey" \
+    "libimobiledevice" "libjpeg-turbo" "libnftnl" "libsigsegv" "libva" \
+    "libva-intel-driver" "libvdpau" "libvpx" "lzip" "motif" "newt" \
+    "orc" "qpdf" "usbmuxd" "xapian-core" \
+  ; do
+    pslack="${pp/=*/}"
+    psbo="${pp/*=/}"
+    is_installed "${pslack}-v-a-bt"
+    iistat=$?
+    if [ $iistat = 0 ] || [ $iistat = 1 ]; then
+      PKG_IN_CURRENT[$psbo]="$R_INSTALLED"
+    fi
+  done
+  return 0
+}
 
 #-------------------------------------------------------------------------------
 
@@ -65,7 +72,14 @@ function parse_arg
     shift
 
     # Shortcuts:
-    if [ -n "${ITEMPRGNAM[$arg]}" ]; then
+    if [ "$SYS_CURRENT" = 'y' ] && [ -n "${PKG_IN_CURRENT[$arg]}" ]; then
+      if [ -n "$callerid" ]; then
+        log_info "${callerid}: using ${PKG_IN_CURRENT[$arg]} for dependency ${arg}"
+      else
+        log_start "$arg"; log_itemfinish "$arg" "skipped" "" "${arg} is already installed as ${PKG_IN_CURRENT[$arg]}"
+      fi
+      continue
+    elif [ -n "${ITEMPRGNAM[$arg]}" ]; then
       # it's an already-valid itemid
       PARSEDARGS+=( "$arg" )
       continue
@@ -73,25 +87,6 @@ function parse_arg
       # it's an already-valid prgnam
       PARSEDARGS+=( "${PRGNAMITEMID[$arg]}" )
       continue
-    elif [ "$SYS_CURRENT" = 'y' ] && [ "$arg" != 'perl' ] && [ "$arg" != 'python' ]; then
-      # if there is a package in Slackware-current, don't look in our own repo
-      if [ -n "${IGNORE_CURRENT[$arg]}" ]; then
-        iistat=999
-      elif [ -n "${PKG_IN_CURRENT[$arg]}" ]; then
-        iistat=0
-      else
-        is_installed "${arg}-v-a-bt"
-        iistat=$?
-      fi
-      if [ $iistat = 0 ] || [ $iistat = 1 ]; then
-        [ -z "${PKG_IN_CURRENT[$arg]}" ] && PKG_IN_CURRENT["$arg"]="$R_INSTALLED"
-        if [ -n "$callerid" ]; then
-          log_info "${callerid}: using ${PKG_IN_CURRENT[$arg]} for dependency ${arg}"
-        else
-          log_start "$arg"; log_itemfinish "$arg" "skipped" "" "${arg} is already installed as ${PKG_IN_CURRENT[$arg]}"
-        fi
-        continue
-      fi
     fi
 
     # Special processing:

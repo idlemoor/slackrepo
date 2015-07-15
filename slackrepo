@@ -266,6 +266,7 @@ if [ "${SYS_OSNAME}${SYS_OSVER}" = "slackware14.1" ]; then
     parse_package_name "$R_INSTALLED"
     if [ "$PN_VERSION" != 3.82 ] || [ "$PN_BUILD" -ge 5 ]; then
       SYS_CURRENT='y'
+      init_current_pkgs
     fi
   fi
 fi
@@ -577,7 +578,9 @@ fi
 while [ $# != 0 ]; do
   arg="$1"
   shift
+  [ "$arg" = '*' ] && log_normal "Calculating list of items to process ... "
   parse_arg "$arg"
+  [ "$arg" = '*' ] && log_done && log_normal ""
   # Note that we set the variable $ITEMID (upper case) so that other functions
   # called recursively (which get $itemid as an argument) can test whether they
   # are dealing with the top level item.

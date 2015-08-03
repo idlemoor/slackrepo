@@ -1,2 +1,0 @@
-ADDREQUIRES="libass libbluray celt libdc1394 faac frei0r gsm openjpeg OpenAL opencore-amr rtmpdump schroedinger speex libvpx xvidcore"
-OPTIONS="ASS=yes BLURAY=yes CELT=yes DC1394=yes FAAC=yes FREI0R=yes GSM=yes JP2=yes LAME=yes OPENAL=yes OPENCORE=yes OPENSSL=yes RTMP=yes SCHROEDINGER=yes SPEEX=yes VPX=yes X264=yes XVID=yes"

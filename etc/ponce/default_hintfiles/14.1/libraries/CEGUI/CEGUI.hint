@@ -1,1 +1,1 @@
-ADDREQUIRES="xerces-c FreeImage DevIL"
+ADDREQUIRES="xerces-c FreeImage DevIL ogre lua tolua++"

@@ -1,1 +1,1 @@
-ADDREQUIRES="xerces-c FreeImage tolua++ ogre"
+ADDREQUIRES="xerces-c FreeImage tolua++"

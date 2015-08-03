@@ -150,7 +150,7 @@ function download_src
     # dropboxusercontent.com -- hopefully no false positives refuse wget?)
     useragent="slackrepo"
     case "$url" in
-      *dropbox*)  useragent="Wget/1.14" ;;  # this may be a lie, but who cares?
+      *dropbox*)  dlcmd="curl"; useragent="Wget/1.14" ;;  # this may be a lie, but who cares?
     esac
     wgetstat=0
     curlstat=0

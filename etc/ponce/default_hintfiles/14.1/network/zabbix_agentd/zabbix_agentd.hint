@@ -1,2 +1,0 @@
-GROUPADD="266:zabbixagent"
-USERADD="228:zabbix:-d/dev/null:-s/bin/false 266:zabbixagent:-d/dev/null:-s/bin/false"

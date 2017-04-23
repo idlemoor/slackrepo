@@ -1,2 +1,0 @@
-GROUPADD="217:_ntp"
-USERADD="217:_ntp:-d/var/empty/openntpd:-s/bin/false"

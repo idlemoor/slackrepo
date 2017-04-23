@@ -1,2 +1,0 @@
-GROUPADD="210:clamav"
-USERADD="256:havp:-d/dev/null:-s/bin/false:-gclamav"

@@ -1,2 +1,0 @@
-ADDREQUIRES="libgnomeprint libgnomeprintui"
-OPTIONS="GNOMEPRINT=yes"

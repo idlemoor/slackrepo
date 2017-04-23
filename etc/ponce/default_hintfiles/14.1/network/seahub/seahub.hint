@@ -1,2 +1,0 @@
-GROUPADD="300:seafile"
-USERADD="300:seafile:-d/opt/haiwen:-s/bin/false"

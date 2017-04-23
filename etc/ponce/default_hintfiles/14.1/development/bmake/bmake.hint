@@ -1,2 +1,0 @@
-NUMJOBS="-j 1"
-PRAGMA="noexport_TAG"

@@ -1,0 +1,2 @@
+GROUPADD="301:gitolite"
+USERADD="301:-d/var/lib/gitolite:-s/bin/bash:-ggitolite"

@@ -1,0 +1,4 @@
+GROUPADD="269:freeswitch"
+USERADD="269:freeswitch:-d/opt/freeswitch:-s/bin/bash"
+PRAGMA="nofakeroot"
+NUMJOBS="-j1"

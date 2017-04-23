@@ -1,0 +1,2 @@
+CLEANUP="depmod -a"
+PRAGMA="unset_ARCH"

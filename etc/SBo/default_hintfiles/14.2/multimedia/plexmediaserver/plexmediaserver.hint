@@ -1,0 +1,2 @@
+GROUPADD="279:plex"
+USERADD="279:plex:-d/var/lib/plexmediaserver:-s/bin/false"

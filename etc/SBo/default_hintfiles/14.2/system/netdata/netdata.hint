@@ -1,0 +1,2 @@
+GROUPADD="338:netdata"
+USERADD="338:netdata:-cnetdata:-s/bin/bash"

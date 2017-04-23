@@ -1,0 +1,2 @@
+GROUPADD="333:ossec"
+USERADD="333:ossec:-d/var/ossec:-s/bin/false 334:ossecm:-gossec:-d/var/ossec:-s/bin/false 335:ossecr:-gossec:-d/var/ossec:-s/bin/false"

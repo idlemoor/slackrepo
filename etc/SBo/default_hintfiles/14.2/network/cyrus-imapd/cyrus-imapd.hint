@@ -1,0 +1,3 @@
+CLEANUP="s_reinstall imapd"
+GROUPADD="238:cyrus"
+USERADD="238:cyrus:-d/var/imap:-s/bin/sh"

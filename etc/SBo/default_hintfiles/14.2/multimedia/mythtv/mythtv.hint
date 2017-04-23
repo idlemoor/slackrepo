@@ -1,0 +1,1 @@
+ADDREQUIRES="libdvdcss libavc1394 libiec61883 jack-audio-connection-kit libvdpau gsm xmltv mjpegtools transcode exif lirc"

@@ -1,0 +1,2 @@
+GROUPADD="228:zabbix"
+USERADD="228:zabbix"

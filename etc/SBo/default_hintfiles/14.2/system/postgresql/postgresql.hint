@@ -1,0 +1,2 @@
+GROUPADD="209:postgres"
+USERADD="209:postgres:-d/var/lib/pgsql"

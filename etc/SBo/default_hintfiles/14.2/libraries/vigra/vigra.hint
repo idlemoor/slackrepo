@@ -1,0 +1,1 @@
+ADDREQUIRES="nose numpy Sphinx"

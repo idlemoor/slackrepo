@@ -1,0 +1,2 @@
+GROUPADD="206:privoxy"
+USERADD="206:privoxy:-d/dev/null"

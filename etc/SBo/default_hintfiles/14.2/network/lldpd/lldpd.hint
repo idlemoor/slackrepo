@@ -1,0 +1,2 @@
+GROUPADD="347:_lldpd"
+USERADD="347:_lldpd:-d/run/lldpd:-s/bin/false"

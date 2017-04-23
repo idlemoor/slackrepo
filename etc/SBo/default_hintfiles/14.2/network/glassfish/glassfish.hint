@@ -1,0 +1,2 @@
+GROUPADD="263:glassfish"
+USERADD="263:glassfish:-d/var/lib/glassfish"

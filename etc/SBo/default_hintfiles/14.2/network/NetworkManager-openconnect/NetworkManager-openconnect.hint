@@ -1,0 +1,1 @@
+USERADD="321:nm-openconnect:-gnogroup:-d/var/empty:-s/bin/false"

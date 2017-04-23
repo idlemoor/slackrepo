@@ -1,0 +1,2 @@
+ADDREQUIRES="cfitsio freexl hdf5 libwebp netcdf xerces-c postgresql"
+PRAGMA="unset_DISTCC_HOSTS"

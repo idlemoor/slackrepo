@@ -1,0 +1,2 @@
+GROUPADD="320:nm-openvpn"
+USERADD="320:nm-openvpn:-gnm-openvpn:-d/var/lib/openvpn/chroot:-s/bin/false"

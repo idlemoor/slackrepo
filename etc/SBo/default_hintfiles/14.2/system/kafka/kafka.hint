@@ -1,0 +1,2 @@
+GROUPADD="323:kafka"
+USERADD="323:kafka:-d/var/lib/kafka:-s/bin/sh"

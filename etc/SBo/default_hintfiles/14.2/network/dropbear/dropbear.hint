@@ -1,0 +1,1 @@
+CLEANUP="mv -f /usr/bin/scp.openssh /usr/bin/scp 2>/dev/null"

@@ -1,0 +1,4 @@
+GROUPADD="308:munin"
+USERADD="308:munin:-s/sbin/nologin"
+NUMJOBS="-j1"
+PRAGMA="nofakeroot"

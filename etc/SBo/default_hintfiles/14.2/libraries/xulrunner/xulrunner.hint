@@ -1,0 +1,1 @@
+ADDREQUIRES="avahi gnome-vfs libbonobo libgnome"

@@ -1,0 +1,1 @@
+ADDREQUIRES="ipython rope matplotlib numpy pyflakes pylint Sphinx scipy"

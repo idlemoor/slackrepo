@@ -1,0 +1,2 @@
+GROUPADD="286:svxlink"
+USERADD="286:svxlink:-d/var/spool/svxlink:-s/bin/false"

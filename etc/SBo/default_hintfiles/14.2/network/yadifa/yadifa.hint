@@ -1,0 +1,2 @@
+GROUPADD="332:yadifa"
+USERADD="332:yadifa:-d/var/lib/yadifa:-s/bin/false"

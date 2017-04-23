@@ -1,0 +1,2 @@
+GROUPADD="275:jabber"
+USERADD="275:jabber"

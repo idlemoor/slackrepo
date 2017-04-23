@@ -1,0 +1,1 @@
+ADDREQUIRES="lame faad2 Unidecode pyOpenSSL"

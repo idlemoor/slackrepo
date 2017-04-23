@@ -1,0 +1,1 @@
+ADDREQUIRES="eigen3 enblend-enfuse hugin sqlite2 libdc1394 QtGStreamer"

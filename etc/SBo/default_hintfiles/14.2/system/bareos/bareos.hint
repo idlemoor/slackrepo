@@ -1,0 +1,2 @@
+GROUPADD="328:bareos"
+USERADD="328:bareos:-d/dev/null:-s/bin/false"

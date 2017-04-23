@@ -1,0 +1,2 @@
+NUMJOBS="-j1"
+PRAGMA="unset_DISTCC_HOSTS"

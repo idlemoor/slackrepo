@@ -1,0 +1,2 @@
+OPTIONS="FTDI='yes'"
+ADDREQUIRES="libftdi"

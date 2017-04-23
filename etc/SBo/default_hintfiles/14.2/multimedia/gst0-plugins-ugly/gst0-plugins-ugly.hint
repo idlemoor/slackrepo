@@ -1,0 +1,1 @@
+ADDREQUIRES="opencore-amr lame libmpeg2 twolame x264"

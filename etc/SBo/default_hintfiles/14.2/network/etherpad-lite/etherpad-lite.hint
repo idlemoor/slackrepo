@@ -1,0 +1,2 @@
+GROUPADD="264:etherpad"
+USERADD="264:etherpad"

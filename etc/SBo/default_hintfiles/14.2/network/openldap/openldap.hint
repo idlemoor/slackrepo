@@ -1,0 +1,2 @@
+GROUPADD="330:ldap"
+USERADD="330:ldap:-d/var/lib/openldap:-s/bin/false:-cOpenLDAP:-r"

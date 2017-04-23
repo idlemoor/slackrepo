@@ -1,0 +1,2 @@
+ADDREQUIRES="lua imlib2 tolua++"
+OPTIONS="OPT1=yes"

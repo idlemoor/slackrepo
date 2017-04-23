@@ -1,0 +1,3 @@
+GROUPADD="200:postfix 201:postdrop"
+USERADD="200:postfix:-d/dev/null:-s/bin/false"
+CLEANUP="s_reinstall sendmail"

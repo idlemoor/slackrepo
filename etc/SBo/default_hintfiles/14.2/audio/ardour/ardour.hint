@@ -1,0 +1,2 @@
+ADDREQUIRES="lv2 lilv suil"
+OPTIONS="LV2=yes"

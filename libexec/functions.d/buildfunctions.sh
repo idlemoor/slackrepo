@@ -641,6 +641,9 @@ function chroot_setup
   CHRMOUNTS+=( "$CHROOTDIR"/proc )
   ${SUDO}mount -t sysfs sysfs "$CHROOTDIR"/sys
   CHRMOUNTS+=( "$CHROOTDIR"/sys )
+  ${SUDO}touch "$CHROOTDIR"/etc/resolv.conf
+  ${SUDO}mount --bind /etc/resolv.conf "$CHROOTDIR"/etc/resolv.conf
+  CHRMOUNTS+=( "$CHROOTDIR"/etc/resolv.conf )
   if [ -n "$SUDO" ] && [ ! -d "$CHROOTDIR"/"$HOME" ]; then
     # create $HOME as a (mostly) empty directory
     ${SUDO}mkdir -p "$CHROOTDIR"/"$HOME"

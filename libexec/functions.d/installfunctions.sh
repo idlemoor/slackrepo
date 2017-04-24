@@ -267,6 +267,7 @@ function uninstall_packages
         if [ -n "${HINT_CLEANUP[$itemid]}" ]; then
           IFS=';'
           for cleancmd in ${HINT_CLEANUP[$itemid]}; do
+            log_info "Cleanup: $cleancmd"
             if [ "${cleancmd:0:6}" = 'unset ' ]; then
               # unset has to be run in this process (obvsly)
               eval "${cleancmd}" >> "$ITEMLOG" 2>&1

@@ -461,7 +461,7 @@ function build_item_packages
     uninstall_deps "$itemid"
   fi
 
-  [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "${BUILD_TMP:?NotSetBUILD_TMP}"
+  [ "$OPT_KEEP_TMP" != 'y' ] && ${SUDO}rm -rf "${BUILD_TMP:?NotSetBUILD_TMP}"
 
   build_ok "$itemid"  # \o/
   return 0
@@ -566,8 +566,8 @@ function build_failed
   fi
 
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
-    rm -rf "$MY_SLACKBUILD" "$MY_OUTPUT"
-    rm -rf "${BUILD_TMP:?NotSetBUILD_TMP}"
+    ${SUDO}rm -rf "$MY_SLACKBUILD" "$MY_OUTPUT"
+    ${SUDO}rm -rf "${BUILD_TMP:?NotSetBUILD_TMP}"
   fi
 
   log_itemfinish "$itemid" 'failed'
@@ -590,8 +590,8 @@ function build_skipped
   log_itemfinish "$itemid" "${STATUS[$itemid]}" "$2" "$3"
 
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
-    rm -rf "$MY_SLACKBUILD" "$MY_OUTPUT"
-    rm -rf "${BUILD_TMP:?NotSetBUILD_TMP}"
+    ${SUDO}rm -rf "$MY_SLACKBUILD" "$MY_OUTPUT"
+    ${SUDO}rm -rf "${BUILD_TMP:?NotSetBUILD_TMP}"
   fi
   return 0
 }
@@ -649,7 +649,7 @@ function chroot_setup
       if [ -d "$HOME"/"$subdir" ]; then
         ${SUDO}mkdir -p "$CHROOTDIR"/"$HOME"/"$subdir"
         ${SUDO}mount --bind "$HOME"/"$subdir" "$CHROOTDIR"/"$HOME"/"$subdir"
-        CHRMOUNTS+=( "$CHROOTDIR/$HOME" )
+        CHRMOUNTS+=( "$CHROOTDIR/$HOME"/"$subdir" )
       fi
     done
     if [ -f "$HOME"/.Xauthority ]; then

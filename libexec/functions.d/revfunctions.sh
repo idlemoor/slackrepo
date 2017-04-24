@@ -525,11 +525,11 @@ function write_pkg_metadata
 ||
 ++========================================
 EOF
-      TMP_PKGCONTENTS="$MYTMPDIR"/pkgcontents_"$pkgbasename"
-      if [ ! -f "$TMP_PKGCONTENTS" ]; then
-        tar tvf "$pkgpath" > "$TMP_PKGCONTENTS"
+      MY_PKGCONTENTS="$MYTMP"/pkgcontents_"$pkgbasename"
+      if [ ! -f "$MY_PKGCONTENTS" ]; then
+        tar tvf "$pkgpath" > "$MY_PKGCONTENTS"
       fi
-      cat "$TMP_PKGCONTENTS" >> "$dotlst"
+      cat "$MY_PKGCONTENTS" >> "$dotlst"
       echo "" >> "$dotlst"
       echo "" >> "$dotlst"
     fi
@@ -569,7 +569,7 @@ EOF
 
       pkgsize=$(du -s "$pkgpath" | cut -f1)
       # this uncompressed size is approx, but hopefully good enough ;-)
-      uncsize=$(awk '{t+=int($3/1024)+1} END {print t}' "$TMP_PKGCONTENTS")
+      uncsize=$(awk '{t+=int($3/1024)+1} END {print t}' "$MY_PKGCONTENTS")
       echo "PACKAGE NAME:  $pkgbasename" > "$dotmeta"
       if [ -n "$SR_DL_URL" ]; then
         echo "PACKAGE MIRROR:  $SR_DL_URL" >> "$dotmeta"
@@ -647,7 +647,7 @@ EOF
     # gen_repos_files.sh will do it later :-)
 
     # Finally, we can get rid of this:
-    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_PKGCONTENTS"
+    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$MY_PKGCONTENTS"
 
   done
 

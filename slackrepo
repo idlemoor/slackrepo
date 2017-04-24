@@ -41,6 +41,7 @@ function print_usage
   echo "  $(basename "$0") remove  [--control_args] item..."
   echo "  $(basename "$0") revert  [--control_args] item..."
   echo "  $(basename "$0") lint    [--control_args] [item...]"
+  echo "  $(basename "$0") info    [--control_args]"
   echo 'Control args:'
   echo '  --repo=ID'
   echo '  --verbose (-v)'
@@ -53,16 +54,23 @@ function print_usage
 #-------------------------------------------------------------------------------
 
 function exit_cleanup
+# Cleanup everything and exit
+# $1 = status to set on exit
 {
   stty sane   # in case we're killed waiting for the gpg passphrase
   if [ -n "$DBUS_SESSION_BUS_PID" ]; then
-    ${SUDO}kill -15 "$DBUS_SESSION_BUS_PID"
+    ${SUDO}kill -15 "$DBUS_SESSION_BUS_PID" || true
   fi
-  if [ -n "$CHROOTDIR" ]; then
-    ${SUDO}umount -l "$CHROOTDIR"/dev/shm
-    ${SUDO}umount -l "$CHROOTDIR"/proc
-    ${SUDO}umount -l "$CHROOTDIR"
+  # unmount any chroot mounts, in reverse order
+  for rev in $(seq $(( ${#CHRMOUNTS[@]} - 1)) -1 0); do
+    ${SUDO}umount -l "${CHRMOUNTS[$rev]}" 2>/dev/null || true
+  done
+  # and MYTMP is possibly mounted too
+  if [ -n "$MYTMP" ]; then
+    ${SUDO}umount -l "$MYTMP" 2>/dev/null || true
+    rmdir --ignore-fail-on-non-empty "$MYTMP"
   fi
+  exit ${1:-0}
 }
 
 #-------------------------------------------------------------------------------
@@ -72,7 +80,7 @@ if [ $# = 0 ] || [ $# = 1 -a \( "$1" = '-?' -o "$1" = '-h' -o "$1" = '--help' -o
   echo ""
   print_usage
   echo ""
-  exit 0
+  exit_cleanup 0
 fi
 
 starttime=$(date +%s)
@@ -118,23 +126,23 @@ while [ $# != 0 ]; do
   case "$1" in
     # we'll accept add/build/rebuild/update/remove/revert with or without '--'
     build | --build | add | --add )
-      [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+      [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
       CMD='build'
       shift; continue ;;
     rebuild | --rebuild )
-      [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+      [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
       CMD='rebuild'
       shift; continue ;;
     update | --update )
-      [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+      [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
       CMD='update'
       shift; continue ;;
     remove | --remove )
-      [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+      [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
       CMD='remove'
       shift; continue ;;
     revert | --revert | restore | --restore )
-      [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+      [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
       CMD='revert'
       shift; continue ;;
     --repo=* )
@@ -165,11 +173,11 @@ while [ $# != 0 ]; do
           found='y'; break
         fi
       done
-      [ "$found" = 'n' ] && { echo "$(basename "$0"): Error: invalid control argument: $1" >&2; exit_cleanup; exit 3; }
+      [ "$found" = 'n' ] && { echo "$(basename "$0"): Error: invalid control argument: $1" >&2; exit_cleanup 3; }
       shift; continue ;;
     * )
       if [ "$(type -t "${1}_command")" = 'function' ]; then
-        [ -n "$CMD" ] && { print_usage; exit_cleanup; exit 3; }
+        [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
         CMD="$1"
         shift; continue
       else
@@ -181,19 +189,16 @@ done
 
 if [ -z "$CMD" ]; then
   print_usage
-  exit_cleanup
-  exit 3
+  exit_cleanup 3
 elif [ $# = 0 ]; then
   if [ "$CMD" = 'remove' ]; then
     echo "Usage: $(basename "$0") remove [--repo=ID] item..."
     echo "(you must specify the items to be removed)"
-    exit_cleanup
-    exit 3
+    exit_cleanup 3
   elif [ "$CMD" = 'revert' ] ; then
     echo "Usage: $(basename "$0") revert [--repo=ID] item..."
     echo "(you must specify the items to be reverted)"
-    exit_cleanup
-    exit 3
+    exit_cleanup 3
   fi
 fi
 
@@ -205,8 +210,7 @@ if [ "$EUID" != 0 ]; then
   if [ ! -x /usr/bin/fakeroot ]; then
     echo "$(basename "$0"): Running as user, but fakeroot is not installed."
     echo "$(basename "$0"): You should either install fakeroot or run slackrepo as root."
-    exit_cleanup
-    exit 3
+    exit_cleanup 3
   fi
   SUDO="/usr/bin/sudo "
   export PATH="/usr/libexec/$(basename "$0"):/usr/local/sbin:/usr/sbin:/sbin:$PATH"
@@ -226,7 +230,7 @@ else
 fi
 
 # Ensure ctrl-c (etc) exits the whole thing, not just a random subshell
-trap "exit_cleanup; exit 1" SIGINT SIGQUIT SIGTERM
+trap "exit_cleanup 1" SIGINT SIGQUIT SIGTERM
 
 #-------------------------------------------------------------------------------
 # Configuration
@@ -243,8 +247,7 @@ elif [ -f /etc/slackware-version ]; then
   SYS_OSVER="$(sed 's/^Slackware //' /etc/slackware-version)"
 else
   echo "$(basename "$0"): Error: /etc/slackware-version not found"
-  exit_cleanup
-  exit 4
+  exit_cleanup 4
 fi
 SYS_KERNEL=$(uname -r)
 SYS_ARCH=$(uname -m)
@@ -253,13 +256,13 @@ SYS_MULTILIB='n'
 SYS_NPROC=$(nproc)
 [ -f /proc/cpuinfo ] && SYS_MHz=$(awk '/^cpu MHz/ {sum+=$4} END {print sum}' < /proc/cpuinfo)
 # If that's jiggered (stupid Pi kernels), try this. Then give up like W.C. Fields said.
-[ -z "$SYS_MHz" ] && [ -f /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq ] \
+[ -z "$SYS_MHz" ] && [ -f /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq ] && \
   SYS_MHz=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq | sed 's/...$//')
 SYS_OVERLAYFS='n'
 # don't look at the kernel version -- somebody might have the old patchset
 [ -f /lib/modules/"$(uname -r)"/kernel/fs/overlayfs/overlay.ko ] && SYS_OVERLAYFS='y'
 SYS_CURRENT='n'
-if [ "${SYS_OSNAME}${SYS_OSVER}" = "slackware14.1" ]; then
+if [ "${SYS_OSNAME}${SYS_OSVER}" = "slackware14.1" ] || [ "${SYS_OSNAME}${SYS_OSVER}" = "slackware14.2" ]; then
   is_installed "make-3.82-a-bt"
   iistat=$?
   if [ "$iistat" = 0 ] || [ "$iistat" = 1 ]; then
@@ -309,7 +312,7 @@ repoconf="${CONFIGDIR:-/etc/slackrepo}/slackrepo_${OPT_REPO}.conf"
 if [ -f "$repoconf" ]; then
   . "$repoconf"
 else
-  echo "$(basename "$0"): Error: No repo '${OPT_REPO}' (configuration file not found: $repoconf)" >&2; exit_cleanup; exit 2
+  echo "$(basename "$0"): Error: No repo '${OPT_REPO}' (configuration file not found: $repoconf)" >&2; exit_cleanup 2
 fi
 # Read the user config files to override everything in the main repo config file.
 # (Yes, we're reading ~/.slackreporc twice, but that's a lot easier than a proper solution)
@@ -373,7 +376,7 @@ for name in $varnames $genrepnames $initnames; do
 done
 
 # Do this before initialising the repo:
-[ "${CMD}" = 'info' ] && { info_command; exit 0; }
+[ "${CMD}" = 'info' ] && { info_command; exit_cleanup 0; }
 
 #-------------------------------------------------------------------------------
 # Initialisation
@@ -382,10 +385,10 @@ done
 # Setup locking and logging:
 LOCKFILE="$(dirname "$SR_SBREPO")/.lock"
 mkdir -p "$(dirname "$LOCKFILE")" || \
-  { echo "$(basename "$0"): Failed to create repository root directory: $(dirname "$LOCKFILE")" >&2; exit_cleanup; exit 4; }
+  { echo "$(basename "$0"): Failed to create repository root directory: $(dirname "$LOCKFILE")" >&2; exit_cleanup 4; }
 touch "$LOCKFILE"
 mkdir -p "$SR_LOGDIR" || \
-  { echo "$(basename "$0"): Failed to create log directory: $SR_LOGDIR" >&2; exit_cleanup; exit 4; }
+  { echo "$(basename "$0"): Failed to create log directory: $SR_LOGDIR" >&2; exit_cleanup 4; }
 MAINLOG="$SR_LOGDIR"/$(basename "$0")_$(date '+%F_%T').log
 init_colour
 if [ "$DOCOLOUR" = 'y' ]; then
@@ -396,8 +399,7 @@ fi
 flock -x --nb 40
 if [ $? != 0 ]; then
   echo "$(basename "$0"): Repository ${OPT_REPO} is locked by another process." >&2
-  exit_cleanup
-  exit 3
+  exit_cleanup 3
 fi
 
 # Arrays for tracking outcomes:
@@ -406,24 +408,24 @@ declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST BADLIST
 # Create directories:
 [ -d "$SR_SBREPO" ]   || \
   { log_normal "Creating SlackBuild repository: $SR_SBREPO" ; mkdir -p "$SR_SBREPO"    || \
-  { log_error "Failed to create repository"; exit_cleanup; exit 4; }; }
+  { log_error "Failed to create repository"; exit_cleanup 4; }; }
 [ -d "$SR_SRCREPO" ]  || \
   { log_normal "Creating source repository: $SR_SRCREPO"    ; mkdir -p "$SR_SRCREPO"   || \
-  { log_error "Failed to create repository"; exit_cleanup; exit 4; }; }
+  { log_error "Failed to create repository"; exit_cleanup 4; }; }
 [ -d "$SR_PKGREPO" ]  || \
   { log_normal "Creating package repository: $SR_PKGREPO"   ; mkdir -p "$SR_PKGREPO"   || \
-  { log_error "Failed to create repository"; exit_cleanup; exit 4; }; }
+  { log_error "Failed to create repository"; exit_cleanup 4; }; }
 [ -z "$SR_PKGBACKUP" ] || [ -d "$SR_PKGBACKUP" ] || \
   { log_normal "Creating backup repository: $SR_PKGBACKUP"  ; mkdir -p "$SR_PKGBACKUP" || \
-  { log_error "Failed to create repository"; exit_cleanup; exit 4; }; }
+  { log_error "Failed to create repository"; exit_cleanup 4; }; }
 [ -d "$SR_HINTDIR" ]  || \
   { log_normal "Creating hintfile directory: $SR_HINTDIR"   ; mkdir -p "$SR_HINTDIR"   || \
-  { log_error "Failed to create directory";  exit_cleanup; exit 4; }; }
+  { log_error "Failed to create directory";  exit_cleanup 4; }; }
 
 # sqlite database for revision details, package identification, build times etc
 # This is now *required* so here is a default path:
 [ -n "$SR_DATABASE" ] || SR_DATABASE="$(dirname "$SR_SBREPO")/database_${OPT_REPO}.sqlite3"
-db_init || { log_error "Failed to initialise database"; exit_cleanup; exit 4; }
+db_init || { log_error "Failed to initialise database"; exit_cleanup 4; }
 # we'll also have a locatedb (findutils) database in the same place:
 SR_LOCATEDB="$(dirname "$SR_DATABASE")/locatedb_${OPT_REPO}"
 
@@ -437,14 +439,18 @@ if [ -n "$SR_TMP" -a -d "$SR_TMP" -a "$OPT_KEEP_TMP" != 'y' ]; then
   log_done
 fi
 mkdir -p "$SR_TMP"
+
 # We also need a slackrepo-specific temporary directory
-MYTMPDIR=$(mktemp -t -d slackrepo.XXXXXX) || { log_error "Failed to create temporary directory"; exit_cleanup; exit 4; }
-[ -n "$SUDO" ] && chmod go+rx "$MYTMPDIR"
-#### Probably should make --keep-tmp force $TMP into $MYTMPDIR
+MYTMP=$(mktemp -t -d slackrepo.XXXXXX) || { log_error "Failed to create temporary directory"; exit_cleanup 4; }
+# mount a tmpfs on MYTMP: (1) it's fast, (2) we might be in an overlay,
+# and you can't have upperdir or workdir on an overlay
+${SUDO}mount -t tmpfs -o defaults,mode=1777 tmpfs "$MYTMP" || { log_error "Failed to mount $MYTMP"; exit_cleanup 4; }
+
+#### Probably should make --keep-tmp force $TMP into $MYTMP
 
 # Disposable package repository for dry run:
 if [ "$OPT_DRY_RUN" = 'y' ]; then
-  DRYREPO="$MYTMPDIR"/dryrun-packages
+  DRYREPO="$MYTMP"/dryrun-packages
   rm -rf "$DRYREPO"
   mkdir -p "$DRYREPO"
 fi
@@ -452,7 +458,7 @@ fi
 #-------------------------------------------------------------------------------
 
 # We will use $SR_SBREPO as the working directory; it simplifies lots of git stuff.
-cd "$SR_SBREPO" || { log_error "Failed to access SlackBuilds repository"; exit_cleanup; exit 4; }
+cd "$SR_SBREPO" || { log_error "Failed to access SlackBuilds repository"; exit_cleanup 4; }
 
 # We used to check whether this is a git repo with...
 # if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
@@ -508,8 +514,7 @@ elif [ "$GOTGIT" = 'y' ] && [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ 
         log_normal "Finished updating git."
       else
         log_error "Failed to update git (status=$gitstat).\nPlease resolve any conflicts and merge manually."
-        exit_cleanup
-        exit 1
+        exit_cleanup 1
       fi
     fi
   fi
@@ -592,7 +597,7 @@ while [ $# != 0 ]; do
       eval "${CMD}_command" "$ITEMID"
     else
       log_error "$(basename "$0"): Unrecognised CMD = $CMD"
-      exit 4
+      exit_cleanup 4
     fi
   done
 done
@@ -708,7 +713,5 @@ fi
 log_normal ""
 
 [ "$genrepstat" = 0 ] && rm -f "$CHANGELOG"
-[ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$DRYREPO" "$MYTMPDIR"
-exit_cleanup
 
-exit 0
+exit_cleanup 0

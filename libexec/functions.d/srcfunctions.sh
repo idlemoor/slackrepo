@@ -162,26 +162,35 @@ function download_src
       wgetstat=$?
     fi
     if [ $wgetstat != 0 ] || [ $curlstat != 0 ]; then
-      # Try SlackBuilds Direct :D quietly ;-)
-      sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/${ITEMPRGNAM[$itemid]}/${url##*/}"
-      # use wget, seeing as it's always https from Sourceforge with its redirect mania
-      # wget failures sometimes leave an incomplete file behind, -r should ensure it is clobbered
-      wget -r $wgetboredom $wgetprogress --no-check-certificate --content-disposition -U "$useragent" "$url" 2>&41
-      sbdstat=$?
-      if [ $sbdstat != 0 ]; then
-        # use the original url and status in the error message
-        [ "$wgetstat" != 0 ] && failmsg="$(print_wget_status $wgetstat)"
-        [ "$curlstat" != 0 ] && failmsg="$(print_curl_status $curlstat)"
-        if [ "$CMD" = 'lint' ]; then
-          log_warning -a "${itemid}: Download failed: ${failmsg}."
-          log_info -a "$url"
+      # Try sbosrcarch
+      tryurl="http://slackware.uk/sbosrcarch/by-name/${itemid}/${url##*/}"
+      curl -q $curlboredom -f $curlprogress -k --ciphers ALL -J -L -A "$useragent" -O "$tryurl" 2>&41
+      trystat=$?
+      if [ "$trystat" = 0 ]; then
+        log_info -a "Downloaded from sbosrcarch: ${url##*/}"
+      else
+        # Try SlackBuilds Direct Links
+        tryurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/${ITEMPRGNAM[$itemid]}/${url##*/}"
+        # use wget, seeing as it's always https from Sourceforge with its redirect mania
+        # wget failures sometimes leave an incomplete file behind, -r should ensure it is clobbered
+        wget -r $wgetboredom $wgetprogress --no-check-certificate --content-disposition -U "$useragent" "$url" 2>&41
+        trystat=$?
+        if [ "$trystat" = 0 ]; then
+          log_info -a "Downloaded from slackbuildsdirectlinks: ${url##*/}"
         else
-          log_error -a "Download failed: ${failmsg}.\n  $url"
+          # use the original url and status in the error message
+          [ "$wgetstat" != 0 ] && failmsg="$(print_wget_status $wgetstat)"
+          [ "$curlstat" != 0 ] && failmsg="$(print_curl_status $curlstat)"
+          if [ "$CMD" = 'lint' ]; then
+            log_warning -a "${itemid}: Download failed: ${failmsg}."
+            log_info -a "$url"
+          else
+            log_error -a "Download failed: ${failmsg}.\n  $url"
+          fi
+          cd - >/dev/null
+          return 1
         fi
-        cd - >/dev/null
-        return 1
       fi
-      log_info -a "Downloaded from SlackBuilds Direct Links: ${url##*/}"
     fi
   done
   echo "$VERSION" > "$DOWNDIR"/.version

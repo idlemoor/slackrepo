@@ -21,6 +21,10 @@
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+# Sat 22 Apr 09:26:00 UTC 2017
+# **UNOFFICIAL VERSION** <idlemoor>
+# Reproducible builds and non-root invocation, for dusk and slackrepo.
+#
 # Wed Sep 23 18:36:43 UTC 2015
 # Support spaces in file/directory names.  <alphageek>
 #
@@ -204,7 +208,7 @@ echo
 echo "Searching for symbolic links:"
 # Get rid of possible pre-existing trouble:
 INST=$(mktemp $TMP/makepkg.XXXXXX)
-find . -type l -printf "%p\t%l\n" | sed 's,^\./,, ; s, ,\\ ,g' | tee $INST
+find . -type l -printf "%p\t%l\n" | LC_COLLATE=C sort | sed 's,^\./,, ; s, ,\\ ,g' | tee $INST
 if [ ! "$(cat $INST)" = "" ]; then
   echo
   echo "Making symbolic link creation script:"
@@ -285,7 +289,11 @@ else
 fi
 if [ "$CHOWN" = "y" ]; then
   find . -type d -exec chmod -v 755 {} \; 
-  find . -type d -exec chown -v root.root {} \;
+  if [ $(id -u) = 0 ]; then
+    find . -type d -exec chown -v root.root {} \;
+  else
+    CHOWNARGS='--owner=root --group=root'
+  fi
 fi
 
 # Ensure that the 'root' of the package is chmod 755 because
@@ -300,33 +308,49 @@ if [ $OLDROOTPERMS -ne 755 ]; then
   chmod 755 .
 fi
 
+# Support the SOURCE_DATE_EPOCH env variable for reproducible builds:
+# everything older than this time is unchanged, but everything newer is assumed
+# to be a build artifact and is therefore set back to the specified time.
+if [ -n "${SOURCE_DATE_EPOCH}" ]; then
+  find . -newermt "@${SOURCE_DATE_EPOCH}" -print0 | \
+    xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
+fi
+
 echo "Creating Slackware package:  ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}"
 echo
 rm -f ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}
 case $EXTENSION in
 'tgz' | 'tar.gz' )
-  $TAR cvf - . | gzip -9c > ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}
+  find . -print0 | LC_COLLATE=C sort -z | sed -z '2,$s,^\./,,' | \
+    $TAR cvf - --no-recursion --null -T - $CHOWNARGS | \
+    gzip -9c > ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}
   ERRCODE=$?
   if [ ! $? = 0 ]; then
     echo "ERROR:  gzip returned error code $? -- makepkg failed."
   fi
   ;;
 'tbz' | 'tar.bz2' )
-  $TAR cvf - . | bzip2 -9c > ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}
+  find . -print0 | LC_COLLATE=C sort -z | sed -z '2,$s,^\./,,' | \
+    $TAR cvf - --no-recursion --null -T - $CHOWNARGS | \
+    bzip2 -9c > ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}
   ERRCODE=$?
   if [ ! $ERRCODE = 0 ]; then
     echo "ERROR:  bzip2 returned error code $ERRCODE -- makepkg failed."
   fi
   ;;
 'tlz' | 'tar.lzma' )
-  $TAR cvf - . | lzma -c > ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}
+  find . -print0 | LC_COLLATE=C sort -z | sed -z '2,$s,^\./,,' | \
+    $TAR cvf - --no-recursion --null -T - $CHOWNARGS | \
+    lzma -c > ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}
   ERRCODE=$?
   if [ ! $ERRCODE = 0 ]; then
     echo "ERROR:  lzma returned error code $ERRCODE -- makepkg failed."
   fi
   ;;
 'txz' | 'tar.xz' )
-  $TAR cvf - . | xz -c > ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}
+  find . -print0 | LC_COLLATE=C sort -z | sed -z '2,$s,^\./,,' | \
+    $TAR cvf - --no-recursion --null -T - $CHOWNARGS | \
+    xz -c > ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}
   ERRCODE=$?
   if [ ! $ERRCODE = 0 ]; then
     echo "ERROR:  xz returned error code $ERRCODE -- makepkg failed."

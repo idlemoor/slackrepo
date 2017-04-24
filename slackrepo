@@ -92,6 +92,8 @@ starttime=$(date +%s)
 # General rule:
 # OPT_XXXX is the internal representation of command line option XXXX
 # SR_XXXX is the internal representation of config file variable XXXX
+# These are not documented. Users should set the XXXX variable (no prefix).
+# But we can inherit OPT_ and SR_ variables for multi-repo support ;-)
 
 # The command modes and options are extensible by adding more source files in
 #   /usr/libexec/slackrepo/functions.d
@@ -114,11 +116,12 @@ for opt in "${OPTIONLIST[@]}" ; do
   optopt="OPT_$opt"
   [ "${!optopt-unset}" = 'unset' ] && [ -z "${!optopt}" ] && eval "$optopt"=''
 done
-# Initialise OPT_REPO from env var $REPO:
-OPT_REPO="$REPO"
-# Defaults for OPT_COLOR and OPT_NICE:
-OPT_COLOR='auto'
-OPT_NICE='5'
+# Initialise OPT_REPO from env var $REPO
+OPT_REPO="${OPT_REPO:-$REPO}"
+# Default for OPT_COLOR
+OPT_COLOR="${OPT_COLOR:-auto}"
+# Default for OPT_NICE
+OPT_NICE="${OPT_NICE:-5}"
 # No default for the command (build/rebuild/update/remove/...):
 CMD=''
 

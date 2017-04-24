@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
-#   All rights reserved.  For licence details, see the file 'LICENCE'.
+# All rights reserved.  For licence details, see the file 'LICENCE'.
 #
 # errorscan_itemlog contains code and concepts from 'checkpkg' v1.15
 #   Copyright 2014 Eric Hameleers, Eindhoven, The Netherlands

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
-#   All rights reserved.  For licence details, see the file 'LICENCE'.
+# All rights reserved.  For licence details, see the file 'LICENCE'.
 #
 # write_pkg_metadata contains code and concepts from 'gen_repos_files.sh' 1.90
 #   Copyright (c) 2006-2013  Eric Hameleers, Eindhoven, The Netherlands

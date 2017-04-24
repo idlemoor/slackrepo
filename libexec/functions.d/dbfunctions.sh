@@ -105,7 +105,8 @@ commit;
       log_done
       # (d) populate the revisions table from the package repo
       log_normal "Populating the revisions table ... "
-      echo "begin transaction;" >"$MYTMPDIR"/revisions.sql
+      MY_REVISIONS="$MYTMP"/revisions.sql
+      echo "begin transaction;" >"$MY_REVISIONS"
       while read revfilepath; do
         itemid=$(dirname "${revfilepath#./}")
         itemprgnam="${itemid##*/}"
@@ -120,14 +121,14 @@ commit;
             [ -z "$dep" ] && continue
           fi
           deplist="${depends:-/}"
-          echo "insert into revisions values('$itemid','$dep','${deplist//:/,}','${version:-/}','${built:-0}','${buildrev:-0}','slackware${slackware}','${hintfile:-/}');" >>"$MYTMPDIR"/revisions.sql
+          echo "insert into revisions values('$itemid','$dep','${deplist//:/,}','${version:-/}','${built:-0}','${buildrev:-0}','slackware${slackware}','${hintfile:-/}');" >>"$MY_REVISIONS"
           unset prgnam version built buildrev slackware depends hintfile
         done <"$SR_PKGREPO"/"$revfilepath"
         rm -f "$SR_PKGREPO"/"$revfilepath"
       done < <(cd "$SR_PKGREPO"; find . -type f -name '*.rev' -o -name '.revision')
-      echo "commit;" >>"$MYTMPDIR"/revisions.sql
-      sqlite3 "$SR_DATABASE" < "$MYTMPDIR"/revisions.sql || return 1
-      rm -f "$MYTMPDIR"/revisions.sql
+      echo "commit;" >>"$MY_REVISIONS"
+      sqlite3 "$SR_DATABASE" < "$MY_REVISIONS" || return 1
+      rm -f "$MY_REVISIONS"
       log_done
       # (e) convert the backup repo's revision data
       log_normal "Converting backup revision data ... "
@@ -542,12 +543,13 @@ function db_index_slackbuilds
 # Paradoxically, the database table is not indexed :-)
 # No parameters.
 {
-  ( cd "$SR_SBREPO"; find . -name '.git' -prune -o -type f -name '*.SlackBuild' -print | sed 's/^\.\///' > "$MYTMPDIR"/sblist )
+  MY_SBLIST="$MYTMP"/sblist
+  ( cd "$SR_SBREPO"; find . -name '.git' -prune -o -type f -name '*.SlackBuild' -print | sed 's/^\.\///' > "$MY_SBLIST" )
   echo -e \
-    "drop table if exists slackbuilds; create table slackbuilds(relpath text);\n.mode csv\n.import $MYTMPDIR/sblist slackbuilds" \
+    "drop table if exists slackbuilds; create table slackbuilds(relpath text);\n.mode csv\n.import $MY_SBLIST slackbuilds" \
     | sqlite3 "$SR_DATABASE"
   dbstat=$?
-  rm "$MYTMPDIR"/sblist
+  rm "$MY_SBLIST"
   [ "$dbstat" != 0 ] && { db_error "$dbstat" ; return 1; }
   return 0
 }

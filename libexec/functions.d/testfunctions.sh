@@ -130,16 +130,16 @@ function test_download
 {
   local itemid="$1"
   local -a downlist
-  local TMP_HEADER url curlstat
+  local MY_HEADER url curlstat
   local retstat=0
 
   downlist=( ${INFODOWNLIST[$itemid]} )
   if [ "${#downlist[@]}" != 0 ]; then
     log_normal -a "Testing download URLs ... "
-    TMP_HEADER="$MYTMPDIR"/curlheader
+    MY_HEADER="$MYTMP"/curlheader
     for url in "${downlist[@]}"; do
       # Try to retrieve just the header.
-      > "$TMP_HEADER"
+      > "$MY_HEADER"
       case "$url" in
       *.googlecode.com/*)
         # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008
@@ -148,26 +148,32 @@ function test_download
         curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -o /dev/null "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" != 0 ]; then
-          sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
-          curl -q --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
+          tryurl="http://slackware.uk/sbosrcarch/by-name/${itemid}/${url##*/}"
+          curl -q --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL -J -L -A slackrepo -I "$tryurl" >/dev/null 2>&1
           if [ $? = 0 ]; then
-            log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat). (Available at SBoDL)"
+            log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat). (Available at sbosrcarch)"
           else
-            log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat)."
+            tryurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/${ITEMPRGNAM[$itemid]}/${url##*/}"
+            curl -q --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL -J -L -A slackrepo -I "$tryurl" >/dev/null 2>&1
+            if [ $? = 0 ]; then
+              log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat). (Available at SBoDL)"
+            else
+              log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat)."
+            fi
           fi
           log_info -a "$url"
           retstat=1
         fi
         ;;
       *)
-        curl -q --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I -o "$TMP_HEADER" "$url" >> "$ITEMLOG" 2>&1
+        curl -q --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I -o "$MY_HEADER" "$url" >> "$ITEMLOG" 2>&1
         curlstat=$?
         if [ "$curlstat" = 0 ]; then
-          remotelength=$(fromdos <"$TMP_HEADER" | grep 'Content-[Ll]ength: ' | tail -n 1 | sed 's/^.* //')
+          remotelength=$(fromdos <"$MY_HEADER" | grep 'Content-[Ll]ength: ' | tail -n 1 | sed 's/^.* //')
           # Proceed only if we seem to have extracted a valid content-length.
           if [ -n "$remotelength" ] && [ "$remotelength" != 0 ]; then
             # Filenames that have %nn encodings won't get checked.
-            filename=$(fromdos <"$TMP_HEADER" | grep 'Content-[Dd]isposition:.*filename=' | sed -e 's/^.*filename=//' -e 's/^"//' -e 's/"$//' -e 's/\%20/ /g' -e 's/\%7E/~/g')
+            filename=$(fromdos <"$MY_HEADER" | grep 'Content-[Dd]isposition:.*filename=' | sed -e 's/^.*filename=//' -e 's/^"//' -e 's/"$//' -e 's/\%20/ /g' -e 's/\%7E/~/g')
             # If no Content-Disposition, we'll have to guess:
             [ -z "$filename" ] && filename="$(basename "$url")"
             if [ -f "${SRCDIR[$itemid]}"/"$filename" ]; then
@@ -185,10 +191,11 @@ function test_download
           fi
         else
           # Header failed, try a full download (amazonaws is "special"... possibly more...)
-          curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL -J -L -A slackrepo -o "$MYTMPDIR"/curldownload "$url" >> "$ITEMLOG" 2>&1
+          MY_DOWNLOAD="$MYTMP"/curldownload
+          curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL -J -L -A slackrepo -o "$MY_DOWNLOAD" "$url" >> "$ITEMLOG" 2>&1
           curlstat=$?
           if [ "$curlstat" = 0 ]; then
-            remotemd5=$(md5sum <"$MYTMPDIR"/curldownload); remotemd5="${remotemd5/ */}"
+            remotemd5=$(md5sum <"$MY_DOWNLOAD"); remotemd5="${remotemd5/ */}"
             found='n'
             for cachedmd5 in ${INFOMD5LIST[$itemid]}; do
               if [ "$remotemd5" = "$cachedmd5" ]; then
@@ -205,26 +212,32 @@ function test_download
               retstat=1
             fi
           else
-            sbdurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/$itemprgnam/${url##*/}"
-            curl -q --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL --disable-epsv --ftp-method nocwd -J -L -A slackrepo -I "$sbdurl" >/dev/null 2>&1
+            tryurl="http://slackware.uk/sbosrcarch/by-name/${itemid}/${url##*/}"
+            curl -q --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL -J -L -A slackrepo -I "$tryurl" >/dev/null 2>&1
             if [ $? = 0 ]; then
-              log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat). (Available at SBoDL)"
+              log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat). (Available at sbosrcarch)"
             else
-              log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat)."
+              tryurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/${ITEMPRGNAM[$itemid]}/${url##*/}"
+              curl -q --connect-timeout 10 --retry 2 -f -v -k --ciphers ALL -J -L -A slackrepo -I "$tryurl" >/dev/null 2>&1
+              if [ $? = 0 ]; then
+                log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat). (Available at SBoDL)"
+              else
+                log_warning -a "${itemid}: Download test failed. $(print_curl_status $curlstat)."
+              fi
             fi
             log_info -a "$url"
             retstat=1
-            if [ -s "$TMP_HEADER" ]; then
+            if [ -s "$MY_HEADER" ]; then
               echo "The following headers may be informative:" >> "$ITEMLOG"
-              cat "$TMP_HEADER" >> "$ITEMLOG"
+              cat "$MY_HEADER" >> "$ITEMLOG"
             fi
           fi
-          rm -f "$MYTMPDIR"/curldownload
+          rm -f "$MY_DOWNLOAD"
         fi
         ;;
       esac
     done
-    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$TMP_HEADER"
+    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$MY_HEADER"
   fi
 
   [ "$retstat" = 0 ] && log_done
@@ -327,12 +340,12 @@ function test_package
 
     # list what's in the package (and check if it's really a tarball)
     # we'll reuse this file several times to analyse the contents
-    TMP_PKGCONTENTS="$MYTMPDIR"/pkgcontents_"$pkgbasename"
-    tar tvf "$pkgpath" > "$TMP_PKGCONTENTS" || { log_error -a "${itemid}: Not a tar archive. ${pkgbasename}"; return 2; }
+    MY_PKGCONTENTS="$MYTMP"/pkgcontents_"$pkgbasename"
+    tar tvf "$pkgpath" > "$MY_PKGCONTENTS" || { log_error -a "${itemid}: Not a tar archive. ${pkgbasename}"; return 2; }
 
     # check where the files will be installed
     wrongstuff=$(awk \
-      '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/ {printf "%s\n",$0}' <"$TMP_PKGCONTENTS")
+      '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/ {printf "%s\n",$0}' <"$MY_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: Unexpected directory. ${pkgbasename}"
       log_info -t -a "$wrongstuff"
@@ -342,7 +355,7 @@ function test_package
     [ "$PN_ARCH"  = 'x86_64' ] && baddirlist+=( 'usr/lib/' ) # but not /lib (e.g. modules)
     [ "$PN_ARCH" != 'x86_64' ] && baddirlist+=( 'lib64/' 'usr/lib64/' )
     for baddir in "${baddirlist[@]}"; do
-      wrongstuff=$(awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' <"$TMP_PKGCONTENTS")
+      wrongstuff=$(awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
       if [ -n "$wrongstuff" ]; then
         log_warning -a "${itemid}: Inappropriate directory. $pkgbasename"
         log_info -t -a "$wrongstuff"
@@ -351,13 +364,13 @@ function test_package
     done
 
     # check if it contains a slack-desc
-    if ! grep -q ' install/slack-desc$' "$TMP_PKGCONTENTS"; then
+    if ! grep -q ' install/slack-desc$' "$MY_PKGCONTENTS"; then
       log_warning -a "${itemid}: No slack-desc. ${pkgbasename}"
       retstat=1
     fi
 
     # check top level directory
-    topdir=$(head -n 1 "$TMP_PKGCONTENTS")
+    topdir=$(head -n 1 "$MY_PKGCONTENTS")
     if ! echo "$topdir" | grep -q '^drwxr-xr-x root/root .* \./$' ; then
       log_warning -a "${itemid}: Bad root directory. ${pkgbasename}"
       log_info -a "$topdir"
@@ -376,7 +389,7 @@ function test_package
     wrongstuff=$(awk \
       "\$2~/^$okusers\/$okgroups\$/ {next};
        \$2~/^[[:alpha:]]+\/[[:alpha:]]+\$/ {next};
-       {printf \"%s\\n\",\$0}" <"$TMP_PKGCONTENTS")
+       {printf \"%s\\n\",\$0}" <"$MY_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: Unexpected owner/group. ${pkgbasename}"
       log_info -t -a "$wrongstuff"
@@ -384,7 +397,7 @@ function test_package
     fi
 
     # check for uncompressed man pages (usr/share/man warning is handled above)
-    wrongstuff=$(grep -E '^-.* usr/(share/)?man/' "$TMP_PKGCONTENTS" | grep -v '\.gz$')
+    wrongstuff=$(grep -E '^-.* usr/(share/)?man/' "$MY_PKGCONTENTS" | grep -v '\.gz$')
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: Uncompressed man pages. ${pkgbasename}"
       log_info -t -a "$wrongstuff"
@@ -393,7 +406,7 @@ function test_package
 
     [ "$retstat" = 0 ] && log_done
 
-    # Note! Don't remove TMP_PKGCONTENTS yet, create_metadata will use it.
+    # Note! Don't remove MY_PKGCONTENTS yet, create_metadata will use it.
 
     # Install it to see what happens (but not if --dry-run)
     if [ "$OPT_DRY_RUN" != 'y' ] && [ "$tryinstall" != 'n' ]; then

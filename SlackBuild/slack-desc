@@ -16,4 +16,4 @@ slackrepo:  - Clean repeatable building, including dependencies
 slackrepo:  - Suitable for bulk testing (no interaction required)
 slackrepo:  - Output repository suitable for use with slackpkg+
 slackrepo:
-slackrepo: Full documentation at http://idlemoor.github.io/slackrepo/
+slackrepo: Full documentation at https://idlemoor.github.io/slackrepo/

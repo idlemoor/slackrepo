@@ -23,7 +23,7 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PRGNAM=slackrepo
-VERSION=${VERSION:-0.2.0}
+VERSION=${VERSION:-0.3.0}
 BUILD=${BUILD:-1}
 TAG=${TAG:-_dbs}
 
@@ -40,11 +40,7 @@ rm -rf $PKG
 mkdir -p $TMP $PKG $OUTPUT
 cd $TMP
 rm -rf $PRGNAM-$VERSION
-if [ -e $CWD/v$VERSION.tar.gz ]; then
-  tar xvf $CWD/v$VERSION.tar.gz
-else
-  tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
-fi
+tar xvf $CWD/$PRGNAM-$VERSION.tar.gz
 cd $PRGNAM-$VERSION
 chown -R root:root .
 find -L . \
@@ -54,46 +50,32 @@ find -L . \
   -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
 
 mkdir -p $PKG/usr/sbin
-cp -a \
-  $PRGNAM \
-  $PKG/usr/sbin
+cp -a $PRGNAM $PKG/usr/sbin
 # Who needs smudge filters anyway?
 sed -i -e "s/%PKGID%/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}${TAG}/" $PKG/usr/sbin/$PRGNAM
 
 mkdir -p $PKG/usr/bin
-ln -sr \
-  $PKG/usr/sbin/$PRGNAM \
-  $PKG/usr/bin/
+ln -sr $PKG/usr/sbin/$PRGNAM $PKG/usr/bin/
 
 mkdir -p $PKG/usr/libexec
-cp -a \
-  libexec/ \
-  $PKG/usr/libexec/$PRGNAM
+cp -a libexec/ $PKG/usr/libexec/$PRGNAM
 
 mkdir -p $PKG/usr/share
-cp -a \
-  share/ \
-  $PKG/usr/share/$PRGNAM
+cp -a share/ $PKG/usr/share/$PRGNAM
 
 mkdir -p $PKG/etc/$PRGNAM
 for conffile in etc/slackrepo_*.conf; do
   repo=$(basename $conffile .conf | sed 's/slackrepo_//')
-  cp -a \
-    $conffile \
-    $PKG/etc/$PRGNAM/$(basename $conffile).new
+  cp -a $conffile $PKG/etc/$PRGNAM/$(basename $conffile).new
   mkdir -p $PKG/etc/$PRGNAM/$repo/hintfiles
-  cp -a \
-    etc/$repo/default_hintfiles \
-    $PKG/etc/$PRGNAM/$repo/
+  cp -a etc/$repo/default_hintfiles $PKG/etc/$PRGNAM/$repo/
 done
 
 mkdir -p $PKG/var/log/$PRGNAM
 mkdir -p $PKG/var/lib/$PRGNAM
 
 mkdir -p $PKG/usr/man
-cp -a \
-  man/* \
-  $PKG/usr/man/
+cp -a man/* $PKG/usr/man/
 find $PKG/usr/man -type f -exec gzip -9 {} \;
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
@@ -105,9 +87,10 @@ cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
 ( cd $PKG
   find etc -type f -name '*.new' -print0 | xargs --null printf "config '%s'\n"
 ) >> $PKG/install/doinst.sh
 
 cd $PKG
-/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz} | grep -v 'WARNING:  zero length file'
+/sbin/makepkg -l y -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.${PKGTYPE:-tgz}

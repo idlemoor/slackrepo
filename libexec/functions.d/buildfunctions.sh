@@ -238,6 +238,12 @@ function build_item_packages
       log_info -a "Pragma: no_make_test"
       sed -i -e "s/make test/: # make test/" "$MY_SLACKBUILD"/"$itemfile"
       ;;
+    'x86arch'* )
+      fixarch="${pragma/x86arch=/}"
+      log_info -a "Pragma: ${pragma}"
+      sed -i -e "s/^PRGNAM=.*/&; ARCH='$fixarch'/" "$MY_SLACKBUILD"/"$itemfile"
+      unset ARCH
+      ;;
     'noexport_ARCH' )
       log_info -a "Pragma: noexport_ARCH"
       sed -i -e "s/^PRGNAM=.*/&; ARCH='$SR_ARCH'/" "$MY_SLACKBUILD"/"$itemfile"

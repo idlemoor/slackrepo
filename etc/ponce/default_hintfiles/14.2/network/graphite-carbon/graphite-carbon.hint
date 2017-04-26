@@ -1,0 +1,2 @@
+GROUPADD="299:graphite"
+USERADD="299:graphite:-d/var/lib/graphite:-s/bin/false:-ggraphite"

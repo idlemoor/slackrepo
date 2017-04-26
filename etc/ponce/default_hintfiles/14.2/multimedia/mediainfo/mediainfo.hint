@@ -1,0 +1,2 @@
+ADDREQUIRES="wxPython"
+OPTIONS="GUI=yes"

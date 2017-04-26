@@ -1,0 +1,2 @@
+GROUPADD="220:tor"
+USERADD="220:tor"

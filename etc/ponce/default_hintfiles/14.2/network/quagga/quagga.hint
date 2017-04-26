@@ -1,0 +1,2 @@
+GROUPADD="245:quagga 246:quaggavt"
+USERADD="245:quagga:-s/bin/false:-d/var/run/quagga"

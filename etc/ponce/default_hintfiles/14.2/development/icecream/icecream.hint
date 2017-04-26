@@ -1,0 +1,2 @@
+GROUPADD="283:icecream"
+USERADD="283:icecream:-d/var/cache/icecream"

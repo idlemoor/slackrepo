@@ -1,0 +1,2 @@
+GROUPADD="305:opendkim"
+USERADD="305:opendkim:-r:-d/var/run/opendkim:-s/sbin/nologin"

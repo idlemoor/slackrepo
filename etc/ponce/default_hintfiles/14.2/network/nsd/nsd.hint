@@ -1,0 +1,2 @@
+GROUPADD="336:nsd"
+USERADD="336:nsd:-d/var/lib/nsd:-s/bin/false"

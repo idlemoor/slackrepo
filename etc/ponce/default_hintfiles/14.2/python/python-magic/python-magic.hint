@@ -1,0 +1,2 @@
+OPTIONS="PYTHON3=yes"
+ADDREQUIRES="python3"

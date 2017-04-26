@@ -1,0 +1,2 @@
+CONFLICTS="libiodbc"
+CLEANUP="s_reinstall virtuoso-ose libiodbc"

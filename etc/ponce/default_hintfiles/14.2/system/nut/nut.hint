@@ -1,0 +1,2 @@
+GROUPADD="218:nut"
+USERADD="218:nut"

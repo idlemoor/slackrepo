@@ -1,0 +1,2 @@
+GROUPADD="274:prosody"
+USERADD="274:prosody:-d/var/lib/prosody:-s/sbin/nologin"

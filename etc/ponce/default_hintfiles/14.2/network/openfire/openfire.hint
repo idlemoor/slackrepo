@@ -1,0 +1,2 @@
+GROUPADD="265:openfire"
+USERADD="265:openfire:-m"

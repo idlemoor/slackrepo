@@ -1,0 +1,3 @@
+GROUPADD="215:vboxusers"
+USERADD="215:vboxadd:-d/var/run/vboxadd:-s/bin/sh:-gvboxusers"
+PRAGMA="unset_DISTCC_HOSTS"

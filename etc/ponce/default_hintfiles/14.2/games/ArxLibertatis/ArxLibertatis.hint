@@ -1,0 +1,2 @@
+ADDREQUIRES="optipng SDL2 qt5"
+OPTIONS="QT5=yes"

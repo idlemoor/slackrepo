@@ -1,0 +1,1 @@
+CLEANUP="rm /etc/fonts/conf.d/61-culmus.conf"

@@ -1,0 +1,1 @@
+ADDREQUIRES="libvirt libvirt-glib spice"

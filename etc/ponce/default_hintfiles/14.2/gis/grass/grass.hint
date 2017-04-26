@@ -1,0 +1,2 @@
+ADDREQUIRES="blas lapack netcdf postgresql ffmpeg libLAS"
+OPTIONS="ENABLE=gmath,netcdf,postgresql,mysql,sqlite,liblas"

@@ -573,7 +573,7 @@ function build_failed
 
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
     ${SUDO}rm -rf "$MY_SLACKBUILD" "$MY_OUTPUT"
-    ${SUDO}rm -rf "${BUILD_TMP:?NotSetBUILD_TMP}"
+    [ -n "${BUILD_TMP}" ] && ${SUDO}rm -rf "${BUILD_TMP}"
   fi
 
   log_itemfinish "$itemid" 'failed'
@@ -593,12 +593,13 @@ function build_skipped
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
 
-  log_itemfinish "$itemid" "${STATUS[$itemid]}" "$2" "$3"
-
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
     ${SUDO}rm -rf "$MY_SLACKBUILD" "$MY_OUTPUT"
-    ${SUDO}rm -rf "${BUILD_TMP:?NotSetBUILD_TMP}"
+    [ -n "${BUILD_TMP}" ] && ${SUDO}rm -rf "${BUILD_TMP}"
   fi
+
+  log_itemfinish "$itemid" "${STATUS[$itemid]}" "$2" "$3"
+
   return 0
 }
 

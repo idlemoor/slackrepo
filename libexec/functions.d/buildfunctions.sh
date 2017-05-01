@@ -198,6 +198,7 @@ function build_item_packages
   hintnoremove='n'
   hintnofakeroot='n'
   hintneednet='n'
+  hintneedX='n'
   restorevars=''
   removestubs=''
   for pragma in ${HINT_PRAGMA[$itemid]}; do
@@ -281,15 +282,21 @@ function build_item_packages
       log_info -a "Pragma: need_net"
       hintneednet='y'
       ;;
+    'need_X' )
+      log_info -a "Pragma: need_X"
+      hintneedX='y'
+      ;;
     * )
       log_warning -a "${itemid}: Hint PRAGMA=\"$pragma\" not recognised"
       ;;
     esac
   done
 
-  # blocking the net will only take effect in a chroot (see chroot_setup)
+  # blocking the net and X will only take effect in a chroot (see chroot_setup)
   BLOCKNET='n'
   [ "$OPT_LINT" = 'y' ] && [ "$hintneednet" != 'y' ] && BLOCKNET='y'
+  BLOCKX='n'
+  [ "$OPT_LINT" = 'y' ] && [ "$hintneedX" != 'y' ] && BLOCKX='y'
 
   # ... fakeroot ...
   if [ -n "$SUDO" ] && [ -x /usr/bin/fakeroot ]; then
@@ -671,24 +678,28 @@ function chroot_setup
     ${SUDO}mount --bind /etc/resolv.conf "$TMP_CHRDIR"/etc/resolv.conf
     CHRMOUNTS+=( "$TMP_CHRDIR"/etc/resolv.conf )
   fi
-  if [ -n "$SUDO" ] && [ ! -d "$TMP_CHRDIR"/"$HOME" ]; then
-    # create $HOME as a (mostly) empty directory
-    ${SUDO}mkdir -p "$TMP_CHRDIR"/"$HOME"
-    ${SUDO}chown -R "$EUID" "$TMP_CHRDIR"/"$HOME"
-    for subdir in .ccache .distcc ; do
-      if [ -d "$HOME"/"$subdir" ]; then
-        ${SUDO}mkdir -p "$TMP_CHRDIR"/"$HOME"/"$subdir"
-        ${SUDO}mount --bind "$HOME"/"$subdir" "$TMP_CHRDIR"/"$HOME"/"$subdir"
-        CHRMOUNTS+=( "$TMP_CHRDIR/$HOME"/"$subdir" )
+  if [ -n "$SUDO" ]; then
+    if [ ! -d "$TMP_CHRDIR"/"$HOME" ]; then
+      # create $HOME as a (mostly) empty directory
+      ${SUDO}mkdir -p "$TMP_CHRDIR"/"$HOME"
+      ${SUDO}chown -R "$EUID" "$TMP_CHRDIR"/"$HOME"
+      for subdir in .ccache .distcc ; do
+        if [ -d "$HOME"/"$subdir" ]; then
+          ${SUDO}mkdir -p "$TMP_CHRDIR"/"$HOME"/"$subdir"
+          ${SUDO}mount --bind "$HOME"/"$subdir" "$TMP_CHRDIR"/"$HOME"/"$subdir"
+          CHRMOUNTS+=( "$TMP_CHRDIR/$HOME"/"$subdir" )
+        fi
+      done
+    fi
+    if [ "$BLOCKX" = 'y' ]; then
+      export -n DISPLAY
+    else
+      if [ -f "$HOME"/.Xauthority ]; then
+        #### would a dummy X server be a lot of bother?
+        ${SUDO}touch "$TMP_CHRDIR"/"$HOME"/.Xauthority
+        ${SUDO}mount --bind "$HOME"/.Xauthority "$TMP_CHRDIR"/"$HOME"/.Xauthority
+        CHRMOUNTS+=( "$TMP_CHRDIR/$HOME"/.Xauthority )
       fi
-    done
-    if [ -f "$HOME"/.Xauthority ]; then
-      #### would a dummy X server be a lot of bother?
-      # copy it to make the mountpoint (setting up 'sudo touch' is overkill)
-      ${SUDO}cp -a "$HOME"/.Xauthority "$TMP_CHRDIR"/"$HOME"/.Xauthority
-      # bind-mount it to keep it up-to-date
-      ${SUDO}mount --bind "$HOME"/.Xauthority "$TMP_CHRDIR"/"$HOME"/.Xauthority
-      CHRMOUNTS+=( "$TMP_CHRDIR/$HOME"/.Xauthority )
     fi
   fi
 

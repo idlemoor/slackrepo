@@ -571,13 +571,17 @@ function info_command
 # Print version, configuration and debugging information on standard output
 # This is called without initialising the repo, so don't use log_xxxx
 {
+
+  # Show slackrepo version
   echo ""
   print_version
   echo ""
 
   # Show the system info
   echo "$(hostname)"
-  echo "  OS: ${SYS_OSNAME}${SYS_OSVER}"
+  osver="${SYS_OSVER}"
+  [ "${SYS_CURRENT}" = 'y' ] && osver="current"
+  echo "  OS: ${SYS_OSNAME}-${osver}"
   echo "  kernel: ${SYS_KERNEL}"
   echo "  arch: ${SYS_ARCH}"
   [ "$SYS_MULTILIB" = 'y' ] && echo "  multilib: yes"
@@ -588,18 +592,18 @@ function info_command
   echo ""
 
   # Show which config files exist
-  echo "Configuration files:"
+  echo "Configuration files"
   for configfile in ~/.slackreporc ~/.genreprc /etc/slackrepo/slackrepo_"${OPT_REPO}".conf; do
     if [ -f "$configfile" ]; then
-      echo "  $configfile: yes"
+      echo "  $configfile  [found]"
     else
-      echo "  $configfile: no"
+      echo "  $configfile  [not found]"
     fi
   done
   echo ""
 
   # Show the options
-  echo "Configuration options and variables:"
+  echo "Configuration options and variables"
   echo "  --repo=$OPT_REPO"
   if [ "$OPT_VERY_VERBOSE" = 'y' ]; then
     echo "  --very-verbose"
@@ -617,13 +621,35 @@ function info_command
   # Show the variables
   for name in $varnames; do
     srvar="SR_$name"
-    echo "  $name=\"${!srvar}\""
+    case "$srvar" in
+      *REPO | *DIR | SR_PKGBACKUP | SR_DATABASE )
+        if [ -e "${!srvar}" ]; then
+          echo "  $name=\"${!srvar}\""
+        else
+          echo "  $name=\"${!srvar}\"  [not found]"
+        fi
+        ;;
+      * )
+        echo "  $name=\"${!srvar}\""
+        ;;
+    esac
   done
   if [ "$SR_USE_GENREPOS" = 1 ]; then
     for name in $genrepnames; do
       srvar="SR_$name"
-      [ -n "${!srvar}" ] && echo "  $name=\"${!srvar}\""
+      if [ -n "${!srvar}" ]; then
+        if [ "$srvar" = 'SR_REPOSROOT' ]; then
+          if [ -e "${!srvar}" ]; then
+            echo "  $name=\"${!srvar}\""
+          else
+            echo "  $name=\"${!srvar}\"  [not found]"
+          fi
+        else
+          echo "  $name=\"${!srvar}\""
+        fi
+      fi
     done
+    [ -z "$SR_RSS_UUID" ] && echo "  RSS_UUID=\"\"  [not valid]"
   else
     echo "  USE_GENREPOS=\"$SR_USE_GENREPOS\""
   fi
@@ -639,13 +665,13 @@ function info_command
       echo "  date:     $(date --date=@$(git log -n 1 --format=%ct))"
       echo "  revision: $(git rev-parse HEAD)$dirty"
       echo "  title:    $(git log -n 1 --format=%s)"
+    elif [ -n "$(ls -A 2>/dev/null)" ]; then
+      echo "SlackBuild repo: $SR_SBREPO is not a git repository."
     else
-      echo "SlackBuild repo: $SR_SBREPO (not git)"
+      echo "SlackBuild repo: $SR_SBREPO is uninitialised."
     fi
-  else
-    echo "Repository $SR_SBREPO does not exist."
+    echo ""
   fi
-  echo ""
 
   # Show significant environment variables. This is not a comprehensive list (see
   # https://www.gnu.org/software/make/manual/html_node/Implicit-Variables.html)

@@ -213,7 +213,7 @@ function uninstall_packages
   fi
 
   # Don't remove a package that has an install hint, unless -f was specified.
-  [ "${HINT_INSTALL[$itemid]}" = 'y' -a "$force" != 'y' ] && return 0
+  [ "${HINT_INSTALL[$itemid]}" = 'y' ] && [ "$force" != 'y' ] && return 0
 
   # Look for the package(s).
   pkgnams=( $(db_get_itemid_pkgnams "$itemid") )
@@ -227,7 +227,7 @@ function uninstall_packages
       continue
     else
       # Don't remove a package flagged with KEEPINSTALLED, unless -f was specified.
-      [ -n "${KEEPINSTALLED[$pkgnam]}" -a "$force" != 'y' ] && continue
+      [ -n "${KEEPINSTALLED[$pkgnam]}" ] && [ "$force" != 'y' ] && continue
 
       if [ "$OPT_INSTALL" = 'y' ] || [ -n "${KEEPINSTALLED[$pkgnam]}" ] || \
          [ "$force" = 'y' ] || [ "${HINT_INSTALL[$itemid]}" = 'y' ]; then

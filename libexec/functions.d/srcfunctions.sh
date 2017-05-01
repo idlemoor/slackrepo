@@ -40,7 +40,7 @@ function verify_src
   # if unsupported/untested, return 5
   [ "$DOWNLIST" = "UNSUPPORTED" -o "$DOWNLIST" = "UNTESTED" ] && return 5
   # if no directory, return 6 (nodownload hint) or 3 (source not found)
-  [ ! -d "$DOWNDIR" -a -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
+  [ ! -d "$DOWNDIR" ] && [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
   [ ! -d "$DOWNDIR" ] && return 3
 
   # More complex checks:
@@ -62,7 +62,7 @@ function verify_src
   readarray -t srcfilelist < <(find "$DOWNDIR" -maxdepth 1 -type f \! -name .version -print 2>/dev/null)
   numgot=${#srcfilelist[@]}
   # no files, empty directory => return 3 (same as no directory) or 6
-  [ $numgot = 0 -a -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
+  [ $numgot = 0 ] && [ -n "${HINT_NODOWNLOAD[$itemid]}" ] && return 6
   [ $numgot = 0 ] && return 3
   # or if we have not got the right number of sources, return 2 (or 6)
   numwant=$(echo "$DOWNLIST" | wc -w)
@@ -73,12 +73,12 @@ function verify_src
   fi
 
   # if we're ignoring the md5sums and sha256sums, we've finished! => return 0
-  [ "${HINT_MD5IGNORE[$itemid]}" = 'y' -a "${HINT_SHA256IGNORE[$itemid]}" = 'y' ] && return 0
+  [ "${HINT_MD5IGNORE[$itemid]}" = 'y' ] && [ "${HINT_SHA256IGNORE[$itemid]}" = 'y' ] && return 0
 
   # run the md5 and/or sha256 check on all the files (don't give up at the first error)
   log_normal -a "Verifying source files ... "
   allok='y'
-  if [ "${HINT_MD5IGNORE[$itemid]}" != 'y' -a -n "$MD5LIST" ]; then
+  if [ "${HINT_MD5IGNORE[$itemid]}" != 'y' ] && [ -n "$MD5LIST" ]; then
     for f in "${srcfilelist[@]}"; do
       mf=$(md5sum "$f"); mf="${mf/ */}"
       ok='n'
@@ -87,7 +87,7 @@ function verify_src
       [ "$ok" = 'y' ] || { ${loglevel} -a "${itemid}: Failed md5sum: $(basename "$f")"; log_info -a "  actual md5sum is $mf"; allok='n'; }
     done
   fi
-  if [ "${HINT_SHA256IGNORE[$itemid]}" != 'y' -a -n "$SHA256LIST" ]; then
+  if [ "${HINT_SHA256IGNORE[$itemid]}" != 'y' ] && [ -n "$SHA256LIST" ]; then
     for f in "${srcfilelist[@]}"; do
       sf=$(sha256sum "$f"); sf="${sf/ */}"
       ok='n'

@@ -105,7 +105,8 @@ OPTIONLIST=( 'REPO' 'VERBOSE' 'VERY_VERBOSE' \
   'DRY_RUN' 'INSTALL' 'LINT' 'KEEP_TMP' 'CHROOT' 'COLOR' 'NICE' )
 
 # Get the support functions
-for f in /usr/libexec/$(basename "$0")/functions.d/*.sh; do
+LIBEXECDIR="/usr/libexec/$(basename "$0")"
+for f in "${LIBEXECDIR}"/functions.d/*.sh; do
   if [ -x "$f" ]; then
     . "$f"
   fi
@@ -165,10 +166,10 @@ while [ $# != 0 ]; do
       found='n'
       for opt in "${OPTIONLIST[@]}"; do
         arg=$(echo "$opt" | tr '_' '-' | tr '[:upper:]' '[:lower:]')
-        if [ "$1" = "--${arg}" -o "$1" = "--${arg}=yes" -o "$1" = "--${arg}=y" ]; then
+        if [ "$1" = "--${arg}" ] || [ "$1" = "--${arg}=yes" ] || [ "$1" = "--${arg}=y" ]; then
           eval OPT_"${opt}"='y'
           found='y'; break
-        elif [ "$1" = "--no-${arg}" -o "$1" = "--${arg}=no" -o "$1" = "--${arg}=n" ]; then
+        elif [ "$1" = "--no-${arg}" ] || [ "$1" = "--${arg}=no" ] || [ "$1" = "--${arg}=n" ]; then
           eval OPT_"${opt}"='n'
           found='y'; break
         elif [ "${1/=*/=}" = "--${arg}=" ]; then
@@ -216,7 +217,7 @@ if [ "$EUID" != 0 ]; then
     exit_cleanup 3
   fi
   SUDO="/usr/bin/sudo "
-  export PATH="/usr/libexec/$(basename "$0"):/usr/local/sbin:/usr/sbin:/sbin:$PATH"
+  export PATH="${LIBEXECDIR}:/usr/local/sbin:/usr/sbin:/sbin:$PATH"
   # We need to launch a dbus session instance for root outside the chroot, to prevent
   # commands like gconftool-2 (in doinst.sh) launching a dbus in the chroot that
   # would persist after chroot exits and stop us unmounting the overlay (*BIG SIGH*)
@@ -224,7 +225,7 @@ if [ "$EUID" != 0 ]; then
   eval "${dbuscrap}"
 else
   SUDO=''
-  export PATH="/usr/libexec/$(basename "$0"):$PATH"
+  export PATH="${LIBEXECDIR}:$PATH"
   # If there is no existing dbus session instance for root, create one
   if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
     dbuscrap="$(DISPLAY='' dbus-launch --sh-syntax 2>/dev/null)"
@@ -255,7 +256,7 @@ fi
 SYS_KERNEL=$(uname -r)
 SYS_ARCH=$(uname -m)
 SYS_MULTILIB='n'
-[ "$SYS_ARCH" = 'x86_64' -a -f /etc/profile.d/32dev.sh ] && SYS_MULTILIB='y'
+[ "$SYS_ARCH" = 'x86_64' ] && [ -f /etc/profile.d/32dev.sh ] && SYS_MULTILIB='y'
 SYS_NPROC=$(nproc)
 [ -f /proc/cpuinfo ] && SYS_MHz=$(awk '/^cpu MHz/ {sum+=$4} END {print sum}' < /proc/cpuinfo)
 # If that's jiggered (stupid Pi kernels), try this. Then give up like W.C. Fields said.
@@ -343,9 +344,9 @@ for name in "${OPTIONLIST[@]}" ; do
   [ -z "${!optvar}" ] && eval "$optvar=\"${!name}\""
   eval unset "$name"
   # simplify anything that looks like a Boolean:
-  if   [ "${!optvar}" = '1' -o "${!optvar}" = 'yes' -o "${!optvar}" = 'y' -o "${!optvar}" = 'YES' -o "${!optvar}" = 'Y' ]; then
+  if   [ "${!optvar}" = '1' ] || [ "${!optvar}" = 'yes' ] || [ "${!optvar}" = 'y' ] || [ "${!optvar}" = 'YES' ] || [ "${!optvar}" = 'Y' ]; then
     eval "$optvar"='y'
-  elif [ "${!optvar}" = '0' -o "${!optvar}" = 'no'  -o "${!optvar}" = 'n' -o "${!optvar}" = 'NO'  -o "${!optvar}" = 'N' -o "${!optvar}" = '' ]; then
+  elif [ "${!optvar}" = '0' ] || [ "${!optvar}" = 'no'  ] || [ "${!optvar}" = 'n' ] || [ "${!optvar}" = 'NO'  ] || [ "${!optvar}" = 'N' ] || [ "${!optvar}" = '' ]; then
     eval "$optvar"='n'
   fi
 done
@@ -369,7 +370,7 @@ if [ -z "$SR_NUMJOBS" ]; then
   SR_NUMJOBS="-j$(( SYS_NPROC * 2 )) -l$(( SYS_NPROC + 1 ))"
 fi
 # setting ARCH breaks lots of SlackBuilds, which is why we do it ;-)
-if [ -z "$SR_ARCH" -o "$SR_ARCH" = '%ARCH%' ]; then
+if [ -z "$SR_ARCH" ] || [ "$SR_ARCH" = '%ARCH%' ]; then
   case "$SYS_ARCH" in
     i?86) if [ "$SYS_OSVER" = '14.1' ]; then
             SR_ARCH='i486'
@@ -445,7 +446,7 @@ SR_LOCATEDB="$(dirname "$SR_DATABASE")/locatedb_${OPT_REPO}"
 # Temporary directory:
 SR_TMP=${SR_TMP:-/tmp/SBo}
 # really really don't want the next bit to go badly ;-)
-if [ -n "$SR_TMP" -a -d "$SR_TMP" -a "$OPT_KEEP_TMP" != 'y' ]; then
+if [ -n "$SR_TMP" ] && [ -d "$SR_TMP" ] && [ "$OPT_KEEP_TMP" != 'y' ]; then
   log_normal "Cleaning $SR_TMP ... "
   # remove it completely to avoid ownership and permission problems
   ${SUDO}rm -rf "${SR_TMP:?NotSetSR_TMP}"
@@ -519,7 +520,7 @@ elif [ "$GOTGIT" = 'y' ] && [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ 
         git fetch
         db_set_misc "git_fetch_${currbranch}" "$(date +%s)"
         dounbuffer=""
-        [ "$DOCOLOUR"  = 'y' ] && dounbuffer="/usr/libexec/slackrepo/unbuffer "
+        [ "$DOCOLOUR"  = 'y' ] && dounbuffer="${LIBEXECDIR}/unbuffer "
         $dounbuffer git merge --ff-only origin/"$currbranch"
         gitstat=$?
       fi
@@ -566,7 +567,7 @@ if [ -s "$CHANGELOG" ]; then
   log_important "Continuing changelog from previous run."
 else
   mkdir -p "$(dirname "$CHANGELOG")"
-  > "$CHANGELOG"
+  true > "$CHANGELOG"
 fi
 
 declare -A KEEPINSTALLED
@@ -698,7 +699,7 @@ fi
 #-------------------------------------------------------------------------------
 
 genrepstat=0
-if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
+if [ "$OPT_DRY_RUN" != 'y' ] && [ -s "$CHANGELOG" ]; then
   if [ "$SR_USE_GENREPOS" = 1 ]; then
     if [ -z "$SR_RSS_UUID" ]; then
       log_error "Please set RSS_UUID in $repoconf"
@@ -712,7 +713,7 @@ if [ "$OPT_DRY_RUN" != 'y' -a -s "$CHANGELOG" ]; then
       RSS_DESCRIPTION="$SR_RSS_DESCRIPTION" RSS_FEEDMAX="$SR_RSS_FEEDMAX" RSS_UUID="$SR_RSS_UUID" \
       GPGBIN="$SR_GPGBIN" USE_GPGAGENT="$SR_USE_GPGAGENT" FOR_SLAPTGET="$SR_FOR_SLAPTGET" \
       FOLLOW_SYMLINKS="$SR_FOLLOW_SYMLINKS" REPO_SUBDIRS="$SR_REPO_SUBDIRS" \
-      sh /usr/libexec/"$(basename "$0")"/gen_repos_files.sh -l "$CHANGELOG"
+      sh "${LIBEXECDIR}"/gen_repos_files.sh -l "$CHANGELOG"
       genrepstat=$?
       [ "$genrepstat" != 0 ] && log_error "gen_repos_files.sh failed -- changelog retained"
       log_normal ""

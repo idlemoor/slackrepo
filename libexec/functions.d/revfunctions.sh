@@ -339,7 +339,7 @@ function calculate_item_status
 
     # If the git rev has changed => update
     if [ "$pkgrev" != "$currrev" ]; then
-      if [ "${GITDIRTY[$itemid]}" != 'y' -a "${pkgrev/*+/+}" != '+dirty' ]; then
+      if [ "${GITDIRTY[$itemid]}" != 'y' ] && [ "${pkgrev/*+/+}" != '+dirty' ]; then
         # if only README, slack-desc and .info have changed, don't build
         # (the VERSION in the .info file has already been checked ;-)
         modifilelist=( $(cd "$SR_SBREPO"; git diff --name-only "$pkgrev" "$currrev" -- "$itemdir" 2>/dev/null) )
@@ -557,7 +557,7 @@ EOF
         tar xf "$pkgpath" -O install/slack-desc 2>/dev/null | sed -n '/^#/d;/:/p' > "$dottxt"
       else
         # bad egg!
-        > "$dottxt"
+        true > "$dottxt"
       fi
     fi
 

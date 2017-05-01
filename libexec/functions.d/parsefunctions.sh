@@ -417,7 +417,7 @@ function parse_info_and_hints
   fi
 
   # Check for unsupported/untested:
-  if [ "${INFODOWNLIST[$itemid]}" = "UNSUPPORTED" -o "${INFODOWNLIST[$itemid]}" = "UNTESTED" ]; then
+  if [ "${INFODOWNLIST[$itemid]}" = "UNSUPPORTED" ] || [ "${INFODOWNLIST[$itemid]}" = "UNTESTED" ]; then
     STATUS[$itemid]="unsupported"
     STATUSINFO[$itemid]="${INFODOWNLIST[$itemid]} on $SR_ARCH"
     return 1
@@ -503,7 +503,7 @@ function parse_info_and_hints
     # GROUPADD hint format: GROUPADD="<gnum>:<gname> ..."
     # USERADD hint format:  USERADD="<unum>:<uname>:[-g<ugroup>:][-d<udir>:][-s<ushell>:][-uargs:...] ..."
     # VALID_GROUPS and VALID_USERS are needed for test_package
-    if [ -n "$GROUPADD}" ]; then
+    if [ -n "${GROUPADD}" ]; then
       for groupstring in $GROUPADD; do
         gnum=''; gname="$itemprgnam"
         for gfield in $(echo "$groupstring" | tr ':' ' '); do
@@ -607,7 +607,7 @@ function parse_info_and_hints
   [ -z "$ver" ] && ver="${HINT_VERSION[$itemid]}"
   [ -z "$ver" ] && ver="$(basename "$(echo "${INFODOWNLIST[$itemid]}" | sed 's/ .*//')" 2>/dev/null | rev | cut -f 3- -d . | cut -f 1 -d - | rev)"
   [ -z "$ver" ] && log_warning "Version of $itemid can not be determined."
-  [ -z "$ver" -a "$GOTGIT" = 'y' ] && ver="${GITREV[$itemid]:0:7}"
+  [ -z "$ver" ] && [ "$GOTGIT" = 'y' ] && ver="${GITREV[$itemid]:0:7}"
   [ -z "$ver" ] && ver="$(date --date=@"$(stat --format='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile")" '+%Y%m%d')"
   INFOVERSION[$itemid]="$ver"
 

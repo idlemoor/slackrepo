@@ -227,7 +227,7 @@ function revert_command
     for pkg in "${packagelist[@]}"; do
       is_installed "$pkg"
       istat=$?
-      if [ "$istat" = 0 -o "$istat" = 1 ]; then
+      if [ "$istat" = 0 ] || [ "$istat" = 1 ]; then
         log_warning "$R_INSTALLED is installed, use removepkg to uninstall it"
       fi
     done
@@ -358,7 +358,7 @@ function remove_command
   for pkg in "${packagelist[@]}"; do
     is_installed "$pkg"
     istat=$?
-    if [ "$istat" = 0 -o "$istat" = 1 ]; then
+    if [ "$istat" = 0 ] || [ "$istat" = 1 ]; then
       log_warning "$R_INSTALLED is installed, use removepkg to uninstall it"
     fi
   done

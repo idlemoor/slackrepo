@@ -50,7 +50,7 @@ function build_item_packages
 
   # Apply version hint
   NEWVERSION="${HINT_VERSION[$itemid]}"
-  if [ -n "$NEWVERSION" -a "${INFOVERSION[$itemid]}" != "$NEWVERSION" ]; then
+  if [ -n "$NEWVERSION" ] && [ "${INFOVERSION[$itemid]}" != "$NEWVERSION" ]; then
     # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
     log_info -a "Setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]})"
     sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$MY_SLACKBUILD/$itemfile"
@@ -83,7 +83,7 @@ function build_item_packages
   verify_src "$itemid" "log_important"
   case $? in
     0) # already got source, and it's good
-       [ "$OPT_LINT" = 'y' -a -z "${HINT_NODOWNLOAD[$itemid]}" ] && test_download "$itemid"
+       [ "$OPT_LINT" = 'y' ] && [ -z "${HINT_NODOWNLOAD[$itemid]}" ] && test_download "$itemid"
        ;;
     1|2|3|4)
        # already got source but it's bad, or not got source, or wrong version => get it
@@ -126,7 +126,7 @@ function build_item_packages
     log_warning -a "${itemid}: no \"BUILD=\" in $itemfile; using 1"
   fi
   eval $buildassign
-  if [ "${STATUSINFO[$itemid]:0:3}" = 'add' -o "${STATUSINFO[$itemid]:0:18}" = 'update for version' ]; then
+  if [ "${STATUSINFO[$itemid]:0:3}" = 'add' ] || [ "${STATUSINFO[$itemid]:0:18}" = 'update for version' ]; then
     # We can just use the SlackBuild's BUILD
     SR_BUILD="$BUILD"
   else
@@ -311,7 +311,7 @@ function build_item_packages
   [ "${OPT_NICE:-0}" != '0' ] && SLACKBUILDRUN="nice -n $OPT_NICE $SLACKBUILDRUN"
 
   # ... and finally, VERBOSE/--color
-  [ "$OPT_VERBOSE" = 'y' ] && [ "$DOCOLOUR" = 'y' ] && SLACKBUILDRUN="/usr/libexec/slackrepo/unbuffer $SLACKBUILDRUN"
+  [ "$OPT_VERBOSE" = 'y' ] && [ "$DOCOLOUR" = 'y' ] && SLACKBUILDRUN="${LIBEXECDIR}/unbuffer $SLACKBUILDRUN"
 
   # Finished assembling the command line.
   SLACKBUILDCMD="${SLACKBUILDOPTS} ${SLACKBUILDRUN}"
@@ -373,10 +373,12 @@ function build_item_packages
   if [ "$OPT_VERBOSE" = 'y' ]; then
     log_verbose '\n---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8----\n' >&41
     set -o pipefail
-    if [ "$SYS_MULTILIB" = "y" ] && [ "$ARCH" = 'i486' -o "$ARCH" = 'i686' ]; then
-      ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MY_SLACKBUILD}\"; ${SLACKBUILDCMD}" 2>&1 | \
-        tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG") >&41
-      buildstat=$?
+    if [ "$SYS_MULTILIB" = "y" ]; then
+      if [ "$ARCH" = 'i486' ] || [ "$ARCH" = 'i586' ] || [ "$ARCH" = 'i686' ]; then
+        ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MY_SLACKBUILD}\"; ${SLACKBUILDCMD}" 2>&1 | \
+          tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG") >&41
+        buildstat=$?
+      fi
     else
       ${CHROOTCMD}sh -c "cd \"${MY_SLACKBUILD}\"; ${SLACKBUILDCMD}" 2>&1 | \
         tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG") >&41
@@ -385,10 +387,12 @@ function build_item_packages
     set +o pipefail
     log_verbose '\n----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<----\n' >&41
   else
-    if [ "$SYS_MULTILIB" = "y" ] && [ "$ARCH" = 'i486' -o "$ARCH" = 'i686' ]; then
-      ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MY_SLACKBUILD}\"; ${SLACKBUILDCMD}" \
-        &> >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG")
-      buildstat=$?
+    if [ "$SYS_MULTILIB" = "y" ]; then
+      if [ "$ARCH" = 'i486' ] || [ "$ARCH" = 'i586' ] || [ "$ARCH" = 'i686' ]; then
+        ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MY_SLACKBUILD}\"; ${SLACKBUILDCMD}" \
+          &> >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG")
+        buildstat=$?
+      fi
     else
       ${CHROOTCMD}sh -c "cd \"${MY_SLACKBUILD}\"; ${SLACKBUILDCMD}" \
         &> >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG")
@@ -427,7 +431,7 @@ function build_item_packages
       return 6
     else
       for pkgpath in "${logpkgs[@]}"; do
-        if [ -f "$MY_SLACKBUILD/README" -a -f "$MY_SLACKBUILD"/"$(basename "$itemfile" .SlackBuild)".info ]; then
+        if [ -f "$MY_SLACKBUILD/README" ] && [ -f "$MY_SLACKBUILD"/"$(basename "$itemfile" .SlackBuild)".info ]; then
           # it's probably an SBo SlackBuild, so complain and don't retag
           if [ -f "${TMP_CHRDIR}$pkgpath" ]; then
             log_warning -a "${itemid}: Package should have been in \$OUTPUT: $pkgpath"
@@ -517,7 +521,7 @@ function build_ok
     mv "$TMP_OUTPUT"/* "$TMP_DRYREPO"/"$itemdir"/
   else
     # save any existing packages and metadata to the backup repo
-    if [ -d "$SR_PKGREPO"/"$itemdir" -a -n "$SR_PKGBACKUP" ]; then
+    if [ -d "$SR_PKGREPO"/"$itemdir" ] && [ -n "$SR_PKGBACKUP" ]; then
       backupdir="$SR_PKGBACKUP"/"$itemdir"
       if [ -d "$backupdir" ]; then
         mv "$backupdir" "$backupdir".prev
@@ -687,7 +691,7 @@ function chroot_setup
         if [ -d "$HOME"/"$subdir" ]; then
           ${SUDO}mkdir -p "$TMP_CHRDIR"/"$HOME"/"$subdir"
           ${SUDO}mount --bind "$HOME"/"$subdir" "$TMP_CHRDIR"/"$HOME"/"$subdir"
-          CHRMOUNTS+=( "$TMP_CHRDIR/$HOME"/"$subdir" )
+          CHRMOUNTS+=( "$TMP_CHRDIR"/"$HOME"/"$subdir" )
         fi
       done
     fi

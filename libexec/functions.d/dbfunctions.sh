@@ -136,7 +136,7 @@ commit;
         itemid=$(dirname "${revfilepath#./}")
         itemprgnam="${itemid##*/}"
         newrevfilepath="$SR_PKGBACKUP"/"$itemid"/revision
-        > "$newrevfilepath"
+        true > "$newrevfilepath"
         while read revinfo; do
           eval "$revinfo" 2>/dev/null
           # sets $prgnam, $version, $built, $buildrev, $slackware, $depends, $hintfile

@@ -345,8 +345,8 @@ function init_colour
 # 1 = 405 lines
 {
   DOCOLOUR='n'
-  [ "$OPT_COLOR" = 'always'       ] && DOCOLOUR='y'
-  [ "$OPT_COLOR" = 'auto' -a -t 1 ] && DOCOLOUR='y'
+  [ "$OPT_COLOR" = 'always' ] && DOCOLOUR='y'
+  [ "$OPT_COLOR" = 'auto' ] && [ -t 1 ] && DOCOLOUR='y'
   if [ "$DOCOLOUR" = 'n' ]; then
     colour_error=""
     colour_warning=""

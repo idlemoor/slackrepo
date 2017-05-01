@@ -139,7 +139,7 @@ function test_download
     MY_HEADER="$MYTMP"/curlheader
     for url in "${downlist[@]}"; do
       # Try to retrieve just the header.
-      > "$MY_HEADER"
+      true > "$MY_HEADER"
       case "$url" in
       *.googlecode.com/*)
         # Let's hear it for googlecode.com, HTTP HEAD support missing since 2008

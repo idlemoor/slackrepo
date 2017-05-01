@@ -1,0 +1,3 @@
+# User_Alias SLACKREPOERS = user1,user2,user3
+# Defaults:SLACKREPOERS !env_reset,!env_delete
+# SLACKREPOERS ALL=(ALL) NOPASSWD: /usr/libexec/slackrepo/*

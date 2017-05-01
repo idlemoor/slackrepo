@@ -73,10 +73,12 @@ for conffile in etc/slackrepo_*.conf; do
   else
     mkdir -p $PKG/etc/$PRGNAM/$repo/default_hintfiles
   fi
+  mkdir -p $PKG/var/log/$PRGNAM/$repo
+  mkdir -p $PKG/var/lib/$PRGNAM/$repo
 done
 
-mkdir -p $PKG/var/log/$PRGNAM
-mkdir -p $PKG/var/lib/$PRGNAM
+mkdir -p $PKG/etc/sudoers.d/$PRGNAM
+cp -a etc/sudoers.d/$PRGNAM $PKG/etc/sudoers.d/$PRGNAM.new
 
 mkdir -p $PKG/usr/man
 cp -a man/* $PKG/usr/man/

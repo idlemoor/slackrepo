@@ -10,10 +10,11 @@ Features:
 
 Optional runtime requirement
 
-fakeroot is required if you want to build as a non-root user. You must
-also create the file /etc/sudoers.d/slackrepo containing these lines
-(replacing "user1,user2,user3" with a list of the users to authorize):
+fakeroot is required if you want to build as a non-root user. You must also
+edit the file /etc/sudoers.d/slackrepo -- replace "user1,user2,user3" with
+a list of the users to authorize, and remove '#' from all three lines, so
+that it looks something like this:
 
-  User_Alias SLACKREPOERS = user1,user2,user3
+  User_Alias SLACKREPOERS = myuser
   Defaults:SLACKREPOERS !env_reset,!env_delete
   SLACKREPOERS ALL=(ALL) NOPASSWD: /usr/libexec/slackrepo/*

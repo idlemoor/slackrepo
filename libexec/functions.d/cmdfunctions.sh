@@ -622,11 +622,22 @@ function info_command
   for name in $varnames; do
     srvar="SR_$name"
     case "$srvar" in
-      *REPO | *DIR | SR_PKGBACKUP | SR_DATABASE )
+      *REPO | *DIR | SR_DATABASE )
         if [ -e "${!srvar}" ]; then
           echo "  $name=\"${!srvar}\""
         else
           echo "  $name=\"${!srvar}\"  [not found]"
+        fi
+        ;;
+      SR_PKGBACKUP )
+        if [ -n "$SR_PKGBACKUP" ]; then
+          if [ -e "${!srvar}" ]; then
+            echo "  $name=\"${!srvar}\""
+          else
+            echo "  $name=\"${!srvar}\"  [not found]"
+          fi
+        else
+          echo "  $name=\"${!srvar}\""
         fi
         ;;
       * )

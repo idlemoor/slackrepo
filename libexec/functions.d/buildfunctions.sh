@@ -197,6 +197,7 @@ function build_item_packages
   # ... PRAGMA ...
   hintnoremove='n'
   hintnofakeroot='n'
+  hintneednet='n'
   restorevars=''
   removestubs=''
   for pragma in ${HINT_PRAGMA[$itemid]}; do
@@ -276,11 +277,19 @@ function build_item_packages
       log_info -a "Pragma: abstar"
       sed -i -e "s/^tar .*/& --absolute-names/" "$MY_SLACKBUILD"/"$itemfile"
       ;;
+    'need_net' )
+      log_info -a "Pragma: need_net"
+      hintneednet='y'
+      ;;
     * )
       log_warning -a "${itemid}: Hint PRAGMA=\"$pragma\" not recognised"
       ;;
     esac
   done
+
+  # blocking the net will only take effect in a chroot (see chroot_setup)
+  BLOCKNET='n'
+  [ "$OPT_LINT" = 'y' ] && [ "$hintneednet" != 'y' ] && BLOCKNET='y'
 
   # ... fakeroot ...
   if [ -n "$SUDO" ] && [ -x /usr/bin/fakeroot ]; then
@@ -654,9 +663,14 @@ function chroot_setup
   CHRMOUNTS+=( "$TMP_CHRDIR"/proc )
   ${SUDO}mount -t sysfs sysfs "$TMP_CHRDIR"/sys
   CHRMOUNTS+=( "$TMP_CHRDIR"/sys )
-  ${SUDO}touch "$TMP_CHRDIR"/etc/resolv.conf
-  ${SUDO}mount --bind /etc/resolv.conf "$TMP_CHRDIR"/etc/resolv.conf
-  CHRMOUNTS+=( "$TMP_CHRDIR"/etc/resolv.conf )
+  if [ "$BLOCKNET" = 'y' ]; then
+    ${SUDO}rm -f "$TMP_CHRDIR"/etc/resolv.conf
+    ${SUDO}touch "$TMP_CHRDIR"/etc/resolv.conf
+  else
+    ${SUDO}touch "$TMP_CHRDIR"/etc/resolv.conf
+    ${SUDO}mount --bind /etc/resolv.conf "$TMP_CHRDIR"/etc/resolv.conf
+    CHRMOUNTS+=( "$TMP_CHRDIR"/etc/resolv.conf )
+  fi
   if [ -n "$SUDO" ] && [ ! -d "$TMP_CHRDIR"/"$HOME" ]; then
     # create $HOME as a (mostly) empty directory
     ${SUDO}mkdir -p "$TMP_CHRDIR"/"$HOME"

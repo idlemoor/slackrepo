@@ -477,7 +477,7 @@ function resourcemon
     loadavg=$(cut -f1 -d' ' < /proc/loadavg)
     memused=$(awk '/MemTotal:/ {mt=$2} /MemAvailable:/ {ma=$2} END {print mt-ma}' /proc/meminfo)
     mytmp=$(df "$MYTMP" --output=used | tail -n +2)
-    ovldir=$(df "$OVLDIR" --output=used | tail -n +2)
+    ovldir=$(df "$TMP_OVLDIR" --output=used | tail -n +2)
     printf '%10s %10s %10s %10s %10s\n' "$elapsed" "$loadavg" "$memused" "$mytmp" "$ovldir" >> "$resourcelog"
     sleep 10
   done

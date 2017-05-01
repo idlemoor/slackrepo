@@ -463,9 +463,9 @@ ${SUDO}mount -t tmpfs -o defaults,mode=1777 tmpfs "$MYTMP" || { log_error "Faile
 
 # Disposable package repository for dry run:
 if [ "$OPT_DRY_RUN" = 'y' ]; then
-  DRYREPO="$MYTMP"/dryrun-packages
-  rm -rf "$DRYREPO"
-  mkdir -p "$DRYREPO"
+  TMP_DRYREPO="$MYTMP"/dryrun-packages
+  rm -rf "$TMP_DRYREPO"
+  mkdir -p "$TMP_DRYREPO"
 fi
 
 #-------------------------------------------------------------------------------

@@ -292,7 +292,7 @@ function calculate_item_status
 
   # Package dir not in either repo => add
   if [ ! -d "$SR_PKGREPO"/"$itemdir" ]; then
-    if [ -z "$DRYREPO" ] || [ ! -d "$DRYREPO"/"$itemdir" ]; then
+    if [ -z "$TMP_DRYREPO" ] || [ ! -d "$TMP_DRYREPO"/"$itemdir" ]; then
       STATUS[$itemid]="add"
       STATUSINFO[$itemid]="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
     fi
@@ -303,7 +303,7 @@ function calculate_item_status
   pkglist=( "$SR_PKGREPO"/"$itemdir"/*.t?z )   ####
   if [ ! -f "${pkglist[0]}" ]; then
     # Nothing in the main repo, so look in dryrun repo
-    pkglist=( "$DRYREPO"/"$itemdir"/*.t?z )    ####
+    pkglist=( "$TMP_DRYREPO"/"$itemdir"/*.t?z )    ####
     if [ ! -f "${pkglist[0]}" ]; then
       STATUS[$itemid]="add"
       STATUSINFO[$itemid]="add version ${HINT_VERSION[$itemid]:-${INFOVERSION[$itemid]}}"
@@ -467,7 +467,7 @@ function write_pkg_metadata
   #-----------------------------#
 
   myrepo="$SR_PKGREPO"
-  [ "$OPT_DRY_RUN" = 'y' ] && myrepo="$DRYREPO"
+  [ "$OPT_DRY_RUN" = 'y' ] && myrepo="$TMP_DRYREPO"
   pkglist=( "$myrepo"/"$itemdir"/*.t?z )
 
   operation="$(echo "${STATUSINFO[$itemid]}" | sed -e 's/^add/Added/' -e 's/^updated + //' -e 's/^update /Updated /' -e 's/^rebuild/Rebuilt/' )"

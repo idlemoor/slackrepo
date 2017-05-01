@@ -77,7 +77,7 @@ for conffile in etc/slackrepo_*.conf; do
   mkdir -p $PKG/var/lib/$PRGNAM/$repo
 done
 
-mkdir -p $PKG/etc/sudoers.d/$PRGNAM
+mkdir -p $PKG/etc/sudoers.d
 cp -a etc/sudoers.d/$PRGNAM $PKG/etc/sudoers.d/$PRGNAM.new
 
 mkdir -p $PKG/usr/man

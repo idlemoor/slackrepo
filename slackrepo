@@ -264,17 +264,22 @@ SYS_NPROC=$(nproc)
 SYS_OVERLAYFS='n'
 # don't look at the kernel version -- somebody might have the old patchset
 [ -f /lib/modules/"$(uname -r)"/kernel/fs/overlayfs/overlay.ko ] && SYS_OVERLAYFS='y'
+# Detect current
 SYS_CURRENT='n'
-if [ "${SYS_OSNAME}${SYS_OSVER}" = "slackware14.1" ] || [ "${SYS_OSNAME}${SYS_OSVER}" = "slackware14.2" ]; then
-  is_installed "make-3.82-a-bt"
-  iistat=$?
-  if [ "$iistat" = 0 ] || [ "$iistat" = 1 ]; then
-    parse_package_name "$R_INSTALLED"
-    if [ "$PN_VERSION" != 3.82 ] || [ "$PN_BUILD" -ge 5 ]; then
+if [ -f /var/lib/slackpkg/ChangeLog.txt ]; then
+  if ! grep -q "${SYS_OSVER}.*is released" /var/lib/slackpkg/ChangeLog.txt; then
+    # we must be in-between updating aaa_base and the real release
+    SYS_CURRENT='y'
+  fi
+elif [ "${SYS_OSNAME}${SYS_OSVER}" = "slackware14.2" ]; then
+  # file-5.25 was the first package superseded in this cycle of current
+  for filefile in /var/log/packages/file-5.25-*-1; do
+    if [ ! -f "$filefile" ]; then
       SYS_CURRENT='y'
       init_current_pkgs
+      break
     fi
-  fi
+  done
 fi
 
 # Next, do the config variables.
@@ -361,12 +366,17 @@ fi
 
 # If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly
 if [ -z "$SR_NUMJOBS" ]; then
-  SR_NUMJOBS="-j$(( SYS_NPROC + 1 ))"
+  SR_NUMJOBS="-j$(( SYS_NPROC * 2 )) -l$(( SYS_NPROC + 1 ))"
 fi
 # setting ARCH breaks lots of SlackBuilds, which is why we do it ;-)
 if [ -z "$SR_ARCH" -o "$SR_ARCH" = '%ARCH%' ]; then
   case "$SYS_ARCH" in
-    i?86) SR_ARCH='i486' ;;
+    i?86) if [ "$SYS_OSVER" = '14.1' ]; then
+            SR_ARCH='i486'
+          else
+            SR_ARCH='i586'
+          fi
+          ;;
     arm*) SR_ARCH='arm' ;;
        *) SR_ARCH="$SYS_ARCH" ;;
   esac

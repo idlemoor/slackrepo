@@ -332,6 +332,9 @@ function build_item_packages
     fi
   fi
 
+  # Start the resource monitor
+  resourcemon "$ITEMLOGDIR"/resource.log &
+
   # Remember the build start time and estimate the build finish time
   estbuildsecs=''
   read prevsecs prevmhz guessflag < <(db_get_buildsecs "$itemid")
@@ -381,6 +384,9 @@ function build_item_packages
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
   [ -n "$restorevars" ] && eval "$restorevars"
   [ -n "$removestubs" ] && rm /usr/include/gnu/stubs-32.h
+
+  # Stop the resource monitor
+  kill %resourcemon
 
   # If there's a config.log in the obvious place, save it
   configlog="${BUILD_TMP}/${itemprgnam}-${INFOVERSION[$itemid]}/config.log"
@@ -625,7 +631,7 @@ function chroot_setup
 
   # Create another tmpfs for the overlay so we can instantly empty it by unmounting
   # (note, upperdir and workdir need to be on the same fs)
-  OVLDIR="$MYTMP"/ovl
+  OVLDIR="$MYTMP"/ovldir
   ${SUDO}mkdir -p "$OVLDIR"
   ${SUDO}mount -t tmpfs -o defaults,mode=1777 tmpfs "$OVLDIR"  || \
     { log_error "Failed to mount $OVLDIR"; exit_cleanup 5; }

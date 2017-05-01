@@ -26,6 +26,8 @@
 #   changelog
 #   errorscan_itemlog
 #   format_left_right
+# Monitoring:
+#   resourcemon
 #-------------------------------------------------------------------------------
 
 # Globals:
@@ -459,4 +461,24 @@ function format_left_right
   [ $(( llen + plen + rlen )) -lt "$LINEWIDTH" ] && plen=$(( LINEWIDTH - llen - rlen ))
   echo $llen $plen $rlen
   return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function resourcemon
+# Log disk, memory and load average
+# $1 = pathname of the log file
+{
+  resourcelog="$1"
+  printf '%10s %10s %10s %10s %10s\n' elapsed loadavg memused mytmp ovldir > "$resourcelog"
+  buildstarttime="$(date '+%s')"
+  while true; do
+    elapsed=$(( $(date '+%s') - buildstarttime ))
+    loadavg=$(cut -f1 -d' ' < /proc/loadavg)
+    memused=$(awk '/MemTotal:/ {mt=$2} /MemAvailable:/ {ma=$2} END {print mt-ma}' /proc/meminfo)
+    mytmp=$(df "$MYTMP" --output=used | tail -n +2)
+    ovldir=$(df "$OVLDIR" --output=used | tail -n +2)
+    printf '%10s %10s %10s %10s %10s\n' "$elapsed" "$loadavg" "$memused" "$mytmp" "$ovldir" >> "$resourcelog"
+    sleep 10
+  done
 }

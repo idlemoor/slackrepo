@@ -166,7 +166,7 @@ function build_item_packages
   if [ "$OPT_KEEP_TMP" = 'y' ]; then
     TMP_BUILD="$SR_TMP"
   else
-    TMP_BUILD="$BIGTMP"/build
+    TMP_BUILD="$BIGTMP/build_$itemprgnam"
   fi
   mkdir -p "$TMP_BUILD"
 
@@ -348,22 +348,22 @@ function build_item_packages
     fi
   fi
 
-  # Start the resource monitor
-  resourcemon "$ITEMLOGDIR"/resource.log &
-
   # Remember the build start time and estimate the build finish time
   estbuildsecs=''
   read prevsecs prevmhz guessflag < <(db_get_buildsecs "$itemid")
   if [ -n "$prevsecs" ] && [ -n "$prevmhz" ] && [ -n "$SYS_MHz" ]; then
     estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevmhz}/${SYS_MHz}+1" | bc | sed 's/\..*//')
   fi
-  buildstarttime="$(date '+%s')"
+  BUILDSTARTTIME="$(date '+%s')"
   eta=""
   if [ -n "$estbuildsecs" ]; then
-    eta="ETA $(date --date=@"$(( buildstarttime + estbuildsecs + 30 ))" '+%H:%M'):??"
+    eta="ETA $(date --date=@"$(( BUILDSTARTTIME + estbuildsecs + 30 ))" '+%H:%M'):??"
     [ "$guessflag" = '~' ] && [ "$estbuildsecs" -gt "1200" ] && eta="${eta:0:8}?:??"
     [ "$guessflag" = '~' ] && eta="eta ~${eta:4:8}"
   fi
+
+  # Start the resource monitor
+  resource_monitor "$ITEMLOGDIR"/resource.log &
 
   # Build it
   MY_STARTSTAMP="$MYTMP"/startstamp
@@ -400,13 +400,16 @@ function build_item_packages
     fi
   fi
 
-  buildfinishtime="$(date '+%s')"
+  BUILDFINISHTIME="$(date '+%s')"
+  # add 1 to round it up so it's never zero
+  BUILDELAPSED=$(( BUILDFINISHTIME - BUILDSTARTTIME + 1 ))
+  kill %resource_monitor
+  # report the resource usage even if the build failed (it may be relevant)
+  resource_report "$ITEMLOGDIR"/resource.log
+
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
   [ -n "$restorevars" ] && eval "$restorevars"
   [ -n "$removestubs" ] && rm /usr/include/gnu/stubs-32.h
-
-  # Stop the resource monitor
-  kill %resourcemon
 
   # If there's a config.log in the obvious place, save it
   configlog="${TMP_BUILD}/${itemprgnam}-${INFOVERSION[$itemid]}/config.log"
@@ -458,9 +461,7 @@ function build_item_packages
   fi
 
   # update build time information
-  # add 1 to round it up so it's never zero
-  actualsecs=$(( buildfinishtime - buildstarttime + 1 ))
-  db_set_buildsecs "$itemid" "$actualsecs"
+  db_set_buildsecs "$itemid" "$BUILDELAPSED"
 
   # update pkgnam to itemid table (do this before any attempt to install)
   #### [ "$OPT_DRY_RUN" != 'y' ] && db_del_itemid_pkgnam "$itemid" ####

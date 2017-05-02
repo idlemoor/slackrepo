@@ -38,10 +38,10 @@ function build_item_packages
   [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
   log_itemstart "$itemid" "Starting $itemid (${STATUSINFO[$itemid]})$buildopt"
 
-  MY_SLACKBUILD="$MYTMP/slackbuild_$itemprgnam"
-  # initial wipe of $MY_SLACKBUILD, even if $OPT_KEEP_TMP is set
-  rm -rf "$MY_SLACKBUILD"
-  cp -a "$SR_SBREPO/$itemdir" "$MY_SLACKBUILD"
+  TMP_SLACKBUILD="$BIGTMP/slackbuild_$itemprgnam"
+  # initial wipe of $TMP_SLACKBUILD, even if $OPT_KEEP_TMP is set
+  rm -rf "$TMP_SLACKBUILD"
+  cp -a "$SR_SBREPO/$itemdir" "$TMP_SLACKBUILD"
 
   if [ "$OPT_LINT" = 'y' ]; then
     test_slackbuild "$itemid"
@@ -53,7 +53,7 @@ function build_item_packages
   if [ -n "$NEWVERSION" ] && [ "${INFOVERSION[$itemid]}" != "$NEWVERSION" ]; then
     # Fiddle with $VERSION -- usually doomed to failure, but not always ;-)
     log_info -a "Setting VERSION=$NEWVERSION (was ${INFOVERSION[$itemid]})"
-    sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$MY_SLACKBUILD/$itemfile"
+    sed -i -e "s/^VERSION=.*/VERSION=$NEWVERSION/" "$TMP_SLACKBUILD/$itemfile"
     # Let's assume shell globbing chars won't appear in any sane VERSION ;-)
     INFODOWNLIST[$itemid]="${INFODOWNLIST[$itemid]//${INFOVERSION[$itemid]}/$NEWVERSION}"
     INFOVERSION[$itemid]="$NEWVERSION"
@@ -110,17 +110,17 @@ function build_item_packages
   # (need to copy if this is a chroot, it might be on an inaccessible mounted FS)
   if [ -n "${INFODOWNLIST[$itemid]}" ]; then
     if [ "$OPT_CHROOT" = 'y' ]; then
-      cp -a "${SRCDIR[$itemid]}"/* "$MY_SLACKBUILD/"
+      cp -a "${SRCDIR[$itemid]}"/* "$TMP_SLACKBUILD/"
     else
       # "Copy / is dandy / but linky / is quicky" [after Ogden Nash]
-      ln -sf -t "$MY_SLACKBUILD/" "${SRCDIR[$itemid]}"/*
+      ln -sf -t "$TMP_SLACKBUILD/" "${SRCDIR[$itemid]}"/*
     fi
   fi
 
   # Work out BUILD
   # Get the value from the SlackBuild
   unset BUILD
-  buildassign=$(grep -a '^BUILD=' "$MY_SLACKBUILD"/"$itemfile")
+  buildassign=$(grep -a '^BUILD=' "$TMP_SLACKBUILD"/"$itemfile")
   if [ -z "$buildassign" ]; then
     buildassign="BUILD=1"
     log_warning -a "${itemid}: no \"BUILD=\" in $itemfile; using 1"
@@ -209,7 +209,7 @@ function build_item_packages
         log_info -a "Pragma: multilib_ldflags"
         libdirsuffix=''
         [ "$SR_ARCH" = 'x86_64' ] && libdirsuffix='64'
-        sed -i -e "s;^\./configure ;LDFLAGS=\"-L/usr/lib$libdirsuffix\" &;" "$MY_SLACKBUILD/$itemfile"
+        sed -i -e "s;^\./configure ;LDFLAGS=\"-L/usr/lib$libdirsuffix\" &;" "$TMP_SLACKBUILD/$itemfile"
       fi
       ;;
     'stubs-32' )
@@ -231,30 +231,30 @@ function build_item_packages
         # skip subdirectories (and don't increment count)
         if [ -f "$SR_SRCREPO"/"$itemdir"/"$sourcefile" ]; then
           target="${tempdownlist[$count]##*/}"
-          ( cd "$MY_SLACKBUILD"; [ -n "$target" ] && [ ! -e "$target" ] && ln -s "$source" "$target" )
+          ( cd "$TMP_SLACKBUILD"; [ -n "$target" ] && [ ! -e "$target" ] && ln -s "$source" "$target" )
           count=$(( count + 1 ))
         fi
       done < <(ls -rt "$SR_SRCREPO"/"$itemdir" 2>/dev/null)
       ;;
     'no_make_test' )
       log_info -a "Pragma: no_make_test"
-      sed -i -e "s/make test/: # make test/" "$MY_SLACKBUILD"/"$itemfile"
+      sed -i -e "s/make test/: # make test/" "$TMP_SLACKBUILD"/"$itemfile"
       ;;
     'x86arch'* )
       fixarch="${pragma/x86arch=/}"
       log_info -a "Pragma: ${pragma}"
-      sed -i -e "s/^PRGNAM=.*/&; ARCH='$fixarch'/" "$MY_SLACKBUILD"/"$itemfile"
+      sed -i -e "s/^PRGNAM=.*/&; ARCH='$fixarch'/" "$TMP_SLACKBUILD"/"$itemfile"
       unset ARCH
       ;;
     'noexport_ARCH' )
       log_info -a "Pragma: noexport_ARCH"
-      sed -i -e "s/^PRGNAM=.*/&; ARCH='$SR_ARCH'/" "$MY_SLACKBUILD"/"$itemfile"
+      sed -i -e "s/^PRGNAM=.*/&; ARCH='$SR_ARCH'/" "$TMP_SLACKBUILD"/"$itemfile"
       unset ARCH
       ;;
     'noexport_BUILD' | 'noexport_TAG' )
       log_info -a "Pragma: ${pragma}"
       var="${pragma/noexport_/}"
-      sed -i -e "s/^${var}=.*/${var}='${!var}'/" "$MY_SLACKBUILD"/"$itemfile"
+      sed -i -e "s/^${var}=.*/${var}='${!var}'/" "$TMP_SLACKBUILD"/"$itemfile"
       unset "${var}"
       ;;
     'unset'* )
@@ -276,7 +276,7 @@ function build_item_packages
       ;;
     'abstar' )
       log_info -a "Pragma: abstar"
-      sed -i -e "s/^tar .*/& --absolute-names/" "$MY_SLACKBUILD"/"$itemfile"
+      sed -i -e "s/^tar .*/& --absolute-names/" "$TMP_SLACKBUILD"/"$itemfile"
       ;;
     'need_net' )
       log_info -a "Pragma: need_net"
@@ -375,12 +375,12 @@ function build_item_packages
     set -o pipefail
     if [ "$SYS_MULTILIB" = "y" ]; then
       if [ "$ARCH" = 'i486' ] || [ "$ARCH" = 'i586' ] || [ "$ARCH" = 'i686' ]; then
-        ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MY_SLACKBUILD}\"; ${SLACKBUILDCMD}" 2>&1 | \
+        ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${TMP_SLACKBUILD}\"; ${SLACKBUILDCMD}" 2>&1 | \
           tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG") >&41
         buildstat=$?
       fi
     else
-      ${CHROOTCMD}sh -c "cd \"${MY_SLACKBUILD}\"; ${SLACKBUILDCMD}" 2>&1 | \
+      ${CHROOTCMD}sh -c "cd \"${TMP_SLACKBUILD}\"; ${SLACKBUILDCMD}" 2>&1 | \
         tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG") >&41
       buildstat=$?
     fi
@@ -389,12 +389,12 @@ function build_item_packages
   else
     if [ "$SYS_MULTILIB" = "y" ]; then
       if [ "$ARCH" = 'i486' ] || [ "$ARCH" = 'i586' ] || [ "$ARCH" = 'i686' ]; then
-        ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${MY_SLACKBUILD}\"; ${SLACKBUILDCMD}" \
+        ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${TMP_SLACKBUILD}\"; ${SLACKBUILDCMD}" \
           &> >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG")
         buildstat=$?
       fi
     else
-      ${CHROOTCMD}sh -c "cd \"${MY_SLACKBUILD}\"; ${SLACKBUILDCMD}" \
+      ${CHROOTCMD}sh -c "cd \"${TMP_SLACKBUILD}\"; ${SLACKBUILDCMD}" \
         &> >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG")
       buildstat=$?
     fi
@@ -421,8 +421,8 @@ function build_item_packages
   fi
 
   # Make sure we got *something* :-)
-  pkglist=( "${TMP_CHRDIR}${TMP_OUTPUT}"/*.t?z )
-  if [ "${pkglist[0]}" = "${TMP_CHRDIR}${TMP_OUTPUT}"/'*.t?z' ]; then
+  pkglist=( "${MY_CHRDIR}${TMP_OUTPUT}"/*.t?z )
+  if [ "${pkglist[0]}" = "${MY_CHRDIR}${TMP_OUTPUT}"/'*.t?z' ]; then
     # no packages: let's get sneaky and snarf it/them from where makepkg said it/them was/were going ;-)
     logpkgs=( $(grep "Slackware package .* created." "$ITEMLOG" | cut -f3 -d" ") )
     if [ "${#logpkgs[@]}" = 0 ]; then
@@ -431,11 +431,11 @@ function build_item_packages
       return 6
     else
       for pkgpath in "${logpkgs[@]}"; do
-        if [ -f "$MY_SLACKBUILD/README" ] && [ -f "$MY_SLACKBUILD"/"$(basename "$itemfile" .SlackBuild)".info ]; then
+        if [ -f "$TMP_SLACKBUILD/README" ] && [ -f "$TMP_SLACKBUILD"/"$(basename "$itemfile" .SlackBuild)".info ]; then
           # it's probably an SBo SlackBuild, so complain and don't retag
-          if [ -f "${TMP_CHRDIR}$pkgpath" ]; then
+          if [ -f "${MY_CHRDIR}$pkgpath" ]; then
             log_warning -a "${itemid}: Package should have been in \$OUTPUT: $pkgpath"
-            mv "${TMP_CHRDIR}$pkgpath" "$TMP_OUTPUT"
+            mv "${MY_CHRDIR}$pkgpath" "$TMP_OUTPUT"
           else
             log_error -a "${itemid}: Package not found: $pkgpath"
             build_failed "$itemid"
@@ -447,9 +447,9 @@ function build_item_packages
           if [ "$currtag" != "$SR_TAG" ]; then
             # retag it. If it's not found, sod it...
             pkgtype=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
-            mv "${TMP_CHRDIR}$pkgpath" "$TMP_OUTPUT"/"${pkgnam/$currtag.$pkgtype/${SR_TAG}.$pkgtype}"
+            mv "${MY_CHRDIR}$pkgpath" "$TMP_OUTPUT"/"${pkgnam/$currtag.$pkgtype/${SR_TAG}.$pkgtype}"
           else
-            mv "${TMP_CHRDIR}$pkgpath" "$TMP_OUTPUT"/
+            mv "${MY_CHRDIR}$pkgpath" "$TMP_OUTPUT"/
           fi
         fi
       done
@@ -511,7 +511,7 @@ function build_ok
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
 
-  [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$MY_SLACKBUILD"
+  [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$TMP_SLACKBUILD"
 
   # ---- Store the packages ----
   if [ "$OPT_DRY_RUN" = 'y' ]; then
@@ -590,7 +590,7 @@ function build_failed
   log_info -t "$(errorscan_itemlog)"
   log_error -n "${STATUSINFO[$itemid]}"
 
-  if [ -n "${TMP_CHRDIR}" ]; then
+  if [ -n "${MY_CHRDIR}" ]; then
     chroot_destroy
   elif [ "${HINT_INSTALL[$itemid]}" = 'n' ] || [ "$OPT_INSTALL" != 'y' -a "${HINT_INSTALL[$itemid]}" != 'y' ]; then
     uninstall_deps "$itemid"
@@ -598,7 +598,7 @@ function build_failed
   fi
 
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
-    ${SUDO}rm -rf "$MY_SLACKBUILD" "$TMP_OUTPUT"
+    ${SUDO}rm -rf "$TMP_SLACKBUILD" "$TMP_OUTPUT"
     [ -n "${TMP_BUILD}" ] && ${SUDO}rm -rf "${TMP_BUILD}"
   fi
 
@@ -620,7 +620,7 @@ function build_skipped
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
 
   if [ "$OPT_KEEP_TMP" != 'y' ]; then
-    ${SUDO}rm -rf "$MY_SLACKBUILD" "$TMP_OUTPUT"
+    ${SUDO}rm -rf "$TMP_SLACKBUILD" "$TMP_OUTPUT"
     [ -n "${TMP_BUILD}" ] && ${SUDO}rm -rf "${TMP_BUILD}"
   fi
 
@@ -633,7 +633,7 @@ function build_skipped
 
 function chroot_setup
 # Setup a temporary chroot environment at $MYTMP/chrdir using overlayfs
-# Also sets the global variables $CHROOTCMD and $TMP_CHRDIR
+# Also sets the global variables $CHROOTCMD and $MY_CHRDIR
 # Return status:
 # 0 = it worked
 # 1 = OPT_CHROOT is not set, or could not mount the overlay
@@ -641,57 +641,54 @@ function chroot_setup
   CHROOTCMD=''
   [ "$OPT_CHROOT" != 'y' ] && return 1
 
-  TMP_CHRDIR="$MYTMP"/chrdir/  # note the trailing slash
-  ${SUDO}mkdir -p "$TMP_CHRDIR"
-  CHROOTCMD="chroot ${TMP_CHRDIR} "  # note the trailing space
-  [ -n "$SUDO" ] && CHROOTCMD="${SUDO} chroot --userspec=${USER} ${TMP_CHRDIR} "
+  MY_CHRDIR="$MYTMP"/chrdir/  # note the trailing slash
+  ${SUDO}mkdir -p "$MY_CHRDIR"
+  CHROOTCMD="chroot ${MY_CHRDIR} "  # note the trailing space
+  [ -n "$SUDO" ] && CHROOTCMD="${SUDO} chroot --userspec=${USER} ${MY_CHRDIR} "
 
   # Track chroot-related mounts in a nice array so they can be unmounted
   CHRMOUNTS=()
 
-  # Create another tmpfs for the overlay so we can instantly empty it by unmounting
-  # (note, upperdir and workdir need to be on the same fs)
-  TMP_OVLDIR="$MYTMP"/ovldir
+  # Setup the overlay
+  # (note, upperdir and workdir must be on the same fs and must not be overlayfs)
+  TMP_OVLDIR="$BIGTMP"/ovldir
   ${SUDO}mkdir -p "$TMP_OVLDIR"
-  ${SUDO}mount -t tmpfs -o defaults,mode=1777 tmpfs "$TMP_OVLDIR"  || \
-    { log_error "Failed to mount $TMP_OVLDIR"; exit_cleanup 5; }
-  CHRMOUNTS+=( "$TMP_OVLDIR" )
   OVL_DIRTY="$TMP_OVLDIR"/dirty
   OVL_WORK="$TMP_OVLDIR"/work
   ${SUDO}mkdir -p "$OVL_DIRTY" "$OVL_WORK"
+  ${SUDO}mount -t overlay overlay -olowerdir=/,upperdir="$OVL_DIRTY",workdir="$OVL_WORK" "$MY_CHRDIR" || \
+    { log_error "Failed to mount $MY_CHRDIR"; exit_cleanup 5; }
+  CHRMOUNTS+=( "$MY_CHRDIR" )
 
-  # Setup the chroot environment with all the trimmings
-  ${SUDO}mount -t overlay overlay -olowerdir=/,upperdir="$OVL_DIRTY",workdir="$OVL_WORK" "$TMP_CHRDIR" || \
-    { log_error "Failed to mount $TMP_CHRDIR"; exit_cleanup 5; }
-  CHRMOUNTS+=( "$TMP_CHRDIR" )
-  ${SUDO}mount --bind /dev "$TMP_CHRDIR"/dev
-  CHRMOUNTS+=( "$TMP_CHRDIR"/dev )
-  ${SUDO}mount --bind /dev/pts "$TMP_CHRDIR"/dev/pts
-  CHRMOUNTS+=( "$TMP_CHRDIR"/dev/pts )
-  ${SUDO}mount --bind /dev/shm "$TMP_CHRDIR"/dev/shm
-  CHRMOUNTS+=( "$TMP_CHRDIR"/dev/shm )
-  ${SUDO}mount -t proc  proc  "$TMP_CHRDIR"/proc
-  CHRMOUNTS+=( "$TMP_CHRDIR"/proc )
-  ${SUDO}mount -t sysfs sysfs "$TMP_CHRDIR"/sys
-  CHRMOUNTS+=( "$TMP_CHRDIR"/sys )
+  # Setup a chroot environment with all the trimmings
+  ${SUDO}mount --bind /dev "$MY_CHRDIR"/dev
+  CHRMOUNTS+=( "$MY_CHRDIR"/dev )
+  ${SUDO}mount --bind /dev/pts "$MY_CHRDIR"/dev/pts
+  CHRMOUNTS+=( "$MY_CHRDIR"/dev/pts )
+  ${SUDO}mount --bind /dev/shm "$MY_CHRDIR"/dev/shm
+  CHRMOUNTS+=( "$MY_CHRDIR"/dev/shm )
+  ${SUDO}mount -t proc  proc  "$MY_CHRDIR"/proc
+  CHRMOUNTS+=( "$MY_CHRDIR"/proc )
+  ${SUDO}mount -t sysfs sysfs "$MY_CHRDIR"/sys
+  CHRMOUNTS+=( "$MY_CHRDIR"/sys )
   if [ "$BLOCKNET" = 'y' ]; then
-    ${SUDO}rm -f "$TMP_CHRDIR"/etc/resolv.conf
-    ${SUDO}touch "$TMP_CHRDIR"/etc/resolv.conf
+    ${SUDO}rm -f "$MY_CHRDIR"/etc/resolv.conf
+    ${SUDO}touch "$MY_CHRDIR"/etc/resolv.conf
   else
-    ${SUDO}touch "$TMP_CHRDIR"/etc/resolv.conf
-    ${SUDO}mount --bind /etc/resolv.conf "$TMP_CHRDIR"/etc/resolv.conf
-    CHRMOUNTS+=( "$TMP_CHRDIR"/etc/resolv.conf )
+    ${SUDO}touch "$MY_CHRDIR"/etc/resolv.conf
+    ${SUDO}mount --bind /etc/resolv.conf "$MY_CHRDIR"/etc/resolv.conf
+    CHRMOUNTS+=( "$MY_CHRDIR"/etc/resolv.conf )
   fi
   if [ -n "$SUDO" ]; then
-    if [ ! -d "$TMP_CHRDIR"/"$HOME" ]; then
+    if [ ! -d "$MY_CHRDIR"/"$HOME" ]; then
       # create $HOME as a (mostly) empty directory
-      ${SUDO}mkdir -p "$TMP_CHRDIR"/"$HOME"
-      ${SUDO}chown -R "$EUID" "$TMP_CHRDIR"/"$HOME"
+      ${SUDO}mkdir -p "$MY_CHRDIR"/"$HOME"
+      ${SUDO}chown -R "$EUID" "$MY_CHRDIR"/"$HOME"
       for subdir in .ccache .distcc ; do
         if [ -d "$HOME"/"$subdir" ]; then
-          ${SUDO}mkdir -p "$TMP_CHRDIR"/"$HOME"/"$subdir"
-          ${SUDO}mount --bind "$HOME"/"$subdir" "$TMP_CHRDIR"/"$HOME"/"$subdir"
-          CHRMOUNTS+=( "$TMP_CHRDIR"/"$HOME"/"$subdir" )
+          ${SUDO}mkdir -p "$MY_CHRDIR"/"$HOME"/"$subdir"
+          ${SUDO}mount --bind "$HOME"/"$subdir" "$MY_CHRDIR"/"$HOME"/"$subdir"
+          CHRMOUNTS+=( "$MY_CHRDIR"/"$HOME"/"$subdir" )
         fi
       done
     fi
@@ -700,23 +697,23 @@ function chroot_setup
     else
       if [ -f "$HOME"/.Xauthority ]; then
         #### would a dummy X server be a lot of bother?
-        ${SUDO}touch "$TMP_CHRDIR"/"$HOME"/.Xauthority
-        ${SUDO}mount --bind "$HOME"/.Xauthority "$TMP_CHRDIR"/"$HOME"/.Xauthority
-        CHRMOUNTS+=( "$TMP_CHRDIR/$HOME"/.Xauthority )
+        ${SUDO}touch "$MY_CHRDIR"/"$HOME"/.Xauthority
+        ${SUDO}mount --bind "$HOME"/.Xauthority "$MY_CHRDIR"/"$HOME"/.Xauthority
+        CHRMOUNTS+=( "$MY_CHRDIR/$HOME"/.Xauthority )
       fi
     fi
   fi
 
   # Import build stuff from $MYTMP
-  ${SUDO}mkdir -p "$TMP_CHRDIR"/"$MY_SLACKBUILD"
-  ${SUDO}mount --bind "$MY_SLACKBUILD" "$TMP_CHRDIR"/"$MY_SLACKBUILD"
-  CHRMOUNTS+=( "$TMP_CHRDIR"/"$MY_SLACKBUILD" )
-  ${SUDO}mkdir -p "$TMP_CHRDIR"/"$TMP_OUTPUT"
-  ${SUDO}mount --bind "$TMP_OUTPUT" "$TMP_CHRDIR"/"$TMP_OUTPUT"
-  CHRMOUNTS+=( "$TMP_CHRDIR"/"$TMP_OUTPUT" )
-  ${SUDO}mkdir -p "$TMP_CHRDIR"/"$TMP_BUILD"
-  ${SUDO}mount --bind "$TMP_BUILD" "$TMP_CHRDIR"/"$TMP_BUILD"
-  CHRMOUNTS+=( "$TMP_CHRDIR"/"$TMP_BUILD" )
+  ${SUDO}mkdir -p "$MY_CHRDIR"/"$TMP_SLACKBUILD"
+  ${SUDO}mount --bind "$TMP_SLACKBUILD" "$MY_CHRDIR"/"$TMP_SLACKBUILD"
+  CHRMOUNTS+=( "$MY_CHRDIR"/"$TMP_SLACKBUILD" )
+  ${SUDO}mkdir -p "$MY_CHRDIR"/"$TMP_OUTPUT"
+  ${SUDO}mount --bind "$TMP_OUTPUT" "$MY_CHRDIR"/"$TMP_OUTPUT"
+  CHRMOUNTS+=( "$MY_CHRDIR"/"$TMP_OUTPUT" )
+  ${SUDO}mkdir -p "$MY_CHRDIR"/"$TMP_BUILD"
+  ${SUDO}mount --bind "$TMP_BUILD" "$MY_CHRDIR"/"$TMP_BUILD"
+  CHRMOUNTS+=( "$MY_CHRDIR"/"$TMP_BUILD" )
 
   return 0
 }
@@ -727,7 +724,7 @@ function chroot_report
 # Warn about modified files and directories in the chroot
 # Return status: always 0
 {
-  [ -z "$TMP_CHRDIR" ] && return 0
+  [ -z "$MY_CHRDIR" ] && return 0
 
   if [ -f "$MY_STARTSTAMP" ]; then
     crap=$(cd "$OVL_DIRTY"; find . -path './tmp' -prune -o  -path ".$HOME/.*/*" -prune -o -newer ../startstamp -print 2>/dev/null)
@@ -750,7 +747,7 @@ function chroot_destroy
 # Unmount the chroot, copy any wanted files, and then destroy it
 # Return status: always 0
 {
-  [ -z "$TMP_CHRDIR" ] && return 0
+  [ -z "$MY_CHRDIR" ] && return 0
   log_normal -a "Unmounting chroot ... "
 
   # unmount the chroot mounts, in reverse order
@@ -758,7 +755,7 @@ function chroot_destroy
     ${SUDO}umount "${CHRMOUNTS[$rev]}" 2>/dev/null || true
   done
   CHRMOUNTS=()
-  unset CHROOTCMD TMP_CHRDIR
+  unset CHROOTCMD MY_CHRDIR
 
   log_done
   return 0

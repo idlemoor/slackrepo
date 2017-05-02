@@ -446,25 +446,28 @@ SR_LOCATEDB="$(dirname "$SR_DATABASE")/locatedb_${OPT_REPO}"
 # Temporary directory:
 SR_TMP=${SR_TMP:-/tmp/SBo}
 # really really don't want the next bit to go badly ;-)
-if [ -n "$SR_TMP" ] && [ -d "$SR_TMP" ] && [ "$OPT_KEEP_TMP" != 'y' ]; then
+if [ -n "$SR_TMP" ] && [ -d "$SR_TMP" ]; then
   log_normal "Cleaning $SR_TMP ... "
   # remove it completely to avoid ownership and permission problems
   ${SUDO}rm -rf "${SR_TMP:?NotSetSR_TMP}"
   log_done
 fi
-mkdir -p "$SR_TMP"
+mkdir -p "$SR_TMP" || { log_error "Failed to create $SR_TMP"; exit_cleanup 4; }
 
-# We also need a slackrepo-specific temporary directory
+# We need a slackrepo-specific temporary directory, for small stuff only
 MYTMP=$(mktemp -t -d slackrepo.XXXXXX) || { log_error "Failed to create temporary directory"; exit_cleanup 4; }
-# mount a tmpfs on MYTMP: (1) it's fast, (2) we might be in an overlay,
+# Mount a tmpfs on MYTMP: (1) it's fast, (2) we might already be in an overlay,
 # and you can't have upperdir or workdir on an overlay
 ${SUDO}mount -t tmpfs -o defaults,mode=1777 tmpfs "$MYTMP" || { log_error "Failed to mount $MYTMP"; exit_cleanup 4; }
+
+# We need a temporary directory for big stuff too
+BIGTMP=$(mktemp -t -p "$SR_TMP" -d slackrepo.XXXXXX) || { log_error "Failed to create directory in $SR_TMP"; exit_cleanup 4; }
 
 #### Probably should make --keep-tmp force $TMP into $MYTMP
 
 # Disposable package repository for dry run:
 if [ "$OPT_DRY_RUN" = 'y' ]; then
-  TMP_DRYREPO="$MYTMP"/dryrun-packages
+  TMP_DRYREPO="$BIGTMP"/dryrun-packages
   rm -rf "$TMP_DRYREPO"
   mkdir -p "$TMP_DRYREPO"
 fi

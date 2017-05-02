@@ -470,15 +470,16 @@ function resourcemon
 # $1 = pathname of the log file
 {
   resourcelog="$1"
-  printf '%10s %10s %10s %10s %10s\n' elapsed loadavg memused mytmp ovldir > "$resourcelog"
+  printf '%10s %10s %10s %10s %10s %10s\n' elapsed loadavg memused bigtmp mytmp ovldir > "$resourcelog"
   buildstarttime="$(date '+%s')"
   while true; do
     elapsed=$(( $(date '+%s') - buildstarttime ))
     loadavg=$(cut -f1 -d' ' < /proc/loadavg)
     memused=$(awk '/MemTotal:/ {mt=$2} /MemAvailable:/ {ma=$2} END {print mt-ma}' /proc/meminfo)
+    bigtmp=$(df "$BIGTMP" --output=used | tail -n +2)
     mytmp=$(df "$MYTMP" --output=used | tail -n +2)
     ovldir=$(df "$TMP_OVLDIR" --output=used | tail -n +2)
-    printf '%10s %10s %10s %10s %10s\n' "$elapsed" "$loadavg" "$memused" "$mytmp" "$ovldir" >> "$resourcelog"
+    printf '%10s %10s %10s %10s %10s %10s\n' "$elapsed" "$loadavg" "$memused" "$bigtmp" "$mytmp" "$ovldir" >> "$resourcelog"
     sleep 10
   done
 }

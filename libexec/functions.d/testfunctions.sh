@@ -191,7 +191,7 @@ function test_download
           fi
         else
           # Header failed, try a full download (amazonaws is "special"... possibly more...)
-          MY_DOWNLOAD="$MYTMP"/curldownload
+          MY_DOWNLOAD="$BIGTMP"/curldownload
           curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL -J -L -A slackrepo -o "$MY_DOWNLOAD" "$url" >> "$ITEMLOG" 2>&1
           curlstat=$?
           if [ "$curlstat" = 0 ]; then

@@ -62,7 +62,7 @@ function build_item_packages
   # Save the existing source to a temporary stash.
   allsourcedir="$SR_SRCREPO"/"$itemdir"
   archsourcedir="$allsourcedir"/"$SR_ARCH"
-  TMP_SRCSTASH="$MYTMP"/prev_source
+  TMP_SRCSTASH="$BIGTMP"/prev_source
   archsourcestash="${TMP_SRCSTASH}_${SR_ARCH}"
   SOURCESTASH=""
   if [ -d "$archsourcedir" ]; then
@@ -157,7 +157,7 @@ function build_item_packages
   fi
 
   # Setup TMP_OUTPUT
-  TMP_OUTPUT="$MYTMP/output_$itemprgnam"
+  TMP_OUTPUT="$BIGTMP/output_$itemprgnam"
   # initial wipe of $TMP_OUTPUT, even if $OPT_KEEP_TMP is set
   rm -rf "$TMP_OUTPUT"
   mkdir -p "$TMP_OUTPUT"
@@ -166,7 +166,7 @@ function build_item_packages
   if [ "$OPT_KEEP_TMP" = 'y' ]; then
     TMP_BUILD="$SR_TMP"
   else
-    TMP_BUILD="$MYTMP"/tmp
+    TMP_BUILD="$BIGTMP"/build
   fi
   mkdir -p "$TMP_BUILD"
 
@@ -632,7 +632,7 @@ function build_skipped
 #-------------------------------------------------------------------------------
 
 function chroot_setup
-# Setup a temporary chroot environment at $MYTMP/chroot using overlayfs
+# Setup a temporary chroot environment at $MYTMP/chrdir using overlayfs
 # Also sets the global variables $CHROOTCMD and $TMP_CHRDIR
 # Return status:
 # 0 = it worked
@@ -641,7 +641,7 @@ function chroot_setup
   CHROOTCMD=''
   [ "$OPT_CHROOT" != 'y' ] && return 1
 
-  TMP_CHRDIR="$MYTMP"/chrootdir/  # note the trailing slash
+  TMP_CHRDIR="$MYTMP"/chrdir/  # note the trailing slash
   ${SUDO}mkdir -p "$TMP_CHRDIR"
   CHROOTCMD="chroot ${TMP_CHRDIR} "  # note the trailing space
   [ -n "$SUDO" ] && CHROOTCMD="${SUDO} chroot --userspec=${USER} ${TMP_CHRDIR} "

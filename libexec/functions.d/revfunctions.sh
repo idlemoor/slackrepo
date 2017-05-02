@@ -582,8 +582,8 @@ EOF
 
         # slack-required
         # from packaging dir, or extract from package, or synthesise it from DIRECTDEPS
-        if [ -f "$TMP"/package-"$pkgnam"/install/slack-required ]; then
-          SLACKREQUIRED=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-required | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        if [ -f "$SR_TMP"/package-"$pkgnam"/install/slack-required ]; then
+          SLACKREQUIRED=$(tr -d ' ' < "$SR_TMP"/package-"$pkgnam"/install/slack-required | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
         elif grep -q install/slack-required "$dotlst"; then
           SLACKREQUIRED=$(tar xf "$pkgpath" -O install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
         elif [ -n "${DIRECTDEPS[$itemid]}" ]; then
@@ -595,8 +595,8 @@ EOF
 
         # slack-conflicts
         # from packaging dir, or extract from package, or get it from the hintfile
-        if [ -f "$TMP"/package-"$pkgnam"/install/slack-conflicts ]; then
-          SLACKCONFLICTS=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-conflicts | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        if [ -f "$SR_TMP"/package-"$pkgnam"/install/slack-conflicts ]; then
+          SLACKCONFLICTS=$(tr -d ' ' < "$SR_TMP"/package-"$pkgnam"/install/slack-conflicts | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
         elif grep -q install/slack-conflicts "$dotlst"; then
           SLACKCONFLICTS=$(tar xf "$pkgpath" -O install/slack-conflicts 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
         elif [ -n "${HINT_CONFLICTS[$itemid]}" ]; then
@@ -608,8 +608,8 @@ EOF
 
         # slack-suggests
         # from packaging dir, or extract from package
-        if [ -f "$TMP"/package-"$pkgnam"/install/slack-suggests ]; then
-          SLACKSUGGESTS=$(tr -d ' ' < "$TMP"/package-"$pkgnam"/install/slack-suggests | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        if [ -f "$SR_TMP"/package-"$pkgnam"/install/slack-suggests ]; then
+          SLACKSUGGESTS=$(tr -d ' ' < "$SR_TMP"/package-"$pkgnam"/install/slack-suggests | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
         elif grep -q install/slack-suggests "$dotlst"; then
           SLACKCONFLICTS=$(tar xf "$pkgpath" -O install/slack-suggests 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
         else

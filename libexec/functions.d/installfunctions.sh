@@ -83,7 +83,7 @@ function install_packages
       local -a pkgnams=( $(db_get_itemid_pkgnams "$itemid") )
       local -a pkglist=()
       for pn in "${pkgnams[@]}"; do
-        # Don't look in MYTMPOUT (if you want that, specify them as pathnames)
+        # Don't look in TMP_OUTPUT (if you want that, specify them as pathnames)
         if [ "$OPT_DRY_RUN" = 'y' ]; then
           for p in "$TMP_DRYREPO"/"$itemdir"/"${pn}"-*.t?z; do
             if [ -e "$p" ]; then

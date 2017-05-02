@@ -365,6 +365,8 @@ function build_item_packages
 
   # Start the resource monitor
   resource_monitor "$ITEMLOGDIR"/resource.log &
+  resmonpid=$!
+  disown "$resmonpid"
 
   # Build it
   MY_STARTSTAMP="$MYTMP"/startstamp
@@ -404,7 +406,7 @@ function build_item_packages
   BUILDFINISHTIME="$(date '+%s')"
   # add 1 to round it up so it's never zero
   BUILDELAPSED=$(( BUILDFINISHTIME - BUILDSTARTTIME + 1 ))
-  kill %resource_monitor
+  kill -9 "$resmonpid"
   # report the resource usage even if the build failed (it may be relevant)
   resource_report "$ITEMLOGDIR"/resource.log
 

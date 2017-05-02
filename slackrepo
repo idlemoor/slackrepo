@@ -70,6 +70,7 @@ function exit_cleanup
     ${SUDO}umount -l "$MYTMP" 2>/dev/null || true
     rmdir --ignore-fail-on-non-empty "$MYTMP"
   fi
+  [ -n "$BIGTMP" ] && rm -rf "$BIGTMP"
   exit ${1:-0}
 }
 

@@ -647,7 +647,7 @@ EOF
     # gen_repos_files.sh will do it later :-)
 
     # Finally, we can get rid of this:
-    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$MY_PKGCONTENTS"
+    rm -f "$MY_PKGCONTENTS"
 
   done
 

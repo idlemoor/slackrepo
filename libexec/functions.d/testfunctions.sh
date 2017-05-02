@@ -191,11 +191,11 @@ function test_download
           fi
         else
           # Header failed, try a full download (amazonaws is "special"... possibly more...)
-          MY_DOWNLOAD="$BIGTMP"/curldownload
-          curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL -J -L -A slackrepo -o "$MY_DOWNLOAD" "$url" >> "$ITEMLOG" 2>&1
+          TMP_DOWNLOAD="$BIGTMP"/curldownload
+          curl -q --connect-timeout 10 --retry 2 -f -s -k --ciphers ALL -J -L -A slackrepo -o "$TMP_DOWNLOAD" "$url" >> "$ITEMLOG" 2>&1
           curlstat=$?
           if [ "$curlstat" = 0 ]; then
-            remotemd5=$(md5sum <"$MY_DOWNLOAD"); remotemd5="${remotemd5/ */}"
+            remotemd5=$(md5sum <"$TMP_DOWNLOAD"); remotemd5="${remotemd5/ */}"
             found='n'
             for cachedmd5 in ${INFOMD5LIST[$itemid]}; do
               if [ "$remotemd5" = "$cachedmd5" ]; then
@@ -232,12 +232,11 @@ function test_download
               cat "$MY_HEADER" >> "$ITEMLOG"
             fi
           fi
-          rm -f "$MY_DOWNLOAD"
+          rm -f "$TMP_DOWNLOAD"
         fi
         ;;
       esac
     done
-    [ "$OPT_KEEP_TMP" != 'y' ] && rm -f "$MY_HEADER"
   fi
 
   [ "$retstat" = 0 ] && log_done

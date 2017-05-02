@@ -7,6 +7,7 @@
 #   build_ok
 #   build_failed
 #   build_skipped
+#   build_cleanup
 #   chroot_setup
 #   chroot_report
 #   chroot_destroy
@@ -494,8 +495,6 @@ function build_item_packages
     uninstall_deps "$itemid"
   fi
 
-  [ "$OPT_KEEP_TMP" != 'y' ] && ${SUDO}rm -rf "${TMP_BUILD:?NotSetTMP_BUILD}"
-
   build_ok "$itemid"  # \o/
   return 0
 }
@@ -503,7 +502,7 @@ function build_item_packages
 #-------------------------------------------------------------------------------
 
 function build_ok
-# Store packages, write metadata, cleanup and log for a build that has succeeded
+# Store packages, write metadata, call cleanup and log for a build that has succeeded
 # $1 = itemid
 # Return status: always 0
 {
@@ -511,8 +510,6 @@ function build_ok
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
   local itemfile="${ITEMFILE[$itemid]}"
-
-  [ "$OPT_KEEP_TMP" != 'y' ] && rm -rf "$TMP_SLACKBUILD"
 
   # ---- Store the packages ----
   if [ "$OPT_DRY_RUN" = 'y' ]; then
@@ -558,10 +555,12 @@ function build_ok
     mkdir -p "$SR_PKGREPO"/"$itemdir"
     mv "$TMP_OUTPUT"/* "$SR_PKGREPO"/"$itemdir"/
   fi
-  rmdir "$TMP_OUTPUT"
 
   # ---- Write the metadata ----
   write_pkg_metadata "$itemid"  # sets $CHANGEMSG
+
+  # ---- Cleanup ----
+  build_cleanup
 
   # ---- Logging ----
   buildopt=''
@@ -577,7 +576,7 @@ function build_ok
 #-------------------------------------------------------------------------------
 
 function build_failed
-# Log and cleanup for a build that has failed
+# Log and call cleanup for a build that has failed
 # $1 = itemid
 # Return status: always 0
 {
@@ -598,11 +597,7 @@ function build_failed
     #### reinstate packages that we uninstalled prior to building
   fi
 
-  if [ "$OPT_KEEP_TMP" != 'y' ]; then
-    ${SUDO}rm -rf "$TMP_SLACKBUILD" "$TMP_OUTPUT"
-    [ -n "${TMP_BUILD}" ] && ${SUDO}rm -rf "${TMP_BUILD}"
-  fi
-
+  build_cleanup
   log_itemfinish "$itemid" 'failed'
 
   return 0
@@ -611,7 +606,7 @@ function build_failed
 #-------------------------------------------------------------------------------
 
 function build_skipped
-# Log and cleanup for a build that has been skipped or is unsupported
+# Log and call cleanup for a build that has been skipped or is unsupported
 # $1 = itemid
 # $2 = message (optional -- supplied to log_itemfinish as $3)
 # $3 = extra message for next line (optional -- supplied to log_itemfinish as $4)
@@ -620,13 +615,28 @@ function build_skipped
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
 
-  if [ "$OPT_KEEP_TMP" != 'y' ]; then
-    ${SUDO}rm -rf "$TMP_SLACKBUILD" "$TMP_OUTPUT"
-    [ -n "${TMP_BUILD}" ] && ${SUDO}rm -rf "${TMP_BUILD}"
-  fi
-
+  build_cleanup
   log_itemfinish "$itemid" "${STATUS[$itemid]}" "$2" "$3"
 
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+
+function build_cleanup
+# Remove temporary files at the end of a build
+# Return status: always 0
+{
+  ${SUDO}rm -rf \
+    "$TMP_SLACKBUILD" \
+    "$TMP_OUTPUT" \
+    "$TMP_BUILD" \
+    "$TMP_OVLDIR" \
+    "$TMP_SRCSTASH" \
+    "$MYTMP"/*
+  if [ "$OPT_KEEP_TMP" != 'y' ]; then
+    ${SUDO}rm -rf "${TMP_BUILD}"
+  fi
   return 0
 }
 

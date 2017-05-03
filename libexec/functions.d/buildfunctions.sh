@@ -293,11 +293,15 @@ function build_item_packages
     esac
   done
 
-  # blocking the net and X will only take effect in a chroot (see chroot_setup)
+  # Block X by unexporting DISPLAY
+  if [ "$OPT_LINT" = 'y' ] && [ "$hintneedX" != 'y' ]; then
+    export -n DISPLAY
+  else
+    export DISPLAY
+  fi
+  # Blocking the net will only take effect in a chroot (see chroot_setup)
   BLOCKNET='n'
   [ "$OPT_LINT" = 'y' ] && [ "$hintneednet" != 'y' ] && BLOCKNET='y'
-  BLOCKX='n'
-  [ "$OPT_LINT" = 'y' ] && [ "$hintneedX" != 'y' ] && BLOCKX='y'
 
   # ... fakeroot ...
   if [ -n "$SUDO" ] && [ -x /usr/bin/fakeroot ]; then
@@ -705,9 +709,7 @@ function chroot_setup
         fi
       done
     fi
-    if [ "$BLOCKX" = 'y' ]; then
-      export -n DISPLAY
-    else
+    if [ "$BLOCKX" != 'y' ]; then
       if [ -f "$HOME"/.Xauthority ]; then
         #### would a dummy X server be a lot of bother?
         ${SUDO}touch "$MY_CHRDIR"/"$HOME"/.Xauthority

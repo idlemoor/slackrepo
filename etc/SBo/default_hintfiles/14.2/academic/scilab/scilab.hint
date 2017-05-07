@@ -1,1 +1,1 @@
-PRAGMA="unset_ARCH"
+PRAGMA="x86arch=i686"

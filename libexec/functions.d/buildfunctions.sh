@@ -697,26 +697,32 @@ function chroot_setup
     CHRMOUNTS+=( "$MY_CHRDIR"/etc/resolv.conf )
   fi
   if [ -n "$SUDO" ]; then
-    if [ ! -d "$MY_CHRDIR"/"$HOME" ]; then
-      # create $HOME as a (mostly) empty directory
-      ${SUDO}mkdir -p "$MY_CHRDIR"/"$HOME"
-      ${SUDO}chown -R "$EUID" "$MY_CHRDIR"/"$HOME"
-      for subdir in .ccache .distcc ; do
-        if [ -d "$HOME"/"$subdir" ]; then
-          ${SUDO}mkdir -p "$MY_CHRDIR"/"$HOME"/"$subdir"
-          ${SUDO}mount --bind "$HOME"/"$subdir" "$MY_CHRDIR"/"$HOME"/"$subdir"
-          CHRMOUNTS+=( "$MY_CHRDIR"/"$HOME"/"$subdir" )
-        fi
-      done
-    fi
-    if [ "$BLOCKX" != 'y' ]; then
-      if [ -f "$HOME"/.Xauthority ]; then
-        #### would a dummy X server be a lot of bother?
-        ${SUDO}touch "$MY_CHRDIR"/"$HOME"/.Xauthority
-        ${SUDO}mount --bind "$HOME"/.Xauthority "$MY_CHRDIR"/"$HOME"/.Xauthority
-        CHRMOUNTS+=( "$MY_CHRDIR/$HOME"/.Xauthority )
+    # setup $HOME as a (mostly) empty directory
+    [ -d "$MY_CHRDIR"/"$HOME" ] || ${SUDO}mkdir -p "$MY_CHRDIR"/"$HOME"
+    # use yet another "small" tmpfs
+    ${SUDO}mount -t tmpfs -o defaults,uid="$EUID",mode=755 tmpfs "$MY_CHRDIR"/"$HOME"
+    CHRMOUNTS+=( "$MY_CHRDIR"/"$HOME" )
+    # bind in useful subdirs from the real home
+    for subdir in .ccache .distcc ; do
+      if [ -d "$HOME"/"$subdir" ]; then
+        ${SUDO}mkdir -p "$MY_CHRDIR"/"$HOME"/"$subdir"
+        ${SUDO}mount --bind "$HOME"/"$subdir" "$MY_CHRDIR"/"$HOME"/"$subdir"
+        CHRMOUNTS+=( "$MY_CHRDIR"/"$HOME"/"$subdir" )
       fi
-    fi
+    done
+  fi
+  if [ "$BLOCKX" != 'y' ] || [ -f "$HOME"/.Xauthority ]; then
+    #### would a dummy X server be a lot of bother?
+    ${SUDO}touch "$MY_CHRDIR"/"$HOME"/.Xauthority
+    ${SUDO}mount --bind "$HOME"/.Xauthority "$MY_CHRDIR"/"$HOME"/.Xauthority
+    CHRMOUNTS+=( "$MY_CHRDIR/$HOME"/.Xauthority )
+  fi
+
+  # if $SR_TMP is not on the root fs, we need to bind-mount it into the chroot
+  if [ "$(findmnt -n -o TARGET -T /tmp)" != / ]; then
+    ${SUDO}mkdir -p "$MY_CHRDIR"/"$SR_TMP"
+    ${SUDO}mount --bind "$SR_TMP" "$MY_CHRDIR"/"$SR_TMP"
+    CHRMOUNTS+=( "$MY_CHRDIR"/"$SR_TMP" )
   fi
 
   # Import build stuff from $MYTMP

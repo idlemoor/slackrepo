@@ -1,1 +1,1 @@
-ADDREQUIRES="wxPython faad2 ffmpeg xvidcore a52dec jack-audio-connection-kit"
+ADDREQUIRES="wxPython faad2 ffmpeg xvidcore jack-audio-connection-kit"

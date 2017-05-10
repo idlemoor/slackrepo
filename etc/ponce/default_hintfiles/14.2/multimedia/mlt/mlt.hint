@@ -1,1 +1,1 @@
-ADDREQUIRES="frei0r swfdec libvdpau jack-rack"
+ADDREQUIRES="frei0r swfdec jack-rack"

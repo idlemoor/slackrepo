@@ -22,16 +22,13 @@ function init_current_pkgs
 # Return status: always 0
 {
   for pp in \
-    "python-setuptools=pysetuptools" \
-    "gst-plugins-base=gst1-plugins-base" \
-    "gst-plugins-good=gst1-plugins-good" \
-    "gstreamer=gstreamer1" \
-    "qt-gstreamer=QtGStreamer" \
-    "openjpeg=openjpeg2" \
-    "LibRaw" "a52dec" "eigen3" "jemalloc" "judy" "libdvdnav" "libfakekey" \
-    "libimobiledevice" "libjpeg-turbo" "libnftnl" "libsigsegv" "libva" \
-    "libva-intel-driver" "libvdpau" "libvpx" "lzip" "motif" "newt" \
-    "orc" "qpdf" "usbmuxd" "xapian-core" \
+    "gst-plugins-libav=gst-libav" \
+    "python-six=six" \
+    "sshfs=sshfs-fuse" \
+    "libinput" "libwacom" "xf86-input-libinput" "opencl-headers" \
+    "libedit" \
+    "ffmpeg" "lame" "libbluray" \
+    "SDL2" "SDL2_gfx" "SDL2_image" "SDL2_mixer" "SDL2_net" "SDL2_ttf" \
   ; do
     pslack="${pp/=*/}"
     psbo="${pp/*=/}"

@@ -1,1 +1,1 @@
-ADDREQUIRES="libva ffmpeg postgresql"
+ADDREQUIRES="ffmpeg postgresql"

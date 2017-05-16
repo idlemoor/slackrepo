@@ -242,10 +242,12 @@ function build_item_packages
       sed -i -e "s/make test/: # make test/" "$TMP_SLACKBUILD"/"$itemfile"
       ;;
     'x86arch'* )
-      fixarch="${pragma/x86arch=/}"
-      log_info -a "Pragma: ${pragma}"
-      sed -i -e "s/^PRGNAM=.*/&; ARCH='$fixarch'/" "$TMP_SLACKBUILD"/"$itemfile"
-      unset ARCH
+      if [ "$SR_ARCH" = 'i486' ] || [ "$SR_ARCH" = 'i586' ] || [ "$SR_ARCH" = 'i686' ]; then
+        log_info -a "Pragma: ${pragma}"
+        fixarch="${pragma/x86arch=/}"
+        sed -i -e "s/^PRGNAM=.*/&; ARCH='$fixarch'/" "$TMP_SLACKBUILD"/"$itemfile"
+        unset ARCH
+      fi
       ;;
     'noexport_ARCH' )
       log_info -a "Pragma: noexport_ARCH"

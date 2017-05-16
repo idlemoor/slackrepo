@@ -1,1 +1,2 @@
 DOWNLOAD="no"
+PRAGMA="x86arch=i486"

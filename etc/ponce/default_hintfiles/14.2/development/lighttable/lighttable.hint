@@ -1,1 +1,1 @@
-PRAGMA="nofakeroot"
+PRAGMA="nofakeroot need_net"

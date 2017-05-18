@@ -676,7 +676,7 @@ function chroot_setup
   OVL_WORK="$TMP_OVLDIR"/work
   ${SUDO}mkdir -p "$OVL_DIRTY" "$OVL_WORK"
   ${SUDO}mount -t overlay overlay -olowerdir=/,upperdir="$OVL_DIRTY",workdir="$OVL_WORK" "$MY_CHRDIR" || \
-    { log_error "Failed to mount $MY_CHRDIR"; exit_cleanup 5; }
+    { log_error "Failed to mount $MY_CHRDIR"; exit_cleanup 6; }
   CHRMOUNTS+=( "$MY_CHRDIR" )
 
   # Setup a chroot environment with all the trimmings

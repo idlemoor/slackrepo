@@ -56,8 +56,16 @@ function print_usage
 function exit_cleanup
 # Cleanup everything and exit
 # $1 = status to set on exit
+# 0 completed ok
+# 1 interrupted
+# 2 bad usage
+# 3 config not found
+# 4 initialisation error
+# 5 another instance is running
+# 6 internal error
 {
   stty sane   # in case we're killed waiting for the gpg passphrase
+  [ "$1" = 1 ] && echo "Interrupted! Cleaning up ..."
   if [ -n "$DBUS_SESSION_BUS_PID" ]; then
     ${SUDO}kill -15 "$DBUS_SESSION_BUS_PID" || true
   fi
@@ -131,23 +139,23 @@ while [ $# != 0 ]; do
   case "$1" in
     # we'll accept add/build/rebuild/update/remove/revert with or without '--'
     build | --build | add | --add )
-      [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
+      [ -n "$CMD" ] && { print_usage; exit_cleanup 2; }
       CMD='build'
       shift; continue ;;
     rebuild | --rebuild )
-      [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
+      [ -n "$CMD" ] && { print_usage; exit_cleanup 2; }
       CMD='rebuild'
       shift; continue ;;
     update | --update )
-      [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
+      [ -n "$CMD" ] && { print_usage; exit_cleanup 2; }
       CMD='update'
       shift; continue ;;
     remove | --remove )
-      [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
+      [ -n "$CMD" ] && { print_usage; exit_cleanup 2; }
       CMD='remove'
       shift; continue ;;
     revert | --revert | restore | --restore )
-      [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
+      [ -n "$CMD" ] && { print_usage; exit_cleanup 2; }
       CMD='revert'
       shift; continue ;;
     --repo=* )
@@ -178,11 +186,11 @@ while [ $# != 0 ]; do
           found='y'; break
         fi
       done
-      [ "$found" = 'n' ] && { echo "$(basename "$0"): Error: invalid control argument: $1" >&2; exit_cleanup 3; }
+      [ "$found" = 'n' ] && { echo "$(basename "$0"): Error: invalid control argument: $1" >&2; exit_cleanup 2; }
       shift; continue ;;
     * )
       if [ "$(type -t "${1}_command")" = 'function' ]; then
-        [ -n "$CMD" ] && { print_usage; exit_cleanup 3; }
+        [ -n "$CMD" ] && { print_usage; exit_cleanup 2; }
         CMD="$1"
         shift; continue
       else
@@ -194,16 +202,16 @@ done
 
 if [ -z "$CMD" ]; then
   print_usage
-  exit_cleanup 3
+  exit_cleanup 2
 elif [ $# = 0 ]; then
   if [ "$CMD" = 'remove' ]; then
     echo "Usage: $(basename "$0") remove [--repo=ID] item..."
     echo "(you must specify the items to be removed)"
-    exit_cleanup 3
+    exit_cleanup 2
   elif [ "$CMD" = 'revert' ] ; then
     echo "Usage: $(basename "$0") revert [--repo=ID] item..."
     echo "(you must specify the items to be reverted)"
-    exit_cleanup 3
+    exit_cleanup 2
   fi
 fi
 
@@ -215,7 +223,7 @@ if [ "$EUID" != 0 ]; then
   if [ ! -x /usr/bin/fakeroot ]; then
     echo "$(basename "$0"): Running as non-root user, but fakeroot is not installed."
     echo "$(basename "$0"): You should either install fakeroot or run slackrepo as root."
-    exit_cleanup 3
+    exit_cleanup 4
   fi
   SUDO="/usr/bin/sudo "
   export PATH="${LIBEXECDIR}:/usr/local/sbin:/usr/sbin:/sbin:$PATH"
@@ -321,7 +329,7 @@ repoconf="${CONFIGDIR:-/etc/slackrepo}/slackrepo_${OPT_REPO}.conf"
 if [ -f "$repoconf" ]; then
   . "$repoconf"
 else
-  echo "$(basename "$0"): Error: No repo '${OPT_REPO}' (configuration file not found: $repoconf)" >&2; exit_cleanup 2
+  echo "$(basename "$0"): Error: No repo '${OPT_REPO}' (configuration file not found: $repoconf)" >&2; exit_cleanup 3
 fi
 # Read the user config files to override everything in the main repo config file.
 # (Yes, we're reading ~/.slackreporc twice, but that's a lot easier than a proper solution)
@@ -413,7 +421,7 @@ fi
 flock -x --nb 40
 if [ $? != 0 ]; then
   echo "$(basename "$0"): Repository ${OPT_REPO} is locked by another process." >&2
-  exit_cleanup 3
+  exit_cleanup 5
 fi
 
 # Arrays for tracking outcomes:
@@ -531,7 +539,7 @@ elif [ "$GOTGIT" = 'y' ] && [ "$CMD" = 'build' ] || [ "$CMD" = 'rebuild' ] || [ 
         log_normal "Finished updating git."
       else
         log_error "Failed to update git (status=$gitstat).\nPlease resolve any conflicts and merge manually."
-        exit_cleanup 1
+        exit_cleanup 4
       fi
     fi
   fi
@@ -614,7 +622,7 @@ while [ $# != 0 ]; do
       eval "${CMD}_command" "$ITEMID"
     else
       log_error "$(basename "$0"): Unrecognised CMD = $CMD"
-      exit_cleanup 4
+      exit_cleanup 6
     fi
   done
 done

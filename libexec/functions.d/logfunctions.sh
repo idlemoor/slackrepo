@@ -64,7 +64,7 @@ function log_normal
     fi
   else
     if [ $(( ${#1} + ${#2} )) -lt "$LINEWIDTH" ]; then
-      read llen plen rlen < <(format_left_right "$1" "$2")
+      read -r llen plen rlen < <(format_left_right "$1" "$2")
       echo -e "${NL}${1:0:$llen}${PADBLANK:0:$plen}${2:0:$rlen}"
       [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${NL}${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
     else
@@ -137,7 +137,7 @@ function log_important
     [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}" >> "$ITEMLOG"
   else
     if [ $(( ${#1} + ${#2} )) -lt "$LINEWIDTH" ]; then
-      read llen plen rlen < <(format_left_right "$1" "$2")
+      read -r llen plen rlen < <(format_left_right "$1" "$2")
       echo -e "${NL}${colour_important}${1:0:$llen}${colour_normal}${PADBLANK:0:$plen}${2:0:$rlen}"
       [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
     else
@@ -200,7 +200,7 @@ function log_error
     [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${E}${1}" >> "$ITEMLOG"
   else
     if [ $(( ${#1} + ${#2} )) -lt "$LINEWIDTH" ]; then
-      read llen plen rlen < <(format_left_right "$1" "$2")
+      read -r llen plen rlen < <(format_left_right "$1" "$2")
       echo -e "${NL}${colour_error}${1:0:$llen}${colour_normal}${PADBLANK:0:$plen}${2:0:$rlen}"
       [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${1}${PADBLANK:0:$plen}${2}" >> "$ITEMLOG"
     else
@@ -496,7 +496,7 @@ function resource_report
 # $BUILDELAPSED should have been set by the caller
 {
   resourcelog="$1"
-  read lavgpeak mempeak tmppeak < <(tail -n +2 "$resourcelog" | \
+  read -r lavgpeak mempeak tmppeak < <(tail -n +2 "$resourcelog" | \
     awk '{ linect+=1;
            if ($2 > lmax) lmax=$2;
            if ($3 > mmax) mmax=$3; if (linect == 1) mstart=$3;

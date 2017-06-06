@@ -227,7 +227,7 @@ function build_item_packages
       # Most of the current bozo downloaders only download one file anyway :-)
       tempdownlist=( ${INFODOWNLIST[$itemid]} )
       count=0
-      while read sourcefile; do
+      while read -r sourcefile; do
         source="${sourcefile##*/}"
         # skip subdirectories (and don't increment count)
         if [ -f "$SR_SRCREPO"/"$itemdir"/"$sourcefile" ]; then
@@ -357,7 +357,7 @@ function build_item_packages
 
   # Remember the build start time and estimate the build finish time
   estbuildsecs=''
-  read prevsecs prevmhz guessflag < <(db_get_buildsecs "$itemid")
+  read -r prevsecs prevmhz guessflag < <(db_get_buildsecs "$itemid")
   if [ -n "$prevsecs" ] && [ -n "$prevmhz" ] && [ -n "$SYS_MHz" ]; then
     estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevmhz}/${SYS_MHz}+1" | bc | sed 's/\..*//')
   fi

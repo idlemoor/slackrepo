@@ -93,7 +93,7 @@ commit;
       log_normal "Populating the packages table ... "
       ( cd "$SR_PKGREPO"
         echo "begin transaction;"
-        find . -type f -name '*.t?z' -print | while read pkgpath; do
+        find . -type f -name '*.t?z' -print | while read -r pkgpath; do
           pkgdir="${pkgpath%/*}"
           pkgbase="${pkgpath##*/}"
           pkgnam="${pkgbase%-*-*-*}"
@@ -107,10 +107,10 @@ commit;
       log_normal "Populating the revisions table ... "
       MY_REVISIONS="$MYTMP"/revisions.sql
       echo "begin transaction;" >"$MY_REVISIONS"
-      while read revfilepath; do
+      while read -r revfilepath; do
         itemid=$(dirname "${revfilepath#./}")
         itemprgnam="${itemid##*/}"
-        while read revinfo; do
+        while read -r revinfo; do
           # hopefully, this sets $prgnam, $version, $built, $buildrev, $slackware, $depends, $hintfile
           eval "$revinfo" 2>/dev/null
           if [ "$prgnam" = "$itemprgnam" ]; then
@@ -132,12 +132,12 @@ commit;
       log_done
       # (e) convert the backup repo's revision data
       log_normal "Converting backup revision data ... "
-      while read revfilepath; do
+      while read -r revfilepath; do
         itemid=$(dirname "${revfilepath#./}")
         itemprgnam="${itemid##*/}"
         newrevfilepath="$SR_PKGBACKUP"/"$itemid"/revision
         true > "$newrevfilepath"
-        while read revinfo; do
+        while read -r revinfo; do
           eval "$revinfo" 2>/dev/null
           # sets $prgnam, $version, $built, $buildrev, $slackware, $depends, $hintfile
           if [ "$prgnam" = "$itemprgnam" ]; then

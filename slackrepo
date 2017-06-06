@@ -696,7 +696,7 @@ if [ "$abortedcount" != 0 ]; then
 fi
 # Don't bother enumerating 'bad' items (not found, etc)
 uniquewarnings=()
-[ "${#WARNINGLIST[@]}" != 0 ] && while read warning; do uniquewarnings+=( "$warning" ); done < <(printf '%s\n' "${WARNINGLIST[@]}" | sort -u )
+[ "${#WARNINGLIST[@]}" != 0 ] && while read -r warning; do uniquewarnings+=( "$warning" ); done < <(printf '%s\n' "${WARNINGLIST[@]}" | sort -u )
 warningcount="${#uniquewarnings[@]}"
 if [ "$warningcount" != 0 ]; then
   log_normal "Warnings:    $warningcount"

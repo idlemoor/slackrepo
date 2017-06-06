@@ -201,7 +201,7 @@ function revert_command
 
   # Log a warning about any dependencies
   if [ -f "$backuprevfile" ]; then
-    while read b_itemid b_depid b_deplist b_version b_built b_rev b_os b_hintcksum ; do
+    while read -r b_itemid b_depid b_deplist b_version b_built b_rev b_os b_hintcksum ; do
       if [ "${b_depid}" = '/' ]; then
         mybuildtime="${b_built}"
       else
@@ -269,7 +269,7 @@ function revert_command
     fi
     # replace the current revision data with the previous revision data
     db_del_rev "$itemid"
-    while read revinfo; do
+    while read -r revinfo; do
       db_set_rev $revinfo
     done < "$backuprevfile"
     rm -f "$backuprevfile"
@@ -399,7 +399,7 @@ function remove_command
     if [ -d "$archsourcedir" ]; then
       archsourcebackupdir="${allsourcebackupdir}_${SR_ARCH}"
       [ "$OPT_DRY_RUN" != 'y' ] && mkdir -p "$archsourcebackupdir"
-      find "$archsourcedir" -type f -maxdepth 1 -print | while read srcpath; do
+      find "$archsourcedir" -type f -maxdepth 1 -print | while read -r srcpath; do
         srcfile="$(basename "$srcpath")"
         if [ "$OPT_DRY_RUN" != 'y' ]; then
           mv "$srcpath" "$archsourcebackupdir"
@@ -411,7 +411,7 @@ function remove_command
     elif [ -d "$allsourcedir" ]; then
       allsourcebackupdir="$backupdir"/source
       [ "$OPT_DRY_RUN" != 'y' ] && mkdir -p "$allsourcebackupdir"
-      find "$allsourcedir" -type f -maxdepth 1 -print | while read srcpath; do
+      find "$allsourcedir" -type f -maxdepth 1 -print | while read -r srcpath; do
         srcfile="$(basename "$srcpath")"
         if [ "$OPT_DRY_RUN" != 'y' ]; then
           mv "$srcpath" "$allsourcebackupdir"
@@ -436,7 +436,7 @@ function remove_command
       fi
     done
     if [ -d "$archsourcedir" ]; then
-      find "$archsourcedir" -type f -maxdepth 1 -print | while read srcpath; do
+      find "$archsourcedir" -type f -maxdepth 1 -print | while read -r srcpath; do
         srcfile="$(basename "$srcpath")"
         if [ "$OPT_DRY_RUN" != 'y' ]; then
           rm -f "$srcpath"
@@ -446,7 +446,7 @@ function remove_command
         fi
       done
     elif [ -d "$allsourcedir" ]; then
-      find "$allsourcedir" -type f -maxdepth 1 -print | while read srcpath; do
+      find "$allsourcedir" -type f -maxdepth 1 -print | while read -r srcpath; do
         srcfile="$(basename "$srcpath")"
         if [ "$OPT_DRY_RUN" != 'y' ]; then
           rm -f "$srcpath"

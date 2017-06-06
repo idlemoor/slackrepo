@@ -338,7 +338,7 @@ function dotprofilizer
   # examine /var/log/packages/xxxx because it's quicker than looking inside a .t?z
   varlogpkg="${MY_CHRDIR}"/var/log/packages/$(basename "${pkgpath/%.t?z/}")
   if grep -q -E '^etc/profile\.d/.*\.sh(\.new)?' "$varlogpkg"; then
-    while read script; do
+    while read -r script; do
       if [ -f "${MY_CHRDIR}"/"$script" ]; then
         log_info -a "  Running profile script: /$script"
         . "${MY_CHRDIR}"/"$script"

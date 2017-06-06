@@ -505,7 +505,6 @@ function write_pkg_metadata
     # but the .md5, .sha256 and .asc filenames include the suffix:
     dotmd5="${pkgpath}.md5"
     dotsha256="${pkgpath}.sha256"
-    dotasc="${pkgpath}.asc"
 
     # Although gen_repos_files.sh can create most of the following files,
     # it's quicker to create them here (we can probably get the slack-desc from the

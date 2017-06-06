@@ -480,8 +480,8 @@ function resource_monitor
     elapsed=$(( $(date '+%s') - BUILDSTARTTIME ))
     loadavg=$(cut -f1 -d' ' < /proc/loadavg)
     memused=$(awk '/MemTotal:/ {mt=$2} /MemAvailable:/ {ma=$2} END {print mt-ma}' /proc/meminfo)
-    bigtmp=$(df "$BIGTMP" --output=used | tail -n +2)
-    printf '%10s %10s %10s %10s\n' "$elapsed" "$loadavg" "$memused" "$bigtmp" >> "$resourcelog"
+    bigtmpsz=$(df "$BIGTMP" --output=used | tail -n +2)
+    printf '%10s %10s %10s %10s\n' "$elapsed" "$loadavg" "$memused" "$bigtmpsz" >> "$resourcelog"
     sleep "$sleepsecs"
   done
 }

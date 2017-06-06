@@ -121,7 +121,7 @@ commit;
             [ -z "$dep" ] && continue
           fi
           deplist="${depends:-/}"
-          echo "insert into revisions values('$itemid','$dep','${deplist//:/,}','${version:-/}','${built:-0}','${buildrev:-0}','slackware${slackware}','${hintfile:-/}');" >>"$MY_REVISIONS"
+          echo "insert into revisions values('$itemid','$dep','${deplist//:/,}','${version:-/}','${built:-0}','${buildrev:-0}','slackware${slackware:-1.01}','${hintfile:-/}');" >>"$MY_REVISIONS"
           unset prgnam version built buildrev slackware depends hintfile
         done <"$SR_PKGREPO"/"$revfilepath"
         rm -f "$SR_PKGREPO"/"$revfilepath"

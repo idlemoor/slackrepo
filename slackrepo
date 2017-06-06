@@ -425,7 +425,7 @@ if [ $? != 0 ]; then
 fi
 
 # Arrays for tracking outcomes:
-declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST BADLIST
+declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST
 
 # Create directories:
 [ -d "$SR_SBREPO" ]   || \
@@ -448,8 +448,6 @@ declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST BADLIST
 # This is now *required* so here is a default path:
 [ -n "$SR_DATABASE" ] || SR_DATABASE="$(dirname "$SR_SBREPO")/database_${OPT_REPO}.sqlite3"
 db_init || { log_error "Failed to initialise database"; exit_cleanup 4; }
-# we'll also have a locatedb (findutils) database in the same place:
-SR_LOCATEDB="$(dirname "$SR_DATABASE")/locatedb_${OPT_REPO}"
 
 # Temporary directory:
 SR_TMP=${SR_TMP:-/tmp/SBo}

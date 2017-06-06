@@ -27,7 +27,7 @@ function test_slackbuild
   local MD5SUM MD5SUM_${SR_ARCH} SHA256SUM SHA256SUM_${SR_ARCH}
   local REQUIRES MAINTAINER EMAIL
 
-  local slackdesc hr linecount
+  local slackdesc linecount
 
   log_normal -a "Testing SlackBuild files ... "
 
@@ -47,17 +47,10 @@ function test_slackbuild
 
   slackdesc="$SR_SBREPO"/"$itemdir"/slack-desc
   if [ -f "$slackdesc" ]; then
-    hr='|-----handy-ruler------------------------------------------------------|'
     # check <=13 line description
     linecount=$(grep -c "^${itemprgnam}:" "$slackdesc")
     [ "$linecount" -gt 13 ] && \
       { log_warning -a "${itemid}: slack-desc: $linecount lines of description"; retstat=1; }
-    # check handy ruler
-#   if ! grep -q "^[[:blank:]]*$hr\$" "$slackdesc" ; then
-#     { log_warning -a "${itemid}: slack-desc: handy-ruler is corrupt or missing"; retstat=1; }
-#   elif [ "$(grep "^[[:blank:]]*$hr\$" "$slackdesc" | sed "s/|.*|//" | wc -c)" -ne $(( ${#itemprgnam} + 1 )) ]; then
-#     { log_warning -a "${itemid}: slack-desc: handy-ruler is misaligned"; retstat=1; }
-#   fi
     # check line length <= 80
     [ "$(grep "^${itemprgnam}:" "$slackdesc" | sed "s/^${itemprgnam}://" | wc -L)" -gt 80 ] && \
       { log_warning -a "${itemid}: slack-desc: description lines too long"; retstat=1; }

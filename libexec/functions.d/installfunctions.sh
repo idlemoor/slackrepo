@@ -193,7 +193,7 @@ function uninstall_packages
   local itemdir="${ITEMDIR[$itemid]}"
   local -a pkglist
   local pkgpath
-  local etcnewfiles etcdirs etcfile etcdir
+  local etcnewfiles etcdirs e
 
   if [ "$OPT_CHROOT" = 'y' ]; then
     # don't bother uninstalling, the chroot has already been destroyed
@@ -248,9 +248,9 @@ function uninstall_packages
         for etcnewfile in $etcnewfiles; do
           rm -f /"$etcnewfile" 2>/dev/null
         done
-        for etcdir in $etcdirs; do
-          if [ -d /"$etcdir" ]; then
-            find /"$etcdir" -type d -depth -exec rmdir --ignore-fail-on-non-empty {} \; 2>/dev/null
+        for e in $etcdirs; do
+          if [ -d /"$e" ]; then
+            find /"$e" -type d -depth -exec rmdir --ignore-fail-on-non-empty {} \; 2>/dev/null
           fi
         done
         # Do this last so it can mend things the package broke.

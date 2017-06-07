@@ -638,7 +638,6 @@ function build_cleanup
   ${SUDO}rm -rf \
     "$TMP_SLACKBUILD" \
     "$TMP_OUTPUT" \
-    "$TMP_BUILD" \
     "$TMP_OVLDIR" \
     "$TMP_SRCSTASH" \
     "$MYTMP"/*

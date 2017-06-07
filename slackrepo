@@ -45,6 +45,7 @@ function print_usage
   echo 'Control args:'
   echo '  --repo=ID'
   echo '  --verbose (-v)'
+  echo '  --debug (-d)'
   echo '  --dry-run | --install'
   echo '  --lint'
   echo '  --keep-tmp'
@@ -167,6 +168,12 @@ while [ $# != 0 ]; do
       shift; continue ;;
     --very-verbose | -vv )
       OPT_VERY_VERBOSE='y'
+      shift; continue ;;
+    --debug | -d )
+      OPT_VERY_VERBOSE='y'
+      OPT_DRY_RUN='y'
+      OPT_LINT='y'
+      OPT_KEEP_TMP='y'
       shift; continue ;;
     --color=* | --colour=* )
       OPT_COLOR="${1/--colo*r=/}"

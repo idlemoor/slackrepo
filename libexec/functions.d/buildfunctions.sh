@@ -213,6 +213,15 @@ function build_item_packages
         sed -i -e "s;^\./configure ;LDFLAGS=\"-L/usr/lib$libdirsuffix\" &;" "$TMP_SLACKBUILD/$itemfile"
       fi
       ;;
+    'python3' )
+      # If python3 support isn't included, add it
+      if ! grep -q python3 "$MYTMPIN/$itemfile" ; then
+        log_info -a "Pragma: python3"
+        SEARCH="python setup.py install --root=\\\$PKG"
+        ADD="if python3 -c 'import sys' 2>/dev/null; then\n  rm -rf build\n  python3 setup.py install --root=\\\$PKG\nfi"
+        sed -i -e "/$SEARCH/a$ADD" "$MYTMPIN/$itemfile"
+      fi
+      ;;
     'stubs-32' )
       if [ "$SYS_ARCH" = 'x86_64' ] && [ ! -e /usr/include/gnu/stubs-32.h ]; then
         log_info -a "Pragma: stubs-32"

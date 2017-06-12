@@ -601,6 +601,12 @@ function parse_info_and_hints
     for delreq in ${DELREQUIRES} '%README%'; do
       INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]//${delreq}/})"
     done
+    # python3 pragma implies a dep on python3
+    for pragma in ${HINT_PRAGMA[$itemid]}; do
+      case "$pragma" in
+        'python3' ) ADDREQUIRES="python3 ${ADDREQUIRES}" ;;
+      esac
+    done
     # Append ADDREQUIRES
     INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]} ${ADDREQUIRES})"
   fi

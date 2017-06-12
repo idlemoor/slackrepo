@@ -442,8 +442,8 @@ function parse_info_and_hints
 
   if [ -n "${HINTFILE[$itemid]}" ] && [ -s "${HINTFILE[$itemid]}" ]; then
     local SKIP \
-          VERSION ADDREQUIRES OPTIONS GROUPADD USERADD CONFLICTS INSTALL NUMJOBS ANSWER CLEANUP \
-          PRAGMA SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
+          VERSION ADDREQUIRES DELREQUIRES OPTIONS GROUPADD USERADD CONFLICTS INSTALL \
+          NUMJOBS ANSWER CLEANUP PRAGMA SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
     . "${HINTFILE[$itemid]}"
 
     # Process the hint file's variables individually (looping for each variable would need
@@ -573,7 +573,9 @@ function parse_info_and_hints
       ${DOWNLOAD+"DOWNLOAD=\"$DOWNLOAD\""} \
       ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
       ${SHA256SUM+"SHA256SUM=\"$SHA256SUM\""} \
-      ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} )"
+      ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} \
+      ${DELREQUIRES+"DELREQUIRES=\"$DELREQUIRES\""} \
+      )"
 
     unset VERSION OPTIONS GROUPADD USERADD \
           CONFLICTS \
@@ -595,8 +597,12 @@ function parse_info_and_hints
       INFOREQUIRES[$itemid]=""
     fi
   else
-    # Get rid of %README% silently, and append ADDREQUIRES
-    INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]//%README%/} ${ADDREQUIRES})"
+    # Remove DELREQUIRES and %README%
+    for delreq in ${DELREQUIRES} '%README%'; do
+      INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]//${delreq}/})"
+    done
+    # Append ADDREQUIRES
+    INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]} ${ADDREQUIRES})"
   fi
 
   # Fix INFOVERSION from hint file's VERSION, or DOWNLOAD, or git, or SlackBuild's modification time

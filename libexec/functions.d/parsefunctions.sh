@@ -392,11 +392,12 @@ function parse_info_and_hints
     if [ -z "${INFODOWNLIST[$itemid]}" ]; then
       # Another sneaky slackbuild snarf ;-)
       # Lots of SlackBuilds use 'wget -c' to download the source.
-      # But the url(s) might contain $PRGNAM and $VERSION, or even $SRCNAM,
+      # But the url(s) might contain $PRGNAM and $VERSION, or $SRCNAM, or $COMMITVER,
       # and might be on continuation lines.
-      local PRGNAM SRCNAM
+      local PRGNAM SRCNAM COMMITVER
       eval "$(grep 'PRGNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
       eval "$(grep 'SRCNAM=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
+      eval "$(grep 'COMMITVER=' "$SR_SBREPO"/"$itemdir"/"$itemfile")"
       eval "INFODOWNLIST[$itemid]=\"$(sed ':x; /\\$/ { N; s/\\\n//; tx }' <"$SR_SBREPO"/"$itemdir"/"$itemfile" | grep 'wget  *-c  *' | sed 's/wget  *-c  *//')\""
       #### Ideally if this sneaky download failed we would run the whole SlackBuild anyway...
       HINT_MD5IGNORE[$itemid]='y'

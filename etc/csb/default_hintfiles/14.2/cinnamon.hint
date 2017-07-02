@@ -1,0 +1,2 @@
+ADDREQUIRES="accountsservice caribou cinnamon-control-center cinnamon-screensaver cinnamon-session cinnamon-settings-daemon cjs clutter-gtk gnome-common libgnomekbd lxml muffin nemo pexpect python-pam"
+PRAGMA="download_basename"

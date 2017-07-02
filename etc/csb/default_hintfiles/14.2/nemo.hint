@@ -1,0 +1,2 @@
+ADDREQUIRES="cinnamon-desktop gnome-common"
+PRAGMA="download_basename"

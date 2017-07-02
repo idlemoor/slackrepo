@@ -1,0 +1,2 @@
+ADDREQUIRES="accountsservice gnome-common"
+PRAGMA="download_basename"

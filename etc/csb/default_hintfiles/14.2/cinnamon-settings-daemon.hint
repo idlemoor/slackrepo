@@ -1,0 +1,2 @@
+ADDREQUIRES="cinnamon-desktop colord libgnomekbd"
+PRAGMA="download_basename"

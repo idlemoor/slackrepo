@@ -182,6 +182,7 @@ function build_item_packages
 
   SLACKBUILDOPTS="env"
   SLACKBUILDRUN="bash ./$itemfile"
+  [ "$OPT_VERY_VERBOSE" = 'y' ] && SLACKBUILDRUN="bash -x ./$itemfile"
 
   # Process options and hints for the build:
 

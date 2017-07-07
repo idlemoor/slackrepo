@@ -329,8 +329,15 @@ function build_item_packages
   # ... and finally, VERBOSE/--color
   [ "$OPT_VERBOSE" = 'y' ] && [ "$DOCOLOUR" = 'y' ] && SLACKBUILDRUN="${LIBEXECDIR}/unbuffer $SLACKBUILDRUN"
 
-  # Finished assembling the command line.
+  # Assemble the command line
   SLACKBUILDCMD="${SLACKBUILDOPTS} ${SLACKBUILDRUN}"
+
+  # Multilib fixup
+  if [ "$SYS_MULTILIB" = "y" ]; then
+    if [ "$ARCH" = 'i486' ] || [ "$ARCH" = 'i586' ] || [ "$ARCH" = 'i686' ]; then
+      SLACKBUILDCMD=". /etc/profile.d/32dev.sh; ${SLACKBUILDCMD}"
+    fi
+  fi
 
   # Setup the chroot
   # (to be destroyed below, or by build_failed if necessary)
@@ -391,31 +398,15 @@ function build_item_packages
   if [ "$OPT_VERBOSE" = 'y' ]; then
     log_verbose '\n---->8-------->8-------->8-------->8-------->8-------->8-------->8-------->8----\n' >&41
     set -o pipefail
-    if [ "$SYS_MULTILIB" = "y" ]; then
-      if [ "$ARCH" = 'i486' ] || [ "$ARCH" = 'i586' ] || [ "$ARCH" = 'i686' ]; then
-        ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${TMP_SLACKBUILD}\"; ${SLACKBUILDCMD}" 2>&1 | \
-          tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG") >&41
-        buildstat=$?
-      fi
-    else
-      ${CHROOTCMD}sh -c "cd \"${TMP_SLACKBUILD}\"; ${SLACKBUILDCMD}" 2>&1 | \
-        tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG") >&41
-      buildstat=$?
-    fi
+    ${CHROOTCMD}sh -c "cd \"${TMP_SLACKBUILD}\"; ${SLACKBUILDCMD}" 2>&1 | \
+      tee >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG") >&41
+    buildstat=$?
     set +o pipefail
     log_verbose '\n----8<--------8<--------8<--------8<--------8<--------8<--------8<--------8<----\n' >&41
   else
-    if [ "$SYS_MULTILIB" = "y" ]; then
-      if [ "$ARCH" = 'i486' ] || [ "$ARCH" = 'i586' ] || [ "$ARCH" = 'i686' ]; then
-        ${CHROOTCMD}sh -c ". /etc/profile.d/32dev.sh; cd \"${TMP_SLACKBUILD}\"; ${SLACKBUILDCMD}" \
-          &> >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG")
-        buildstat=$?
-      fi
-    else
-      ${CHROOTCMD}sh -c "cd \"${TMP_SLACKBUILD}\"; ${SLACKBUILDCMD}" \
-        &> >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG")
-      buildstat=$?
-    fi
+    ${CHROOTCMD}sh -c "cd \"${TMP_SLACKBUILD}\"; ${SLACKBUILDCMD}" \
+      &> >(sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\x1b[()].//' -e 's/\x0e//g' -e 's/\x0f//g' >>"$ITEMLOG")
+    buildstat=$?
   fi
 
   BUILDFINISHTIME="$(date '+%s')"

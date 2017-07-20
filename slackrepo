@@ -67,8 +67,13 @@ function exit_cleanup
 {
   stty sane   # in case we're killed waiting for the gpg passphrase
   [ "$1" = 1 ] && echo "Interrupted! Cleaning up ..."
+  if [ -n "$resmonpid" ]; then
+    ${SUDO}/bin/kill -9 "$resmonpid" 2>/dev/null || true
+    wait "$resmonpid" 2>/dev/null || true
+  fi
   if [ -n "$DBUS_SESSION_BUS_PID" ]; then
-    ${SUDO}kill -15 "$DBUS_SESSION_BUS_PID" || true
+    ${SUDO}/bin/kill -15 "$DBUS_SESSION_BUS_PID" 2>/dev/null || true
+    sleep 1
   fi
   # unmount any chroot mounts, in reverse order
   for rev in $(seq $(( ${#CHRMOUNTS[@]} - 1)) -1 0); do

@@ -216,12 +216,14 @@ function build_item_packages
       ;;
     'python3' )
       # If python3 support isn't included, add it
-      if ! grep -q python3 "$MYTMPIN/$itemfile" ; then
+      if ! grep -q python3 "$TMP_SLACKBUILD/$itemfile" ; then
         log_info -a "Pragma: python3"
-        SEARCH="python setup.py install --root=\\\$PKG"
+        SEARCH="python setup.py install --root[= ]\\\$PKG"
         ADD="if python3 -c 'import sys' 2>/dev/null; then\n  rm -rf build\n  python3 setup.py install --root=\\\$PKG\nfi"
-        sed -i -e "/$SEARCH/a$ADD" "$MYTMPIN/$itemfile"
+        sed -i -e "/$SEARCH/a$ADD" "$TMP_SLACKBUILD/$itemfile"
       fi
+      # Add 'PYTHON3=yes' to options, for the 'other' kind of python3 SlackBuild
+      SLACKBUILDOPTS="$SLACKBUILDOPTS PYTHON3=yes"
       ;;
     'stubs-32' )
       if [ "$SYS_ARCH" = 'x86_64' ] && [ ! -e /usr/include/gnu/stubs-32.h ]; then

@@ -342,7 +342,9 @@ function build_item_packages
 
   # Setup the chroot
   # (to be destroyed below, or by build_failed if necessary)
-  chroot_setup || return 1
+  if [ "$OPT_CHROOT" = 'y' ]; then
+    chroot_setup || return 1
+  fi
 
   # Get all dependencies installed
   install_deps "$itemid"
@@ -656,7 +658,8 @@ function chroot_setup
 # Also sets the global variables $CHROOTCMD and $MY_CHRDIR
 # Return status:
 # 0 = it worked
-# 1 = OPT_CHROOT is not set, or could not mount the overlay
+# 1 = OPT_CHROOT is not set
+# Exits completely (status=6) if the overlay failed to mount
 {
   CHROOTCMD=''
   [ "$OPT_CHROOT" != 'y' ] && return 1

@@ -1,1 +1,2 @@
+PRAGMA="nofakeroot"
 CLEANUP="rm -f /usr/lib*/libGL.* /usr/lib*/libEGL.so*; s_reinstall mesa xorg-server"

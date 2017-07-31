@@ -1,1 +1,1 @@
-ADDREQUIRES="libmp4v2 chromaprint ffmpeg"
+ADDREQUIRES="libmp4v2 ffmpeg"

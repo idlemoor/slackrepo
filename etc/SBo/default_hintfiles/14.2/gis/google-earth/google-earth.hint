@@ -1,2 +1,2 @@
 MD5SUM="no"
-PRAGMA="x86arch=i586"
+PRAGMA="x86arch=i586 download_basename"

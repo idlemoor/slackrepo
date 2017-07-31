@@ -1,0 +1,2 @@
+OPTIONS="MKCHROOT_IGNORE_LN_ERRORS=yes"
+PRAGMA="nofakeroot"

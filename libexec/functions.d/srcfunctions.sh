@@ -172,8 +172,7 @@ function download_src
         # Try SlackBuilds Direct Links
         tryurl="https://sourceforge.net/projects/slackbuildsdirectlinks/files/${ITEMPRGNAM[$itemid]}/${url##*/}"
         # use wget, seeing as it's always https from Sourceforge with its redirect mania
-        # wget failures sometimes leave an incomplete file behind, -r should ensure it is clobbered
-        wget -r $wgetboredom $wgetprogress --no-check-certificate --content-disposition -U "$useragent" "$url" 2>&41
+        wget $wgetboredom $wgetprogress --no-check-certificate --content-disposition -U "$useragent" "$tryurl" 2>&41
         trystat=$?
         if [ "$trystat" = 0 ]; then
           log_info -a "Downloaded from slackbuildsdirectlinks: ${url##*/}"

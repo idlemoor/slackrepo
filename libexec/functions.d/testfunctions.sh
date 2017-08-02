@@ -294,7 +294,8 @@ function test_package
       checkversion="${INFOVERSION[$itemid]}"
       [ "${HINT_KERNEL[$itemid]}" != 'n' ] && checkversion="${INFOVERSION[$itemid]}_${SYS_KERNEL}"
     fi
-    [ "$PN_VERSION" != "${checkversion}" ] && \
+    # also, we'll accept '_anything' (e.g. locale) as a suffix to checkversion
+    [ "$PN_VERSION" != "${checkversion}" ] && [ "${PN_VERSION##${checkversion}_*}" != "" ] && \
       { log_warning -a "${itemid}: Package VERSION is \"$PN_VERSION\" (expected \"${checkversion}\"). ${pkgbasename}"; retstat=1; }
 
     # check the arch

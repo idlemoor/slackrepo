@@ -445,11 +445,21 @@ done
 
 # Setup locking and logging:
 LOCKFILE="$(dirname "$SR_SBREPO")/.lock"
-mkdir -p "$(dirname "$LOCKFILE")" || \
-  { echo "$(basename "$0"): Failed to create repository root directory: $(dirname "$LOCKFILE")" >&2; exit_cleanup 4; }
-touch "$LOCKFILE"
-mkdir -p "$SR_LOGDIR" || \
-  { echo "$(basename "$0"): Failed to create log directory: $SR_LOGDIR" >&2; exit_cleanup 4; }
+if ! mkdir -p "$(dirname "$LOCKFILE")"; then
+  echo "$(basename "$0"): Failed to create repository root directory: $(dirname "$LOCKFILE")" >&2
+  [ "$EUID" != 0 ] && echo "You're not root, you need to set SBREPO to a writable directory." >&2
+  exit_cleanup 4
+fi
+if ! touch "$LOCKFILE"; then
+  echo "$(basename "$0"): Failed to create lock file: $LOCKFILE" >&2
+  [ "$EUID" != 0 ] && echo "You're not root, you need to set SBREPO to a writable directory." >&2
+  exit_cleanup 4
+fi
+if ! mkdir -p "$SR_LOGDIR"; then
+  echo "$(basename "$0"): Failed to create log directory: $SR_LOGDIR" >&2
+  [ "$EUID" != 0 ] && echo "You're not root, you need to set LOGDIR to a writable directory." >&2
+  exit_cleanup 4
+fi
 MAINLOG="$SR_LOGDIR"/$(basename "$0")_$(date '+%F_%T').log
 init_colour
 if [ "$DOCOLOUR" = 'y' ]; then

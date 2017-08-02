@@ -387,7 +387,7 @@ fi
 [ -z "$OPT_NICE" ] && OPT_NICE='0'
 
 # Set up the OPT_LINT_* suboptions
-validlints="sb,dl,x,net,pkg"
+validlints="sb,dl,x,net,pkg,inst"
 [ "$OPT_LINT" = 'y' ] && OPT_LINT="$validlints"
 for vopt in $(echo "$validlints" | sed 's/,/ /g'); do
   eval OPT_LINT_"${vopt^^}"='n'

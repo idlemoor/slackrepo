@@ -137,11 +137,19 @@ function install_packages
         KEEPINSTALLED[$pkgnam]="$pkgid"
       elif [ "$istat" = 2 ]; then
         # nothing similar currently installed
+        > "$MYTMP"/installpkglog
         set -o pipefail
-        ROOT=${MY_CHRDIR:-/} ${SUDO}installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG"
+        ROOT=${MY_CHRDIR:-/} ${SUDO}installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG" "$MYTMP"/installpkglog
         pstat=$?
         set +o pipefail
-        [ "$pstat" = 0 ] || { log_error -a "${itemid}: installpkg $pkgbase failed (status $pstat)"; return 1; }
+        if [ "$pstat" != 0 ]; then
+          log_error -a "${itemid}: installpkg $pkgbase failed (status $pstat)"
+          log_info -t "$(<"$MYTMP"/installpkglog)"
+          return 1
+        elif [ $(wc -l <"$MYTMP"/installpkglog) -gt 1 ]; then
+          log_warning -a "${itemid}: Possible error message from installpkg."
+          log_info -t "$(<"$MYTMP"/installpkglog)"
+        fi
         dotprofilizer "$pkgpath"
         [ "$OPT_INSTALL" = 'y' -o "${HINT_INSTALL[$itemid]}" = 'y' ] && KEEPINSTALLED[$pkgnam]="$pkgid"
       else

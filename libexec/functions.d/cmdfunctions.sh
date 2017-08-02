@@ -545,6 +545,7 @@ function lint_command
     pkgpathlist=( "${SR_PKGREPO}"/"$itemdir"/"$pkgnam"-*-*-*.t?z )
     for pkgpath in "${pkgpathlist[@]}"; do
       if [ -f "$pkgpath" ]; then
+        # Note, we can't test-install a package without its deps, so we use 'test_package -n'
         test_package -n "$itemid" "$pkgpath"
         pstat=$?
         [ $pstat -gt $tpkstat ] && tpkstat=$pstat

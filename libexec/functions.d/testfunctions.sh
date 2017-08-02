@@ -259,10 +259,13 @@ function test_package
 # 1 = the test found something
 # 2 = significant error
 {
-  [ "$OPT_LINT_PKG" != 'y' ] && return 0
+  [ "${OPT_LINT_PKG:-n}" != 'y' ] && return 0
 
   local tryinstall='y'
-  if [ "$1" = '-n' ]; then
+  if [ "${OPT_LINT_INST:-n}" != 'y' ]; then
+    tryinstall='n'
+  fi
+  if [ "$1" = '-n' ] ; then
     tryinstall='n'
     shift
   fi
@@ -417,6 +420,7 @@ function test_package
     # Install it to see what happens (but not if --dry-run)
     if [ "$OPT_DRY_RUN" != 'y' ] && [ "$tryinstall" != 'n' ]; then
       log_normal -a "Test installing $pkgbasename ..."
+      # if install_packages returns nonzero, we can assume the package doesn't need to be uninstalled
       install_packages "$pkgpath" || return 1
     fi
 

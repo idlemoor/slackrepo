@@ -290,10 +290,11 @@ function test_package
       # for the lint command, use the database (in case the package is out of date w.r.t. the .info file)
       checkversion=$(db_get_rev "$itemid" | cut -f2 -d" ")
     else
-      # otherwise, it should be the same as INFOVERSION
+      # otherwise, it should be the same as INFOVERSION (or INFOVERSION_KERNEL)
       checkversion="${INFOVERSION[$itemid]}"
+      [ "${HINT_KERNEL[$itemid]}" != 'n' ] && checkversion="${INFOVERSION[$itemid]}_${SYS_KERNEL}"
     fi
-    [ "$PN_VERSION" != "${checkversion}" ] && [ "$PN_VERSION" != "${checkversion}_$(uname -r | tr - _)" ] && \
+    [ "$PN_VERSION" != "${checkversion}" ] && \
       { log_warning -a "${itemid}: Package VERSION is \"$PN_VERSION\" (expected \"${checkversion}\"). ${pkgbasename}"; retstat=1; }
 
     # check the arch

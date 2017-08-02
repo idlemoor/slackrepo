@@ -32,7 +32,7 @@ function print_current_revinfo
 #   version              (arbitrary string)
 #   built                (secs since epoch)
 #   rev                  (gitrevision, or secs since epoch if not git)
-#   os                   (<osname><osversion>)
+#   os                   (<osname><osversion> or <osname><osversion>/<kernel>)
 #   hintcksum            (md5sum, or / if no hintfile)
 {
   local itemid="$1"
@@ -57,6 +57,7 @@ function print_current_revinfo
   fi
 
   osstuff="${SYS_OSNAME}${SYS_OSVER}"
+  [ "${HINT_KERNEL[$itemid]:-n}" != 'n' ] && osstuff="${SYS_OSNAME}${SYS_OSVER}/${SYS_KERNEL}"
 
   hintstuff='/'
   if [ -n "${HINTFILE[$itemdir]}" ] && [ -s "${HINTFILE[$itemdir]}" ]; then
@@ -394,17 +395,30 @@ function calculate_item_status
     fi
   fi
 
-  # Has the OS changed => rebuild
+  # Has the OS or kernel changed => rebuild
   curros="${SYS_OSNAME}${SYS_OSVER}"
-  if [ "$pkgos" != "$curros" ]; then
+  if [ "${pkgos%/*}" != "$curros" ]; then
     if [ "${STATUS[$itemid]}" = 'updated' ]; then
       STATUS[$itemid]="updated+rebuild"
-      STATUSINFO[$itemid]="updated + rebuild for upgraded ${SYS_OSNAME}"
+      STATUSINFO[$itemid]="updated + rebuild for ${curros}"
     else
       STATUS[$itemid]="rebuild"
-      STATUSINFO[$itemid]="rebuild for upgraded ${SYS_OSNAME}"
+      STATUSINFO[$itemid]="rebuild for ${curros}"
     fi
     return 0
+  fi
+  if [ "${HINT_KERNEL[$itemid]:-n}" != 'n' ]; then
+    pkgknl="${pkgos##*/}"
+    if [ "$pkgknl" != "$SYS_KERNEL" ]; then
+      if [ "${STATUS[$itemid]}" = 'updated' ]; then
+        STATUS[$itemid]="updated+rebuild"
+        STATUSINFO[$itemid]="updated + rebuild for kernel ${SYS_KERNEL}"
+      else
+        STATUS[$itemid]="rebuild"
+        STATUSINFO[$itemid]="rebuild for kernel ${SYS_KERNEL}"
+      fi
+      return 0
+    fi
   fi
 
   # Has the hintfile changed => rebuild

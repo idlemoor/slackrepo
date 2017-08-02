@@ -1,1 +1,1 @@
-PRAGMA="x86arch=i586"
+PRAGMA="kernelmodule x86arch=i586"

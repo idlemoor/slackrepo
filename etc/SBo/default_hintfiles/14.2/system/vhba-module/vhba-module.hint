@@ -1,2 +1,1 @@
-CLEANUP="depmod -a"
-PRAGMA="unset_ARCH"
+PRAGMA="kernelmodule unset_ARCH"

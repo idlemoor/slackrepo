@@ -196,9 +196,12 @@ function uninstall_packages
   local etcnewfiles etcdirs e
 
   if [ "$OPT_CHROOT" = 'y' ]; then
-    # don't bother uninstalling, the chroot has already been destroyed
-    # just cherry pick 'depmod' out of the cleanup hints
-    if [ -n "${HINT_CLEANUP[$itemid]}" ]; then
+    # Don't bother uninstalling, the chroot has already been destroyed,
+    # but we need to run 'depmod' if we have removed a kernel module.
+    if [ "${HINT_KERNEL[$itemid]}" = 'kernelmodule' ]; then
+      ${SUDO}depmod -a
+    elif [ -n "${HINT_CLEANUP[$itemid]}" ]; then
+      # For backwards compatibility, look for 'depmod' in the cleanup hints.
       IFS=';'
       for cleancmd in ${HINT_CLEANUP[$itemid]}; do
         if [ "${cleancmd:0:7}" = 'depmod ' ]; then
@@ -253,6 +256,10 @@ function uninstall_packages
             find /"$e" -type d -depth -exec rmdir --ignore-fail-on-non-empty {} \; 2>/dev/null
           fi
         done
+        # If it was a kernel module, we need to run depmod
+        if [ "${HINT_KERNEL[$pkgnam]}" != 'kernelmodule' ]; then
+          ${SUDO}depmod -a
+        fi
         # Do this last so it can mend things the package broke.
         # The cleanup hint can contain any required shell commands, for example:
         #   * Reinstalling Slackware packages that conflict with the item's packages
@@ -260,9 +267,9 @@ function uninstall_packages
         #   * Unsetting environment variables set in an /etc/profile.d script
         #     (e.g. unset LD_PRELOAD)
         #   * Removing specific files and directories that removepkg doesn't remove
-        #   * Running depmod to remove references to removed kernel modules
         #   * Running sed -i (e.g. to remove entries from /etc/shells, ld.so.conf)
         #   * Running ldconfig
+        #   * [obsolete] Running depmod to remove references to removed kernel modules
         # Be very careful with semicolons, IFS splitting is dumb.
         if [ -n "${HINT_CLEANUP[$itemid]}" ]; then
           IFS=';'

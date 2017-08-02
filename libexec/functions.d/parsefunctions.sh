@@ -292,7 +292,7 @@ declare -A \
   HINT_MD5IGNORE HINT_SHA256IGNORE HINT_NUMJOBS HINT_INSTALL HINT_PRAGMA \
   HINT_ARCH HINT_CLEANUP HINT_USERADD HINT_GROUPADD HINT_ANSWER HINT_NODOWNLOAD \
   HINT_CONFLICTS \
-  HINT_OPTIONS HINT_VERSION HINTFILE
+  HINT_OPTIONS HINT_VERSION HINT_KERNEL HINTFILE
 # and for validation in test_*
 declare -A VALID_USERS VALID_GROUPS
 
@@ -611,6 +611,16 @@ function parse_info_and_hints
     # Append ADDREQUIRES
     INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]} ${ADDREQUIRES})"
   fi
+
+  # Set HINT_KERNEL -- there are two PRAGMAs for user interface reasons, but because
+  # they are not actioned at build-time, they are more useful in the code as HINT_KERNEL
+  HINT_KERNEL[$itemid]='n'
+  for pragma in ${HINT_PRAGMA[$itemid]}; do
+    case "$pragma" in
+      'kernel')        HINT_KERNEL[$itemid]='kernel' ;;
+      'kernelmodule' ) HINT_KERNEL[$itemid]='kernelmodule' ;;
+    esac
+  done
 
   # Fix INFOVERSION from hint file's VERSION, or DOWNLOAD, or git, or SlackBuild's modification time
   ver="${INFOVERSION[$itemid]}"

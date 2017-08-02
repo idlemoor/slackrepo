@@ -1,1 +1,1 @@
-PRAGMA="nofakeroot unset_DISTCC_HOSTS unset_ARCH"
+PRAGMA="kernel nofakeroot unset_DISTCC_HOSTS unset_ARCH"

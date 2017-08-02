@@ -299,6 +299,8 @@ function build_item_packages
       log_info -a "Pragma: need_X"
       hintneedX='y'
       ;;
+    'kernel'* )
+      ;;
     * )
       log_warning -a "${itemid}: Hint PRAGMA=\"$pragma\" not recognised"
       ;;

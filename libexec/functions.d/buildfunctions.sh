@@ -178,6 +178,30 @@ function build_item_packages
     PKGTYPE="$SR_PKGTYPE" \
     NUMJOBS="$SR_NUMJOBS"
 
+  # Reproducible building (* experimental *)
+  if [ "${OPT_REPROD:-n}" != 'n' ]; then
+    # Use our modified makepkg
+    sed -i -e "s#/sbin/makepkg #makepkg #" "$TMP_SLACKBUILD/$itemfile"
+    # Use the newest revision time of the package and its first-level deps.
+    #### But what if a Slackware dep has been patched? ####
+    if [ "$GOTGIT" = 'y' ]; then
+      latest="$(git log -n 1 --pretty=format:%ct "${GITREV[$itemid]}")"
+      for parentid in ${DIRECTDEPS[$itemid]}; do
+        parentstamp="$(git log -n 1 --pretty=format:%ct "${GITREV[$parentid]}")"
+        [ "$parentstamp" -gt "$latest" ] && latest="$parentstamp"
+      done
+    else
+      latest="$(cd "$SR_SBREPO"/"$itemdir"; ls -t | head -n 1 | xargs stat --format='%Y')"
+      for parentid in ${DIRECTDEPS[$itemid]}; do
+        parentstamp="$(cd "$SR_SBREPO"/${ITEMDIR[$parentid]}; ls -t | head -n 1 | xargs stat --format='%Y')"
+        [ "$parentstamp" -gt "$latest" ] && latest="$parentstamp"
+      done
+    fi
+    export SOURCE_DATE_EPOCH="$latest"
+  else
+    unset SOURCE_DATE_EPOCH
+  fi
+
   SLACKBUILDOPTS="env"
   SLACKBUILDRUN="bash ./$itemfile"
   [ "$OPT_VERY_VERBOSE" = 'y' ] && SLACKBUILDRUN="bash -x ./$itemfile"

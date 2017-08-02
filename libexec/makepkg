@@ -323,7 +323,7 @@ case $EXTENSION in
 'tgz' | 'tar.gz' )
   find . -print0 | LC_COLLATE=C sort -z | sed -z '2,$s,^\./,,' | \
     $TAR cvf - --no-recursion --null -T - $CHOWNARGS | \
-    gzip -9c > ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}
+    gzip -9cn > ${TARGET_NAME}/${TAR_NAME}.${EXTENSION}
   ERRCODE=$?
   if [ ! $? = 0 ]; then
     echo "ERROR:  gzip returned error code $? -- makepkg failed."

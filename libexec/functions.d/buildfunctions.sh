@@ -44,10 +44,8 @@ function build_item_packages
   rm -rf "$TMP_SLACKBUILD"
   cp -a "$SR_SBREPO/$itemdir" "$TMP_SLACKBUILD"
 
-  if [ "$OPT_LINT" = 'y' ]; then
-    test_slackbuild "$itemid"
-    [ $? -gt 1 ] && return 7
-  fi
+  test_slackbuild "$itemid"
+  [ $? -gt 1 ] && return 7
 
   # Apply version hint
   NEWVERSION="${HINT_VERSION[$itemid]}"
@@ -84,7 +82,7 @@ function build_item_packages
   verify_src "$itemid" "log_important"
   case $? in
     0) # already got source, and it's good
-       [ "$OPT_LINT" = 'y' ] && [ -z "${HINT_NODOWNLOAD[$itemid]}" ] && test_download "$itemid"
+       [ -z "${HINT_NODOWNLOAD[$itemid]}" ] && test_download "$itemid"
        ;;
     1|2|3|4)
        # already got source but it's bad, or not got source, or wrong version => get it
@@ -308,14 +306,14 @@ function build_item_packages
   done
 
   # Block X by unexporting DISPLAY
-  if [ "$OPT_LINT" = 'y' ] && [ "$hintneedX" != 'y' ]; then
+  if [ "$OPT_LINT_X" = 'y' ] && [ "$hintneedX" != 'y' ]; then
     export -n DISPLAY
   else
     export DISPLAY
   fi
   # Blocking the net will only take effect in a chroot (see chroot_setup)
   BLOCKNET='n'
-  [ "$OPT_LINT" = 'y' ] && [ "$hintneednet" != 'y' ] && BLOCKNET='y'
+  [ "$OPT_LINT_NET" = 'y' ] && [ "$hintneednet" != 'y' ] && BLOCKNET='y'
 
   # ... fakeroot ...
   if [ -n "$SUDO" ] && [ -x /usr/bin/fakeroot ]; then
@@ -494,10 +492,8 @@ function build_item_packages
 
   [ "$OPT_CHROOT" = 'y' ] && chroot_report
 
-  if [ "$OPT_LINT" = 'y' ]; then
-    test_package "$itemid" "${pkglist[@]}"
-    [ $? -gt 1 ] && { build_failed "$itemid"; return 7; }
-  fi
+  test_package "$itemid" "${pkglist[@]}"
+  [ $? -gt 1 ] && { build_failed "$itemid"; return 7; }
 
   [ "$OPT_CHROOT" = 'y' ] && chroot_destroy
   rm -f "$MY_STARTSTAMP" 2>/dev/null

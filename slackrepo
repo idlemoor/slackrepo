@@ -47,7 +47,7 @@ function print_usage
   echo '  --verbose (-v)'
   echo '  --debug (-d)'
   echo '  --dry-run | --install'
-  echo '  --lint'
+  echo '  --lint[=type,...]'
   echo '  --keep-tmp'
   return 0
 }
@@ -187,10 +187,10 @@ while [ $# != 0 ]; do
       found='n'
       for opt in "${OPTIONLIST[@]}"; do
         arg=$(echo "$opt" | tr '_' '-' | tr '[:upper:]' '[:lower:]')
-        if [ "$1" = "--${arg}" ] || [ "$1" = "--${arg}=yes" ] || [ "$1" = "--${arg}=y" ]; then
+        if [ "$1" = "--${arg}" ] || [ "$1" = "--${arg}=yes" ] || [ "$1" = "--${arg}=y" ] || [ "$1" = "--${arg}=all" ]; then
           eval OPT_"${opt}"='y'
           found='y'; break
-        elif [ "$1" = "--no-${arg}" ] || [ "$1" = "--${arg}=no" ] || [ "$1" = "--${arg}=n" ]; then
+        elif [ "$1" = "--no-${arg}" ] || [ "$1" = "--${arg}=no" ] || [ "$1" = "--${arg}=n" ] || [ "$1" = "--${arg}=none" ]; then
           eval OPT_"${opt}"='n'
           found='y'; break
         elif [ "${1/=*/=}" = "--${arg}=" ]; then
@@ -364,9 +364,9 @@ for name in "${OPTIONLIST[@]}" ; do
   [ -z "${!optvar}" ] && eval "$optvar=\"${!name}\""
   eval unset "$name"
   # simplify anything that looks like a Boolean:
-  if   [ "${!optvar}" = '1' ] || [ "${!optvar}" = 'yes' ] || [ "${!optvar}" = 'y' ] || [ "${!optvar}" = 'YES' ] || [ "${!optvar}" = 'Y' ]; then
+  if   [ "${!optvar}" = '1' ] || [ "${!optvar}" = 'yes' ] || [ "${!optvar}" = 'y' ] || [ "${!optvar}" = 'YES' ] || [ "${!optvar}" = 'Y' ] || [ "${!optvar}" = 'all' ]; then
     eval "$optvar"='y'
-  elif [ "${!optvar}" = '0' ] || [ "${!optvar}" = 'no'  ] || [ "${!optvar}" = 'n' ] || [ "${!optvar}" = 'NO'  ] || [ "${!optvar}" = 'N' ] || [ "${!optvar}" = '' ]; then
+  elif [ "${!optvar}" = '0' ] || [ "${!optvar}" = 'no'  ] || [ "${!optvar}" = 'n' ] || [ "${!optvar}" = 'NO'  ] || [ "${!optvar}" = 'N' ] || [ "${!optvar}" = 'none' ] || [ "${!optvar}" = '' ]; then
     eval "$optvar"='n'
   fi
 done
@@ -384,6 +384,29 @@ if [ "$OPT_CHROOT" = 'y' ] && [ "$SYS_OVERLAYFS" != 'y' ]; then
 fi
 # accept null niceness, map to zero
 [ -z "$OPT_NICE" ] && OPT_NICE='0'
+
+# Set up the OPT_LINT_* suboptions
+validlints="sb,dl,x,net,pkg"
+[ "$OPT_LINT" = 'y' ] && OPT_LINT="$validlints"
+for vopt in $(echo "$validlints" | sed 's/,/ /g'); do
+  eval OPT_LINT_"${vopt^^}"='n'
+done
+if [ "$OPT_LINT" != 'n' ]; then
+  foundopts=''
+  for uopt in $(echo "$OPT_LINT" | sed 's/,/ /g'); do
+    found='n'
+    for vopt in $(echo "$validlints" | sed 's/,/ /g'); do
+      if [ "$uopt" = "$vopt" ]; then
+        found='y'
+        foundopts="${foundopts}${vopt},"
+        eval OPT_LINT_"${vopt^^}"='y'
+        break
+      fi
+    done
+    [ "$found" = 'n' ] && echo "$(basename "$0"): lint option not valid: $uopt" >&2
+  done
+  OPT_LINT="${foundopts%%,}"
+fi
 
 # If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly
 if [ -z "$SR_NUMJOBS" ]; then
@@ -409,7 +432,10 @@ for name in $varnames $genrepnames $initnames; do
   eval "$srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_OSVER/g" -e "s/%ARCH%/$SR_ARCH/g")\""
 done
 
-# Do this before initialising the repo:
+#-------------------------------------------------------------------------------
+
+# Run the 'info' command right now.
+# It's completely passive, we don't want to initialise the repo.
 [ "${CMD}" = 'info' ] && { info_command; exit_cleanup 0; }
 
 #-------------------------------------------------------------------------------

@@ -7,15 +7,23 @@
 #   test_download
 #   test_package
 #-------------------------------------------------------------------------------
+#
+# Life is too short to do lots of option checking wherever these functions are
+# called, so each function should do its own check for OPT_LINT_xxxx and
+# return 0 if it isn't enabled.
+#
+#-------------------------------------------------------------------------------
 
 function test_slackbuild
 # Test prgnam.SlackBuild, slack-desc, prgnam.info and README files
 # $1 = itemid
 # Return status:
-# 0 = all good
+# 0 = all good, or lint option not enabled
 # 1 = the test found something
 # 2 = significant error
 {
+  [ "$OPT_LINT_SB" != 'y' ] && return 0
+
   local itemid="$1"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
@@ -117,10 +125,12 @@ function test_download
 # Test whether download URLs are 404, by trying to pull the header
 # $1 = itemid
 # Return status:
-# 0 = all good
+# 0 = all good, or lint option not enabled
 # 1 = not found, found but modified, or otherwise failed
 # 2 = significant error
 {
+  [ "$OPT_LINT_DL" != 'y' ] && return 0
+
   local itemid="$1"
   local -a downlist
   local MY_HEADER url curlstat
@@ -245,10 +255,12 @@ function test_package
 # $1    = itemid
 # $2... = paths of packages to be checked
 # Return status:
-# 0 = all good
+# 0 = all good, or lint option not enabled
 # 1 = the test found something
 # 2 = significant error
 {
+  [ "$OPT_LINT_PKG" != 'y' ] && return 0
+
   local tryinstall='y'
   if [ "$1" = '-n' ]; then
     tryinstall='n'

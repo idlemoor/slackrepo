@@ -612,7 +612,7 @@ function info_command
   fi
   [      "$OPT_DRY_RUN" = 'y' ] && echo "  --dry-run"
   [      "$OPT_INSTALL" = 'y' ] && echo "  --install"
-  [         "$OPT_LINT" = 'y' ] && echo "  --lint"
+  [        "$OPT_LINT" != 'n' ] && echo "  --lint=$OPT_LINT"
   [     "$OPT_KEEP_TMP" = 'y' ] && echo "  --keep-tmp"
   [       "$OPT_CHROOT" = 'y' ] && echo "  --chroot"
   [    "$OPT_COLOR" != 'auto' ] && echo "  --color=$OPT_COLOR"

@@ -148,7 +148,7 @@ function install_packages
           return 1
         else
           logtext=$(cat "$MYTMP"/installpkglog | \
-            grep -v "^${pkgbase#.t?z}: .*]$" | \
+            grep -v "^${pkgbase%.t?z}: .*] *$" | \
             grep -v -F 'Reloading system message bus configuration...')
           if [ -n "$logtext" ]; then
             log_warning -a "${itemid}: Possible error message from installpkg."

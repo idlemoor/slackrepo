@@ -355,25 +355,79 @@ function test_package
     MY_PKGCONTENTS="$MYTMP"/pkgcontents_"$pkgbasename"
     tar tvf "$pkgpath" > "$MY_PKGCONTENTS" || { log_error -a "${itemid}: Not a tar archive. ${pkgbasename}"; return 2; }
 
-    # check where the files will be installed
+    # check directories
     wrongstuff=$(awk \
-      '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|usr\/|var\/|install\/|\.\/$)/ {printf "%s\n",$0}' <"$MY_PKGCONTENTS")
+      '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|tmp\/|usr\/|var\/|install\/|\.\/$)/ {printf "%s\n",$0}' <"$MY_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
-      log_warning -a "${itemid}: Unexpected directory. ${pkgbasename}"
+      log_warning -a "${itemid}: Nonstandard directories. ${pkgbasename}"
       log_info -t -a "$wrongstuff"
       retstat=1
     fi
-    baddirlist=( 'usr/local/' 'usr/share/man/' )
-    [ "$PN_ARCH"  = 'x86_64' ] && baddirlist+=( 'usr/lib/' ) # but not /lib (e.g. modules)
-    [ "$PN_ARCH" != 'x86_64' ] && baddirlist+=( 'lib64/' 'usr/lib64/' )
-    for baddir in "${baddirlist[@]}"; do
+    for baddir in 'tmp/' 'usr/local/' 'usr/share/man/'; do
       wrongstuff=$(awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
       if [ -n "$wrongstuff" ]; then
-        log_warning -a "${itemid}: Inappropriate directory. $pkgbasename"
+        log_warning -a "${itemid}: Bad directory $baddir. ${pkgbasename}"
         log_info -t -a "$wrongstuff"
         retstat=1
       fi
     done
+
+    # check for arch-inappropriate files and locations
+    case "$PN_ARCH" in
+      i?86)
+          for baddir in 'lib64/' 'usr/lib64/' ; do
+            wrongstuff=$(awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
+            if [ -n "$wrongstuff" ]; then
+              log_warning -a "${itemid}: Bad directory $baddir for arch $PN_ARCH. ${pkgbasename}"
+              log_info -t -a "$wrongstuff"
+              retstat=1
+            fi
+          done
+          ;;
+      x86_64)
+          libstuff=$(awk '$6~/^'"$(echo usr/lib/ | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
+          if [ -n "$libstuff" ]; then
+            # if we're testing a package we just built, destdir might still exist
+            if [ -d "$BIGTMP/build_$itemprgnam/package-$itemprgnam" ]; then
+              pkgtree="$BIGTMP/build_$itemprgnam/package-$itemprgnam"
+            else
+              # we're going to have to extract it :(
+              pkgtree="$BIGTMP"/pkgtree
+              mkdir -p "$pkgtree"
+              tar xf "$pkgpath" -C "$pkgtree" usr/lib/
+            fi
+            # yes, 'x86-64' has a '-' not a '_'
+            wrongstuff=$(cd "$pkgtree"; find usr/lib -print0 | xargs -0 file 2>/dev/null | \
+              grep -e "executable" -e "shared object" | grep 'ELF' | grep 'x86-64' | cut -f1 -d:)
+            if [ -n "$wrongstuff" ]; then
+              log_warning -a "${itemid}: x86-64 files in /usr/lib. ${pkgbasename}"
+              log_info -t -a "$wrongstuff"
+              retstat=1
+            fi
+          fi
+          ;;
+      noarch | fw)
+          if [ -d "$BIGTMP/build_$itemprgnam/package-$itemprgnam" ]; then
+            pkgtree="$BIGTMP/build_$itemprgnam/package-$itemprgnam"
+          else
+            pkgtree="$BIGTMP"/pkgtree
+            mkdir -p "$pkgtree"
+            tar xf "$pkgpath" -C "$pkgtree"
+          fi
+          wrongstuff=$(cd "$pkgtree"; find * -print0 | xargs -0 file 2>/dev/null | \
+            grep -e "executable" -e "shared object" | grep 'ELF' | cut -f1 -d:)
+          if [ -n "$wrongstuff" ]; then
+            log_warning -a "${itemid}: executables and/or libraries in noarch package. ${pkgbasename}"
+            log_info -t -a "$wrongstuff"
+            retstat=1
+          fi
+          ;;
+      x86) :
+          ;;
+      *)   :
+          ;;
+    esac
+    rm -rf "$BIGTMP"/pkgtree
 
     # check if it contains a slack-desc
     if ! grep -q ' install/slack-desc$' "$MY_PKGCONTENTS"; then

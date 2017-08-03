@@ -146,9 +146,14 @@ function install_packages
           log_error -a "${itemid}: installpkg $pkgbase failed (status $pstat)"
           log_info -t "$(<"$MYTMP"/installpkglog)"
           return 1
-        elif [ $(wc -l <"$MYTMP"/installpkglog) -gt 1 ]; then
-          log_warning -a "${itemid}: Possible error message from installpkg."
-          log_info -t "$(<"$MYTMP"/installpkglog)"
+        else
+          logtext=$(cat "$MYTMP"/installpkglog | \
+            grep -v "^${pkgbase#.t?z}: .*]$" | \
+            grep -v -F 'Reloading system message bus configuration...')
+          if [ -n "$logtext" ]; then
+            log_warning -a "${itemid}: Possible error message from installpkg."
+            log_info -t "$logtext"
+          fi
         fi
         dotprofilizer "$pkgpath"
         [ "$OPT_INSTALL" = 'y' -o "${HINT_INSTALL[$itemid]}" = 'y' ] && KEEPINSTALLED[$pkgnam]="$pkgid"

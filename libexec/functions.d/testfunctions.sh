@@ -81,6 +81,9 @@ function test_slackbuild
       { log_warning -a "${itemid}: PRGNAM in $itemprgnam.info is '$PRGNAM' (expected $itemprgnam)"; retstat=1; }
     [ -n "$VERSION" ] || \
       { log_warning -a "${itemid}: VERSION not set in $itemprgnam.info"; retstat=1; }
+    case "$VERSION" in
+      *-*) log_warning -a "${itemid}: VERSION \"$VERSION\" in $itemprgnam.info contains '-'"; retstat=1 ;;
+    esac
     [ -v HOMEPAGE ] || \
       { log_warning -a "${itemid}: HOMEPAGE not set in $itemprgnam.info"; retstat=1; }
       # Don't bother testing the homepage URL - parked domains give false negatives
@@ -295,7 +298,7 @@ function test_package
     else
       # otherwise, it should be the same as INFOVERSION (or INFOVERSION_KERNEL)
       checkversion="${INFOVERSION[$itemid]}"
-      [ "${HINT_KERNEL[$itemid]}" != 'n' ] && checkversion="${INFOVERSION[$itemid]}_${SYS_KERNEL}"
+      [ "${HINT_KERNEL[$itemid]}" != 'n' ] && checkversion="${INFOVERSION[$itemid]}_$(echo ${SYS_KERNEL} | tr - _)"
     fi
     # also, we'll accept '_anything' (e.g. locale) as a suffix to checkversion
     [ "$PN_VERSION" != "${checkversion}" ] && [ "${PN_VERSION##${checkversion}_*}" != "" ] && \

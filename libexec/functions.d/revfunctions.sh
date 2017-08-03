@@ -516,6 +516,7 @@ function write_pkg_metadata
     dotdep="${nosuffix}.dep"
     dottxt="${nosuffix}.txt"
     dotmeta="${nosuffix}.meta"
+    dotbuildinfo="${nosuffix}.buildinfo"
     # but the .md5, .sha256 and .asc filenames include the suffix:
     dotmd5="${pkgpath}.md5"
     dotsha256="${pkgpath}.sha256"
@@ -658,6 +659,32 @@ EOF
     # .asc                        #
     #-----------------------------#
     # gen_repos_files.sh will do it later :-)
+
+    #-----------------------------#
+    # .buildinfo                  #
+    #-----------------------------#
+
+    if [ "$OPT_REPROD" = 'y' ]; then
+      # The buildinfo should not change while slackrepo is running,
+      # so we will create a temp file once and reuse it.
+      # (It's 'hidden' so it won't get cleaned up at the end of each build.)
+      buildinfotmp="$MYTMP"/.buildinfo.txt
+      if [ ! -f "$buildinfotmp" ]; then
+        osname="${SYS_OSNAME^}"
+        osver="${SYS_OSVER}"
+        [ "${SYS_CURRENT}" = 'y' ] && osver="current"
+        echo "$osname $osver $SYS_KERNEL"              > "$buildinfotmp"
+        if [ -f /var/lib/slackpkg/ChangeLog.txt ]; then
+          head -1 /var/lib/slackpkg/ChangeLog.txt     >> "$buildinfotmp"
+        else
+          echo "Thu  1 Jan 00:00:00 UTC 1970"         >> "$buildinfotmp"
+        fi
+        # record gcc target and version (e.g. might be using testing/)
+        gcc -v |& grep '^Target:' | cut -f2 -d' '     >> "$buildinfotmp"
+        gcc -v |& grep '^gcc version'                 >> "$buildinfotmp"
+      fi
+      cp "$buildinfotmp" "$dotbuildinfo"
+    fi
 
     # Finally, we can get rid of this:
     rm -f "$MY_PKGCONTENTS"

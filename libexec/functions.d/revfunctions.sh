@@ -664,7 +664,7 @@ EOF
     # .buildinfo                  #
     #-----------------------------#
 
-    if [ "$OPT_REPROD" = 'y' ]; then
+    if [ "$OPT_REPROD" = 'y' ] && [ -n "$SOURCE_DATE_EPOCH" ]; then
       # The buildinfo should not change while slackrepo is running,
       # so we will create a temp file once and reuse it.
       # (It's 'hidden' so it won't get cleaned up at the end of each build.)
@@ -675,6 +675,10 @@ EOF
         [ "${SYS_CURRENT}" = 'y' ] && osver="current"
         echo "$osname $osver $SYS_KERNEL"              > "$buildinfotmp"
         if [ -f /var/lib/slackpkg/ChangeLog.txt ]; then
+          # We won't check that the latest changes have actually been
+          # applied.  However, it would be unusual for changes in -stable
+          # to affect builds [citation needed], and anyone attempting
+          # reproducibility on -current would be best advised to desist.
           head -1 /var/lib/slackpkg/ChangeLog.txt     >> "$buildinfotmp"
         else
           echo "Thu  1 Jan 00:00:00 UTC 1970"         >> "$buildinfotmp"
@@ -685,6 +689,10 @@ EOF
       fi
       cp "$buildinfotmp" "$dotbuildinfo"
     fi
+
+    #-----------------------------#
+    # Done!                       #
+    #-----------------------------#
 
     # Finally, we can get rid of this:
     rm -f "$MY_PKGCONTENTS"

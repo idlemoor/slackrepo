@@ -312,6 +312,7 @@ fi
 # everything older than this time is unchanged, but everything newer is assumed
 # to be a build artifact and is therefore set back to the specified time.
 if [ -n "${SOURCE_DATE_EPOCH}" ]; then
+  echo "Clamping mtime to $(date --date=@${SOURCE_DATE_EPOCH})."
   find . -newermt "@${SOURCE_DATE_EPOCH}" -print0 | \
     xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
 fi

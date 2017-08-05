@@ -179,25 +179,28 @@ function build_item_packages
     NUMJOBS="$SR_NUMJOBS"
 
   # Reproducible building (* experimental *)
+  # Don't do it if this isn't a git repo or if git is dirty.
+  canreprod='n'
   if [ "${OPT_REPROD:-n}" != 'n' ]; then
-    # Use our modified makepkg
-    sed -i -e "s#/sbin/makepkg #makepkg #" "$TMP_SLACKBUILD/$itemfile"
-    # Use the newest revision time of the package and its first-level deps.
-    #### But what if a Slackware dep has been patched? ####
-    if [ "$GOTGIT" = 'y' ]; then
+    if [ "$GOTGIT" = 'y' ] && [ "${GITDIRTY[$itemid]}" != 'y' ]; then
+      canreprod='y'
+      # Use the newest revision time of the package and its first-level deps.
       latest="$(git log -n 1 --pretty=format:%ct "${GITREV[$itemid]}")"
       for parentid in ${DIRECTDEPS[$itemid]}; do
-        parentstamp="$(git log -n 1 --pretty=format:%ct "${GITREV[$parentid]}")"
-        [ "$parentstamp" -gt "$latest" ] && latest="$parentstamp"
-      done
-    else
-      latest="$(cd "$SR_SBREPO"/"$itemdir"; ls -t | head -n 1 | xargs stat --format='%Y')"
-      for parentid in ${DIRECTDEPS[$itemid]}; do
-        parentstamp="$(cd "$SR_SBREPO"/${ITEMDIR[$parentid]}; ls -t | head -n 1 | xargs stat --format='%Y')"
-        [ "$parentstamp" -gt "$latest" ] && latest="$parentstamp"
+        if [ "${GITDIRTY[$parentid]}" != 'y' ]; then
+          parentstamp="$(git log -n 1 --pretty=format:%ct "${GITREV[$parentid]}")"
+          [ "$parentstamp" -gt "$latest" ] && latest="$parentstamp"
+        else
+          canreprod='n'
+          break
+        fi
       done
     fi
+  fi
+  if [ "$canreprod" = 'y' ]; then
     export SOURCE_DATE_EPOCH="$latest"
+    # Use our modified makepkg
+    sed -i -e "s#/sbin/makepkg #makepkg #" "$TMP_SLACKBUILD/$itemfile"
   else
     unset SOURCE_DATE_EPOCH
   fi

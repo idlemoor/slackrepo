@@ -151,7 +151,7 @@ function install_packages
             grep -v "^${pkgbase%.t?z}: .*] *$" | \
             grep -v -F 'Reloading system message bus configuration...')
           if [ -n "$logtext" ]; then
-            log_warning -a "${itemid}: Possible error message from installpkg."
+            log_warning -a "${itemid}: Possible error message from doinst.sh or installpkg"
             log_info -t "$logtext"
           fi
         fi

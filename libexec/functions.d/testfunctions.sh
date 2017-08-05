@@ -329,8 +329,15 @@ function test_package
     [ "$okarch" != 'y' ] && { log_warning -a "${itemid}: Package ARCH is $PN_ARCH (expected $SR_ARCH). ${pkgbasename}"; retstat=1; }
 
     # check the build
-    [ -n "$SR_BUILD" ] && [ "$PN_BUILD" != "$SR_BUILD" ] && \
-      { log_warning -a "${itemid}: Package BUILD is $PN_BUILD (expected $SR_BUILD). ${pkgbasename}"; retstat=1; }
+    if [ -n "$SR_BUILD" ] && [ "$PN_BUILD" != "$SR_BUILD" ]; then
+      ignorebuild='n'
+      for pragma in ${HINT_PRAGMA[$itemid]}; do
+        case "$pragma" in
+          *_BUILD ) ignorebuild='y'; break ;;
+        esac
+      done
+      [ "$ignorebuild" != 'y' ] && { log_warning -a "${itemid}: Package BUILD is $PN_BUILD (expected $SR_BUILD). ${pkgbasename}"; retstat=1; }
+    fi
 
     # check the tag
     [ "$PN_TAG" != "$SR_TAG" ] && \

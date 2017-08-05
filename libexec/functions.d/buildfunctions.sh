@@ -681,7 +681,7 @@ function build_cleanup
 #-------------------------------------------------------------------------------
 
 function chroot_setup
-# Setup a temporary chroot environment at $MYTMP/chrdir using overlayfs
+# Setup a temporary chroot environment at $MYTMP/chrootdir using overlayfs
 # Also sets the global variables $CHROOTCMD and $MY_CHRDIR
 # Return status:
 # 0 = it worked
@@ -691,7 +691,7 @@ function chroot_setup
   CHROOTCMD=''
   [ "$OPT_CHROOT" != 'y' ] && return 1
 
-  MY_CHRDIR="$MYTMP"/chrdir/  # note the trailing slash
+  MY_CHRDIR="$MYTMP"/chrootdir/  # note the trailing slash
   ${SUDO}mkdir -p "$MY_CHRDIR"
   CHROOTCMD="chroot ${MY_CHRDIR} "  # note the trailing space
   [ -n "$SUDO" ] && CHROOTCMD="${SUDO} chroot --userspec=${USER} ${MY_CHRDIR} "

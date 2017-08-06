@@ -66,7 +66,6 @@ function exit_cleanup
 # 6 internal error
 {
   stty sane   # in case we're killed waiting for the gpg passphrase
-  [ "$1" = 1 ] && echo "Interrupted! Cleaning up ..."
   if [ -n "$resmonpid" ]; then
     ${SUDO}/bin/kill -9 "$resmonpid" 2>/dev/null || true
     wait "$resmonpid" 2>/dev/null || true

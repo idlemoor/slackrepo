@@ -1,0 +1,1 @@
+ADDREQUIRES="libgtop libunique caja libmatekbd mate-desktop mate-icon-theme mate-menus mate-settings-daemon marco yelp-tools"

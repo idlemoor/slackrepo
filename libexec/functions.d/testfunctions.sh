@@ -6,6 +6,7 @@
 #   test_slackbuild
 #   test_download
 #   test_package
+#   get_pkgtree
 #-------------------------------------------------------------------------------
 #
 # Life is too short to do lots of option checking wherever these functions are
@@ -276,8 +277,7 @@ function test_package
   local itemid="$1"
   shift
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
-  local -a baddirlist
-  local pkgpath pkgbasename filetype baddirlist baddir
+  local pkgpath pkgbasename filetype dir
   local retstat=0
 
   while [ $# != 0 ]; do
@@ -370,10 +370,10 @@ function test_package
       log_info -t -a "$wrongstuff"
       retstat=1
     fi
-    for baddir in 'tmp/' 'usr/local/' 'usr/share/man/'; do
-      wrongstuff=$(awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
+    for dir in 'tmp/' 'usr/local/' 'usr/share/man/'; do
+      wrongstuff=$(awk '$6~/^'"$(echo "$dir" | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
       if [ -n "$wrongstuff" ]; then
-        log_warning -a "${itemid}: Bad directory $baddir. ${pkgbasename}"
+        log_warning -a "${itemid}: Bad directory $dir. ${pkgbasename}"
         log_info -t -a "$wrongstuff"
         retstat=1
       fi
@@ -382,10 +382,10 @@ function test_package
     # check for arch-inappropriate files and locations
     case "$PN_ARCH" in
       i?86)
-          for baddir in 'lib64/' 'usr/lib64/' ; do
-            wrongstuff=$(awk '$6~/^'"$(echo $baddir | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
+          for dir in 'lib64/' 'usr/lib64/' ; do
+            wrongstuff=$(awk '$6~/^'"$(echo "$dir" | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
             if [ -n "$wrongstuff" ]; then
-              log_warning -a "${itemid}: Bad directory $baddir for arch $PN_ARCH. ${pkgbasename}"
+              log_warning -a "${itemid}: Bad directory $dir for arch $PN_ARCH. ${pkgbasename}"
               log_info -t -a "$wrongstuff"
               retstat=1
             fi
@@ -394,17 +394,9 @@ function test_package
       x86_64)
           libstuff=$(awk '$6~/^'"$(echo usr/lib/ | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
           if [ -n "$libstuff" ]; then
-            # if we're testing a package we just built, destdir might still exist
-            if [ -d "$BIGTMP/build_$itemprgnam/package-$itemprgnam" ]; then
-              pkgtree="$BIGTMP/build_$itemprgnam/package-$itemprgnam"
-            else
-              # we're going to have to extract it :(
-              pkgtree="$BIGTMP"/pkgtree
-              mkdir -p "$pkgtree"
-              tar xf "$pkgpath" -C "$pkgtree" usr/lib/
-            fi
+            get_pkgtree "$itemprgnam" "$pkgpath" usr/lib/
             # yes, 'x86-64' has a '-' not a '_'
-            wrongstuff=$(cd "$pkgtree"; find usr/lib -print0 | xargs -0 file 2>/dev/null | \
+            wrongstuff=$(cd "$PKGTREE"; find usr/lib -print0 | xargs -0 file 2>/dev/null | \
               grep -e "executable" -e "shared object" | grep 'ELF' | grep 'x86-64' | cut -f1 -d:)
             if [ -n "$wrongstuff" ]; then
               log_warning -a "${itemid}: x86-64 files in /usr/lib. ${pkgbasename}"
@@ -414,14 +406,8 @@ function test_package
           fi
           ;;
       noarch | fw)
-          if [ -d "$BIGTMP/build_$itemprgnam/package-$itemprgnam" ]; then
-            pkgtree="$BIGTMP/build_$itemprgnam/package-$itemprgnam"
-          else
-            pkgtree="$BIGTMP"/pkgtree
-            mkdir -p "$pkgtree"
-            tar xf "$pkgpath" -C "$pkgtree"
-          fi
-          wrongstuff=$(cd "$pkgtree"; find * -print0 | xargs -0 file 2>/dev/null | \
+          get_pkgtree "$itemprgnam" "$pkgpath"
+          wrongstuff=$(cd "$PKGTREE"; find * -print0 | xargs -0 file 2>/dev/null | \
             grep -e "executable" -e "shared object" | grep 'ELF' | cut -f1 -d:)
           if [ -n "$wrongstuff" ]; then
             log_warning -a "${itemid}: executables and/or libraries in noarch package. ${pkgbasename}"
@@ -434,13 +420,34 @@ function test_package
       *)   :
           ;;
     esac
-    rm -rf "$BIGTMP"/pkgtree
 
-    # check if it contains a slack-desc
+    # check if the package contains a slack-desc
     if ! grep -q ' install/slack-desc$' "$MY_PKGCONTENTS"; then
       log_warning -a "${itemid}: No slack-desc. ${pkgbasename}"
       retstat=1
     fi
+
+    # check doinst.sh has the sections it needs
+    # (config and preserve-perms not checked -- the test install below will do that)
+    [ -n "$(awk '$6~/^'"$(echo "install/doinst.sh" | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")" ] && \
+      get_pkgtree "$itemprgnam" "$pkgpath" install/doinst.sh
+    for dir in \
+      usr/share/applications \
+      usr/share/mime \
+      usr/share/icons/hicolor \
+      usr/share/glib-2.0/schemas \
+      usr/lib/gio/modules \
+      usr/lib64/gio/modules \
+      usr/info \
+    ; do
+      inpkg=$(awk '$6~/^'"$(echo "$dir" | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
+      indoinst=$(grep "$dir" "$PKGTREE"/install/doinst.sh 2>/dev/null)
+      if [ -n "$inpkg" ] && [ -z "$indoinst" ]; then
+        log_warning -a "${itemid}: $dir in package but not in doinst.sh. ${pkgbasename}"
+      elif [ -z "$inpkg" ] && [ -n "$indoinst" ]; then
+        log_warning -a "${itemid}: $dir in doinst.sh but not in package. ${pkgbasename}"
+      fi
+    done
 
     # check top level directory
     topdir=$(head -n 1 "$MY_PKGCONTENTS")
@@ -479,6 +486,8 @@ function test_package
 
     [ "$retstat" = 0 ] && log_done
 
+    # If this exists, we can get rid of it now.
+    rm -rf "$BIGTMP"/pkgtree
     # Note! Don't remove MY_PKGCONTENTS yet, create_metadata will use it.
 
     # Install it to see what happens (but not if --dry-run)
@@ -492,4 +501,32 @@ function test_package
 
   uninstall_packages "$itemid"
   return $retstat
+}
+
+#-------------------------------------------------------------------------------
+
+function get_pkgtree
+# Find the package tree left over from building, or create a (partial) tree by
+# extracting it from the package.
+# $1    = itemprgnam
+# $2    = path to the package
+# $3... (optionally) relative paths to be extracted
+# Return status: always 0 (get the params right or regret it)
+# Sets global $PKGTREE with the tree's path
+{
+  local itemprgnam="$1"
+  local pkgpath="$2"
+  shift; shift
+
+  # If we're testing a package we just built, destdir might still exist
+  if [ -d "$BIGTMP/build_$itemprgnam/package-$itemprgnam" ]; then
+    PKGTREE="$BIGTMP/build_$itemprgnam/package-$itemprgnam"
+  else
+    # we're going to have to extract it :(
+    PKGTREE="$BIGTMP"/pkgtree
+    mkdir -p "$PKGTREE"
+    tar xf "$pkgpath" -C "$PKGTREE" "$@"
+  fi
+
+  return 0
 }

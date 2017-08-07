@@ -362,40 +362,39 @@ function test_package
     MY_PKGCONTENTS="$MYTMP"/pkgcontents_"$pkgbasename"
     tar tvf "$pkgpath" > "$MY_PKGCONTENTS" || { log_error -a "${itemid}: Not a tar archive. ${pkgbasename}"; return 2; }
 
-    # check directories
-    wrongstuff=$(awk \
-      '$6!~/^(bin\/|boot\/|dev\/|etc\/|lib\/|lib64\/|opt\/|sbin\/|srv\/|tmp\/|usr\/|var\/|install\/|\.\/$)/ {printf "%s\n",$0}' <"$MY_PKGCONTENTS")
+    # check directories and files
+    oklist='(bin/|boot/|dev/|etc/|lib/|lib64/|opt/|sbin/|srv/|tmp/|usr/|var/|install/|./)'
+    wrongstuff=$(awk '$6!~/^'"$(echo "$oklist" | sed -e 's:[\./]:\\&:g')"'/' <"$MY_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
       log_warning -a "${itemid}: Nonstandard directories. ${pkgbasename}"
       log_info -t -a "$wrongstuff"
       retstat=1
     fi
-    for dir in 'tmp/' 'usr/local/' 'usr/share/man/'; do
-      wrongstuff=$(awk '$6~/^'"$(echo "$dir" | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
-      if [ -n "$wrongstuff" ]; then
-        log_warning -a "${itemid}: Bad directory $dir. ${pkgbasename}"
-        log_info -t -a "$wrongstuff"
-        retstat=1
-      fi
-    done
+    badlist='(usr/local/|usr/share/man/|usr/share/icons/?*/icon-theme.cache|usr/share/mime.cache|usr/info/dir|?*/perllocal.pod)'
+    wrongstuff=$(awk '$6~/^'"$(echo "$badlist" | sed -e 's:[\./]:\\&:g')"'/' <"$MY_PKGCONTENTS")
+    if [ -n "$wrongstuff" ]; then
+      log_warning -a "${itemid}: Bad directories/files. ${pkgbasename}"
+      log_info -t -a "$wrongstuff"
+      retstat=1
+    fi
 
     # check for arch-inappropriate files and locations
     case "$PN_ARCH" in
       i?86)
-          for dir in 'lib64/' 'usr/lib64/' ; do
-            wrongstuff=$(awk '$6~/^'"$(echo "$dir" | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
-            if [ -n "$wrongstuff" ]; then
-              log_warning -a "${itemid}: Bad directory $dir for arch $PN_ARCH. ${pkgbasename}"
-              log_info -t -a "$wrongstuff"
-              retstat=1
-            fi
-          done
+          badlist='(lib64/|usr/lib64/)'
+          wrongstuff=$(awk '$6~/^'"$(echo "$badlist" | sed -e 's:[\./]:\\&:g')"'/' <"$MY_PKGCONTENTS")
+          if [ -n "$wrongstuff" ]; then
+            log_warning -a "${itemid}: Bad directory $dir for arch $PN_ARCH. ${pkgbasename}"
+            log_info -t -a "$wrongstuff"
+            retstat=1
+          fi
           ;;
       x86_64)
-          libstuff=$(awk '$6~/^'"$(echo usr/lib/ | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
+          liblist='usr/lib/'
+          libstuff=$(awk '$6~/^'"$(echo "$liblist" | sed -e 's:[\./]:\\&:g')"'/' <"$MY_PKGCONTENTS")
           if [ -n "$libstuff" ]; then
             get_pkgtree "$itemprgnam" "$pkgpath" usr/lib/
-            # yes, 'x86-64' has a '-' not a '_'
+            # in output from the 'file' command, 'x86-64' has a '-' not a '_'
             wrongstuff=$(cd "$PKGTREE"; find usr/lib -print0 | xargs -0 file 2>/dev/null | \
               grep -e "executable" -e "shared object" | grep 'ELF' | grep 'x86-64' | cut -f1 -d:)
             if [ -n "$wrongstuff" ]; then
@@ -441,6 +440,7 @@ function test_package
       usr/info \
     ; do
       inpkg=$(awk '$6~/^'"$(echo "$dir" | sed s:/:'\\'/:g)"'/' <"$MY_PKGCONTENTS")
+      # if doinst.sh does not exist, indoinst will be assigned a null string
       indoinst=$(grep "$dir" "$PKGTREE"/install/doinst.sh 2>/dev/null)
       if [ -n "$inpkg" ] && [ -z "$indoinst" ]; then
         log_warning -a "${itemid}: $dir in package but not in doinst.sh. ${pkgbasename}"

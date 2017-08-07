@@ -289,7 +289,7 @@ function test_package
     # check the prgnam
     parse_package_name "$pkgbasename"
     [ "$PN_PRGNAM" != "$itemprgnam" ] && \
-      { log_warning -a "${itemid}: Package PRGNAM is \"$PN_PRGNAM\" (expected \"$itemprgnam\"). ${pkgbasename}"; retstat=1; }
+      { log_warning -a "${itemid}: Package PRGNAM is \"$PN_PRGNAM\" (expected \"$itemprgnam\")"; retstat=1; }
 
     # check the version
     if [ "$CMD" = 'lint' ]; then
@@ -302,7 +302,7 @@ function test_package
     fi
     # also, we'll accept '_anything' (e.g. locale) as a suffix to checkversion
     [ "$PN_VERSION" != "${checkversion}" ] && [ "${PN_VERSION##${checkversion}_*}" != "" ] && \
-      { log_warning -a "${itemid}: Package VERSION is \"$PN_VERSION\" (expected \"${checkversion}\"). ${pkgbasename}"; retstat=1; }
+      { log_warning -a "${itemid}: Package VERSION is \"$PN_VERSION\" (expected \"${checkversion}\")"; retstat=1; }
 
     # check the arch
     okarch='n'
@@ -326,7 +326,7 @@ function test_package
           ;;
       esac
     fi
-    [ "$okarch" != 'y' ] && { log_warning -a "${itemid}: Package ARCH is $PN_ARCH (expected $SR_ARCH). ${pkgbasename}"; retstat=1; }
+    [ "$okarch" != 'y' ] && { log_warning -a "${itemid}: Package ARCH is $PN_ARCH (expected $SR_ARCH)"; retstat=1; }
 
     # check the build
     if [ -n "$SR_BUILD" ] && [ "$PN_BUILD" != "$SR_BUILD" ]; then
@@ -336,44 +336,44 @@ function test_package
           *_BUILD ) ignorebuild='y'; break ;;
         esac
       done
-      [ "$ignorebuild" != 'y' ] && { log_warning -a "${itemid}: Package BUILD is $PN_BUILD (expected $SR_BUILD). ${pkgbasename}"; retstat=1; }
+      [ "$ignorebuild" != 'y' ] && { log_warning -a "${itemid}: Package BUILD is $PN_BUILD (expected $SR_BUILD)"; retstat=1; }
     fi
 
     # check the tag
     [ "$PN_TAG" != "$SR_TAG" ] && \
-      { log_warning -a "${itemid}: Package TAG is \"$PN_TAG\" (expected \"$SR_TAG\"). ${pkgbasename}"; retstat=1; }
+      { log_warning -a "${itemid}: Package TAG is \"$PN_TAG\" (expected \"$SR_TAG\")"; retstat=1; }
 
     # check the pkgtype
     [ "$PN_PKGTYPE" != "$SR_PKGTYPE" ] && \
-      { log_warning -a "${itemid}: Package type is .$PN_PKGTYPE (expected .$SR_PKGTYPE). ${pkgbasename}"; retstat=1; }
+      { log_warning -a "${itemid}: Package type is .$PN_PKGTYPE (expected .$SR_PKGTYPE)"; retstat=1; }
 
     # check that the actual compression type matches the suffix
     filetype=$(file -b "$pkgpath")
     case "$filetype" in
-      'gzip compressed data'*)  [ "$PN_PKGTYPE" = 'tgz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .tgz). ${pkgbasename}"; retstat=1; } ;;
-      'XZ compressed data'*)    [ "$PN_PKGTYPE" = 'txz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .txz). ${pkgbasename}"; retstat=1; } ;;
-      'bzip2 compressed data'*) [ "$PN_PKGTYPE" = 'tbz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .tbz). ${pkgbasename}"; retstat=1; } ;;
-      'LZMA compressed data'*)  [ "$PN_PKGTYPE" = 'tlz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .tlz). ${pkgbasename}"; retstat=1; } ;;
-      *) log_error -a "${itemid}: Not a package (\"$filetype\"). ${pkgbasename}" ; return 2 ;;
+      'gzip compressed data'*)  [ "$PN_PKGTYPE" = 'tgz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .tgz)"; retstat=1; } ;;
+      'XZ compressed data'*)    [ "$PN_PKGTYPE" = 'txz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .txz)"; retstat=1; } ;;
+      'bzip2 compressed data'*) [ "$PN_PKGTYPE" = 'tbz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .tbz)"; retstat=1; } ;;
+      'LZMA compressed data'*)  [ "$PN_PKGTYPE" = 'tlz' ] || { log_warning -a "${itemid}: Wrong suffix (should be .tlz)"; retstat=1; } ;;
+      *) log_error -a "${itemid}: Not a package (\"$filetype\")" ; return 2 ;;
     esac
 
     # list what's in the package (and check if it's really a tarball)
     # we'll reuse this file several times to analyse the contents
     MY_PKGCONTENTS="$MYTMP"/pkgcontents_"$pkgbasename"
-    tar tvf "$pkgpath" > "$MY_PKGCONTENTS" || { log_error -a "${itemid}: Not a tar archive. ${pkgbasename}"; return 2; }
+    tar tvf "$pkgpath" > "$MY_PKGCONTENTS" || { log_error -a "${itemid}: Not a tar archive"; return 2; }
 
     # check directories and files
     oklist='(bin/|boot/|dev/|etc/|lib/|lib64/|opt/|sbin/|srv/|tmp/|usr/|var/|install/|./)'
     wrongstuff=$(awk '$6!~/^'"$(echo "$oklist" | sed -e 's:[\./]:\\&:g')"'/' <"$MY_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
-      log_warning -a "${itemid}: Nonstandard directories. ${pkgbasename}"
+      log_warning -a "${itemid}: Nonstandard directories"
       log_info -t -a "$wrongstuff"
       retstat=1
     fi
     badlist='(usr/local/|usr/share/man/|usr/share/icons/?*/icon-theme.cache|usr/share/mime.cache|usr/info/dir|?*/perllocal.pod)'
     wrongstuff=$(awk '$6~/^'"$(echo "$badlist" | sed -e 's:[\./]:\\&:g')"'/' <"$MY_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
-      log_warning -a "${itemid}: Bad directories/files. ${pkgbasename}"
+      log_warning -a "${itemid}: Bad directories/files"
       log_info -t -a "$wrongstuff"
       retstat=1
     fi
@@ -384,7 +384,7 @@ function test_package
           badlist='(lib64/|usr/lib64/)'
           wrongstuff=$(awk '$6~/^'"$(echo "$badlist" | sed -e 's:[\./]:\\&:g')"'/' <"$MY_PKGCONTENTS")
           if [ -n "$wrongstuff" ]; then
-            log_warning -a "${itemid}: Bad directory $dir for arch $PN_ARCH. ${pkgbasename}"
+            log_warning -a "${itemid}: Bad directory $dir for arch $PN_ARCH"
             log_info -t -a "$wrongstuff"
             retstat=1
           fi
@@ -398,7 +398,7 @@ function test_package
             wrongstuff=$(cd "$PKGTREE"; find usr/lib -print0 | xargs -0 file 2>/dev/null | \
               grep -e "executable" -e "shared object" | grep 'ELF' | grep 'x86-64' | cut -f1 -d:)
             if [ -n "$wrongstuff" ]; then
-              log_warning -a "${itemid}: x86-64 files in /usr/lib. ${pkgbasename}"
+              log_warning -a "${itemid}: x86-64 files in /usr/lib"
               log_info -t -a "$wrongstuff"
               retstat=1
             fi
@@ -409,7 +409,7 @@ function test_package
           wrongstuff=$(cd "$PKGTREE"; find * -print0 | xargs -0 file 2>/dev/null | \
             grep -e "executable" -e "shared object" | grep 'ELF' | cut -f1 -d:)
           if [ -n "$wrongstuff" ]; then
-            log_warning -a "${itemid}: executables and/or libraries in noarch package. ${pkgbasename}"
+            log_warning -a "${itemid}: executables and/or libraries in noarch package"
             log_info -t -a "$wrongstuff"
             retstat=1
           fi
@@ -422,7 +422,7 @@ function test_package
 
     # check if the package contains a slack-desc
     if ! grep -q ' install/slack-desc$' "$MY_PKGCONTENTS"; then
-      log_warning -a "${itemid}: No slack-desc. ${pkgbasename}"
+      log_warning -a "${itemid}: No slack-desc"
       retstat=1
     fi
 
@@ -443,16 +443,16 @@ function test_package
       # if doinst.sh does not exist, indoinst will be assigned a null string
       indoinst=$(grep "$dir" "$PKGTREE"/install/doinst.sh 2>/dev/null)
       if [ -n "$inpkg" ] && [ -z "$indoinst" ]; then
-        log_warning -a "${itemid}: $dir in package but not in doinst.sh. ${pkgbasename}"
+        log_warning -a "${itemid}: $dir in package but not in doinst.sh"
       elif [ -z "$inpkg" ] && [ -n "$indoinst" ]; then
-        log_warning -a "${itemid}: $dir in doinst.sh but not in package. ${pkgbasename}"
+        log_warning -a "${itemid}: $dir in doinst.sh but not in package"
       fi
     done
 
     # check top level directory
     topdir=$(head -n 1 "$MY_PKGCONTENTS")
     if ! echo "$topdir" | grep -q '^drwxr-xr-x root/root .* \./$' ; then
-      log_warning -a "${itemid}: Bad root directory. ${pkgbasename}"
+      log_warning -a "${itemid}: Bad root directory"
       log_info -a "$topdir"
       retstat=1
     fi
@@ -471,7 +471,7 @@ function test_package
        \$2~/^[[:alpha:]]+\/[[:alpha:]]+\$/ {next};
        {printf \"%s\\n\",\$0}" <"$MY_PKGCONTENTS")
     if [ -n "$wrongstuff" ]; then
-      log_warning -a "${itemid}: Unexpected owner/group. ${pkgbasename}"
+      log_warning -a "${itemid}: Unexpected owner/group"
       log_info -t -a "$wrongstuff"
       retstat=1
     fi
@@ -479,7 +479,7 @@ function test_package
     # check for uncompressed man pages (usr/share/man warning is handled above)
     wrongstuff=$(grep -E '^-.* usr/(share/)?man/' "$MY_PKGCONTENTS" | grep -v '\.gz$')
     if [ -n "$wrongstuff" ]; then
-      log_warning -a "${itemid}: Uncompressed man pages. ${pkgbasename}"
+      log_warning -a "${itemid}: Uncompressed man pages"
       log_info -t -a "$wrongstuff"
       retstat=1
     fi

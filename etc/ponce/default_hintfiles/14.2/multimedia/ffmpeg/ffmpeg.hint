@@ -1,2 +1,1 @@
-ADDREQUIRES="libass libbluray celt libdc1394 frei0r gsm libiec61883 libavc1394 libilbc ladspa_sdk lame libmodplug OpenAL opencore-amr opus rtmpdump schroedinger speex twolame x264 x265 xvidcore"
-OPTIONS="ASS=yes BLURAY=yes CELT=yes DC1394=yes FREI0R=yes GSM=yes IEC61883=yes ILBC=yes LADSPA=yes LAME=yes MODPLUG=yes OPENAL=yes OPENCORE=yes OPUS=yes PULSEAUDIO=yes RTMP=yes SCHROEDINGER=yes SPEEX=yes TWOLAME=yes VPX=yes X264=yes X265=yes XVID=yes"
+SKIP="Now included in Slackware."

@@ -3,7 +3,6 @@
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #-------------------------------------------------------------------------------
 # parsefunctions.sh - parse functions for slackrepo
-#   init_current_pkgs
 #   parse_arg
 #   find_items
 #   parse_package_name
@@ -12,34 +11,6 @@
 
 declare -a PARSEDARGS
 declare -A ITEMDIR ITEMFILE ITEMPRGNAM PRGNAMITEMID
-
-#-------------------------------------------------------------------------------
-
-declare -A PKG_IN_CURRENT
-
-function init_current_pkgs
-# Create a list of SBo deps that are in Slackware-current
-# Return status: always 0
-{
-  for pp in \
-    "gst-plugins-libav=gst-libav" \
-    "python-six=six" \
-    "sshfs=sshfs-fuse" \
-    "libinput" "libwacom" "xf86-input-libinput" "opencl-headers" \
-    "libedit" \
-    "ffmpeg" "lame" "libbluray" \
-    "SDL2" "SDL2_gfx" "SDL2_image" "SDL2_mixer" "SDL2_net" "SDL2_ttf" \
-  ; do
-    pslack="${pp/=*/}"
-    psbo="${pp/*=/}"
-    is_installed "${pslack}-v-a-bt"
-    iistat=$?
-    if [ $iistat = 0 ] || [ $iistat = 1 ]; then
-      PKG_IN_CURRENT[$psbo]="$R_INSTALLED"
-    fi
-  done
-  return 0
-}
 
 #-------------------------------------------------------------------------------
 
@@ -69,14 +40,7 @@ function parse_arg
     shift
 
     # Shortcuts:
-    if [ "$SYS_CURRENT" = 'y' ] && [ -n "${PKG_IN_CURRENT[$arg]}" ]; then
-      if [ -n "$callerid" ]; then
-        log_info "${callerid}: using ${PKG_IN_CURRENT[$arg]} for dependency ${arg}"
-      else
-        log_start "$arg"; log_itemfinish "$arg" "skipped" "" "${arg} is already installed as ${PKG_IN_CURRENT[$arg]}"
-      fi
-      continue
-    elif [ -n "${ITEMPRGNAM[$arg]}" ]; then
+    if [ -n "${ITEMPRGNAM[$arg]}" ]; then
       # it's an already-valid itemid
       PARSEDARGS+=( "$arg" )
       continue
@@ -355,6 +319,7 @@ function parse_info_and_hints
     unset PRGNAM MAINTAINER EMAIL
 
     # If VERSION isn't set, snarf it from the SlackBuild:
+    local versioncmds prevdir
     if [ -z "$VERSION" ]; then
       # The next bit is necessarily dependent on the empirical characteristics
       # of the SlackBuilds in Slackware, msb, csb, etc :-/
@@ -427,6 +392,7 @@ function parse_info_and_hints
   # HINTFILE[$itemid] not set => we need to check for a hintfile
   # HINTFILE[$itemid] set to null => there is no hintfile
   # HINTFILE[$itemid] non-null => other HINT_xxx variables have already been set
+  local hintfile hintsearch trydir
 
   if [ "${HINTFILE[$itemid]+yesitisset}" != 'yesitisset' ]; then
     hintfile=''
@@ -465,6 +431,7 @@ function parse_info_and_hints
     fi
 
     # Process hint file's VERSION, ARCH, DOWNLOAD[_ARCH] and [MD5|SHA256]SUM[_ARCH] together:
+    local dlvar md5var sha256var
     if [ -n "$ARCH" ]; then
       dlvar="DOWNLOAD_$ARCH"
       [ -n "${!dlvar}" ] && DOWNLOAD="${!dlvar}"
@@ -502,6 +469,7 @@ function parse_info_and_hints
     # USERADD hint format:  USERADD="<unum>:<uname>:[-g<ugroup>:][-d<udir>:][-s<ushell>:][-uargs:...] ..."
     # VALID_GROUPS and VALID_USERS are needed for test_package
     if [ -n "${GROUPADD}" ]; then
+      local groupstring gnum gname
       for groupstring in $GROUPADD; do
         gnum=''; gname="$itemprgnam"
         for gfield in $(echo "$groupstring" | tr ':' ' '); do
@@ -524,6 +492,7 @@ function parse_info_and_hints
       done
     fi
     if [ -n "$USERADD" ]; then
+      local userstring unum uname udir ufield ugroup ushell uargs
       for userstring in $USERADD; do
         unum=''; uname="$itemprgnam"; ugroup=""
         udir='/dev/null'; ushell='/bin/false'; uargs=''
@@ -554,6 +523,7 @@ function parse_info_and_hints
     fi
 
     # Process SKIP and ADDREQUIRES in the Fixup department below.
+    local briefskip
     briefskip="${SKIP:0:20}"
     [ "${#SKIP}" -gt 20 ] && briefskip="${SKIP:0:17}..."
 
@@ -598,7 +568,9 @@ function parse_info_and_hints
       INFOREQUIRES[$itemid]=""
     fi
   else
-    # Remove DELREQUIRES and %README%
+
+    # (1) Remove DELREQUIRES and %README%
+    local delreq pragma
     for delreq in ${DELREQUIRES} '%README%'; do
       INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]//${delreq}/})"
     done
@@ -608,8 +580,31 @@ function parse_info_and_hints
         'python3' ) ADDREQUIRES="python3 ${ADDREQUIRES}" ;;
       esac
     done
-    # Append ADDREQUIRES
+
+    # (2) Append ADDREQUIRES
     INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]} ${ADDREQUIRES})"
+
+    # (3) Substitute SUBST
+    local newrequires irqdep newdep
+    if [ "${#SUBST[@]}" != 0 ] && [ -n "${INFOREQUIRES[$itemid]}" ]; then
+      newrequires=''
+      for irqdep in ${INFOREQUIRES[$itemid]}; do
+        newdep="${SUBST[$irqdep]}"
+        if [ -z "$newdep" ]; then
+          newdep="$irqdep"
+        else
+          if [ "$newdep" = '!' ]; then
+            log_info "Substitute !${irqdep}"
+            newdep=''
+          else
+            log_info "Substitute ${irqdep} => ${newdep}"
+          fi
+        fi
+        newrequires="$newrequires $newdep"
+      done
+      INFOREQUIRES[$itemid]=$(echo $newrequires)
+    fi
+
   fi
 
   # Set HINT_KERNEL -- there are two PRAGMAs for user interface reasons, but because
@@ -623,7 +618,7 @@ function parse_info_and_hints
   done
 
   # Fix INFOVERSION from hint file's VERSION, or DOWNLOAD, or git, or SlackBuild's modification time
-  ver="${INFOVERSION[$itemid]}"
+  local ver="${INFOVERSION[$itemid]}"
   [ -z "$ver" ] && ver="${HINT_VERSION[$itemid]}"
   [ -z "$ver" ] && ver="$(basename "$(echo "${INFODOWNLIST[$itemid]}" | sed 's/ .*//')" 2>/dev/null | rev | cut -f 3- -d . | cut -f 1 -d - | rev)"
   [ -z "$ver" ] && log_warning "Version of $itemid can not be determined."

@@ -308,6 +308,7 @@ fi
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO SRCREPO PKGREPO PKGBACKUP \
           HINTDIR DEFAULT_HINTDIR LOGDIR DATABASE TMP \
+          SUBSTITUTE \
           ARCH TAG PKGTYPE NUMJOBS"
 # These config vars don't need to be obfuscated:
 genrepnames="USE_GENREPOS REPOSROOT REPOSOWNER REPOSOWNERGPG DL_URL \
@@ -406,6 +407,18 @@ if [ "$OPT_LINT" != 'n' ]; then
     [ "$found" = 'n' ] && echo "$(basename "$0"): lint option not valid: $uopt" >&2
   done
   OPT_LINT="${foundopts%%,}"
+fi
+
+# Set up the dependency substitutions in SUBST
+declare -A SUBST
+if [ -n "$SR_SUBSTITUTE" ]; then
+  for sub in $(echo $(echo $SR_SUBSTITUTE | sed -e 's/,/ /g') | sed -e 's/ *=> */=>/g') ; do
+    depdel="${sub/=>*/}"
+    depadd="${sub/*=>/}"
+    [ "${depdel:0:1}" = '!' ] && depadd='!'
+    [ -z "$depadd" ] && depadd='!'
+    SUBST[${depdel##!}]="$depadd"
+  done
 fi
 
 # If SR_NUMJOBS or SR_ARCH not set, work them out and set them explicitly

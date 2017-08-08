@@ -296,7 +296,6 @@ elif [ "${SYS_OSNAME}${SYS_OSVER}" = "slackware14.2" ]; then
   for filefile in /var/log/packages/file-5.25-*-1; do
     if [ ! -f "$filefile" ]; then
       SYS_CURRENT='y'
-      init_current_pkgs
       break
     fi
   done

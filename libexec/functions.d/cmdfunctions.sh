@@ -440,9 +440,9 @@ function remove_command
         srcfile="$(basename "$srcpath")"
         if [ "$OPT_DRY_RUN" != 'y' ]; then
           rm -f "$srcpath"
-          log_normal "Source file $srcfile has been removed"
+          [ "$srcfile" != '.version' ] && log_normal "Source file $srcfile has been removed"
         else
-          log_normal "Source file $srcfile would be removed"
+          [ "$srcfile" != '.version' ] && log_normal "Source file $srcfile would be removed"
         fi
       done
     elif [ -d "$allsourcedir" ]; then
@@ -450,9 +450,9 @@ function remove_command
         srcfile="$(basename "$srcpath")"
         if [ "$OPT_DRY_RUN" != 'y' ]; then
           rm -f "$srcpath"
-          log_normal "Source file $srcfile has been removed"
+          [ "$srcfile" != '.version' ] && log_normal "Source file $srcfile has been removed"
         else
-          log_normal "Source file $srcfile would be removed"
+          [ "$srcfile" != '.version' ] && log_normal "Source file $srcfile would be removed"
         fi
       done
     fi

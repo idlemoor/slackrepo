@@ -238,19 +238,18 @@ if [ "$EUID" != 0 ]; then
   fi
   SUDO="/usr/bin/sudo "
   export PATH="${LIBEXECDIR}:/usr/local/sbin:/usr/sbin:/sbin:$PATH"
-  # We need to launch a dbus session instance for root outside the chroot, to prevent
-  # commands like gconftool-2 (in doinst.sh) launching a dbus in the chroot that
-  # would persist after chroot exits and stop us unmounting the overlay (*BIG SIGH*)
-  dbuscrap="$(DISPLAY='' ${SUDO}dbus-launch --sh-syntax 2>/dev/null)"
-  eval "${dbuscrap}"
 else
   SUDO=''
   export PATH="${LIBEXECDIR}:$PATH"
-  # If there is no existing dbus session instance for root, create one
-  if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
-    dbuscrap="$(DISPLAY='' dbus-launch --sh-syntax 2>/dev/null)"
-    eval "${dbuscrap}"
-  fi
+fi
+
+# If there is no existing dbus session instance for root, create one.  We need
+# to have a dbus session instance for root outside the chroot, to prevent
+# commands like gconftool-2 (in doinst.sh) launching a dbus in the chroot that
+# would persist after chroot exits and stop us unmounting the overlay (*BIG SIGH*)
+if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+  dbuscrap="$(DISPLAY='' ${SUDO}dbus-launch --sh-syntax 2>/dev/null)"
+  eval "${dbuscrap}"
 fi
 
 # Ensure ctrl-c (etc) exits the whole thing, not just a random subshell

@@ -147,8 +147,9 @@ function install_packages
           log_info -t "$(<"$MYTMP"/installpkglog)"
           return 1
         else
+          tersename="${pkgbase%.t?z}:"
           logtext=$(cat "$MYTMP"/installpkglog | \
-            grep -v "^${pkgbase%.t?z}: .*] *$" | \
+            grep -v "^${tersename:0:72} .*] *$" | \
             grep -v -F 'Reloading system message bus configuration...')
           if [ -n "$logtext" ]; then
             log_warning -a "${itemid}: Possible error message from doinst.sh or installpkg"

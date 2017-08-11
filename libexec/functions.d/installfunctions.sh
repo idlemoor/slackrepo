@@ -150,10 +150,10 @@ function install_packages
           tersename="${pkgbase%.t?z}:"
           logtext=$(cat "$MYTMP"/installpkglog | \
             grep -v "^${tersename:0:72} .*] *$" | \
-            grep -v -F 'Reloading system message bus configuration...')
+            grep -v -F -e 'Reloading system message bus configuration...' \
+                       -e 'kbuildsycoca4 running...')
           if [ -n "$logtext" ]; then
             log_warning -a "${itemid}: Possible error message from doinst.sh or installpkg"
-            log_info -t "$logtext"
           fi
         fi
         dotprofilizer "$pkgpath"

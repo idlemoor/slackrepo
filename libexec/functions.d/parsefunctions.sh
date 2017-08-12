@@ -255,7 +255,7 @@ declare -A SRCDIR GITREV GITDIRTY
 declare -A \
   HINT_MD5IGNORE HINT_SHA256IGNORE HINT_NUMJOBS HINT_INSTALL HINT_PRAGMA \
   HINT_ARCH HINT_CLEANUP HINT_USERADD HINT_GROUPADD HINT_ANSWER HINT_NODOWNLOAD \
-  HINT_CONFLICTS \
+  HINT_CONFLICTS HINT_NOWARNING \
   HINT_OPTIONS HINT_VERSION HINT_KERNEL HINTFILE
 # and for validation in test_*
 declare -A VALID_USERS VALID_GROUPS
@@ -409,7 +409,7 @@ function parse_info_and_hints
 
   if [ -n "${HINTFILE[$itemid]}" ] && [ -s "${HINTFILE[$itemid]}" ]; then
     local SKIP \
-          VERSION ADDREQUIRES DELREQUIRES OPTIONS GROUPADD USERADD CONFLICTS INSTALL \
+          VERSION ADDREQUIRES DELREQUIRES OPTIONS GROUPADD USERADD CONFLICTS NOWARNING INSTALL \
           NUMJOBS ANSWER CLEANUP PRAGMA SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
     . "${HINTFILE[$itemid]}"
 
@@ -421,6 +421,7 @@ function parse_info_and_hints
     [ -n "$ANSWER"    ] &&    HINT_ANSWER[$itemid]="$ANSWER"
     [ -n "$CLEANUP"   ] &&   HINT_CLEANUP[$itemid]="$CLEANUP"
     [ -n "$PRAGMA"    ] &&    HINT_PRAGMA[$itemid]="$PRAGMA"
+    [ -n "$NOWARNING" ] && HINT_NOWARNING[$itemid]="$NOWARNING"
     [ -n "$SPECIAL"   ] &&    HINT_PRAGMA[$itemid]="$SPECIAL"
 
     # Process hint file's INSTALL
@@ -540,6 +541,7 @@ function parse_info_and_hints
       ${ANSWER+"ANSWER=\"$ANSWER\""} \
       ${CLEANUP+"CLEANUP=\"$CLEANUP\""} \
       ${PRAGMA+"PRAGMA=\"$PRAGMA\""} \
+      ${NOWARNING+"NOWARNING=\"$NOWARNING\""} \
       ${ARCH+"ARCH=\"$ARCH\""} \
       ${DOWNLOAD+"DOWNLOAD=\"$DOWNLOAD\""} \
       ${MD5SUM+"MD5SUM=\"$MD5SUM\""} \
@@ -549,7 +551,7 @@ function parse_info_and_hints
       )"
 
     unset VERSION OPTIONS GROUPADD USERADD \
-          CONFLICTS \
+          CONFLICTS NOWARNING \
           INSTALL NUMJOBS ANSWER CLEANUP \
           PRAGMA SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
 

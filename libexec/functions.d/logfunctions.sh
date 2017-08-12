@@ -152,27 +152,37 @@ function log_important
 #-------------------------------------------------------------------------------
 
 function log_warning
-# Log a message to standard output in yellow highlight.
+# Log a message to standard output in magenta highlight.
 # Log a message to ITEMLOG if '-a' is specified.
 # Message is prefixed with 'WARNING' (unless '-n' is specified).
 # Message is remembered in the array WARNINGLIST (unless '-n' is specified).
-# Usage: log_warning [-a] [-n] messagestring
-# Return status: always 0
+# But!!  If '-s' is specified, and the message matches a regex in
+# ${HINT_NOWARNING[$itemid]}, the message is suppressed -- it isn't logged
+# to standard output, and isn't remembered in WARNINGLIST.
+# Usage: log_warning [-a] [-n] [-s] messagestring
+# Return status: 0 = ok, 1 = message was suppressed
 {
   W='WARNING: '
   A='n'
+  S='n'
   while [ $# != 0 ]; do
     case "$1" in
-    '-n') W='';  shift; continue ;;
     '-a') A='y'; shift; continue ;;
+    '-n') W='';  shift; continue ;;
+    '-s') if [ -n "${HINT_NOWARNING[$itemid]}" ]; then
+            if echo "$1" | grep "${HINT_NOWARNING[$itemid]}"; then
+              S='y'
+            fi
+          fi
+          shift; continue ;;
     *)    break ;;
     esac
   done
-  echo -e "${NL}${colour_warning}${W}${1}${colour_normal}"
+  [ "$S" = 'n' ] && echo -e "${NL}${colour_warning}${W}${1}${colour_normal}"
   [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${W}${1}" >> "$ITEMLOG"
   NL=''
-  [ -n "$W" ] && WARNINGLIST+=( "${1}" )
-  return 0
+  [ "$S" = 'n' ] && [ -n "$W" ] && WARNINGLIST+=( "${1}" ) && return 0
+  return 1
 }
 
 #-------------------------------------------------------------------------------

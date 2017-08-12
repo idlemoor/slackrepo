@@ -786,8 +786,8 @@ function chroot_report
       excludes="^/dev/ttyp|^$HOME/\\.distcc|^$HOME/\\.cache|^$HOME\$|^/var/tmp|\\.pyc\$|^/etc/ld.so.cache\$|^/var/cache/ldconfig\$"
       significant="$(echo "$crap" | sed -e "s#^\./#/#" | grep -v -E "$excludes" | sort)"
       if [ -n "$significant" ]; then
-        log_warning -a "$itemid: Files/directories were modified in the chroot"
-        log_info -t -a "${significant}"
+        log_warning -a -s "$itemid: Files/directories were modified in the chroot" && \
+          log_info -t -a "${significant}"
       fi
     fi
   fi

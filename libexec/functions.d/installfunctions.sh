@@ -153,7 +153,7 @@ function install_packages
             grep -v -F -e 'Reloading system message bus configuration...' \
                        -e 'kbuildsycoca4 running...')
           if [ -n "$logtext" ]; then
-            log_warning -a "${itemid}: Possible error message from doinst.sh or installpkg"
+            log_warning -a -s "${itemid}: Possible error message from doinst.sh or installpkg"
           fi
         fi
         dotprofilizer "$pkgpath"

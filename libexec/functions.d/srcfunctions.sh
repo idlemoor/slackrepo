@@ -141,17 +141,22 @@ function download_src
     # wget is good for redirects and ftp, but curl's content-disposition is better,
     # so let's try it this way:
     dlcmd='wget'
-    case "${HINT_PRAGMA[$itemid]}" in
-      *download_basename*) dlcmd="curl" ;;
-    esac
+    useragent="slackrepo/1.0.0"
     # Some sites refuse to serve documents if the user-agent is wget or curl...
     # but Dropbox fails to redirect to the actual download if the user-agent *isn't* wget.
     # (The regex '*dropbox*' gives false positives, but is necessary to cope with
     # dropboxusercontent.com -- hopefully no false positives refuse wget?)
-    useragent="slackrepo"
     case "$url" in
-      *dropbox*)  dlcmd="curl"; useragent="Wget/1.14" ;;  # this may be a lie, but who cares?
+      *dropbox*)  dlcmd="curl"; useragent="Wget/1.18" ;;  # this may be a lie, but who cares?
     esac
+    # In case of utter derpage, you can override that with a pragma if necessary :(
+    for pragma in ${HINT_PRAGMA[$itemid]}; do
+      case "$pragma" in
+        download_basename) dlcmd="curl" ;;
+        curl) dlcmd="curl"; useragent="curl/7.51.0" ;;
+        wget) dlcmd="wget"; useragent="Wget/1.18" ;;
+      esac
+    done
     wgetstat=0
     curlstat=0
     if [ "$dlcmd" = 'curl' ]; then

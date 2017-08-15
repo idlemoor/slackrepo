@@ -191,7 +191,7 @@ function log_warning
 function log_error
 # Log a message to standard output in red highlight, with an optional second
 # message to the right.
-# Typically the second message will be the current time, or a time estimate.
+# Typically the second message will be the current time.
 # Log a message to ITEMLOG if '-a' is specified.
 # Message is prefixed with 'ERROR: ' (unless '-n' is specified).
 # Usage: log_error [-a] [-n] messagestring

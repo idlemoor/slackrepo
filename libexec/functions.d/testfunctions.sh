@@ -255,7 +255,7 @@ function test_download
 
 function test_package
 # Test a package (check its name, and check its contents)
-# $1 (optionally) -n => do not try to install the packages
+# $1 (optionally) -i => try to install the packages
 # $1    = itemid
 # $2... = paths of packages to be checked
 # Return status:
@@ -265,12 +265,11 @@ function test_package
 {
   [ "${OPT_LINT_PKG:-n}" != 'y' ] && return 0
 
-  local tryinstall='y'
-  if [ "${OPT_LINT_INST:-n}" != 'y' ]; then
-    tryinstall='n'
-  fi
-  if [ "$1" = '-n' ] ; then
-    tryinstall='n'
+  local tryinstall='n'
+  if [ "$1" = '-i' ] ; then
+    if [ "${OPT_LINT_INST:-n}" = 'y' ]; then
+      tryinstall='y'
+    fi
     shift
   fi
 

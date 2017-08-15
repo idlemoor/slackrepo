@@ -156,6 +156,12 @@ while [ $# != 0 ]; do
       [ -n "$CMD" ] && { print_usage; exit_cleanup 2; }
       CMD='update'
       shift; continue ;;
+    install )
+      [ -n "$CMD" ] && { print_usage; exit_cleanup 2; }
+      # transform the 'install' command into 'build --install'
+      CMD='build'
+      OPT_INSTALL='y'
+      shift; continue ;;
     remove | --remove )
       [ -n "$CMD" ] && { print_usage; exit_cleanup 2; }
       CMD='remove'

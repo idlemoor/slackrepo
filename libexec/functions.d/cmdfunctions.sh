@@ -57,7 +57,15 @@ function build_command
   if [ "${#TODOLIST[@]}" = 0 ]; then
     # Nothing is going to be built.  Log the final outcome.
     if [ "${STATUS[$itemid]}" = 'ok' ]; then
+      # we still need to process --install
       log_important "$itemid is up-to-date (version ${INFOVERSION[$itemid]})."
+      if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
+        log_normal ""
+        CMD='install' log_itemstart "$itemid" "Installing $itemid"
+        install_deps "$itemid" || { log_error "Failed to install dependencies of $itemid"; return 1; }
+        install_packages "$itemid" || { log_error "Failed to install $itemid"; return 1; }
+        log_important "Installing finished."
+      fi
     elif [ "${STATUS[$itemid]}" = 'removed' ]; then
       log_important "$itemid has been removed."
     elif [ "${STATUS[$itemid]}" = 'skipped' ]; then
@@ -525,8 +533,8 @@ function lint_command
       pkgpathlist=( "${SR_PKGREPO}"/"$itemdir"/"$pkgnam"-*-*-*.t?z )
       for pkgpath in "${pkgpathlist[@]}"; do
         if [ -f "$pkgpath" ]; then
-          # Note, we can't test-install a package without its deps, so we use 'test_package -n'
-          test_package -n "$itemid" "$pkgpath"
+          # Note, we can't test-install a package without its deps, so we don't use 'test_package -i'
+          test_package "$itemid" "$pkgpath"
           pstat=$?
           [ "$pstat" -gt "$tpkgstat" ] && tpkgstat="$pstat"
         fi

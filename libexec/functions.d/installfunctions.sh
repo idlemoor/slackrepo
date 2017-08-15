@@ -138,8 +138,10 @@ function install_packages
       elif [ "$istat" = 2 ]; then
         # nothing similar currently installed
         > "$MYTMP"/installpkglog
+        teelist="$MAINLOG $MYTMP/installpkglog"
+        [ -n "$ITEMLOG" ] && teelist="$teelist $ITEMLOG"
         set -o pipefail
-        ROOT=${MY_CHRDIR:-/} ${SUDO}installpkg --terse "$pkgpath" 2>&1 | tee -a "$MAINLOG" "$ITEMLOG" "$MYTMP"/installpkglog
+        ROOT=${MY_CHRDIR:-/} ${SUDO}installpkg --terse "$pkgpath" 2>&1 | tee -a $teelist
         pstat=$?
         set +o pipefail
         if [ "$pstat" != 0 ]; then

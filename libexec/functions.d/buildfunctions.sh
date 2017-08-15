@@ -36,7 +36,6 @@ function build_item_packages
 
   buildopt=''
   [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
-  [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
   log_itemstart "$itemid" "Starting $itemid (${STATUSINFO[$itemid]})$buildopt"
 
   TMP_SLACKBUILD="$BIGTMP/slackbuild_$itemprgnam"
@@ -521,20 +520,33 @@ function build_item_packages
 
   [ "$OPT_CHROOT" = 'y' ] && chroot_report
 
-  test_package "$itemid" "${pkglist[@]}"
+  local inst testinst
+  # Do we want to install it?  if not, we'll ask for a test install.
+  inst='n'
+  testinst='-i'
+  if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
+    inst='y'
+    testinst=''
+  fi
+
+  test_package $testinst "$itemid" "${pkglist[@]}"
   [ $? -gt 1 ] && { build_failed "$itemid"; return 7; }
 
   [ "$OPT_CHROOT" = 'y' ] && chroot_destroy
   rm -f "$MY_STARTSTAMP" 2>/dev/null
 
-  if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
+  if [ "$inst" = 'y' ]; then
+    build_ok "$itemid"
+    CMD='install' log_itemstart "$itemid" "Installing $itemid"
     install_packages "$itemid" || { build_failed "$itemid"; return 8; }
+    log_important "Installing finished."
+    log_normal ""
     #### set the new pkgbase in KEEPINSTALLED[$pkgnam] ????
   else
     uninstall_deps "$itemid"
+    build_ok "$itemid"
   fi
 
-  build_ok "$itemid"  # \o/
   return 0
 }
 
@@ -604,7 +616,6 @@ function build_ok
   # ---- Logging ----
   buildopt=''
   [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
-  [ "$OPT_INSTALL" = 'y' ] && buildopt=' [install]'
   STATUS[$itemid]="ok"
   STATUSINFO[$itemid]="$CHANGEMSG$buildopt"
   log_itemfinish "${itemid}" 'ok' "${STATUSINFO[$itemid]}"

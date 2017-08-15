@@ -253,7 +253,7 @@ function build_item_packages
     'stubs-32' )
       if [ "$SYS_ARCH" = 'x86_64' ] && [ ! -e /usr/include/gnu/stubs-32.h ]; then
         log_info -a "Pragma: stubs-32"
-        cp -a /usr/share/slackrepo/stubs-32.h /usr/include/gnu/
+        ${SUDO}cp -a /usr/share/slackrepo/stubs-32.h /usr/include/gnu/
         removestubs='y'
       fi
       ;;
@@ -451,7 +451,7 @@ function build_item_packages
 
   unset ARCH BUILD TAG TMP OUTPUT PKGTYPE NUMJOBS
   [ -n "$restorevars" ] && eval "$restorevars"
-  [ -n "$removestubs" ] && rm /usr/include/gnu/stubs-32.h
+  [ -n "$removestubs" ] && ${SUDO}rm /usr/include/gnu/stubs-32.h
 
   # If there's a config.log in the obvious place, save it
   configlog="${TMP_BUILD}/${itemprgnam}-${INFOVERSION[$itemid]}/config.log"

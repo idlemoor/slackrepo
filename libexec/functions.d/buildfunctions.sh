@@ -528,7 +528,7 @@ function build_item_packages
   rm -f "$MY_STARTSTAMP" 2>/dev/null
 
   if [ "${HINT_INSTALL[$itemid]}" = 'y' ] || [ "$OPT_INSTALL" = 'y' -a "${HINT_INSTALL[$itemid]}" != 'n' ]; then
-    install_packages "${pkglist[@]}" || { build_failed "$itemid"; return 8; }
+    install_packages "$itemid" || { build_failed "$itemid"; return 8; }
     #### set the new pkgbase in KEEPINSTALLED[$pkgnam] ????
   else
     uninstall_deps "$itemid"

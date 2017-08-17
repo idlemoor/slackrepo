@@ -90,16 +90,25 @@ function calculate_deps_and_status
 # Writes a pretty tree to $DEPTREE.
 # Arguments:
 #   $1 = itemid
-#   $2 = parent's itemid, or null if no parent
+#   $2 = list of parent's itemids (direct parent first), null if no parents
 #   $3 = indentation for pretty tree
 # Return status: always 0.
 #   If anything really bad happened, TODOLIST will be empty ;-)
 {
   local itemid="$1"
-  local parentid="${2:-}"
+  local parentlist="${2:-}"
+  local parentid=$(echo "$parentlist" | sed 's/ .*//')
   local indent="${3:-}"
   local itemprgnam="${ITEMPRGNAM[$itemid]}"
   local itemdir="${ITEMDIR[$itemid]}"
+
+  local pid
+  for pid in $parentlist; do
+    if [ "$pid" = "$itemid" ]; then
+      log_warning "${itemid}: Circular dependency: $(echo $itemid $parentlist | awk '{for (i=NF; i>0; i--) printf "%s ",$i}')"
+      return 0
+    fi
+  done
 
   # These variables are used both here and in calculate_item_status.
   # This isn't terribly efficient, but at least db_get_rev has a cache.
@@ -142,16 +151,12 @@ function calculate_deps_and_status
     local dep newdep olddep alreadygotnewdep
     local -a myfulldeps=()
     for dep in ${DIRECTDEPS[$itemid]}; do
-      calculate_deps_and_status "$dep" "$itemid" "$indent  "
+      calculate_deps_and_status "$dep" "$itemid $parentlist" "$indent  "
       for newdep in ${FULLDEPS[$dep]} "$dep"; do
         alreadygotnewdep='n'
         for olddep in "${myfulldeps[@]}"; do
           if [ "$newdep" = "$olddep" ]; then
             alreadygotnewdep='y'
-            break
-          elif [ "$newdep" = "$itemid" ]; then
-            alreadygotnewdep='y'
-            log_error "${itemid}: Circular dependency via $dep (ignored)"
             break
           fi
         done

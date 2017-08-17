@@ -362,8 +362,12 @@ function calculate_item_status
             [ -n "$title" ] && STATUSINFO[$itemid]="${STATUSINFO[$itemid]} \"$title\""
             return 0
           done
+          # nothing important has changed, so we can bump the item's stored revision from $pkgrev to $currrev without rebuilding :)
+          if [ "$OPT_DRY_RUN" != 'y' ]; then
+            db_set_rev "$itemid" '/' "$pkgdeps" "$pkgver" "$pkgblt" "$currrev" "$pkgos" "$pkghnt"
+          fi
         else
-          # nonzero status means $pkgrev is no longer valid (e.g. upstream has rewritten history) => update
+          # nonzero status means $pkgrev is no longer valid (probably garbage collected) => need to update
           STATUS[$itemid]="update"
           STATUSINFO[$itemid]="update for git $shortcurrrev"
           return 0

@@ -520,8 +520,7 @@ SR_TMP=${SR_TMP:-/tmp/SBo}
 # really really don't want the next bit to go badly ;-)
 if [ -n "$SR_TMP" ] && [ -d "$SR_TMP" ]; then
   log_normal "Cleaning $SR_TMP ... "
-  # remove it completely to avoid ownership and permission problems
-  ${SUDO}rm -rf "${SR_TMP:?NotSetSR_TMP}"
+  find "${SR_TMP:?NotSetSR_TMP}" -mindepth 1 -maxdepth 1 -exec ${SUDO}rm -rf {} \;
   log_done
 fi
 mkdir -p "$SR_TMP" || { log_error "Failed to create $SR_TMP"; exit_cleanup 4; }

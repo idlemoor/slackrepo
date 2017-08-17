@@ -1,2 +1,0 @@
-ADDREQUIRES="pulseaudio portaudio"
-GROUPADD="273:fax"

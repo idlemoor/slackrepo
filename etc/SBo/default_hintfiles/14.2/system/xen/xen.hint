@@ -1,2 +1,0 @@
-PRAGMA="stubs-32 unset_ARCH"
-NUMJOBS="-j1"

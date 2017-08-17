@@ -1,5 +1,0 @@
-ADDREQUIRES=""
-GROUPADD="222:exim"
-USERADD="222:exim:-d/var/spool/exim"
-CONFLICTS="sendmail"
-CLEANUP="s_reinstall sendmail"

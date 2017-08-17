@@ -1,2 +1,0 @@
-ADDREQUIRES="libshout libmms libmpdclient musepack-tools lame faac faad2 ffmpeg fluidsynth jack-audio-connection-kit zziplib id3lib libmp4v2 opus mod_dnssd yajl"
-OPTIONS="ISO9660=yes SOUNDCLOUD=yes RECORDEROUTPUT=yes ZZIPLIB=yes ID3=yes FLAC=yes SQLITE=yes"

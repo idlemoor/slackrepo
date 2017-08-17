@@ -1,2 +1,0 @@
-GROUPADD="313:dhcpy6d"
-USERADD="313:dhcpy6d:-r:-d/var/lib/dhcpy6d:-s/sbin/nologin"

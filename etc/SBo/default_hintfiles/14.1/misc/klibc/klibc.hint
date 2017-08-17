@@ -1,2 +1,0 @@
-NUMJOBS="-j1"
-PRAGMA="nofakeroot unset_DISTCC_HOSTS"

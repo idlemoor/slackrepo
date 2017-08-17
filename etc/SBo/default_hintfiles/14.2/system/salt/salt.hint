@@ -1,1 +1,0 @@
-ADDREQUIRES="python-ldap Mako libvirt pyOpenSSL CherryPy pymongo python-keyring MySQL-python redis-py python-gnupg"

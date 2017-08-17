@@ -1,2 +1,0 @@
-ADDREQUIRES="gst1-plugins-base pulseaudio"
-PRAGMA="multilib_ldflags"

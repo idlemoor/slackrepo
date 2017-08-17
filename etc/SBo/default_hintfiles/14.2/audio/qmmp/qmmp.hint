@@ -1,1 +1,0 @@
-ADDREQUIRES="libmms jack-audio-connection-kit libmodplug ffmpeg faad2 libbs2b"

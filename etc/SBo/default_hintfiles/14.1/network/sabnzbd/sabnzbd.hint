@@ -1,2 +1,0 @@
-GROUPADD="296:sabnzbd"
-USERADD="296:sabnzbd:-d/opt/sabnzbd:-s/bin/false"

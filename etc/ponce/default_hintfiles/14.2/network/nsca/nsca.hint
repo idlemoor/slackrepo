@@ -1,2 +1,0 @@
-GROUPADD="213:nagios"
-USERADD="213:nagios:-d/usr/libexec/nagios"

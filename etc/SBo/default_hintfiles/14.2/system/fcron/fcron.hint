@@ -1,2 +1,0 @@
-GROUPADD="289:fcron"
-USERADD="289:fcron:-d/var/spool/fcron:-M:-s/bin/false"

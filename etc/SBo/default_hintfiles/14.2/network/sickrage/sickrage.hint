@@ -1,2 +1,0 @@
-GROUPADD="324:sickrage"
-USERADD="324:sickrage:-d/var/lib/sickrage:-s/bin/false"

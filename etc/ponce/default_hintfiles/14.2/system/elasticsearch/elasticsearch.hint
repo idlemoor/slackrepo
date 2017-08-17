@@ -1,2 +1,0 @@
-GROUPADD="280:elasticsearch"
-USERADD="280:elasticsearch:-d/dev/null:-s/bin/sh"

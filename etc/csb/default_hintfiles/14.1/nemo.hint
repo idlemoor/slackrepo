@@ -1,2 +1,0 @@
-ADDREQUIRES="cinnamon-desktop gnome-common pygobject3"
-PRAGMA="download_basename"

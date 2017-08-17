@@ -1,2 +1,0 @@
-SKIP="This requires webkitgtk3 not available in MSB, but available through SBo"
-ADDREQUIRES=""

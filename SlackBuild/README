@@ -7,8 +7,9 @@ Features:
   - Highly automated (no interaction required)
   - Output repositories suitable for use with slackpkg+
 
+You will probably also want to install slackrepo-hints.
 
-Optional runtime requirement
+Optional runtime requirement: fakeroot
 
 fakeroot is required if you want to build as a non-root user. You must also
 edit the file /etc/sudoers.d/slackrepo -- replace "user1,user2,user3" with

@@ -1,2 +1,0 @@
-GROUPADD="295:sks"
-USERADD="295:sks:-d/var/lib/sks:-r:-M:-e1970-01-02:-s/sbin/nologin"

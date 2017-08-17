@@ -1,2 +1,0 @@
-OPTIONS="A52DEC=yes FAAC=yes LAME=yes LIBDV=yes LIBMPEG2=yes MJPEGTOOLS=yes QUICKTIME=yes X264=yes XVID=yes"
-ADDREQUIRES="faac lame libdv libmpeg2 mjpegtools libquicktime x264 xvidcore"

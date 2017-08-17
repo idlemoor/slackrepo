@@ -1,2 +1,0 @@
-GROUPADD="259:hiawatha 260:php-fcgi"
-USERADD="259:hiawatha:-d/:-s/bin/false 260:php-fcgi:-d/:-s/bin/false"

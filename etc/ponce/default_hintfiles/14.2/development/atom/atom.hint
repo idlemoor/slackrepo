@@ -1,2 +1,0 @@
-OPTIONS="DELETE_CACHE=yes"
-PRAGMA="need_net"

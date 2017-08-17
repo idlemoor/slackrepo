@@ -1,1 +1,0 @@
-ADDREQUIRES="rtmpdump pycrypto python-librtmp futures singledispatch python-requests"

@@ -1,2 +1,0 @@
-GROUPADD="257:pcscd"
-USERADD="257:pcscd:-d/var/run/pcscd"

@@ -1,1 +1,0 @@
-ADDREQUIRES="pygobject3 libgtop gtksourceview mate-common mate-icon-theme mate-panel yelp-tools"

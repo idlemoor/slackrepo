@@ -1,3 +1,0 @@
-DOWNLOAD="no"
-GROUPADD="329:dba"
-USERADD="329:oracle:-d/u01/app/oracle:-s/bin/bash:-g329"

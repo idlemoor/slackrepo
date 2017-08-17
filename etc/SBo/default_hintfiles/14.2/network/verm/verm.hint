@@ -1,2 +1,0 @@
-GROUPADD="346:verm"
-USERADD="346:verm:-d/var/lib/verm"

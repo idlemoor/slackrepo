@@ -1,2 +1,0 @@
-GROUPADD="268:bacula"
-USERADD="268:bacula:-d/dev/null:-s/bin/false"

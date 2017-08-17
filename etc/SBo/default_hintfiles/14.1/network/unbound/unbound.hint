@@ -1,2 +1,0 @@
-GROUPADD="304:unbound"
-USERADD="304:unbound:-r:-d/etc/unbound/:-s/sbin/nologin"

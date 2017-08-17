@@ -1,2 +1,0 @@
-ADDREQUIRES="texi2html"
-CLEANUP="s_reinstall tetex tetex-doc a2ps"

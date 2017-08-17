@@ -1,2 +1,0 @@
-ADDREQUIRES="autoconf-archive cinnamon-menus cinnamon-settings-daemon colord gnome-common gnome-menus krb5 libgnomekbd"
-PRAGMA="download_basename"

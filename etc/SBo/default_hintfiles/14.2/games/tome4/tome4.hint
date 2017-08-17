@@ -1,2 +1,0 @@
-NUMJOBS="-j1"
-PRAGMA="noexport_ARCH"

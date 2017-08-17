@@ -1,2 +1,0 @@
-ADDREQUIRES="ffmpeg lsdvd ogmtools mjpegtools xvid4conf subtitleripper fping rar"
-NUMJOBS="-j1"

@@ -1,3 +1,0 @@
-GROUPADD="307:syncthing"
-USERADD="307:syncthing:-d/var/lib/syncthing:-s/bin/bash"
-PRAGMA="unset_ARCH"

@@ -1,2 +1,0 @@
-SKIP="This requires pysetuptools, python-distutils-extra and wmctrl (available via SBo)"
-ADDREQUIRES=""

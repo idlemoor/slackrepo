@@ -1,1 +1,0 @@
-ADDREQUIRES="scipy tox virtualenv"

@@ -1,2 +1,0 @@
-OPTIONS="BINDINGS=yes"
-ADDREQUIRES="numpy"

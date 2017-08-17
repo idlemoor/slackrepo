@@ -1,2 +1,0 @@
-GROUPADD="348:influxdb"
-USERADD="348:influxdb:-s/bin/false:-d/var/lib/influxdb"

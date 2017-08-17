@@ -1,3 +1,0 @@
-ADDREQUIRES=""
-CLEANUP="s_reinstall tcsh"
-PRAGMA="noexport_BUILD"

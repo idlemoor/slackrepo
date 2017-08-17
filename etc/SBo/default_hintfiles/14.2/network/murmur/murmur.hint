@@ -1,2 +1,0 @@
-GROUPADD="261:murmur"
-USERADD="261:murmur:-d/var/lib/murmur"

@@ -1,2 +1,0 @@
-GROUPADD="252:nexus"
-USERADD="252:nexus:-d/bin/sh"

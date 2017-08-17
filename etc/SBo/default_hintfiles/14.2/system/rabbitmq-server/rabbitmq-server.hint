@@ -1,2 +1,0 @@
-GROUPADD="319:rabbitmq"
-USERADD="319:rabbitmq:-cRabbitMQ:-d/var/lib/rabbitmq:-s/bin/sh"

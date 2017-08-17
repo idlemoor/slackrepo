@@ -1,2 +1,0 @@
-GROUPADD="254:jboss"
-USERADD="254:jboss:-M:-r:-s/bin/bash:-d/usr/share/jboss-as"

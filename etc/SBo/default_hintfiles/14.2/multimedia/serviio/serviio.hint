@@ -1,2 +1,0 @@
-GROUPADD="serviio:337"
-USERADD="serviio:337:-d/opt/serviio"

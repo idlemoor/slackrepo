@@ -68,11 +68,7 @@ for conffile in etc/slackrepo_*.conf; do
   repo=$(basename $conffile .conf | sed 's/slackrepo_//')
   cp -a $conffile $PKG/etc/$PRGNAM/$(basename $conffile).new
   mkdir -p $PKG/etc/$PRGNAM/$repo/hintfiles
-  if [ -d etc/$repo/default_hintfiles ]; then
-    cp -a etc/$repo/default_hintfiles $PKG/etc/$PRGNAM/$repo/
-  else
-    mkdir -p $PKG/etc/$PRGNAM/$repo/default_hintfiles
-  fi
+  mkdir -p $PKG/etc/$PRGNAM/$repo/default_hintfiles
   mkdir -p $PKG/var/log/$PRGNAM/$repo
   mkdir -p $PKG/var/lib/$PRGNAM/$repo
 done

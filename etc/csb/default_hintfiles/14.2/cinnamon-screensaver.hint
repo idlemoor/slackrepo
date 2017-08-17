@@ -1,2 +1,0 @@
-ADDREQUIRES="cinnamon-desktop libgnomekbd gnome-common pam python3"
-PRAGMA="download_basename"

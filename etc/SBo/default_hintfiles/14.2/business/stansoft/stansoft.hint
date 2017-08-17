@@ -1,2 +1,0 @@
-GROUPADD="325:stansoft"
-USERADD="325:stansoft:-cStansoft:-s/bin/bash"

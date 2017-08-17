@@ -1,2 +1,0 @@
-CLEANUP="depmod -a"
-PRAGMA="unset_DISTCC_HOSTS"

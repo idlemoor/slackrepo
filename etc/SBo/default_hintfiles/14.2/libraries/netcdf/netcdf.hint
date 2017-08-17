@@ -1,2 +1,0 @@
-ADDREQUIRES="hdf"
-OPTIONS="HDF4=yes"

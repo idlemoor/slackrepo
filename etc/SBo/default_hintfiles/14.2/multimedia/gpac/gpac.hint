@@ -1,1 +1,0 @@
-ADDREQUIRES="wxPython faad2 ffmpeg xvidcore jack-audio-connection-kit"

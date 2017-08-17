@@ -1,2 +1,0 @@
-GROUPADD="230:davfs2"
-USERADD="230:davfs2:-d/var/cache/davfs2"

@@ -1,2 +1,0 @@
-GROUPADD="322:zookeeper"
-USERADD="322:zookeeper:-d/var/lib/zookeeper:-s/bin/sh"

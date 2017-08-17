@@ -1,2 +1,0 @@
-GROUPADD="227:thttpd"
-USERADD="227:thttpd:-d/"

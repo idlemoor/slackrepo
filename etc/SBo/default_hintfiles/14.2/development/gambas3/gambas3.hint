@@ -1,1 +1,0 @@
-ADDREQUIRES="alure gtkglext imlib2 unixODBC sqlite2 postgresql qt5"

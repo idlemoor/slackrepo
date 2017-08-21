@@ -346,15 +346,15 @@ function calculate_item_status
     # If the git rev has changed => update
     if [ "$pkgrev" != "$currrev" ]; then
       if [ "${GITDIRTY[$itemid]}" != 'y' ] && [ "${pkgrev/*+/+}" != '+dirty' ]; then
-        # if only README, slack-desc and .info have changed, don't build
+        # if only README*, slack-desc and .info have changed, don't build
         # (the VERSION in the .info file has already been checked ;-)
         modifilelist=( $(cd "$SR_SBREPO"; git diff --name-only "$pkgrev" "$currrev" -- "$itemdir" 2>/dev/null) )
         if [ $? = 0 ]; then
           for modifile in "${modifilelist[@]}"; do
             bn="${modifile##*/}"
-            [ "$bn" = "README" ] && continue
-            [ "$bn" = "slack-desc" ] && continue
-            [ "$bn" = "$itemprgnam.info" ] && continue
+            case "$bn" in
+              README* | slack-desc | "$itemprgnam.info" )  continue ;;
+            esac
             STATUS[$itemid]="update"
             STATUSINFO[$itemid]="update for git $shortcurrrev"
             # get title of the latest commit message

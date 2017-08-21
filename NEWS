@@ -1,3 +1,57 @@
+slackrepo-0.3, September 2017
+
+The following new features and improvements have been added since the release
+of slackrepo-0.2.0:
+
+  * Default hintfiles have been moved to the slackrepo-hints package,
+    so you now need both slackrepo and slackrepo-hints if you use the
+    default hintfiles (recommended).
+
+  * CPU, memory and disk space usage is recorded during builds. A summary is shown 
+    on the console if the build takes more than five minutes, and a log is created
+    in the log directory.
+
+  * There are several dependency hint improvements and a new config file option.
+    - the new SUBSTITUTE config file option allows you to set a global policy for
+      replacing dependencies in all builds, for example:
+        SUBSTITUTE="jdk => openjdk, jack_audio_connection_kit => jack2"
+    - the new DELREQUIRES hint deletes a dependency (it's the opposite of ADDREQUIRES)
+    - the new BUILDTIME hint deletes dependencies from the repository .dep file
+      and slapt-get information
+    - the new RUNTIME hint adds dependencies to the repository .dep file and slapt-get
+      information
+
+  * The new 'python3' pragma gives you a single easy way to force python3 support, 
+    including SlackBuilds that automatically detect Python 3, SlackBuilds that need
+    a PYTHON3 option, and even to add Python 3 support into SlackBuilds that do not
+    support it. (Thanks to Jeremy Hansen.)
+
+  * The new 'kernelmod' and 'kernel' pragmas enable automatic rebuilding of a package
+    when the build system's kernel is upgraded.
+
+  * The new 'x86arch' pragma sets the correct arch for 32 bit binary repack
+    SlackBuilds.
+
+  * The new 'curl' and 'wget' pragmas fake the user agent string when downloading.
+
+  * If downloading from the normal URL fails, downloads now fall back to both
+    sbosrcarch and Slackbuilds Direct Links.
+
+  * The new --debug control argument is a quick way of setting
+    --very-verbose --dry-run --lint --keep-tmp
+
+  * Some warnings have been revised and new warnings have been added.
+
+  * Warnings can be suppressed selectively for specific builds with the new
+    'NOWARNING' hint.
+
+  * The lint command and --lint control argument now accept suboptions for doing
+    checks selectively.
+
+  * Experimental support for reproducible builds has been added (set the config
+    variable REPRODUCIBLE='y').
+
+
 slackrepo-0.2.0, May 2015
 
 The following new features and improvements have been added since the release
@@ -12,7 +66,7 @@ of slackrepo-0.1.0 last year:
     clean (this feature requires the 'fakeroot' package, available from
     SlackBuilds.org) - see the FAQ
 
-  * Automatic download fallback to Slackbuilds Direct Links if the original 
+  * Automatic download fallback to Slackbuilds Direct Links if the original
     download has gone down
 
   * On Slackware -current, the default is to build from Matteo Bernardini's
@@ -46,7 +100,7 @@ of slackrepo-0.1.0 last year:
 
   * The SPECIAL hint has been renamed to PRAGMA (but SPECIAL is still accepted)
 
-  * Revised and additional hintfiles Thanks to Panagiotis Nikolaou for the
+  * Revised and additional hintfiles, thanks to Panagiotis Nikolaou for the
     contributions!
 
   * sqlite database to track package revision info (the previous release of

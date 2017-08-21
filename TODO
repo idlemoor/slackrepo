@@ -1,17 +1,15 @@
 TODO
 ----
 
-Multi-repo support
+Use sbosrcarch structure for source repo (rsyncable) and make by-md5sum
+the primary access route
 
-Share package dirs
+Share package dirs (Slackware structure)
 
-Rewrite argument parsing
+Full support for reproducible building
 
-More testing for multilib cross-compiles
+Cross-repo dependencies and builds
 
 ARM support
 
 speed up gen_repos_files.sh
-changelog even if no gen_repos_files.sh
-
-Rebuilds to permit circular deps

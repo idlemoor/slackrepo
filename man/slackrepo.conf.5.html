@@ -1,44 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>slackrepo.conf(5)</title>
-<link rel="icon" type="image/x-icon" href="favicon.ico">
-<link rel="shortcut icon" href="favicon.ico">
-<link rel="stylesheet" type="text/css" href="slackrepostyle.css">
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>slackrepo(8)</title>
+  <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
+
+  <link rel="stylesheet" href="/slackrepo/css/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro|Droid+Sans+Mono" type="text/css">
+
+
+  <link rel="canonical" href="https://idlemoor.github.io/slackrepo/slackrepo/man/slackrepo.conf.5.html">
+  <link rel="alternate" type="application/rss+xml" title="slackrepo" href="https://idlemoor.github.io/slackrepo/slackrepo/feed.xml">
+  <link rel="shortcut icon" type="image/png" href="/slackrepo/favicon.png" >
+
 </head>
 
 <body>
+<header class="site-header">
+  <div class="wrapper">
+    <a class="site-title" href="/slackrepo/">slackrepo</a>
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+      <div class="nav-trigger">
+        <a class="site-nav-link" href="/slackrepo/news.html">News</a>
+<a class="site-nav-link" href="/slackrepo/download.html">Download</a>
+<a class="site-nav-link" href="/slackrepo/quickstart.html">Quick&nbsp;Start</a>
+<a class="site-nav-link" href="/slackrepo/doc/">Documentation</a>
+<a class="site-nav-link" href="/slackrepo/screenshots.html">Screenshots</a>
 
-<header>
-<h2>manpages</h2>
-<p><a href="slackrepo.8.html">slackrepo(8)</a> &bull;
-<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a> &bull;
-<a href="slackrepo.hint.5.html">slackrepo.hint(5)</a><p>
+        
+        <br class="not-when-small" />
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.8.html">slackrepo.8</a>
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.conf.5.html">slackrepo.conf.5</a>
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.hint.5.html">slackrepo.hint.5</a>
+
+        
+      </div>
+    </nav>
+  </div>
 </header>
 
-<nav>
-<h2><a href="index.html">slackrepo</a></h2>
-<ul>
-<li><a href="news.html">News</a></li>
-<li><a href="download.html">Download</a></li>
-<li><a href="quickstart.html">Quick start</a></li>
-<li><a href="screenshots.html">Screenshots</a></li>
-<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
-<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
-<li>
-<ul>
-<li><a href="slackrepo.8.html">slackrepo(8)</a></li>
-<li><b style="color:red">&bull;</b>&nbsp;<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a></li>
-<li><a href="slackrepo.hint.5.html">slackrepo.hint(5)</a></li>
-</ul>
-</li>
-</ul>
-</nav>
-
-<div id="man">
+<div class="page-content">
+  <div class="wrapper">
+    <div id="man">
 
 <a name="top"></a>
 <h2>slackrepo.conf (5)</h2>
@@ -54,16 +68,16 @@ slackrepo.conf - repository configuration files for slackrepo
 
 <a name="contents"></a><h3>CONTENTS</h3>
 <blockquote>
-<a href="#1">Synopsis</a><br>
-<a href="#2">Description</a><br>
-&nbsp; &nbsp; &nbsp;<a href="#3">Default repo ID and configuration directory</a><br>
-&nbsp; &nbsp; &nbsp;<a href="#4">Repository filestore locations</a><br>
-&nbsp; &nbsp; &nbsp;<a href="#5">Building packages</a><br>
-&nbsp; &nbsp; &nbsp;<a href="#6">Defaults for control arguments</a><br>
-&nbsp; &nbsp; &nbsp;<a href="#7">Calling gen_repos_files.sh</a><br>
-&nbsp; &nbsp; &nbsp;<a href="#8">Initial setup</a><br>
-&nbsp; &nbsp; &nbsp;<a href="#9">Environment variables</a><br>
-<a href="#10">See Also</a><br>
+<a href="#1">Synopsis</a><br />
+<a href="#2">Description</a><br />
+&nbsp; &nbsp; &nbsp;<a href="#3">Default repo ID and configuration directory</a><br />
+&nbsp; &nbsp; &nbsp;<a href="#4">Repository filestore locations</a><br />
+&nbsp; &nbsp; &nbsp;<a href="#5">Building packages</a><br />
+&nbsp; &nbsp; &nbsp;<a href="#6">Defaults for control arguments</a><br />
+&nbsp; &nbsp; &nbsp;<a href="#7">Calling gen_repos_files.sh</a><br />
+&nbsp; &nbsp; &nbsp;<a href="#8">Initial setup</a><br />
+&nbsp; &nbsp; &nbsp;<a href="#9">Environment variables</a><br />
+<a href="#10">See Also</a><br />
 </blockquote>
 
 
@@ -74,8 +88,8 @@ slackrepo.conf - repository configuration files for slackrepo
 <b>/etc/slackrepo/slackrepo_</b><i>ID</i><b>.conf</b> (where
 <i>ID</i> is a repository ID, for example,
 <b>SBo</b>)
-<br><b>~/.genreprc</b>
-<br><b>~/.slackreporc</b>
+<br /><b>~/.genreprc</b>
+<br /><b>~/.slackreporc</b>
 </blockquote>
 
 
@@ -106,7 +120,7 @@ environment variables or control arguments on the
 <i>/etc/slackrepo/slackrepo_ID.conf</i>.</p>
 <p>Note that all the examples below show the values that are set in the
 supplied configuration file for the <b>SBo</b> (SlackBuilds.org) repository ID.<p>
-</blockquote>
+&lt;/blockquote&gt;
 
 
 <a name="3">
@@ -300,7 +314,7 @@ KEEP_TMP='n'
 COLOR='auto'
 NICE='5'
 </pre>
-</blockquote>
+&lt;/blockquote&gt;
 
 
 <a name="7">
@@ -482,7 +496,7 @@ You can simply add export commands at the end of the configuration file.<p>
 export CC=clang
 export CXX=clang++
 </pre>
-</blockquote>
+&lt;/blockquote&gt;
 
 
 <a name="10">
@@ -500,12 +514,26 @@ slackpkg(8).
 <p></p>
 
 
-<hr>
+<hr />
 <table width="100%"><tbody>
 <tr> <td width="33%"><i>slackrepo-0.2.0</i></td> <td align="center" width="33%">SLACKREPO.CONF (5)</td> <td align="right" width="33%"><i>2015-05-01</i></td> </tr>
 </tbody></table>
 
+&lt;/div&gt;
+</p></p></blockquote></p></p></blockquote></p></p></blockquote></div>
+
+  </div>
 </div>
+<footer class="site-footer">
+  <div class="wrapper">
+    <p>
+      Page last modified 2017-08-23 11:39:59
+    </p>
+    
+  </div>
+</footer>
+
+
 
 </body>
 </html>

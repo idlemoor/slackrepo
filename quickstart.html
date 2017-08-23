@@ -1,96 +1,150 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>slackrepo - Quick start</title>
-<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
-<link rel="shortcut icon" href="/slackrepo/favicon.ico">
-<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Quick Start</title>
+  <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
+
+  <link rel="stylesheet" href="/slackrepo/css/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro|Droid+Sans+Mono" type="text/css">
+
+
+  <link rel="canonical" href="https://idlemoor.github.io/slackrepo/slackrepo/quickstart.html">
+  <link rel="alternate" type="application/rss+xml" title="slackrepo" href="https://idlemoor.github.io/slackrepo/slackrepo/feed.xml">
+  <link rel="shortcut icon" type="image/png" href="/slackrepo/favicon.png" >
+
 </head>
 
 <body>
+<header class="site-header">
+  <div class="wrapper">
+    <a class="site-title" href="/slackrepo/">slackrepo</a>
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+      <div class="nav-trigger">
+        <a class="site-nav-link" href="/slackrepo/news.html">News</a>
+<a class="site-nav-link" href="/slackrepo/download.html">Download</a>
+<a class="site-nav-link" href="/slackrepo/quickstart.html">Quick&nbsp;Start</a>
+<a class="site-nav-link" href="/slackrepo/doc/">Documentation</a>
+<a class="site-nav-link" href="/slackrepo/screenshots.html">Screenshots</a>
 
-<header>
-<h2>Quick start</h2>
-<p><a href="#running">Running</a> &bull;
-<a href="#examples">Examples</a> &bull;
-<a href="#commands">Commands</a> &bull;
-<a href="#options">Options</a> &bull;
-<a href="#logging">Logging</a> &bull;
+        
+      </div>
+    </nav>
+  </div>
 </header>
 
-<nav>
-<h2><a href="index.html">slackrepo</a></h2>
+<div class="page-content">
+  <div class="wrapper">
+    <h1 id="quick-start">Quick Start</h1>
+
+<p style="font-size:larger">Slackrepo is a highly automated tool for Slackware users to manage their own
+package repositories.</p>
+
+<p style="font-size:larger">It builds packages from a repository of SlackBuilds
+and then outputs the packages to a package repository.</p>
+
+<p style="font-size:larger">Some notable features are:</p>
+
 <ul>
-<li><a href="news.html">News</a></li>
-<li><a href="download.html">Download</a></li>
-<li><b style="color:red">&bull;</b>&nbsp;<a href="quickstart.html">Quick start</a></li>
-<li><a href="screenshots.html">Screenshots</a></li>
-<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
-<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
+  <li><b>Automatic updating</b> —
+revisions of the SlackBuild repository determine <a href="/slackrepo/doc/usage.html#updates">updates</a> and rebuilds of packages</li>
+  <li><b>Clean building</b> —
+<a href="/slackrepo/doc/usage.html#dependencies">dependencies</a> are built as a ‘tree’, not a linear ‘queue’,
+and packages that are out-of-date with respect to their dependencies are automatically rebuilt;
+slackrepo creates a throw-away chroot environment for each build, to help keep your build box safe and clean.</li>
+  <li><b>Quality assurance checks</b> —
+optional <a href="/slackrepo/doc/checks.html">lint checks</a> can be performed on the SlackBuild files and built packages</li>
+  <li><b>No interaction required</b> —
+highly automated and suitable for batch building hundreds or even thousands of packages</li>
+  <li>Can build from
+<b><a class="ext" href="https://SlackBuilds.org">SlackBuilds.org</a> (SBo)</b>,
+Chess Griffin and Willy Sudiarto Raharjo’s <b>&lt;a class=”ext href=”https://github.com/mateslackbuilds/msb”“&gt;Mate SlackBuilds&lt;/a&gt; (msb)</b>,
+Willy’s <b><a class="ext" href="https://github.com/willysr/csb">Cinnamon SlackBuilds</a> (csb),</b>
+and Matteo Bernardini’s forked <b><a class="ext" href="https://github.com/Ponce/slackbuilds">SBo repository for slackware-current</a> (ponce).</b></li>
 </ul>
-</nav>
 
-<div id="main">
-
-<p class="scary">Before you use slackrepo to build packages,
-you should read and understand the page about <b><a href="hintfiles.html">hintfiles</a></b>.
-You should always check the README of each SlackBuild you intend to run.</p>
-
-<h3><a name="running"></a>Running</h3>
+<h2 id="running">Running</h2>
 
 <p>Slackrepo runs from the command line.
 It is not interactive and does not have a graphical interface.
 You can run it as the root user, or (if you do some additional setup) as a non-root user.
-Sources are downloaded on demand (unless already
-available in the local cache); a well-functioning network connection is
-assumed.</p>
+Sources are downloaded on demand (unless already available in the local cache);
+a well-functioning network connection is assumed.</p>
 
-<p>For best results, slackrepo is intended to be run on a "clean" standard
-Slackware environment (like a "build box" or a virtual machine), with a full
-installation of Slackware and no additional packages (or very few). You can
-then use the package repository to install the packages on other hosts (e.g.
-with slackpkg+). To keep your build box safe and clean, slackrepo can build
-in a throw-away chroot environment.</p>
+<p>For best results, slackrepo is intended to be run on a “clean” standard
+Slackware environment (like a “build box” or a virtual machine), with a
+full installation of Slackware and no additional packages (or very
+few).  You can then use the package repository to install the packages on
+other hosts (e.g. with <a class="ext" href="https://github.com/zuno/slackpkgplus">slackpkg+</a>).
+However, slackrepo can also be used as a simple local command-line package builder and installer.</p>
 
-<h3><a name="examples"></a>Examples</h4>
+<p class="scary">Before you use slackrepo to build packages,
+you should read and understand the page about <b><a href="/slackrepo/doc/hintfiles.html">hintfiles</a></b>.
+You should always check the README of each SlackBuild.</p>
 
-<p>Build graphics/shotwell, with all its dependencies:</p>
-<pre>slackrepo build graphics/shotwell</pre>
-<p>or just</p>
-<pre>slackrepo build shotwell</pre>
+<h2 id="examples">Examples</h2>
 
-<p>Build the whole SBo repository! (You will need about four days and 80Gb of disk space):</p>
-<pre>slackrepo build</pre>
+<div class="highlighter-rouge"><pre class="highlight"><code># Build graphics/shotwell, with all its dependencies
+slackrepo build graphics/shotwell
+# or just
+slackrepo build shotwell
 
-<p>Build and install shotwell and all its dependencies (note, the system will no longer be a clean build environment):</p>
-<pre>slackrepo build --install shotwell</pre>
+# Build and install shotwell and all its dependencies
+# (note, the system will no longer be a clean build environment)
+slackrepo build --install shotwell
+</code></pre>
+</div>
 
-<p>Update all the academic/ packages in your package repository for SBo's latest
-changes (this WILL NOT add new packages from upstream, unless they are required dependencies):</p>
-<pre>slackrepo update academic</pre>
+<div class="highlighter-rouge"><pre class="highlight"><code># Build the whole SBo repository!
+# (you will need at least four days and 80Gb of disk space)
+slackrepo build
+</code></pre>
+</div>
 
-<p>Build all the academic/ packages in SBo (this WILL add new packages from upstream,
-and will also update for SBo's latest changes):</p>
-<pre>slackrepo build academic</pre>
+<div class="highlighter-rouge"><pre class="highlight"><code># Update all the academic/ packages in your package repository for SBo's latest changes
+# (this WILL NOT add new packages, unless they are required dependencies)
+slackrepo update academic
 
-<p>Do a "dry run" update of all your existing SBo packages:</p>
-<pre>slackrepo update --dry-run</pre>
+# Build all the academic/ packages in SBo
+# (this WILL add new packages, and will also update for SBo's latest changes)
+slackrepo build academic
+</code></pre>
+</div>
 
-<p>Remove the package grass (note, its dependencies and dependers will not be removed):</p>
-<pre>slackpkg remove grass</pre>
+<div class="highlighter-rouge"><pre class="highlight"><code># Do a "dry run" update of all your existing SBo packages
+slackrepo update --dry-run
+</code></pre>
+</div>
 
-<p>Test-build colord (in the csb repo), with verbose messages; do not store the built package:</p>
-<pre>slackrepo build -v --repo=csb --lint --dry-run colord</pre>
+<div class="highlighter-rouge"><pre class="highlight"><code># Build colord (in the csb repo) with lint checks, do not store the built package,
+# and keep all the temporary files so you can investigate them
+slackrepo build --repo=csb --debug colord
+</code></pre>
+</div>
 
+<div class="highlighter-rouge"><pre class="highlight"><code># Remove the package grass
+# (dependencies and dependers will not be removed)
+slackpkg remove grass
+</code></pre>
+</div>
 
-<h3><a name="commands"></a>Commands</h3>
+<h2 id="commands">Commands</h2>
 
-<p>Slackrepo has six commands: build, rebuild, update, remove, revert and lint.</p>
+<p>Slackrepo has five main commands: build, rebuild, update, remove and revert.
+Other commands include lint, install and info.</p>
 
-<h5>(1) build command</h5>
+<h4 id="1-build">1. build</h4>
 
 <pre>slackrepo build [--options] [item...]</pre>
 
@@ -100,19 +154,19 @@ package already stored.  Missing or out-of-date dependencies are also
 built and stored into the package repository.  If no items are specified,
 everything in the SlackBuild repository is built and stored.</p>
 
-<p>Items can be specified as the name of an individual item (e.g. 'wxPython')
-or as an individual item in a category (e.g. 'libraries/wxPython'), or as
-an entire category of items (e.g. 'libraries').  Obviously, very large
+<p>Items can be specified as the name of an individual item (e.g. ‘wxPython’)
+or as an individual item in a category (e.g. ‘libraries/wxPython’), or as
+an entire category of items (e.g. ‘libraries’).  Obviously, very large
 amounts of storage will be needed if you build entire categories.</p>
 
-<h5>(2) rebuild command</h5>
+<h4 id="2-rebuild">2. rebuild</h4>
 
 <pre>slackrepo rebuild [--options] [item...]</pre>
 
 <p>The rebuild command is like the build command, except that packages already in the package
 repository will be rebuilt, even if they are up-to-date. That is the only difference!</p>
 
-<h5>(3) update command</h5>
+<h4 id="3-update">3. update</h4>
 
 <pre>slackrepo update [--options] [item...]</pre>
 
@@ -121,65 +175,72 @@ package repository to the SlackBuild repository. Packages are built,
 rebuilt or removed, as appropriate.  If no items are specified,
 everything in the package repository is compared.</p>
 
-<h5>(4) remove command</h5>
+<h4 id="4-remove">4. remove</h4>
 
 <pre>slackrepo remove [--options] item...</pre>
 
 <p>The remove command removes packages for each specified item from the package repository.
 Also, any cached source files are removed. Backups are made, in case you change your mind later.</p>
 
-<h5>(5) revert command</h5>
+<h4 id="5-revert">5. revert</h4>
 
 <pre>slackrepo revert [--options] item...</pre>
 
 <p>The revert command restores packages (and source files) for each specified item from the backup.
-The existing packages are backed up, in case you change your mind again and again and again...</p>
+The existing packages are backed up, in case you change your mind again and again and again…</p>
 
-<h5>(6) lint command</h5>
+<h4 id="other-commands">Other commands</h4>
 
-<pre>slackrepo lint [--options] [item...]</pre>
+<pre>slackrepo lint [--options] [item...]
+slackrepo install [--options] [item...]
+slackrepo info</pre>
 
-<p>The lint command performs quality tests on the source download URLs and source files, the SlackBuild,
-and the packages for each specified item.</p>
+<p>The lint command performs quality checks on the source download URLs and source files, the SlackBuild,
+and existing packages for each specified item.</p>
 
-<h3><a name="options"></a>Options</h3>
+<p>The install command is a quick way of typing <code>add --install</code>
+(the <code>--install</code> control argument is described below).</p>
 
-<h5>--repo=ID</h5>
+<p>The info command prints information about your system and repository setup.</p>
+
+<h2 id="options">Options</h2>
+
+<h4 id="--repoid">--repo=ID</h4>
 
 <p>Use the SlackBuild and package repository identified by ID.  The location of
 the SlackBuild and package repositories are determined by the configuration
 file /etc/slackrepo/repo_ID.conf.  The default repository ID is <strong>SBo</strong>
-(<a href="http://SlackBuilds.org" class="ext">SlackBuilds.org</a>), but others
+(<a class="ext" href="https://SlackBuilds.org">SlackBuilds.org</a>), but others
 supplied include
-<strong>msb</strong> (<a href="https://github.com/mateslackbuilds/msb" class="ext">Mate SlackBuilds</a>) and
-<strong>csb</strong> (<a href="https://github.com/willysr/csb" class="ext">Cinnamon SlackBuilds</a>).
+<strong>msb</strong> (<a class="ext" href="https://github.com/mateslackbuilds/msb">Mate SlackBuilds</a>) and
+<strong>csb</strong> (<a class="ext" href="https://github.com/willysr/csb">Cinnamon SlackBuilds</a>).
 On Slackware -current, the default repository is <strong>ponce</strong>
-(<a href="https://github.com/Ponce/slackbuilds" class="ext">SBo repository for slackware-current</a>).</p>
+(<a class="ext" href="https://github.com/Ponce/slackbuilds">SBo repository for slackware-current</a>).</p>
 
-<h5>-v, --verbose</h5>
+<h4 id="-v---verbose">-v, --verbose</h4>
 
 <p>Display detailed build output on the console during execution.
 See <a href="#logging">Logging</a> (below) for details.</p>
 
-<h5>--dry-run</h5>
-
-<p>Builds, rebuilds and updates will be performed, and removals will be notified,
-but no changes will be made to the package repository.</p>
-
-<h5>--install</h5>
+<h4 id="--install">--install</h4>
 
 <p>Built, rebuilt and updated packages will be installed on the host system.
-This results in a "queue" style build, and packages may not be 100% clean of
+This results in a “queue” style build, and packages may not be 100% clean of
 unexpected dependencies. The default is for packages <strong>not</strong> to
 be installed.</p>
 
-<h5>--lint</h5>
+<h4 id="--dry-run">--dry-run</h4>
 
-<p>The SlackBuild files, source downloads and packages will be subjected to additional
-quality tests during the build.</p>
+<p>Packages will be built, but will not be saved in the repository.</p>
 
+<h4 id="--debug">--debug</h4>
 
-<h3><a name="logging"></a>Logging</h3>
+<p>This is short for <code>-vv --lint --dry-run --keep-tmp</code>. Verbose build output
+will be forced. The SlackBuild files, source downloads and packages will be subjected
+to quality checks. Packages will not be saved in the repository. Temporary files
+will be kept so you can investigate any problems.</p>
+
+<h2 id="logging">Logging</h2>
 
 <p>All messages from slackrepo are sent to a main log file.  Progress messages are
 displayed on the screen.</p>
@@ -190,14 +251,25 @@ file, but is not displayed on the screen unless you specify the <code>--verbose<
 
 <p>The log files are in a repository-specific directory.  A new main log file is created
 for each run of slackrepo, with a name of the form
-<br><code>/var/log/slackrepo/SBo/slackrepo_YYYY-MM-DD_hh:mm:ss.log</code></p>
+<br /><code>/var/log/slackrepo/SBo/slackrepo_YYYY-MM-DD_hh:mm:ss.log</code></p>
 
 <p>Each item-specific log file is in a subdirectory if the SlackBuilds directory
-has subdirectories.  For example, the log file for building the SBo item 'graphics/shotwell' is
-<br><code>/var/log/slackrepo/SBo/graphics/shotwell/build.log</code></p>
+has subdirectories.  For example, the log file for building the SBo item ‘graphics/shotwell’ is
+<br /><code>/var/log/slackrepo/SBo/graphics/shotwell/build.log</code></p>
 
 
+  </div>
 </div>
+<footer class="site-footer">
+  <div class="wrapper">
+    <p>
+      Page last modified 2017-08-23 11:39:59
+    </p>
+    
+  </div>
+</footer>
+
+
 
 </body>
 </html>

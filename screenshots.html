@@ -1,80 +1,153 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>slackrepo - Screenshots</title>
-<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
-<link rel="shortcut icon" href="/slackrepo/favicon.ico">
-<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Screenshots</title>
+  <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
+
+  <link rel="stylesheet" href="/slackrepo/css/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro|Droid+Sans+Mono" type="text/css">
+
+
+  <link rel="canonical" href="https://idlemoor.github.io/slackrepo/slackrepo/screenshots.html">
+  <link rel="alternate" type="application/rss+xml" title="slackrepo" href="https://idlemoor.github.io/slackrepo/slackrepo/feed.xml">
+  <link rel="shortcut icon" type="image/png" href="/slackrepo/favicon.png" >
+
 </head>
 
 <body>
+<header class="site-header">
+  <div class="wrapper">
+    <a class="site-title" href="/slackrepo/">slackrepo</a>
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+      <div class="nav-trigger">
+        <a class="site-nav-link" href="/slackrepo/news.html">News</a>
+<a class="site-nav-link" href="/slackrepo/download.html">Download</a>
+<a class="site-nav-link" href="/slackrepo/quickstart.html">Quick&nbsp;Start</a>
+<a class="site-nav-link" href="/slackrepo/doc/">Documentation</a>
+<a class="site-nav-link" href="/slackrepo/screenshots.html">Screenshots</a>
 
-<header>
-<h2>Screenshots</h2>
+        
+      </div>
+    </nav>
+  </div>
 </header>
 
-<nav>
-<h2><a href="index.html">slackrepo</a></h2>
-<ul>
-<li><a href="news.html">News</a></li>
-<li><a href="download.html">Download</a></li>
-<li><a href="quickstart.html">Quick start</a></li>
-<li><b style="color:red">&bull;</b>&nbsp;<a href="screenshots.html">Screenshots</a></li>
-<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
-<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
-</ul>
-</nav>
+<div class="page-content">
+  <div class="wrapper">
+    <h1 id="screenshots">Screenshots</h1>
 
-<div id="main">
+<div style="line-height:1">
 
-<p class="ssr" style="clear:both">
-<img src="screenbuild.png" alt="screenshot of 'slackrepo build scons'" title="slackrepo build scons">
-Building the package 'development/scons' from SlackBuilds.org is simple.
-Just type
-<br /><code>slackrepo build scons</code></p>
-<p class="ssr">When it has finished, slackrepo shows a summary of what was done.</p>
-
-<p class="ssl" style="clear:both">
-<img src="screendeps.png" alt="screenshot of a build with dependencies: 'slackrepo build viking'" title="slackrepo build viking">
-Dependencies are automatically built.</p>
-<p class="ssl">In this case, we want to build viking. We already have packages for scons and libgexiv2, but gpsd needs to be added.</p>
-
-<p class="ssr" style="clear:both">
-<img src="screenupdate.png" alt="screenshot of an update: 'slackrepo update netcdf'" title="slackrepo update netcdf">
-When your existing packages in your package repository have been updated in the
-upstream SlackBuild repository, 
-<br><code>slackrepo update</code>
-<br>will apply the updates.</p>
-
-<p class="ssl" style="clear:both">
-<img src="screenrebuild.png" alt="screenshot of updated dependency and rebuild: 'slackrepo update gdal'" title="slackrepo update gdal">
-A package will automatically be rebuilt if any of its dependencies have been
-updated.</p>
-
-<p class="ssr" style="clear:both">
-<img src="screenfail.png" alt="screenshot of a build failure: 'slackrepo build xonclock'" title="slackrepo build xonclock">
-When a build fails, slackrepo attempts to show significant errors from the item's log file,
-using an awesome regular expression devised by Eric Hameleers for his
-<a href="http://www.slackware.com/~alien/tools/checkpkg" class="ext">checkpkg</a>
-script.</p>
-<p class="ssr">The selected errors are not always complete or relevant,
-but they will usually help to locate the problem.  The item's log file will always
-contain full details.</p>
-
-<p class="ssl" style="clear:both">
-<img src="screenverbose.png" alt="screenshot of verbose output: 'slackrepo build -v jhead'" title="slackrepo build -v jhead">
-Use -v (--verbose) if you want to see detailed build output (like manual building, sbopkg, etc).</p>
-<p class="ssl">Build output from cmake, git, clang, mono, waf and gcc-4.9 is coloured
-(but if you don't like that, you can disable it).
-Log file output is filtered to remove the colour codes.
+<p>
+    Building the package 'development/scons' from SlackBuilds.org is
+    simple. Just type
+    <br /><code>slackrepo build scons</code>
 </p>
-<p class="ssl">You can make -v the default by editing the config file,
-setting <code>VERBOSE="y"</code>.
+<p>
+    When it has finished, slackrepo shows a summary of what was done.
+</p>
+<p style="margin-bottom:3rem">
+    <img src="/slackrepo/screenshots/screenbuild.png" alt="screenshot of 'slackrepo build scons'" title="slackrepo build scons" />
+</p>
+
+
+
+<p>
+    Dependencies are automatically built.
+</p>
+<p>
+    In this case, we want to build viking. We already have packages for
+    scons and libgexiv2, but gpsd needs to be added.
+</p>
+<p style="margin-bottom:3rem">
+    <img src="/slackrepo/screenshots/screendeps.png" alt="screenshot of a build with dependencies: 'slackrepo build viking'" title="slackrepo build viking" />
+</p>
+
+<p></p>
+
+<p>
+    When your existing packages in your package repository have been
+    updated in the upstream SlackBuild repository,
+    <br /><code>slackrepo update</code>
+    <br />will apply the updates.
+</p>
+<p style="margin-bottom:3rem">
+    <img src="/slackrepo/screenshots/screenupdate.png" alt="screenshot of an update: 'slackrepo update netcdf'" title="slackrepo update netcdf" />
+</p>
+
+<p></p>
+
+<p>
+    A package will automatically be rebuilt if any of its dependencies
+    have been updated.
+</p>
+<p style="margin-bottom:3rem">
+    <img src="/slackrepo/screenshots/screenrebuild.png" alt="screenshot of updated dependency and rebuild: 'slackrepo update gdal'" title="slackrepo update gdal" />
+</p>
+
+<p></p>
+
+<p>
+    When a build fails, slackrepo attempts to show significant errors
+    from the item's log file, using an awesome regular expression
+    devised by Eric Hameleers for his
+    <a class="ext" href="http://www.slackware.com/~alien/tools/checkpkg">checkpkg</a>
+    script.
+</p>
+<p>
+    The selected errors are not always complete or relevant, but they
+    will usually help to locate the problem.  The item's log file will
+    always contain full details.
+</p>
+<p style="margin-bottom:3rem">
+    <img src="/slackrepo/screenshots/screenfail.png" alt="screenshot of a build failure: 'slackrepo build xonclock'" title="slackrepo build xonclock" />
+</p>
+
+<p></p>
+
+<p>
+    Use -v (--verbose) if you want to see detailed build output (like
+    manual building, sbopkg, etc).
+</p>
+<p>
+    Build output (from cmake, git, gcc, clang, mono, waf and others) is
+    coloured (but if you don't like that, you can disable it). Log file
+    output is filtered to remove the colour codes.
+</p>
+<p>
+    You can make -v the default by editing the config file, setting
+    <code>VERBOSE="y"</code>.
+</p>
+<p style="margin-bottom:3rem">
+    <img src="/slackrepo/screenshots/screenverbose.png" alt="screenshot of verbose output: 'slackrepo build -v jhead'" title="slackrepo build -v jhead" />
+</p>
 
 </div>
+
+  </div>
+</div>
+<footer class="site-footer">
+  <div class="wrapper">
+    <p>
+      Page last modified 2017-08-23 11:39:59
+    </p>
+    
+  </div>
+</footer>
+
+
 
 </body>
 </html>

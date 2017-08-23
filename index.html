@@ -1,84 +1,113 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Introduction to slackrepo</title>
-<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
-<link rel="shortcut icon" href="/slackrepo/favicon.ico">
-<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Introduction</title>
+  <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
+
+  <link rel="stylesheet" href="/slackrepo/css/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro|Droid+Sans+Mono" type="text/css">
+
+
+  <link rel="canonical" href="https://idlemoor.github.io/slackrepo/slackrepo/">
+  <link rel="alternate" type="application/rss+xml" title="slackrepo" href="https://idlemoor.github.io/slackrepo/slackrepo/feed.xml">
+  <link rel="shortcut icon" type="image/png" href="/slackrepo/favicon.png" >
+
 </head>
 
 <body>
+<header class="site-header">
+  <div class="wrapper">
+    <a class="site-title" href="/slackrepo/">slackrepo</a>
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+      <div class="nav-trigger">
+        <a class="site-nav-link" href="/slackrepo/news.html">News</a>
+<a class="site-nav-link" href="/slackrepo/download.html">Download</a>
+<a class="site-nav-link" href="/slackrepo/quickstart.html">Quick&nbsp;Start</a>
+<a class="site-nav-link" href="/slackrepo/doc/">Documentation</a>
+<a class="site-nav-link" href="/slackrepo/screenshots.html">Screenshots</a>
 
-<header>
-<h2>Introduction</h2>
+        
+      </div>
+    </nav>
+  </div>
 </header>
 
-<nav>
-<h2><a href="index.html">slackrepo</a></h2>
-<ul>
-<li><a href="news.html">News</a></li>
-<li><a href="download.html">Download</a></li>
-<li><a href="quickstart.html">Quick start</a></li>
-<li><a href="screenshots.html">Screenshots</a></li>
-<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
-<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
-</ul>
-</nav>
+<div class="page-content">
+  <div class="wrapper">
+    <div class="floatleft">
+<h1 id="introduction">Introduction</h1>
+<p style="font-size:large">
+Slackrepo is a highly automated tool for Slackware users to manage
+their own package repositories. It builds packages from a repository of
+SlackBuilds (for example, a clone of
+<a class="ext" href="https://SlackBuilds.org">SlackBuilds.org</a>),
+and then outputs the packages to a package repository.
+</p>
+<p style="font-size:large">
+See the <a href="/slackrepo/quickstart.html">Quick start</a> and
+<a href="/slackrepo/download.html">Download</a> pages for more information.
+</p>
+</div>
 
-<div id="main">
+<div class="floatright">
+<a href="/slackrepo/screenshots.html">
+<img src="/slackrepo/screenshots/screenmate.png" alt="screenshot of mate being built" title="mate being built" />
+</a>
+</div>
 
-<h3>New version! slackrepo-0.2.0, May 2015</h3>
+<div style="clear: both"></div>
 
-<p class="ssl" style="clear:both;font-size:larger">
-<img src="screenmate.png" alt="screenshot of mate being built" title="mate being built">
-This new version has many new features, improvements and of course bug fixes.
-See the <a href="news.html">News</a> page for details.</p>
-<p class="ssl" style="font-size:larger">You can <b><a href="download.html">download a prebuilt package here</a></b>.
-  <!-- or you can build it yourself thanks to <a href="http://slackbuilds.org/repository/14.1/system/slackrepo/" class="ext">SlackBuilds.org</a>. -->
+<h2 id="new-release-03-september-2017">New release 0.3, September 2017</h2>
+
+<p style="font-size:large">
+    After a long time in development, here is a new release for you!
 </p>
 
-<h3 style="clear:both">What is it?</h3>
+<p><b>Important! The default hintfiles are now in a separate package.</b>
+<br />Here are the two prebuilt packages that you need:
+<br /><b><a class="ext" href="https://files.idlemoor.tk/packages/slackrepo-0.3-noarch-1_dbs.txz">slackrepo-0.3-noarch-1_dbs.txz</a></b>
+<br /><b><a class="ext" href="https://files.idlemoor.tk/packages/slackrepo-hintfiles-20170826-noarch-1_dbs.txz">slackrepo-hintfiles-20170826-noarch-1_dbs.txz</a></b>
+<br />See the <a href="/slackrepo/download.html">Download</a> page for signatures and md5sums.</p>
 
-<p>Slackrepo is a highly automated tool for Slackware users to manage their own
-package repositories. It builds packages from a repository of SlackBuilds
-(for example, a clone of
-<a href="http://SlackBuilds.org" class="ext">SlackBuilds.org</a>),
-and then outputs the packages to a package repository.</p>
+<p>New features in this release include fine-grained dependency control
+(SUBSTITUTE, DELREQUIRES, BUILDTIME and RUNTIME), resource monitoring,
+Python 3 injection, and more lint checks with suppression of warnings.
+Bug fixes include --install, temp file usage and mount handling.
+See the <a href="/slackrepo/news.html">News</a> page for more details.</p>
 
-<p>Some notable features are:</p>
-<ul>
-<li><b>Automatic updating</b> &mdash; revisions of the SlackBuild repository determine <a href="usagenotes.html#updates">updates</a> and rebuilds of
-packages</li>
-<li><b>Clean building</b> &mdash; <a href="usagenotes.html#dependencies">dependencies</a> are built as a 'tree', not a linear 'queue',
-and packages that are out-of-date with respect to their dependencies are automatically rebuilt;
-slackrepo can create a throw-away chroot environment for each build, to help keep your build box safe and clean.</li>
-<li><b>Quality assurance testing</b> &mdash; optional <a href="tests.html">tests</a> can be performed on the SlackBuild files and built packages</li>
-<li><b>No interaction required</b> &mdash; highly automated and suitable for batch building hundreds or even thousands of packages</li>
-<li>Can build from
-<b><a href="http://SlackBuilds.org" class="ext">SlackBuilds.org</a> (SBo)</b>,
-Chess Griffin and Willy Sudiarto Raharjo's <b><a href="https://github.com/mateslackbuilds/msb" class="ext">Mate SlackBuilds</a> (msb)</b>,
-Willy's <b><a href="https://github.com/willysr/csb" class="ext">Cinnamon SlackBuilds</a> (csb),</b>
-and Matteo Bernardini's forked <b><a href="https://github.com/Ponce/slackbuilds" class="ext">SBo repository for slackware-current</a> (ponce).</b>
-</ul>
-
-<p>For best results, slackrepo is intended to be run on a "clean" standard
-Slackware environment (like a "build box" or a virtual machine), with a
-full installation of Slackware and no additional packages (or very
-few).  You can then use the package repository to install the packages on
-other hosts (e.g. with <a href="https://github.com/zuno/slackpkgplus" class="ext">slackpkg+</a>).
-However, it can also be used as a simple command-line package builder
-and installer.</p>
-
-<p>Slackrepo is not affiliated with, or endorsed by, SlackBuilds.org or
-Slackware Linux, Inc.  The author thanks the awesome people behind those projects
-for their continuing generosity to the community.</p>
-<p>For avoidance of doubt,
-slackrepo is unrelated to the group communication software named Slack.</p>
-
+  </div>
 </div>
+<footer class="site-footer">
+  <div class="wrapper">
+    <p>
+      Page last modified 2017-08-23 11:39:59
+    </p>
+    
+    <p>
+  Slackrepo is not affiliated with, or endorsed by, SlackBuilds.org or Slackware Linux, Inc.
+  The author thanks the awesome people behind those projects for their continuing generosity to the community.
+</p>
+<p>
+  For avoidance of doubt, slackrepo is unrelated to the group communication software named Slack.
+</p>
+
+    
+  </div>
+</footer>
+
+
 
 </body>
 </html>

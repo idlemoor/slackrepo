@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Lint checks</title>
+  <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
+
+  <link rel="stylesheet" href="/slackrepo/css/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro|Droid+Sans+Mono" type="text/css">
+
+
+  <link rel="canonical" href="https://idlemoor.github.io/slackrepo/slackrepo/doc/checks.html">
+  <link rel="alternate" type="application/rss+xml" title="slackrepo" href="https://idlemoor.github.io/slackrepo/slackrepo/feed.xml">
+  <link rel="shortcut icon" type="image/png" href="/slackrepo/favicon.png" >
+
+</head>
+
+<body>
+<header class="site-header">
+  <div class="wrapper">
+    <a class="site-title" href="/slackrepo/">slackrepo</a>
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+      <div class="nav-trigger">
+        <a class="site-nav-link" href="/slackrepo/news.html">News</a>
+<a class="site-nav-link" href="/slackrepo/download.html">Download</a>
+<a class="site-nav-link" href="/slackrepo/quickstart.html">Quick&nbsp;Start</a>
+<a class="site-nav-link" href="/slackrepo/doc/">Documentation</a>
+<a class="site-nav-link" href="/slackrepo/screenshots.html">Screenshots</a>
+
+        
+        <br class="not-when-small" />
+<a class="site-nav-link" href="/slackrepo/doc/usage.html">Usage&nbsp;notes</a>
+<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
+<a class="site-nav-link" href="/slackrepo/doc/faq.html">FAQ</a>
+<a class="site-nav-link" href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
+<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
+<a class="site-nav-link" href="/slackrepo/doc/structure.html">Repo&nbsp;structure</a>
+<a class="site-nav-link" href="/slackrepo/doc/checks.html">Checks</a>
+<a class="site-nav-link" href="/slackrepo/doc/links.html">Links</a>
+
+        
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="page-content">
+  <div class="wrapper">
+    <h1 id="lint-checks">Lint checks</h1>
+
+<p>The following checks are performed by the <code>lint</code> command, and by the
+<code>build</code>, <code>rebuild</code> and <code>update</code>
+commands if the <code>--lint</code> control argument is specified.
+When any checks fail, warnings are displayed and logged, but building continues.</p>
+
+<h3 id="prgnamslackbuild">prgnam.SlackBuild</h3>
+
+<ul>
+  <li>Should exist</li>
+</ul>
+
+<h3 id="slack-desc">slack-desc</h3>
+
+<ul>
+  <li>Should exist</li>
+  <li>Should have between 1 and 14 lines that start with <code>prgnam:</code></li>
+  <li>If the handy-ruler exists, it must be aligned correctly and have the correct format</li>
+  <li>No trailing spaces on <code>prgnam:</code> lines, i.e. no lines should match <code>^prgnam:&lt;sp&gt;&lt;sp&gt;*$</code></li>
+  <li>No <code>prgnam:</code> lines should have more than 73 chars of description</li>
+  <li>All other lines must be prefixed by <code>#</code>, or completely empty</li>
+</ul>
+
+<h3 id="prgnaminfo">prgnam.info</h3>
+
+<ul>
+  <li>Optional; its existence indicates an SBo-style SlackBuild</li>
+  <li>Should define PRGNAM, VERSION, HOMEPAGE, DOWNLOAD(_arch), MD5SUM(_arch), REQUIRES, MAINTAINER, EMAIL</li>
+  <li>Download URLs should work; to check this, the header is retrieved</li>
+  <li>PRGNAM should be the same as the .info file’s name and the .SlackBuild file’s name</li>
+  <li>Each item defined in REQUIRES should exist in the repo</li>
+</ul>
+
+<h3 id="readme">README</h3>
+
+<ul>
+  <li>Optional; if prgnam.info exists, README should exist</li>
+  <li>Should not contain long lines &gt;= 80 chars</li>
+</ul>
+
+<h3 id="package-name">Package name</h3>
+
+<ul>
+  <li>Package name should be in form $PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE</li>
+  <li>If the slackbuild produces one package, PRGNAM should be the same as the slackbuild’s name and should be the same as PRGNAM in the .info file</li>
+  <li>VERSION should be the same as VERSION in the .info file</li>
+  <li>ARCH should be i?86 or x86_64 (optionally suffixed with _<i>KNLVER</i>, _<i>LOCALE</i> etc), or noarch</li>
+  <li>BUILD should be numeric</li>
+  <li>TAG should be same as the repo’s TAG</li>
+  <li>PKGTYPE should be tgz, txz, tbz or tlz (and should be as set by the caller)</li>
+</ul>
+
+<h3 id="package-contents">Package contents</h3>
+
+<ul>
+  <li>Should be tar-1.13 compatible (path prefix should not start with <code>./</code>)</li>
+  <li>Compression type should correspond to package type suffix</li>
+  <li>Should only install to (bin)|(boot)|(dev)|(etc)|(lib)|(opt)|(sbin)|(srv)|(usr)|(var)|(install)</li>
+  <li>should contain install/slack-desc</li>
+  <li>nothing installed to usr/local</li>
+  <li>nothing installed to usr/share/man</li>
+  <li>all manpages gz compressed</li>
+  <li>should install without error</li>
+</ul>
+
+  </div>
+</div>
+<footer class="site-footer">
+  <div class="wrapper">
+    <p>
+      Page last modified 2017-08-23 11:39:59
+    </p>
+    
+  </div>
+</footer>
+
+
+
+</body>
+</html>

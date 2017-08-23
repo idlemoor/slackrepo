@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Configuration</title>
+  <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
+
+  <link rel="stylesheet" href="/slackrepo/css/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro|Droid+Sans+Mono" type="text/css">
+
+
+  <link rel="canonical" href="https://idlemoor.github.io/slackrepo/slackrepo/doc/config.html">
+  <link rel="alternate" type="application/rss+xml" title="slackrepo" href="https://idlemoor.github.io/slackrepo/slackrepo/feed.xml">
+  <link rel="shortcut icon" type="image/png" href="/slackrepo/favicon.png" >
+
+</head>
+
+<body>
+<header class="site-header">
+  <div class="wrapper">
+    <a class="site-title" href="/slackrepo/">slackrepo</a>
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+      <div class="nav-trigger">
+        <a class="site-nav-link" href="/slackrepo/news.html">News</a>
+<a class="site-nav-link" href="/slackrepo/download.html">Download</a>
+<a class="site-nav-link" href="/slackrepo/quickstart.html">Quick&nbsp;Start</a>
+<a class="site-nav-link" href="/slackrepo/doc/">Documentation</a>
+<a class="site-nav-link" href="/slackrepo/screenshots.html">Screenshots</a>
+
+        
+        <br class="not-when-small" />
+<a class="site-nav-link" href="/slackrepo/doc/usage.html">Usage&nbsp;notes</a>
+<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
+<a class="site-nav-link" href="/slackrepo/doc/faq.html">FAQ</a>
+<a class="site-nav-link" href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
+<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
+<a class="site-nav-link" href="/slackrepo/doc/structure.html">Repo&nbsp;structure</a>
+<a class="site-nav-link" href="/slackrepo/doc/checks.html">Checks</a>
+<a class="site-nav-link" href="/slackrepo/doc/links.html">Links</a>
+
+        
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="page-content">
+  <div class="wrapper">
+    <h1 id="configuration">Configuration</h1>
+
+<p>These configuration options are set in <code>slackrepo_SBo.conf</code>
+or <code>~/.slackreporc</code>.</p>
+
+<p><i>For full details, see the manpage
+<a href="/slackrepo/man/slackrepo.conf.5.html">slackrepo.conf(5)</a></i></p>
+
+<h3 id="default-repo-id-and-configuration-directory">Default repo ID and configuration directory</h3>
+
+<ul>
+  <li><code>REPO="SBo"</code> — the default repo ID.  This determines the configuration file
+<code>slackrepo_<i>ID</i>.conf</code> from which other configuration variables will be read.
+This can be set <b>only</b> in <code>~/.slackreporc</code>, but can be overridden by the <code>REPO</code> environment
+variable or by the command line option <code>--repo=<i>ID</i></code>.</li>
+  <li><code>CONFIGDIR="/etc/slackrepo"</code> — the configuration directory.  This specifies an alternative
+directory to be used instead of <code>/etc/slackrepo</code> to find the configuration files.
+This can be set <b>only</b> in <code>~/.slackreporc</code>, but can be overridden by the <code>CONFIGDIR</code> environment
+variable.</li>
+</ul>
+
+<h3 id="repository-filestore-locations">Repository filestore locations</h3>
+
+<p>The strings <code>%REPO%</code>, <code>%SLACKVER%</code> and <code>%ARCH%</code>
+are replaced by the repository ID (e.g. SBo), the Slackware version (e.g. 14.2),
+and the Slackware ARCH (e.g. i586).</p>
+
+<ul>
+  <li><code>SBREPO="/var/lib/slackrepo/%REPO%/slackbuilds"</code> — location of SlackBuilds repository</li>
+  <li><code>SRCREPO="/var/lib/slackrepo/%REPO%/source"</code> — location of downloaded source repository</li>
+  <li><code>PKGREPO="/var/lib/slackrepo/%REPO%/packages/%SLACKVER%/%ARCH%"</code> — location of package repository</li>
+  <li><code>PKGBACKUP="/var/lib/slackrepo/%REPO%/backups/%SLACKVER%/%ARCH%"</code> — location of backups</li>
+  <li><code>HINTDIR="/etc/slackrepo/%REPO%/hintfiles"</code> — location of <a href="/slackrepo/doc/hintfiles.html">Hintfiles</a></li>
+  <li><code>DEFAULT_HINTDIR="/etc/slackrepo/%REPO%/default_hintfiles/%SLACKVER%"</code> — location of default hintfiles</li>
+  <li><code>LOGDIR="/var/log/slackrepo/%REPO%"</code> — location of log files</li>
+  <li><code>DATABASE="/var/lib/slackrepo/%REPO%/database_%REPO%.sqlite3"</code> — location of the database</li>
+  <li><code>TMP="/tmp/%REPO%"</code> — directory for temporary files</li>
+</ul>
+
+<p>If you want to run slackrepo as an ordinary user, you can use something like
+this instead, and save it to .slackreporc in your ordinary user’s home directory:</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>SBREPO=~/slackrepo/%REPO%/slackbuilds
+SRCREPO=~/slackrepo/%REPO%/source
+PKGREPO=~/slackrepo/%REPO%/packages/%SLACKVER%/%ARCH%
+PKGBACKUP=~/slackrepo/%REPO%/backups/%SLACKVER%/%ARCH%
+HINTDIR=~/slackrepo/%REPO%/hintfiles
+DEFAULT_HINTDIR="/etc/slackrepo/%REPO%/default_hintfiles/%SLACKVER%"
+LOGDIR=~/slackrepo/%REPO%/logs
+DATABASE=~/slackrepo/%REPO%/database_%REPO%.sqlite3
+</code></pre>
+</div>
+<p>If you use ~ you should NOT use quotes “…”. You also need to edit the file
+<code>/etc/sudoers.d/slackrepo</code>, replacing <code><i>username</i></code> with your
+username:</p>
+<pre>
+User_Alias SLACKREPOERS = <i>username</i>
+Defaults:SLACKREPOERS !env_reset,!env_delete
+SLACKREPOERS ALL=(ALL) NOPASSWD: /usr/libexec/slackrepo/*
+</pre>
+
+<h3 id="building-packages">Building packages</h3>
+
+<ul>
+  <li><code>NUMJOBS=''</code> — number of make jobs to set in MAKEFLAGS (e.g., <code>NUMJOBS='-j2'</code>).
+Leave blank to have this automatically determined as one more than the number of processors on the build host.</li>
+  <li><code>ARCH=''</code> — arch for built packages (normally determined from the build host)</li>
+  <li><code>TAG='_SBo'</code> — tag for built packages (<strong>please change this</strong>
+if your packages will be publicly available, see <a class="ext" href="https://slackbuilds.org/faq/#package_repos">SlackBuilds.org FAQ 20</a>)</li>
+  <li><code>PKGTYPE='tgz'</code> — package compression type. Valid values are: tgz, txz, tbz, tlz</li>
+</ul>
+
+<h3 id="calling-gen_repos_filessh">Calling gen_repos_files.sh</h3>
+
+<ul>
+  <li><code>USE_GENREPOS='0'</code> — whether to use gen_repos_files.sh (to enable it, change 0 to 1)</li>
+</ul>
+
+<p>If you enable gen_repos_files.sh, you <strong>must</strong> set correct values for its
+configuration options in <code>/etc/slackrepo/slackrepo_SBo.conf</code>.  However, if
+you already use gen_repos_files.sh, it will still read your existing
+<code>~/.genreprc</code> file.  For details, see the man page <a href="/slackrepo/man/slackrepo.conf.5.html">slackrepo.conf(5)</a>.</p>
+
+  </div>
+</div>
+<footer class="site-footer">
+  <div class="wrapper">
+    <p>
+      Page last modified 2017-08-23 11:39:59
+    </p>
+    
+  </div>
+</footer>
+
+
+
+</body>
+</html>

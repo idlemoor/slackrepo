@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Repository structure</title>
+  <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
+
+  <link rel="stylesheet" href="/slackrepo/css/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro|Droid+Sans+Mono" type="text/css">
+
+
+  <link rel="canonical" href="https://idlemoor.github.io/slackrepo/slackrepo/doc/structure.html">
+  <link rel="alternate" type="application/rss+xml" title="slackrepo" href="https://idlemoor.github.io/slackrepo/slackrepo/feed.xml">
+  <link rel="shortcut icon" type="image/png" href="/slackrepo/favicon.png" >
+
+</head>
+
+<body>
+<header class="site-header">
+  <div class="wrapper">
+    <a class="site-title" href="/slackrepo/">slackrepo</a>
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+      <div class="nav-trigger">
+        <a class="site-nav-link" href="/slackrepo/news.html">News</a>
+<a class="site-nav-link" href="/slackrepo/download.html">Download</a>
+<a class="site-nav-link" href="/slackrepo/quickstart.html">Quick&nbsp;Start</a>
+<a class="site-nav-link" href="/slackrepo/doc/">Documentation</a>
+<a class="site-nav-link" href="/slackrepo/screenshots.html">Screenshots</a>
+
+        
+        <br class="not-when-small" />
+<a class="site-nav-link" href="/slackrepo/doc/usage.html">Usage&nbsp;notes</a>
+<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
+<a class="site-nav-link" href="/slackrepo/doc/faq.html">FAQ</a>
+<a class="site-nav-link" href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
+<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
+<a class="site-nav-link" href="/slackrepo/doc/structure.html">Repo&nbsp;structure</a>
+<a class="site-nav-link" href="/slackrepo/doc/checks.html">Checks</a>
+<a class="site-nav-link" href="/slackrepo/doc/links.html">Links</a>
+
+        
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="page-content">
+  <div class="wrapper">
+    <h1 id="repository-structure">Repository structure</h1>
+
+<h2 id="repository-paths">Repository paths</h2>
+
+<p>Multiple repositories are supported.  The Repository ID, e.g. <b>SBo</b>,
+selects a configuration file, e.g. <code>/etc/slackrepo/slackrepo_<b>SBo</b>.conf</code>, and
+the configuration file sets the paths of the SlackBuild repository, the
+source repository, the package repository, the hintfile and queuefile directories, and the
+log directory.  The Repository ID can be specified by the control argument
+<code>--repo=ID</code>, or by the <code>REPO</code> environment variable, or by setting <code>REPO=ID</code>
+in the file <code>~/.slackreporc</code>.  By default, the default default is <b>SBo</b>.</p>
+
+<p>Example showing repository trees for Repository ID <b>SBo</b>:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[REPO=SBo] /etc/slackrepo/slackrepo_SBo.conf
+            |
+[SBREPO]    |--/var/lib/slackrepo/SBo/slackbuilds/category/prgnam/prgnam.SlackBuild
+[SRCREPO]   |--/var/lib/slackrepo/SBo/source/category/prgnam/prgnam-1.0.4.tar.gz
+[PKGREPO]   |--/var/lib/slackrepo/SBo/packages/14.2/i586/category/prgnam/prgnam-1.0.4-i586-1_SBo.tgz
+[PKGBACKUP] |--/var/lib/slackrepo/SBo/backups/14.2/i586/category/prgnam/prgnam-1.0.3-i586-1_SBo.tgz
+            |
+[DATABASE]  |--/var/lib/slackrepo/SBo/database_SBo.sqlite3
+            |
+[HINTDIR]   |--/etc/slackrepo/SBo/hintfiles/[category/prgnam/]prgnam.hint
+            |
+[LOGDIR]    |--/var/log/slackrepo/SBo/category/prgnam/build.log
+            |--/var/log/slackrepo/SBo/category/prgnam/build.1.log.gz
+            |--/var/log/slackrepo/SBo/category/prgnam/config.log
+</code></pre>
+</div>
+
+<p>Under each of SBREPO, SRCREPO, PKGREPO, PKGBACKUP and LOGDIR is a subdirectory structure for each
+SBo category and item. In HINTDIR, the subdirectory structure is optional: this allows you
+to use your existing queuefile directory, if you have one.</p>
+
+<h2 id="package-repository-files">Package repository files</h2>
+
+<p>The following files are created by gen_repos_files.sh and slackrepo in the package repository.</p>
+
+<p>In the package repository’s root directory:</p>
+
+<ul>
+  <li><code>CHECKSUMS.md5</code> - md5 checksums for all the packages and the package metadata</li>
+  <li><code>CHECKSUMS.md5.asc</code> - a detached GPG signature that can be used to verify CHECKSUMS.md5</li>
+  <li><code>CHECKSUMS.md5.gz</code> - a compressed copy of CHECKSUMS.md5</li>
+  <li><code>CHECKSUMS.md5.gz.asc</code> - a detached GPG signature that can be used to verify CHECKSUMS.md5.gz</li>
+  <li><code>ChangeLog.rss</code> - an RSS feed of recent ChangeLog.txt entries</li>
+  <li><code>ChangeLog.txt</code> - the cumulative ChangeLog for this package repository</li>
+  <li><code>ChangeLog.txt.gz</code> - a compressed copy of ChangeLog.txt</li>
+  <li><code>FILELIST.TXT</code> - a listing of all the files in the package repository</li>
+  <li><code>GPG-KEY</code> - your public GPG key</li>
+  <li><code>MANIFEST.bz2</code> - a compressed listing of the contents of all the packages in the package repository</li>
+  <li><code>PACKAGES.TXT</code> - a listing of all the packages in the package repository</li>
+  <li><code>PACKAGES.TXT.gz</code> - a compressed copy of PACKAGES.TXT</li>
+</ul>
+
+<p>For each package:</p>
+
+<ul>
+  <li><code>package.tgz</code> (or .txz, .tbz, .tlz) - the package itself</li>
+  <li><code>package.tgz.asc</code> (or .txz.asc, .tbz.asc, .tlz.asc) - a detached GPG signature that can be used to verify the package</li>
+  <li><code>package.tgz.md5</code> (or .txz.md5, .tbz.md5, .tlz.md5) - the package’s md5sum</li>
+  <li><code>package.dep</code> - a plaintext list of all dependencies of the package (including indirect dependencies, but excluding any dependencies in Slackware itself)</li>
+  <li><code>package.lst</code> - a listing of the contents of the package</li>
+  <li><code>package.meta</code> - package management information, for generating PACKAGES.TXT</li>
+  <li><code>package.txt</code> - text description of the package (based on the slack-desc)</li>
+</ul>
+
+  </div>
+</div>
+<footer class="site-footer">
+  <div class="wrapper">
+    <p>
+      Page last modified 2017-08-23 11:39:59
+    </p>
+    
+  </div>
+</footer>
+
+
+
+</body>
+</html>

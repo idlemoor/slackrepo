@@ -1,89 +1,130 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>slackrepo - News</title>
-<link rel="icon" type="image/png" href="/slackrepo/favicon.png">
-<link rel="shortcut icon" href="/slackrepo/favicon.ico">
-<link rel="stylesheet" type="text/css" href="/slackrepo/slackrepostyle.css">
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>News</title>
+  <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
+
+  <link rel="stylesheet" href="/slackrepo/css/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro|Droid+Sans+Mono" type="text/css">
+
+
+  <link rel="canonical" href="https://idlemoor.github.io/slackrepo/slackrepo/news.html">
+  <link rel="alternate" type="application/rss+xml" title="slackrepo" href="https://idlemoor.github.io/slackrepo/slackrepo/feed.xml">
+  <link rel="shortcut icon" type="image/png" href="/slackrepo/favicon.png" >
+
 </head>
 
 <body>
+<header class="site-header">
+  <div class="wrapper">
+    <a class="site-title" href="/slackrepo/">slackrepo</a>
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+      <div class="nav-trigger">
+        <a class="site-nav-link" href="/slackrepo/news.html">News</a>
+<a class="site-nav-link" href="/slackrepo/download.html">Download</a>
+<a class="site-nav-link" href="/slackrepo/quickstart.html">Quick&nbsp;Start</a>
+<a class="site-nav-link" href="/slackrepo/doc/">Documentation</a>
+<a class="site-nav-link" href="/slackrepo/screenshots.html">Screenshots</a>
 
-<header>
-<h2>News</h2>
+        
+      </div>
+    </nav>
+  </div>
 </header>
 
-<nav>
-<h2><a href="index.html">slackrepo</a></h2>
+<div class="page-content">
+  <div class="wrapper">
+    <h1 id="news">News</h1>
+
+<h2 id="slackrepo-03-september-2017">slackrepo-0.3, September 2017</h2>
+
+<p>The following new features and improvements have been added since slackrepo-0.2.0:</p>
+
 <ul>
-<li><b style="color:red">&bull;</b>&nbsp;<a href="news.html">News</a></li>
-<li><a href="download.html">Download</a></li>
-<li><a href="quickstart.html">Quick start</a></li>
-<li><a href="screenshots.html">Screenshots</a></li>
-<li><a href="usagenotes.html">Documentation&nbsp;&raquo;</a></li>
-<li><a href="slackrepo.8.html">manpages&nbsp;&raquo;</a></li>
+  <li><b>Default hintfiles have been moved to the <i>slackrepo-hints</i> package</b>,
+so you now need both <i>slackrepo</i> and <i>slackrepo-hints</i> if you use the
+default hintfiles (recommended).</li>
+  <li>Automatic download fallback to
+<a class="ext" href="http://slackware.uk/sbosrcarch/">sbosrcarch</a> and
+<a class="ext" href="https://sourceforge.net/projects/slackbuildsdirectlinks/">Slackbuilds Direct Links</a>
+if downloading from the upstream URL fails</li>
+  <li>Resource monitoring of CPU, memory and disk space during builds</li>
+  <li>Dependency hint improvements
+DELREQUIRES SUBSTITUTE BUILDTIME RUNTIME</li>
+  <li>‘python3’ pragma</li>
+  <li>New warnings</li>
+  <li>Warnings can be suppressed</li>
+  <li>--debug control argument is a quick way of setting --very-verbose --dry-run --lint --keep-tmp</li>
+  <li>Suboptions for the lint command and --lint control argument</li>
+  <li>‘kernelmod’ and ‘kernel’ pragmas for automatic rebuilding when the
+build system’s kernel version changes</li>
+  <li>Other new pragmas ‘x86arch’ to select the correct arch for 32 bit
+binary repack SlackBuilds; ‘curl’ and ‘wget’ for downloading from sites that
+inspect the user agent.</li>
+  <li>Experimental support for reproducible builds (set the config variable REPRODUCIBLE=’y’).</li>
 </ul>
-</nav>
 
-<div id="main">
-
-<h3>slackrepo-0.2.0, May 2015</h3>
-
-<p>The following new features and improvements have been added since the 
-release of slackrepo-0.1.0 last year:</p>
+<h2 id="slackrepo-020-may-2015">slackrepo-0.2.0, May 2015</h2>
 
 <ul>
-
-<li><b>Building in a dynamically created and destroyed chroot environment</b>
+  <li>Building in a dynamically created and destroyed chroot environment
 to keep your system absolutely clean, to detect bad builds and to speed up package uninstalls
 (this feature requires Linux kernel version 3.18 or newer with overlayfs, for example Slackware -current)</li>
-
-<li><b>Building as a non-root user</b> to detect bad builds and keep your system clean
-(this feature requires the 'fakeroot' package, available from SlackBuilds.org) &mdash; see the <a href="faq.html#usermode">FAQ</a></li>
-
-<li><b>Automatic download fallback to <a href="https://sourceforge.net/projects/slackbuildsdirectlinks/" class="ext">Slackbuilds Direct Links</a></b>
+  <li>Building as a non-root user to detect bad builds and keep your system clean
+(the ‘fakeroot’ package, available from SlackBuilds.org) — see the <a href="/slackrepo/doc/faq.html">FAQ</a></li>
+  <li>Automatic download fallback to <a class="ext" href="https://sourceforge.net/projects/slackbuildsdirectlinks/">Slackbuilds Direct Links</a>
 if the original download has gone down</li>
-
-<li>On Slackware -current, the default is to build from Matteo Bernardini's forked
-<b><a href="https://github.com/Ponce/slackbuilds" class="ext">SBo repository for slackware-current</a> (--repo=ponce)</b></li>
-
-<li><b>Build time estimates</b> are shown, using a database of known build times,
+  <li>On Slackware -current, the default is to build from Matteo Bernardini’s forked
+<a class="ext" href="https://github.com/Ponce/slackbuilds">SBo repository for slackware-current</a> (--repo=ponce)</li>
+  <li>Build time estimates are shown, using a database of known build times,
 or the last occasion you successfully built the same package</li>
-
-<li><b>Automatic package backup</b> is performed, so you can go back to the
+  <li>Automatic package backup is performed, so you can go back to the
 previous build of a package</li>
-
-<li><b>New 'lint' command</b> allows you to test or retest SlackBuilds,
+  <li>New ‘lint’ command allows you to check or recheck SlackBuilds,
 source download links and package contents without building or rebuilding</li>
-
-<li><b>Coloured output</b> from cmake, git, clang, mono, waf and gcc-4.9 
+  <li>Coloured output from cmake, git, clang, mono, waf and gcc-4.9
 when you build with --verbose</li>
-
-<li><b>Shell-style globs (wildcards)</b> are now supported in the command arguments, so you can do things like
-<br><code>slackrepo build 'xfce4-*-plugin'</code>
-<br>(As with commands like 'find', you will need to quote them or escape them,
+  <li>Shell-style globs (wildcards) are now supported in the command arguments, so you can do things like
+<br /><code>slackrepo build 'xfce4-*-plugin'</code>
+<br />(As with commands like ‘find’, you will need to quote them or escape them,
 to protect them from the shell.)</li>
-
-<li><b>System-supplied hintfiles have moved</b> to the directory
-<br><code>/etc/slackrepo/<i>repo</i>/default_hintfiles/<i>slackversion</i></code>
-<br>and are now enabled by default. Your own local hintfiles override the
+  <li>System-supplied hintfiles have moved to the directory
+<br /><code>/etc/slackrepo/<i>repo</i>/default_hintfiles/<i>slackversion</i></code>
+<br />and are now enabled by default. Your own local hintfiles override the
 default hintfiles, and are still read from the directory
 <code>/etc/slackrepo/<i>repo</i>/hintfiles</code>.
-You can disable the default hintfiles by disabling the DEFAULT_HINTDIR configuration variable.
-
-<li>The SPECIAL hint has been renamed to <b>PRAGMA</b> (but SPECIAL is still accepted)</li>
-
-<li><b>Revised and additional hintfiles</b> Thanks to Panagiotis Nikolaou for the contributions!</li>
-
-<li><b>sqlite database</b> to track package revision info
+You can disable the default hintfiles by disabling the DEFAULT_HINTDIR configuration variable.</li>
+  <li>The SPECIAL hint has been renamed to PRAGMA (but SPECIAL is still accepted)</li>
+  <li>Revised and additional hintfiles Thanks to Panagiotis Nikolaou for the contributions!</li>
+  <li>sqlite database to track package revision info
 (the previous release of slackrepo used dotfiles)</li>
-
-<li><b>Simplified --verbose option</b>, --quiet option removed</li>
-
+  <li>Simplified --verbose option, --quiet option removed</li>
 </ul>
+
+  </div>
+</div>
+<footer class="site-footer">
+  <div class="wrapper">
+    <p>
+      Page last modified 2017-08-23 11:39:59
+    </p>
+    
+  </div>
+</footer>
+
+
 
 </body>
 </html>

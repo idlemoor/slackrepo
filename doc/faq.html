@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>FAQ</title>
+  <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
+
+  <link rel="stylesheet" href="/slackrepo/css/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro|Droid+Sans+Mono" type="text/css">
+
+
+  <link rel="canonical" href="https://idlemoor.github.io/slackrepo/slackrepo/doc/faq.html">
+  <link rel="alternate" type="application/rss+xml" title="slackrepo" href="https://idlemoor.github.io/slackrepo/slackrepo/feed.xml">
+  <link rel="shortcut icon" type="image/png" href="/slackrepo/favicon.png" >
+
+</head>
+
+<body>
+<header class="site-header">
+  <div class="wrapper">
+    <a class="site-title" href="/slackrepo/">slackrepo</a>
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+      <div class="nav-trigger">
+        <a class="site-nav-link" href="/slackrepo/news.html">News</a>
+<a class="site-nav-link" href="/slackrepo/download.html">Download</a>
+<a class="site-nav-link" href="/slackrepo/quickstart.html">Quick&nbsp;Start</a>
+<a class="site-nav-link" href="/slackrepo/doc/">Documentation</a>
+<a class="site-nav-link" href="/slackrepo/screenshots.html">Screenshots</a>
+
+        
+        <br class="not-when-small" />
+<a class="site-nav-link" href="/slackrepo/doc/usage.html">Usage&nbsp;notes</a>
+<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
+<a class="site-nav-link" href="/slackrepo/doc/faq.html">FAQ</a>
+<a class="site-nav-link" href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
+<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
+<a class="site-nav-link" href="/slackrepo/doc/structure.html">Repo&nbsp;structure</a>
+<a class="site-nav-link" href="/slackrepo/doc/checks.html">Checks</a>
+<a class="site-nav-link" href="/slackrepo/doc/links.html">Links</a>
+
+        
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="page-content">
+  <div class="wrapper">
+    <h1 id="faq">FAQ</h1>
+
+<div id="faqs" style="counter-reset: faqnumber">
+
+
+<h4 class="faq" id="why">Why should I use slackrepo?</h4>
+
+<p style="margin-bottom:0">
+That depends on your needs. If you don't build your own packages, you
+don't need slackrepo.  The existing
+<a href="/slackrepo/doc/links.html#other-package-management-tools">popular tools</a> like
+<a class="ext" href="http://www.sbopkg.org/">sbopkg</a> and
+<a class="ext" href="http://slackblogs.blogspot.co.uk/2014/01/managing-sbo-dependencies-easily.html">sqg</a>,
+<a class="ext" href="http://alien.slackbook.org/AST/">AST</a>,
+<a class="ext" href="http://www.src2pkg.net/start">src2pkg</a>,
+<a class="ext" href="http://www.dawoodfall.net/files/slackbuilds/noversion/mkslack/">mkslack</a>,
+etc. remain good choices for personal package building and installing,
+but for repeatable, clean batch building and regular maintenance of
+large repositories, you need slackrepo. If you want to visualise the
+difference between other tools and slackrepo, perhaps this classic
+illustration from
+<a class="ext" href="http://devopsreactions.tumblr.com/post/84407988311/scripts-written-by-developers-versus-scripts">Devops Reactions</a> will help.
+</p>
+<div class="floatleft">
+    <p style="margin-bottom:0; line-height:2">
+    <i>other tools</i>
+    <br /><img src="/slackrepo/img/devopskuqJXRz.gif" style="width:auto; height:auto; max-height:10rem" alt="diddle diddle diddle diddle" title="diddle diddle diddle diddle" />
+    </p>
+</div>
+<div class="page-vertical">
+    <p style="margin-bottom:0; line-height:2">
+    <i>slackrepo</i>
+    <br /><img src="/slackrepo/img/devops7eDCVhk.gif" style="width:auto; height:auto; max-height:10rem" alt="STOMP STOMP STOMP" title="STOMP STOMP STOMP" />
+    </p>
+</div>
+<div style="clear:all">
+</div>
+
+<h4 class="faq" id="smileys">All this automation stinks,
+I want complete control by doing everything manually.</h4>
+
+<p>
+Automation will give you huge gains in accuracy, reproducibility and
+productivity. You still have complete control of the details with
+slackrepo's <a href="/slackrepo/doc/hintfiles.html">hintfiles</a>. By building in a
+dynamically created and destroyed chroot environment (available in
+Slackware-current), slackrepo will keep your build system clean, and by
+calculating trees of dependencies rather than linear queues, slackrepo
+will keep your packages clean too. Good luck doing that manually!
+</p>
+
+
+<h4 class="faq" id="smileys">Why does the output have stupid smileys?</h4>
+
+<p>
+So you can search and grep in the logfile. That's not stupid.&nbsp;&nbsp;<code>;-)</code>
+</p>
+
+
+<h4 class="faq" id="rebuilds">Why does it do so many rebuilds?</h4>
+
+<p>
+To be foolproof <code>:-)</code> A future version might examine the sonames inside
+each package and do something more intelligent, but "too many" rebuilds
+is always safer than "too few".
+</p>
+
+
+<h4 class="faq" id="howlong">The build time estimates are rubbish.</h4>
+
+<p>
+They are better than nothing. If you can improve the code, please send
+me a patch.
+</p>
+<p>
+<iframe width="420" height="315" src="http://www.youtube.com/embed/8xRqXYsksFg?rel=0&amp;start=25&amp;end=&amp;autoplay=0" frameborder="0" allowfullscreen=""></iframe>
+</p>
+
+
+<h4 class="faq" id="usermode">How do I setup slackrepo to run as an ordinary (non-root) user?</h4>
+
+<p>
+You need to build and install
+<a class="ext" href="https://slackbuilds.org/repository/14.2/system/fakeroot/">fakeroot</a> manually and you need to create the file
+<code>/etc/sudoers.d/slackrepo</code>, containing this (replacing
+<code><i><u>yourusername</u></i></code>
+with your username):
+</p>
+<pre>
+User_Alias SLACKREPOERS = <i><u>yourusername</u></i>
+Defaults:SLACKREPOERS !env_reset,!env_delete
+SLACKREPOERS ALL=(ALL) NOPASSWD: /usr/libexec/slackrepo/*
+</pre>
+<p>
+and you need to create the file <code>.slackreporc</code> in the user's
+home directory, containing something like this (and of course you can
+set any other configuration variables in the same file):
+</p>
+<pre>
+SBREPO=~/slackrepo/%REPO%/slackbuilds
+SRCREPO=~/slackrepo/%REPO%/source
+PKGREPO=~/slackrepo/%REPO%/packages/%SLACKVER%/%ARCH%
+PKGBACKUP=~/slackrepo/%REPO%/backups/%SLACKVER%/%ARCH%
+HINTDIR=~/slackrepo/%REPO%/hintfiles
+DEFAULT_HINTDIR="/etc/slackrepo/%REPO%/default_hintfiles/%SLACKVER%"
+LOGDIR=~/slackrepo/%REPO%/logs
+DATABASE=~/slackrepo/%REPO%/database_%REPO%.sqlite3
+</pre>
+<p>
+By default this will be initialised as the SBo repository.
+If you want to have multiple user-mode repositories, your
+<code>.slackreporc</code> file should contain these two lines:
+</p>
+<pre>
+REPO=<i><u>default</u></i>
+CONFIGDIR=~
+</pre>
+<p>
+(where <code><i><u>default</u></i></code> is your favourite repository
+ID) and then slackrepo will read everything else from the files
+slackrepo_csb.conf, slackrepo_SBo.conf, etc. in your home directory
+instead of /etc.
+</p>
+
+
+<h4 class="faq" id="multiple">Can I run more than one instance of slackrepo at the same time?</h4>
+
+<p>
+Only if they are building different repos, and only if you are building
+with chroots. You can have one instance building <b>SBo</b> and another
+instance building <b>msb</b>, but you can not have two instances
+building <b>SBo</b> at the same time. Please don't try to have two
+hosts building the same repo at the same time using NFS.
+</p>
+
+
+<h4 class="faq" id="rebuilds">Why does it use so much disk space?</h4>
+
+<p>
+It depends on how many packages you build and how large the packages
+are. Some of the SBo games are truly enormous. Many people have the
+habit of deleting source files and packages as soon as they have been
+built and installed, so they don't understand how much disk space a
+repository needs. By default, slackrepo keeps a backup copy of old
+packages, but you can disable backups by setting
+<code>PKGBACKUP=''</code> in the configuration file. The log files can
+be quite large; if this is a problem you can delete them manually.
+</p>
+
+
+<h4 class="faq" id="oldslack">Does slackrepo work on older versions of Slackware?</h4>
+
+<p>
+Maybe :-) There are SBo default hintfiles for the SlackBuilds.org '14.2'
+and '14.1' branches. Some of them will need to be edited if you want to use them
+with an earlier branch or with Slackware -current. The code has been
+tested only with bash-4.2, so there may be problems with 13.37 or
+earlier.
+</p>
+
+
+<h4 class="faq" id="slax">Does slackrepo work on other distros like Salix?</h4>
+
+<p>
+Probably, but this is untested. The package repo metadata can be
+configured for slapt-get compatibility.
+</p>
+
+
+<h4 class="faq" id="updates">SlackBuilds.org has just pushed a public update,
+but slackrepo hasn't updated its copy of the SBo git repository.</h4>
+
+<p>
+To be polite to SlackBuilds.org, slackrepo only checks for an update
+once every 24 hours. If you are impolite and impatient, you can update
+the git repository manually.
+</p>
+
+
+<h4 class="faq" id="genrepos">Why is gen_repos_files.sh so slow?</h4>
+
+<p>
+It needs to make a new MANIFEST.bz2 file etc. In a very big repository
+(thousands of packages), this can take hours.
+</p>
+
+
+<h4 class="faq" id="epicfail">This SlackBuild works when I run it
+manually, but fails in slackrepo. wtf?</h4>
+
+<p>
+Try some of these <a href="/slackrepo/doc/hintfiles.html">hints</a>:
+<br /><code>NUMJOBS="-j1"</code>&emsp;(slackrepo uses multiple jobs unless you specify this hint)
+<br /><code>PRAGMA="unset_ARCH"</code>&emsp;(the ARCH code in many SlackBuilds is unhelpful, particularly for i586 and i686)
+<br /><code>PRAGMA="nofakeroot"</code>&emsp;(if you're building as a non-root user)
+</p>
+
+
+<h4 class="faq" id="gnutar">I get the error message
+<code>tar: Directory renamed before its status could be extracted</code></h4>
+
+<p>
+Use the <code>PRAGMA="abstar"</code> hint. Gnu tar sometimes gets
+confused if the archive contains symlinks with .. in the path.
+</p>
+
+</div>
+
+  </div>
+</div>
+<footer class="site-footer">
+  <div class="wrapper">
+    <p>
+      Page last modified 2017-08-23 11:39:59
+    </p>
+    
+  </div>
+</footer>
+
+
+
+</body>
+</html>

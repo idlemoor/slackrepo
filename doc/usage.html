@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Usage notes</title>
+  <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
+
+  <link rel="stylesheet" href="/slackrepo/css/main.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro|Droid+Sans+Mono" type="text/css">
+
+
+  <link rel="canonical" href="https://idlemoor.github.io/slackrepo/slackrepo/doc/usage.html">
+  <link rel="alternate" type="application/rss+xml" title="slackrepo" href="https://idlemoor.github.io/slackrepo/slackrepo/feed.xml">
+  <link rel="shortcut icon" type="image/png" href="/slackrepo/favicon.png" >
+
+</head>
+
+<body>
+<header class="site-header">
+  <div class="wrapper">
+    <a class="site-title" href="/slackrepo/">slackrepo</a>
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+      <div class="nav-trigger">
+        <a class="site-nav-link" href="/slackrepo/news.html">News</a>
+<a class="site-nav-link" href="/slackrepo/download.html">Download</a>
+<a class="site-nav-link" href="/slackrepo/quickstart.html">Quick&nbsp;Start</a>
+<a class="site-nav-link" href="/slackrepo/doc/">Documentation</a>
+<a class="site-nav-link" href="/slackrepo/screenshots.html">Screenshots</a>
+
+        
+        <br class="not-when-small" />
+<a class="site-nav-link" href="/slackrepo/doc/usage.html">Usage&nbsp;notes</a>
+<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
+<a class="site-nav-link" href="/slackrepo/doc/faq.html">FAQ</a>
+<a class="site-nav-link" href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
+<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
+<a class="site-nav-link" href="/slackrepo/doc/structure.html">Repo&nbsp;structure</a>
+<a class="site-nav-link" href="/slackrepo/doc/checks.html">Checks</a>
+<a class="site-nav-link" href="/slackrepo/doc/links.html">Links</a>
+
+        
+      </div>
+    </nav>
+  </div>
+</header>
+
+<div class="page-content">
+  <div class="wrapper">
+    <h1 id="usage-notes">Usage notes</h1>
+
+<h2 id="dependencies">Dependencies</h2>
+
+<p>Dependencies are built, installed and removed automatically, according to the
+contents of .info files (<code>REQUIRES="..."</code>) and
+<a href="/slackrepo/doc/hintfiles.html">Hintfiles</a> (<code>ADDREQUIRES="..."</code>).
+If a SlackBuild does not have a corresponding .info file or hintfile, dependencies cannot
+be processed.</p>
+
+<p>Except when <code>--install</code> is specified, building, installing and removing is done
+as a ‘tree’ of dependencies, not a linear ‘queue’, so dependencies may be
+installed and removed multiple times as necessary. This produces clean packages
+that can be redistributed.</p>
+
+<p>When an existing package in the repository is older than its dependencies,
+it may need to be rebuilt. To cause a rebuild, the dependencies must have been
+significantly updated: see <a href="#updates">Updates</a> below for details.</p>
+
+<p>Remember that dependencies on standard Slackware packages are not listed
+in .info files and hintfiles, and not tracked by slackrepo.</p>
+
+<h2 id="git">git</h2>
+
+<p>If no SlackBuild repository exists when slackrepo starts, it will clone the
+SlackBuilds.org git repository, and a local branch <b>14.2</b> will be created
+that tracks <b>origin/14.2</b> (i.e., the stable branch at SlackBuilds.org).</p>
+
+<p>Otherwise, slackrepo simply uses the git branch and revision that is currently
+checked out. If an item’s SlackBuild directory is dirty, a warning is logged.</p>
+
+<p>As a special case, if the local branch is named <b>14.2</b> (as above) and is
+clean, then when slackrepo starts, it will automatically fast forward the local
+branch from upstream (if possible), but <strong>only if more than
+one day has elapsed</strong> since the last automatic fast forward.</p>
+
+<h2 id="updates">Updates</h2>
+
+<p>The build and rebuild commands will always update or rebuild packages if necessary.
+For example, if a package is being built, its dependencies will be
+updated and/or rebuilt if they are out-of-date. The update command proactively looks for
+packages that are out-of-date, and removes packages for which the SlackBuilds
+no longer exist.</p>
+
+<p>A package is out-of-date if:</p>
+
+<ul>
+  <li>the git revision in the directory containing the SlackBuild has changed
+since the package was built</li>
+  <li>or the directory containing the SlackBuilds has untracked/uncommited files
+(i.e., git is “dirty”) and they are newer than the package</li>
+  <li>or its hintfile has changed since the package was built</li>
+  <li>or any of its direct dependencies has been updated since the package was built</li>
+  <li>or (for kernel-dependent packages) the kernel version has changed since the package was built</li>
+  <li>or the version of Slackware has changed since the package was built</li>
+</ul>
+
+<p>Changes in the SlackBuilds directory are classified as ‘updates’, which will
+cause directly depending items to be rebuilt if/when they are processed.
+Other changes are classified as ‘rebuilds’ and do not cause
+depending items to be rebuilt.</p>
+
+<p>For example, ffmpeg depends on x264, and transcode depends on ffmpeg.
+If x264 is updated, ffmpeg will be rebuilt, but transcode will not be rebuilt.
+If x264 is rebuilt, ffmpeg will not be rebuilt.  If ffmpeg is updated,
+transcode will be rebuilt.</p>
+
+<p>Changes in the SlackBuilds directory that affect only the slack-desc file,
+README files, and .info file (except for VERSION=) are ignored.</p>
+
+<p>If a package is rebuilt, or if a package is updated but its
+version number is unchanged, then <strong>the package’s BUILD number
+is always incremented</strong>, overriding the BUILD number in the SlackBuild file.</p>
+
+<p><img src="/slackrepo/screenshots/screenrebuild.png" alt="screenshot of updated dependency and rebuild" title="updated dependency and rebuild" /></p>
+
+<h2 id="gen_repos_filessh">gen_repos_files.sh</h2>
+
+<p>Optionally, Eric Hameleers’
+<a class="ext" href="http://www.slackware.com/~alien/tools/gen_repos_files.sh">gen_repos_files.sh</a>
+(which is included) can
+be used to maintain additional package metadata in the package repository,
+such as package signing and a changelog.  Thanks, Eric!  To use it, you will
+need to set a few configuration values in the repository’s configuration
+file <code>/etc/slackrepo/slackrepo_SBo.conf</code> (but, if you use gen_repos_files.sh
+already, your existing <code>~/.genreprc</code> config file will be read).</p>
+
+<p>Note that you will be prompted for your GPG passphrase when gen_repos_files.sh
+runs (after all the packages have been built).  You can avoid this by using
+gpg-agent — see <a href="/slackrepo/man/slackrepo.conf.5.html">slackrepo.conf(5)</a> for details.</p>
+
+<h2 id="slackpkg">slackpkg+</h2>
+
+<p>The repositories created by slackrepo and gen_repos_files.sh are suitable for use with Matteo Rossini’s
+<a class="ext" href="http://slakfinder.org/slackpkg+.html">slackpkg+</a>, which is a plugin for slackpkg
+that allows you to use slackpkg to manage packages from third party
+repositories.  Thanks, Matteo!</p>
+
+<p>To make your slackrepo package repository accessible outside the build host, you will need to
+export it as a shared directory (e.g. NFS or a Virtualbox shared folder),
+or perhaps serve it via a local webserver on the build host (e.g. by
+setting <code>PKGREPO=/var/www/htdocs/pkgrepo</code> in <code>/etc/slackrepo/slackrepo_SBo.conf</code>).</p>
+
+<p>For example, on a client system, to configure slackpkg+ to use a shared
+directory, you can define a slackpkgplus “local mirror” with <code>file://</code>
+<i>(do not use <code>dir://</code>)</i>, and so <code>/etc/slackpkg/slackpkgplus.conf</code> would have something like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>REPOPLUS=( SBo slackpkgplus restricted alienbob )
+MIRRORPLUS['SBo']=file://sharedfolder/
+</code></pre>
+</div>
+
+<p>Or to configure slackpkg+ to use a web-served repository on the build
+host, you would have something like this:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>REPOPLUS=( SBo slackpkgplus restricted alienbob )
+MIRRORPLUS['SBo']=http://buildhost/pkgrepo/
+</code></pre>
+</div>
+
+<p>If you choose not to sign your packages with gen_repos_files.sh, you will
+need to tell slackpkg+ not to check GPG signatures.  There are two ways
+of doing this: (1) set <code>CHECKGPG=off</code> in <code>/etc/slackpkg/slackpkg.conf</code>, or
+(2) use the slackpkg control argument <code>-checkgpg=off</code>.</p>
+
+<p>Note that slackpkg+ will not install newly added packages from your own
+package repository when you run <code>slackpkg install-new</code>.  This command
+searches for new packages ONLY in the official Slackware repository.  To
+install specific packages in your own repository you can use</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>slackpkg install &lt;packagename...&gt;
+</code></pre>
+</div>
+
+<p>or to install and upgrade everything in your own repository, you can use</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>slackpkg add &lt;reponame&gt;
+</code></pre>
+</div>
+
+  </div>
+</div>
+<footer class="site-footer">
+  <div class="wrapper">
+    <p>
+      Page last modified 2017-08-23 11:39:59
+    </p>
+    
+  </div>
+</footer>
+
+
+
+</body>
+</html>

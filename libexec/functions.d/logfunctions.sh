@@ -2,8 +2,8 @@
 # Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 # All rights reserved.  For licence details, see the file 'LICENCE'.
 #
-# errorscan_itemlog contains code and concepts from 'checkpkg' v1.15
-#   Copyright 2014 Eric Hameleers, Eindhoven, The Netherlands
+# errorscan_itemlog contains code and concepts from 'checkpkg' 1.32
+#   Copyright 2014-2017 Eric Hameleers, Eindhoven, The Netherlands
 #   All rights reserved.  For licence details, see the file 'LICENCE'.
 #   http://www.slackware.com/~alien/tools/checkpkg
 #
@@ -443,8 +443,9 @@ function errorscan_itemlog
 # Return status: always 0
 {
   # This is Alien Bob being awesome, as usual :D
+  # now updated w.r.t. checkpkg v. 1.32
   grep -E \
-    "FAIL| hunk ignored|[^A-Z]Error |[^A-Z]ERROR |Error:|error:|errors occurred|ved symbol|ndefined reference to|ost recent call first|ot found|cannot operate on dangling|ot supported|annot find -l|make: \*\*\* No |kipping patch|t seem to find a patch|^Usage: |option requires |o such file or dir|SlackBuild: line" \
+    "aborted!|[[:space:]]too[[:space:]]old|FAIL|[[:space:]]hunk[[:space:]]ignored|[^A-Z]Error[[:space:]]|[^A-Z]ERROR[[:space:]]|Error:|error:|errors[[:space:]]occurred|ved[[:space:]]symbol|ndefined[[:space:]]reference[[:space:]]to|ost[[:space:]]recent[[:space:]]call[[:space:]]first|ot[[:space:]]found|annot[[:space:]]find[[:space:]]-l|make:[[:space:]]\*\*\*[[:space:]]No[[:space:]]|kipping[[:space:]]patch|skipping[[:space:]]incompatible[[:space:]]|t[[:space:]]seem[[:space:]]to[[:space:]]find[[:space:]]a[[:space:]]patch|[[:space:]]not[[:space:]]supported|^Usage:[[:space:]]|option[[:space:]]requires[[:space:]]|memory[[:space:]]exhausted|cannot[[:space:]]stat[[:space:]]|SlackBuild:[[:space:]]line|No[[:space:]]such[[:space:]]file|[Uu]nrecognised[[:space:]]xattr|[Uu]nknown[[:space:]]option" \
     "$ITEMLOG"
   return 0
 }

@@ -143,7 +143,7 @@ function build_item_packages
       # backup(s) exist, just look at the first (as above)
       # if the version is the same, we need the higher build no.
       backupver=$(echo "${backuppkgs[0]}" | rev | cut -f3 -d- | rev )
-      backupbuild=$(echo "${backuppkgs[0]}" | sed -e 's/^.*-//' -e 's/[^0-9]*$//' )
+      backupbuild=$(echo "${backuppkgs[0]}" | sed -e 's/^.*-//' -e 's/^\([[:digit:]][[:digit:]]*\).*$/\1/')
       [ "$backupver" = "${INFOVERSION[$itemid]}" ] && [ "$backupbuild" -gt "$oldbuild" ] && oldbuild="$backupbuild"
     fi
     nextbuild=$(( ${oldbuild:-0} + 1 ))

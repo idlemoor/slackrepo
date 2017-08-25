@@ -136,7 +136,7 @@ function build_item_packages
     else
       # If there are multiple packages from one SlackBuild, and they all have
       # different BUILD numbers, frankly we are screwed, so just use the first:
-      oldbuild=$(echo "${oldpkgs[0]}" | sed -e 's/^.*-//' -e 's/[^0-9]*$//' )
+      oldbuild=$(echo "${oldpkgs[0]}" | sed -e 's/^.*-//' -e 's/^\([[:digit:]][[:digit:]]*\).*$/\1/')
     fi
     backuppkgs=( "$SR_PKGBACKUP"/"$itemdir"/*.t?z )
     if [ "${backuppkgs[0]}" != "$SR_PKGBACKUP"/"$itemdir"/'*.t?z' ]; then

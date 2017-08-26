@@ -36,7 +36,7 @@ function build_item_packages
 
   buildopt=''
   [ "$OPT_DRY_RUN" = 'y' ] && buildopt=' [dry run]'
-  log_itemstart "$itemid" "Starting $itemid (${STATUSINFO[$itemid]})$buildopt"
+  log_itemstart "$itemid" "Building $itemid (${STATUSINFO[$itemid]})$buildopt"
 
   TMP_SLACKBUILD="$BIGTMP/slackbuild_$itemprgnam"
   # initial wipe of $TMP_SLACKBUILD, even if $OPT_KEEP_TMP is set

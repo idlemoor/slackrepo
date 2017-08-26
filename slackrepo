@@ -558,7 +558,8 @@ GOTGIT=n
 if [ -z "$(ls "$SR_SBREPO" 2>/dev/null)" ]; then
   if [ -n "${SR_INIT_GITCLONE}" ]; then
     log_normal "Cloning SlackBuilds repository $SR_SBREPO from ${SR_INIT_GITCLONE}."
-    git clone "${SR_INIT_GITCLONE}" "$SR_SBREPO"
+    git clone "${SR_INIT_GITCLONE}" "$SR_SBREPO" || \
+      { log_error "Failed to clone from ${SR_INIT_GITCLONE}"; exit_cleanup 4; }
     git fetch -a
     git remote update
     mybranch="${SR_INIT_GITBRANCH:-${SYS_OSVER:-master}}"

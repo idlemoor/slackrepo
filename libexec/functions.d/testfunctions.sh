@@ -433,7 +433,6 @@ function test_package
       usr/share/applications \
       usr/share/mime \
       usr/share/icons/hicolor \
-      usr/share/glib-2.0/schemas \
       usr/lib/gio/modules \
       usr/lib64/gio/modules \
       usr/info \

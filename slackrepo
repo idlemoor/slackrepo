@@ -39,16 +39,13 @@ function print_usage
   echo "  $(basename "$0") rebuild [--control_args] [item...]"
   echo "  $(basename "$0") update  [--control_args] [item...]"
   echo "  $(basename "$0") remove  [--control_args] item..."
-  echo "  $(basename "$0") revert  [--control_args] item..."
-  echo "  $(basename "$0") lint    [--control_args] [item...]"
   echo "  $(basename "$0") info    [--control_args]"
   echo 'Control args:'
   echo '  --repo=ID'
-  echo '  --verbose (-v)'
-  echo '  --debug (-d)'
   echo '  --dry-run | --install'
-  echo '  --lint[=type,...]'
-  echo '  --keep-tmp'
+  echo '  --debug (-d)'
+  echo 'For the complete usage and list of control args, please see'
+  echo '  man slackrepo'
   return 0
 }
 

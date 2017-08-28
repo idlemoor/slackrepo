@@ -180,7 +180,7 @@ function build_item_packages
   # Reproducible building (* experimental *)
   # Don't do it if this isn't a git repo or if git is dirty.
   canreprod='n'
-  if [ "${OPT_REPROD:-n}" != 'n' ]; then
+  if [ "${OPT_REPRODUCIBLE:-n}" != 'n' ]; then
     if [ "$GOTGIT" = 'y' ] && [ "${GITDIRTY[$itemid]}" != 'y' ]; then
       canreprod='y'
       # Use the newest revision time of the package and its first-level deps.

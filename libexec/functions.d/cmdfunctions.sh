@@ -607,7 +607,7 @@ function info_command
   [       "$OPT_CHROOT" = 'y' ] && echo "  --chroot"
   [    "$OPT_COLOR" != 'auto' ] && echo "  --color=$OPT_COLOR"
   [        "$OPT_NICE" != '5' ] && echo "  --nice=$OPT_NICE"
-  [       "$OPT_REPROD" = 'y' ] && echo "  --reprod"
+  [       "$OPT_REPRODUCIBLE" = 'y' ] && echo "  --reprod"
 
   # Show the variables
   for name in $varnames; do

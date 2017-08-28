@@ -673,7 +673,7 @@ EOF
     # .buildinfo                  #
     #-----------------------------#
 
-    if [ "$OPT_REPROD" = 'y' ] && [ -n "$SOURCE_DATE_EPOCH" ]; then
+    if [ "$OPT_REPRODUCIBLE" = 'y' ] && [ -n "$SOURCE_DATE_EPOCH" ]; then
       # The buildinfo should not change while slackrepo is running,
       # so we will create a temp file once and reuse it.
       # (It's 'hidden' so it won't get cleaned up at the end of each build.)

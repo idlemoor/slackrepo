@@ -409,8 +409,8 @@ function parse_info_and_hints
 
   if [ -n "${HINTFILE[$itemid]}" ] && [ -s "${HINTFILE[$itemid]}" ]; then
     local SKIP \
-          VERSION ADDREQUIRES DELREQUIRES OPTIONS GROUPADD USERADD CONFLICTS NOWARNING INSTALL \
-          NUMJOBS ANSWER CLEANUP PRAGMA SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
+          VERSION ADDREQUIRES DELREQUIRES OPTIONS GROUPADD USERADD CONFLICTS NOWARNING NOWARNINGS \
+          INSTALL NUMJOBS ANSWER CLEANUP PRAGMA SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
     . "${HINTFILE[$itemid]}"
 
     # Process the hint file's variables individually (looping for each variable would need
@@ -421,6 +421,7 @@ function parse_info_and_hints
     [ -n "$ANSWER"    ] &&    HINT_ANSWER[$itemid]="$ANSWER"
     [ -n "$CLEANUP"   ] &&   HINT_CLEANUP[$itemid]="$CLEANUP"
     [ -n "$PRAGMA"    ] &&    HINT_PRAGMA[$itemid]="$PRAGMA"
+   [ -n "$NOWARNINGS" ] && HINT_NOWARNING[$itemid]="$NOWARNINGS"
     [ -n "$NOWARNING" ] && HINT_NOWARNING[$itemid]="$NOWARNING"
     [ -n "$SPECIAL"   ] &&    HINT_PRAGMA[$itemid]="$SPECIAL"
 

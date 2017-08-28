@@ -116,7 +116,7 @@ starttime=$(date +%s)
 # To define an extended option '--bar', do OPTIONLIST+=( 'BAR' )
 
 # Initialise OPTIONLIST first so that any extended options are at the end
-OPTIONLIST=( 'REPO' 'VERBOSE' 'VERY_VERBOSE' \
+OPTIONLIST=( 'REPO' 'VERBOSE' 'VERY_VERBOSE' 'NOWARNING' \
   'DRY_RUN' 'INSTALL' 'LINT' 'KEEP_TMP' 'CHROOT' 'COLOR' 'NICE' 'REPROD' )
 
 # Get the support functions
@@ -188,6 +188,10 @@ while [ $# != 0 ]; do
       shift; continue ;;
     --color=* | --colour=* )
       OPT_COLOR="${1/--colo*r=/}"
+      shift; continue ;;
+    --nowarning=* | --nowarnings=* )
+      OPT_NOWARNING="${1/--nowarning*=/}"
+      [ "${OPT_NOWARNING}" = '' ] && OPT_NOWARNING='.*'
       shift; continue ;;
     -* )
       found='n'

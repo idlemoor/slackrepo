@@ -6,97 +6,82 @@
 .
 .
 .SH NAME
-slackrepo \- automated SlackBuild package building and repository maintenance
+.
+.
+.
+.PP
+\fBslackrepo\fR \- automated SlackBuild package building and repository maintenance
 .
 .
 .
 .SH SYNOPSIS
-.B slackrepo build
-.RI [ OPTIONS ]
-.RI [ ITEM ...]
 .
-.br
-.B slackrepo rebuild
-.RI [ OPTIONS ]
-.RI [ ITEM ...]
 .
-.br
-.B slackrepo update
-.RI [ OPTIONS ]
-.RI [ ITEM ...]
 .
-.br
-.B slackrepo remove
-.RI [ OPTIONS ]
-.IR ITEM ...
-.
-.br
-.B slackrepo revert
-.RI [ OPTIONS ]
-.IR ITEM ...
-.
-.br
-.B slackrepo lint
-.RI [ OPTIONS ]
-.RI [ ITEM ...]
-.
-.br
-.B slackrepo install
-.RI [ OPTIONS ]
-.RI [ ITEM ...]
-.
-.br
-.B slackrepo info [\-\-repo=ID]
+.PP
+\fBslackrepo build\fR [\fIOPTIONS\fR] [\fIITEM ...\fR]
+.PP
+\fBslackrepo rebuild\fR [\fIOPTIONS\fR] [\fIITEM\fR ...]
+.PP
+\fBslackrepo update\fR [\fIOPTIONS\fR] [\fIITEM\fR] ...
+.PP
+\fBslackrepo remove\fR [\fIOPTIONS\fR] \fIITEM ...
+.PP
+\fBslackrepo revert\fR [\fIOPTIONS\fR] \fIITEM ...
+.PP
+\fBslackrepo lint\fR [\fIOPTIONS\fR] [\fIITEM\fR ...]
+.PP
+\fBslackrepo install\fR [\fIOPTIONS\fR] [\fIITEM\fR ...]
+.PP
+\fBslackrepo info\fR [\fIOPTIONS\fR]
 .
 .
 .
 .SH DESCRIPTION
 .
-.TP
-.B slackrepo\ build
+.PP
+Slackrepo is a highly automated tool for Slackware users to manage 
+their own package repositories. It builds packages from a repository of 
+SlackBuilds (for example, a clone of SlackBuilds.org), and then outputs 
+the packages to a package repository. 
+.
+.
+.
+.TP 6
+\fBslackrepo\ build\fR
 Builds packages from an input repository of SlackBuilds (for example,
-a git clone of SlackBuilds.org), and then stores them in a package repository. 'add'
-is accepted as a synonym of 'build'.
-.
-.TP
-.B slackrepo\ rebuild
+a git clone of SlackBuilds.org), and then stores them in a package repository. \fBadd\fR
+is accepted as a synonym of \fBbuild\fR.
+.TP 6
+\fBslackrepo\ rebuild
 Rebuilds packages that are already in the package repository.
-.
-.TP
-.B slackrepo\ update
+.TP 6
+\fBslackrepo\ update
 Builds, rebuilds and removes packages in the package repository,
 according to changes in the SlackBuild repository.
-.
-.TP
-.B slackrepo\ remove
+.TP 6
+\fBslackrepo\ remove
 Removes packages from the package repository.
-.
-.TP
-.B slackrepo\ revert
+.TP 6
+\fBslackrepo\ revert
 Moves packages from the backup repository into the package repository,
-and packages from the package repository into the backup repository. 'restore'
-is accepted as a synonym of 'revert'.
-.
-.TP
-.B slackrepo\ lint
-Performs quality checks without performing a build. See the
-.B \-\-lint
+and packages from the package repository into the backup repository. \fBrestore\fR
+is accepted as a synonym of \fBrevert\fR.
+.TP 6
+\fBslackrepo\ lint
+Performs quality checks without performing a build. See the \fB\-\-lint\fR
 control argument for a brief description of the checks that can be performed.
-.
-.TP
-.B slackrepo\ install
+.TP 6
+\fBslackrepo\ install
 Installs a package on the host system, building first if necessary. This command is
-equivalent to
-.B build \-\-install.
-.
-.TP
-.B slackrepo\ info [\-\-repo=ID]
-Prints information about the system and specified repository configuration.
-.
-.TP
-.I ITEM
+equivalent to \fBbuild \-\-install\fR.
+.TP 6
+\fBslackrepo\ info
+Prints information about the system and specified repository, configuration and options.
+.TP 6
+\fIITEM
 An item specifies a directory or a SlackBuild file in the SlackBuild repository,
-and/or (in the update, remove and revert commands only) formerly in the SlackBuild repository.
+and/or (in the \fBupdate\fR, \fBremove\fR and \fBrevert\fR commands only) formerly in the SlackBuild repository.
 Shell-style globs (wildcards) are allowed.
 If no items are specified, all directories in the SlackBuild repository are processed
 (except in the remove and revert commands,
@@ -106,85 +91,14 @@ where it is mandatory to specify the items to be removed).
 .
 .SH OPTIONS
 .
-.TP
-.B \-\-repo=ID
-Use the SlackBuild and package repository identified by ID.
-The filestore locations of the SlackBuild and package repositories are defined in
-the configuration file
-.IR /etc/slackrepo/slackrepo_ID.conf ,
-where ID is an identifier for the repositories.
-The default repository ID is SBo.
-For details, see
-.BR slackrepo.conf(5) .
-.
-.TP
-.B \-\-dry\-run
-Builds and rebuilds will be performed, and removes and reverts will be checked, but no
-changes will be made to the package repository. This option conflicts with \-\-install.
-This option has no effect with the lint command.
-.
-.TP
-.B \-\-install
-Built, rebuilt and updated packages will be installed on the host system.
-This results in a \(dqqueue\(dq style build, and packages may not be 100% clean of
-unexpected dependencies. The default is for packages
-.B not
-to be installed. This option conflicts with \-\-dry\-run, and has no effect with the
-remove, revert and lint commands.
-.
-.TP
-.B \-\-chroot
+.TP 6
+\fB\-\-chroot
 Construct and use a temporary chroot environment for each build process.
 (Requires a Linux 3.18+ kernel with overlayfs.)
 This option has no effect with the remove, revert and lint commands.
 .
-.TP
-.BR \-v ", " \-\-verbose
-Display the output of each build process on the console during execution. If
-.B \-\-verbose
-or
-.B -v
-is specified multiple times, it is equivalent to
-.BR \-\-very-verbose .
-.
-.TP
-.BR \-vv ", " \-\-very\-verbose
-Forces
-.B make
-and
-.B cmake
-to produce more verbose compilation output
-when it is called by a SlackBuild. This option implies
-.B \-\-verbose.
-.
-.TP
-.B \-\-keep\-tmp
-Keep all temporary files in $TMP and $TMPDIR, for debugging purposes.
-.
-.TP
-.B \-\-lint[=sb,dl,x,net,pkg,inst]
-Specifies quality checks to be performed:
-.B sb
-checks the SlackBuild files,
-.B dl
-checks the download URLs,
-.B x
-prevents access to the X GUI during the build,
-.B net
-prevents access to the network during the build,
-.B pkg
-checks the package and its contents, and
-.B inst
-temporarily installs the package.
-With the remove, revert and info commands, this option has no effect.
-.
-.TP
-.B \-\-debug
-Equivalent to
-.B \-\-very\-verbose \-\-lint \-\-dry\-run \-\-keep\-tmp
-.
-.TP
-.B \-\-color=always|auto|no
+.TP 6
+\fB\-\-color=always|auto|no
 Pass coloured output from cmake, clang, git, gcc, mono, waf etc. to standard output
 if standard output is a terminal console
 .RB ( \-\-color=auto ),
@@ -195,57 +109,119 @@ or do not pass colour
 The default is
 .BR \-\-color=auto .
 The
-.B \-\-color
+\fB\-\-color\fR
 option is effective only if
-.B \-\-verbose
+\fB\-\-verbose\fR
 is specified.
-.B \-\-colour
+\fB\-\-colour\fR
 is accepted as a synonym of
-.BR \-\-color .
+\fB\-\-color\fR.
 .
-.TP
-.B \-\-nice=N
-Adjust the niceness of the build process by integer N.
+.TP 6
+\fB\-\-debug
+Equivalent to
+\fB\-\-very\-verbose \-\-lint \-\-dry\-run \-\-keep\-tmp
+.
+.TP 6
+\fB\-\-dry\-run
+Builds and rebuilds will be performed, and removes and reverts will be checked, but no
+changes will be made to the package repository. This option conflicts with \fB\-\-install\fR.
+This option has no effect with the \fBlint\fR command.
+.
+.TP 6
+\fB\-\-install
+Built, rebuilt and updated packages will be installed on the host system.
+This results in a \(dqqueue\(dq style build, and packages may not be 100% clean of
+unexpected dependencies. The default is for packages not
+to be installed. This option conflicts with \fB\-\-dry\-run\fR, and has no effect with the
+\fBremove\fR, \fBrevert\fR and \fBlint\fR commands.
+.
+.TP 6
+\fB\-\-keep\-tmp
+Keep all temporary files in $TMP\fR and $TMPDIR\fR, for debugging purposes.
+.
+.TP 6
+\fB\-\-lint\fR[\fB=sb,dl,x,net,pkg,inst\fR]
+Specifies quality checks to be performed:
+\fBsb\fR
+checks the SlackBuild files,
+\fBdl\fR
+checks the download URLs,
+\fBx\fR
+prevents access to the X GUI during the build,
+\fBnet\fR
+prevents access to the network during the build,
+\fBpkg\fR
+checks the package and its contents, and
+\fBinst\fR
+temporarily installs the package.
+With the \fBremove\fR, \fBrevert\fR and \fBinfo\fR commands, this option has no effect.
+.
+.TP 6
+\fB\-\-nice=\fIN\fR
+Adjust the niceness of the build process by integer \fIN\fR.
 The default is 5 (like distcc).
+.
+.TP 6
+\fB\-\-nowarning=\fIEREGEX\fR
+Suppress warnings that match the GNU grep extended regular expression \fIEREGEX\fR.
+Multiple warnings can be suppressed with an extended regular expression of the form
+\(aq(textone|texttwo|...)\(aq.
+.
+.TP 6
+\fB\-\-repo=\fIID\fR
+Use the SlackBuild and package repository identified by \fIID\fR.
+The filestore locations of the SlackBuild and package repositories are defined in
+the configuration file
+.IR /etc/slackrepo/slackrepo_ID.conf ,
+where \fIID\fR is an identifier for the repositories.
+The default repository \fIID\fR is \fBSBo\fR. For details, see
+.BR slackrepo.conf(5) .
+.
+.TP 6
+\fB\-v\fR, \fB\-\-verbose\fR
+Display the output of each build process on the console during execution. If
+\fB\-\-verbose\fR or \fB-v\fR is specified multiple times, it is equivalent
+to \fB\-\-very-verbose\fR.
+.
+.TP 6
+\fB\-vv\fR, \fB\-\-very\-verbose\fR
+Forces \fBmake\fR and \fBcmake\fR to produce more verbose compilation output
+when it is called by a SlackBuild. This option implies \fB\-\-verbose.
 .
 .
 .
 .SH EXIT STATUS
 .
-.B 0
-all operations completed
-.br
-.B 1
-execution was interrupted
-.br
-.B 2
-invocation usage error
-.br
-.B 3
-the configuration file was not found
-.br
-.B 4
-initialisation error
-.br
-.B 5
-another instance is running
-.br
-.B 6
-internal error, please report a bug
+.PP
+\fB0\fR - all operations completed
+.PP
+\fB1\fR - execution was interrupted
+.PP
+\fB2\fR - invocation usage error
+.PP
+\fB3\fR - the configuration file was not found
+.PP
+\fB4\fR - initialisation error
+.PP
+\fB5\fR - another instance is running
+.PP
+\fB6\fR - internal error, please report a bug
 .
 .
 .
 .SH ENVIRONMENT
 .
-.P
-The behaviour of
-.B slackrepo
-is affected by the following environment variables:
-.P
-.BR REPO ", " CONFIGDIR ", " SBREPO ", " SRCREPO ", " PKGREPO ", " PKGBACKUP ,
-.BR HINTDIR ", " DEFAULT_HINTDIR ", " LOGDIR ", " DATABASE ", " TMP ,
-.BR SUBSTITUTE ", " NUMJOBS ", " ARCH ", " TAG ", " PKGTYPE ", " USE_GENREPOS
-.P
+.PP
+The behaviour of \fBslackrepo\fR is affected by the following environment
+variables:
+.
+.PP
+\fBREPO\fR, \fBCONFIGDIR\fR, \fBSBREPO\fR, \fBSRCREPO\fR, \fBPKGREPO\fR, \fBPKGBACKUP\fR,
+\fBHINTDIR\fR, \fBDEFAULT_HINTDIR\fR, \fBLOGDIR\fR, \fBDATABASE\fR, \fBTMP\fR,
+\fBSUBSTITUTE\fR, \fBNUMJOBS\fR, \fBARCH\fR, \fBTAG\fR, \fBPKGTYPE\fR, \fBUSE_GENREPOS\fR
+.
+.PP
 Each of these environment variables overrides the corresponding configuration
 variable in the file
 .I /etc/slackrepo/slackrepo_ID.conf
@@ -253,22 +229,25 @@ or
 .IR ~/.slackreporc .
 For details, see
 .BR slackrepo.conf (5).
-.P
-.B MAKEFLAGS
-.P
+.
+.PP
+\fBMAKEFLAGS\fR
+.PP
 The MAKEFLAGS variable is passed to each SlackBuild.  Its value will
 be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLAGS.
-.P
-.B TMPDIR
-.P
-.B slackrepo
-uses the directory specified by TMPDIR (default
+.
+.PP
+\fBTMPDIR\fR
+.PP
+\fBslackrepo\fR uses the directory specified by TMPDIR (default
 .IR /tmp )
 for its own temporary files.
 (However, SlackBuilds conventionally use the directory specified by TMP, not TMPDIR.)
-.P
-.B VERBOSE  ", " VERY_VERBOSE ", " CHROOT ", " DRY_RUN ", " INSTALL ", " LINT ", " KEEP_TMP ", " COLOR ", " NICE
-.P
+.PP
+\fBVERBOSE\fR, \fBVERY_VERBOSE\fR, \fBCHROOT\fR, \fBDRY_RUN\fR, \fBINSTALL\fR, \fBLINT\fR,
+\fBKEEP_TMP\fR, \fBCOLOR\fR, \fBNICE\fR, \fBNOWARNING\fR
+.
+.PP
 Each of these environment variables can be used to set the default for the corresponding control argument.
 They override the corresponding configuration variables in the file
 .I /etc/slackrepo/slackrepo_ID.conf
@@ -276,17 +255,16 @@ or
 .IR ~/.slackreporc .
 For details, see
 .BR slackrepo.conf (5).
-.P
-.B SLACKREPO_COLORS
-.P
+.PP
+\fBSLACKREPO_COLORS
+.PP
 This environment variable can be used to customise slackrepo's colour palette.
 The value is a string similar to LS_COLORS or GCC_COLORS. The default palette is
-.P
-.RS
+.PP
 .EX
-SLACKREPO_COLORS="error=01;31:warning=01;35:success=01;32:important=01:normal=00:info=22;36:ok=00:build=22;32:skip=22;35:fail=22;31:updated=22;36"
+SLACKREPO_COLORS="error=01;31:warning=01;35:success=01;32:important=01:normal=00:\\
+info=22;36:ok=00:build=22;32:skip=22;35:fail=22;31:updated=22;36"
 .EE
-.RE
 .
 .
 .
@@ -305,23 +283,22 @@ see
 .BR slackrepo.conf (5).
 .TP 5
 .I /etc/slackrepo/SBo/hintfiles
-This directory contains the hintfiles for the SBo repository; see
+This directory contains the local hintfiles for the SBo repository; see
 .BR slackrepo.hint (5).
 .
 .
 .
 .SH NOTES
 .
-.P
-For best results,
-.B slackrepo
+.PP
+For best results, \fBslackrepo\fR
 is intended to be run on a \(dqclean\(dq standard Slackware
 environment (like a \(dqbuild box\(dq or a virtual machine), with a full installation
 of Slackware and no additional packages (or very few). You can then use the
 package repository to install the packages on other hosts (e.g. with
-.BR slackpkg+ ).
+\fBslackpkg+\fR).
 .
-.P
+.PP
 Packages are updated or rebuilt if required; for example, if a package is being
 built, its dependencies will be updated and/or rebuilt if they are out-of-date.
 A package is out-of-date if:
@@ -341,7 +318,7 @@ for kernel-dependent packages, the kernel version has changed since the package 
 .IP \(bu 4
 the version of Slackware has changed since the package was built
 .RE
-.P
+.PP
 Changes in the SlackBuilds directory are classified as
 \(dqupdates\(dq, which will cause directly depending items to be rebuilt.
 Other changes are classified as \(dqrebuilds\(dq and do not cause depending
@@ -351,16 +328,10 @@ If x264 is updated, ffmpeg will be rebuilt, but transcode will not be rebuilt.
 If x264 is rebuilt, ffmpeg will not be rebuilt.
 If ffmpeg is updated, transcode will be rebuilt.
 .
-.P
+.PP
 When a package is rebuilt, and when a package is updated but its version
 is unchanged, the BUILD number in the package repository is always incremented
 (and the BUILD number in the SlackBuild file is ignored).
-.
-.P
-.B slackrepo
-is not affiliated with, or endorsed by, the SlackBuilds.org Project or
-Slackware. The author thanks those projects for their continuing generosity
-to the community.  Slackware\*R is a registered trademark of Patrick Volkerding.
 .
 .
 .
@@ -368,70 +339,54 @@ to the community.  Slackware\*R is a registered trademark of Patrick Volkerding.
 .
 Build the whole SBo repository (you will need at least four days
 and 80Gb of disk space):
-.P
-.RS
+.PP
 .EX
 # slackrepo build
 .EE
-.RE
-.P
+.PP
 Build shotwell, with all its dependencies:
-.P
-.RS
+.PP
 .EX
 # slackrepo build shotwell
 .EE
-.RE
-.P
+.PP
 Build and install shotwell and all its dependencies (this will NOT be a clean build):
-.P
-.RS
+.PP
 .EX
 slackrepo build \-\-install shotwell
 .EE
-.RE
-.P
+.PP
 Remove grass (note, its dependencies and dependers will not be removed):
-.P
-.RS
+.PP
 .EX
 # slackpkg remove grass
 .EE
-.RE
-.P
+.PP
 Restore the backed-up grass packages
 (note, you can use this to 'undelete' packages that were removed in error):
-.P
-.RS
+.PP
 .EX
 # slackpkg revert grass
 .EE
-.RE
-.P
+.PP
 Update all the academic/ packages in your package repository for SBo's latest changes:
-.P
-.RS
+.PP
 .EX
 # slackrepo update academic
 .EE
-.RE
-.P
+.PP
 Do a \(dqdry run\(dq update of all your SBo packages, with verbose messages:
-.P
-.RS
+.PP
 .EX
 # slackrepo update \-\-dry-run -v
 .EE
-.RE
-.P
+.PP
 Build colord (in the csb repo) with lint checks, do not store the built package,
 and keep all the temporary files so you can investigate them:
-.P
-.RS
+.PP
 .EX
 # slackrepo build \-\-repo=csb \-\-debug colord
 .EE
-.RE
 .
 .
 .

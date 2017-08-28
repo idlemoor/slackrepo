@@ -175,13 +175,12 @@ function log_warning
   done
   show='y'
   if [ "$S" = 'y' ] && [ -n "${HINT_NOWARNING[$itemid]:-${OPT_NOWARNING}}" ]; then
-    if echo "$1" | grep -q "${HINT_NOWARNING[$itemid]:-${OPT_NOWARNING}}"; then
+    if echo "$1" | grep -q -E "${HINT_NOWARNING[$itemid]:-${OPT_NOWARNING}}"; then
       show='n'
     fi
   fi
-  [ "$show" = 'y' ] && echo -e "${NL}${colour_warning}${W}${1}${colour_normal}"
+  [ "$show" = 'y' ] && echo -e "${NL}${colour_warning}${W}${1}${colour_normal}" && NL=''
   [ "$A" = 'y' ] && [ -n "$ITEMLOG" ] && echo -e "${W}${1}" >> "$ITEMLOG"
-  NL=''
   [ "$show" = 'y' ] && [ -n "$W" ] && WARNINGLIST+=( "${1}" ) && return 0
   return 1
 }

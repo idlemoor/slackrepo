@@ -197,7 +197,7 @@ while [ $# != 0 ]; do
       found='n'
       for opt in "${OPTIONLIST[@]}"; do
         arg=$(echo "$opt" | tr '_' '-' | tr '[:upper:]' '[:lower:]')
-        if [ "$1" = "--${arg}" ] || [ "$1" = "--${arg}=yes" ] || [ "$1" = "--${arg}=y" ] || [ "$1" = "--${arg}=all" ]; then
+        if [ "$1" = "--${arg}" ] || [ "$1" = "--${arg}=yes" ] || [ "$1" = "--${arg}=y" ]; then
           eval OPT_"${opt}"='y'
           found='y'; break
         elif [ "$1" = "--no-${arg}" ] || [ "$1" = "--${arg}=no" ] || [ "$1" = "--${arg}=n" ] || [ "$1" = "--${arg}=none" ]; then

@@ -186,7 +186,7 @@ function download_src
           [ "$wgetstat" != 0 ] && failmsg="$(print_wget_status $wgetstat)"
           [ "$curlstat" != 0 ] && failmsg="$(print_curl_status $curlstat)"
           if [ "$CMD" = 'lint' ]; then
-            log_warning -a "${itemid}: Download failed: ${failmsg}."
+            log_warning -s -a "${itemid}: Download failed: ${failmsg}."
             log_info -a "$url"
           else
             log_error -a "Download failed: ${failmsg}.\n  $url"

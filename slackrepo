@@ -664,7 +664,7 @@ if [ -n "$SR_TAG" ] && [ "$OPT_INSTALL" != 'y' ] && [ "$CMD" != 'remove' ]; then
   for pkg in /var/log/packages/*"$SR_TAG"; do
     if [ -f "$pkg" ]; then
       pkgid="${pkg##*/}"
-      [ "${#KEEPINSTALLED[@]}" = 0 ] && log_warning "Packages with tag $SR_TAG are already installed"
+      [ "${#KEEPINSTALLED[@]}" = 0 ] && log_warning -s "Packages with tag $SR_TAG are already installed"
       log_normal "  $pkgid"
       KEEPINSTALLED[${pkgid%-*-*-*}]="$pkgid"
     fi

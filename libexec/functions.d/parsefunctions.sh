@@ -109,10 +109,10 @@ function parse_arg
       is_installed "${guesspkgnam}-v-a-bt"
       iistat=$?
       if [ $iistat = 0 ] || [ $iistat = 1 ]; then
-        log_warning -a "${callerid}: Found installed package ${R_INSTALLED} for ${arg} (not in repo)"
+        log_warning -s -a "${callerid}: Found installed package ${R_INSTALLED} for ${arg} (not in repo)"
         continue
       else
-        log_warning -a "${callerid}: Dependency ${arg} does not exist and has been ignored"
+        log_warning -s -a "${callerid}: Dependency ${arg} does not exist and has been ignored"
       fi
     fi
 
@@ -298,7 +298,7 @@ function parse_info_and_hints
       GITDIRTY[$itemid]="n"
       if [ -n "$(cd "$SR_SBREPO"/"$itemdir"; git status -s .)" ]; then
         GITDIRTY[$itemid]="y"
-        log_warning "${itemid}: git is dirty"
+        log_warning -s "${itemid}: git is dirty"
       fi
     else
       GITREV[$itemid]=''
@@ -479,7 +479,7 @@ function parse_info_and_hints
             * ) gname="$gfield" ;;
           esac
         done
-        [ -z "$gnum" ] && { log_warning "${itemid}: GROUPADD hint has no GID number" ; break ; }
+        [ -z "$gnum" ] && { log_warning -n "${itemid}: GROUPADD hint has no GID number" ; break ; }
         if ! getent group "$gname" | grep -q "^${gname}:" 2>/dev/null ; then
           HINT_GROUPADD[$itemid]="${HINT_GROUPADD[$itemid]}groupadd -g $gnum $gname; "
         else
@@ -508,7 +508,7 @@ function parse_info_and_hints
             *   ) uname="$ufield" ;;
           esac
         done
-        [ -z "$unum" ] && { log_warning "${itemid}: USERADD hint has no UID number" ; break ; }
+        [ -z "$unum" ] && { log_warning -n "${itemid}: USERADD hint has no UID number" ; break ; }
         if ! getent passwd "$uname" | grep -q "^${uname}:" 2>/dev/null ; then
           [ -z "$ugroup" ] && ugroup="$uname"
           HINT_USERADD[$itemid]="${HINT_USERADD[$itemid]}useradd  -u $unum -g $ugroup -c $itemprgnam -d $udir -s $ushell $uargs $uname; "
@@ -623,7 +623,7 @@ function parse_info_and_hints
   local ver="${INFOVERSION[$itemid]}"
   [ -z "$ver" ] && ver="${HINT_VERSION[$itemid]}"
   [ -z "$ver" ] && ver="$(basename "$(echo "${INFODOWNLIST[$itemid]}" | sed 's/ .*//')" 2>/dev/null | rev | cut -f 3- -d . | cut -f 1 -d - | rev)"
-  [ -z "$ver" ] && log_warning "Version of $itemid can not be determined."
+  [ -z "$ver" ] && log_warning -n "Version of $itemid can not be determined."
   [ -z "$ver" ] && [ "$GOTGIT" = 'y' ] && ver="${GITREV[$itemid]:0:7}"
   [ -z "$ver" ] && ver="$(date --date=@"$(stat --format='%Y' "$SR_SBREPO"/"$itemdir"/"$itemfile")" '+%Y%m%d')"
   INFOVERSION[$itemid]="$ver"

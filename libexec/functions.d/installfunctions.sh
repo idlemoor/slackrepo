@@ -330,7 +330,7 @@ function is_installed
       instnam="${instid%-*-*-*}"
       if [ "$instnam" = "$pkgnam" ]; then
         if [ -n "$R_INSTALLED" ]; then
-          log_warning "Your /var/log/packages is broken."
+          log_warning -n "Your /var/log/packages is broken."
           log_warning -n "Please review these files:"
           log_warning -n "  $instpkg"
           log_warning -n "  /var/log/packages/$R_INSTALLED"
@@ -338,7 +338,7 @@ function is_installed
         fi
         R_INSTALLED="$instid"
       elif [ "${instid%-upgraded}" != "$instid" ]; then
-        log_warning "Your /var/log/packages is broken."
+        log_warning -n "Your /var/log/packages is broken."
         log_warning -n "Please review these files:"
         log_warning -n "  $instpkg"
       fi

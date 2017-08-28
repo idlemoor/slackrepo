@@ -79,7 +79,7 @@ function build_command
       log_error "Cannot build ${itemid}."
       [ -n "${STATUSINFO[$itemid]}" ] && log_normal "${STATUSINFO[$itemid]}"
     else
-      log_warning "$itemid has unexpected status ${STATUS[$itemid]}"
+      log_warning -n "$itemid has unexpected status ${STATUS[$itemid]}"
     fi
     log_normal ""
   else
@@ -215,7 +215,7 @@ function revert_command
       else
         deprevdata=( $(db_get_rev "${b_depid}") )
         if [ "${deprevdata[2]:-0}" -gt "$mybuildtime" ]; then
-          log_warning "${b_depid} may need to be reverted"
+          log_warning -s "${b_depid} may need to be reverted"
         fi
       fi
     done < "$backuprevfile"
@@ -227,7 +227,7 @@ function revert_command
   # Log a warning about any dependers
   dependers=$(db_get_dependers "$itemid")
   for depender in $dependers; do
-    log_warning "$depender may need to be rebuilt or reverted"
+    log_warning -s "$depender may need to be rebuilt or reverted"
   done
   # Log a warning about any packages that are installed
   packagelist=( "$packagedir"/*.t?z )
@@ -236,7 +236,7 @@ function revert_command
       is_installed "$pkg"
       istat=$?
       if [ "$istat" = 0 ] || [ "$istat" = 1 ]; then
-        log_warning "$R_INSTALLED is installed, use removepkg to uninstall it"
+        log_warning -s "$R_INSTALLED is installed, use removepkg to uninstall it"
       fi
     done
   fi
@@ -350,7 +350,7 @@ function remove_command
     # Log a warning about any dependers, unless this is happening within another item
     dependers=$(db_get_dependers "$itemid")
     for depender in $dependers; do
-      log_warning "$depender may need to be removed or rebuilt"
+      log_warning -s "$depender may need to be removed or rebuilt"
     done
   else
     removeopt=''
@@ -367,7 +367,7 @@ function remove_command
     is_installed "$pkg"
     istat=$?
     if [ "$istat" = 0 ] || [ "$istat" = 1 ]; then
-      log_warning "$R_INSTALLED is installed, use removepkg to uninstall it"
+      log_warning -s "$R_INSTALLED is installed, use removepkg to uninstall it"
     fi
   done
 

@@ -121,7 +121,7 @@ function build_item_packages
   buildassign=$(grep -a '^BUILD=' "$TMP_SLACKBUILD"/"$itemfile")
   if [ -z "$buildassign" ]; then
     buildassign="BUILD=1"
-    log_warning -a "${itemid}: no \"BUILD=\" in $itemfile; using 1"
+    log_warning -s -a "${itemid}: no \"BUILD=\" in $itemfile; using 1"
   fi
   eval $buildassign
   if [ "${STATUSINFO[$itemid]:0:3}" = 'add' ] || [ "${STATUSINFO[$itemid]:0:18}" = 'update for version' ]; then
@@ -328,7 +328,7 @@ function build_item_packages
     'kernel'* | curl | wget )
       ;;
     * )
-      log_warning -a "${itemid}: Hint PRAGMA=\"$pragma\" not recognised"
+      log_warning -s -a "${itemid}: Hint PRAGMA=\"$pragma\" not recognised"
       ;;
     esac
   done
@@ -478,7 +478,7 @@ function build_item_packages
         if [ -f "$TMP_SLACKBUILD/README" ] && [ -f "$TMP_SLACKBUILD"/"$(basename "$itemfile" .SlackBuild)".info ]; then
           # it's probably an SBo SlackBuild, so complain and don't retag
           if [ -f "${MY_CHRDIR}$pkgpath" ]; then
-            log_warning -a "${itemid}: Package should have been in \$OUTPUT: $pkgpath"
+            log_warning -s -a "${itemid}: Package should have been in \$OUTPUT: $pkgpath"
             mv "${MY_CHRDIR}$pkgpath" "$TMP_OUTPUT"
           else
             log_error -a "${itemid}: Package not found: $pkgpath"
@@ -797,7 +797,7 @@ function chroot_report
       excludes="^/dev/ttyp|^$HOME/\\.distcc|^$HOME/\\.cache|^$HOME\$|^/var/tmp|\\.pyc\$|^/etc/ld.so.cache\$|^/var/cache/ldconfig\$"
       significant="$(echo "$crap" | sed -e "s#^\./#/#" | grep -v -E "$excludes" | sort)"
       if [ -n "$significant" ]; then
-        log_warning -a -s "$itemid: Files/directories were modified in the chroot" && \
+        log_warning -s -a "$itemid: Files/directories were modified in the chroot" && \
           log_info -t -a "${significant}"
       fi
     fi

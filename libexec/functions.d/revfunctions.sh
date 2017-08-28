@@ -105,7 +105,7 @@ function calculate_deps_and_status
   local pid
   for pid in $parentlist; do
     if [ "$pid" = "$itemid" ]; then
-      log_warning "${itemid}: Circular dependency: $(echo $itemid $parentlist | awk '{for (i=NF; i>0; i--) printf "%s ",$i}')"
+      log_warning -s "${itemid}: Circular dependency: $(echo $itemid $parentlist | awk '{for (i=NF; i>0; i--) printf "%s ",$i}')"
       return 0
     fi
   done
@@ -130,9 +130,9 @@ function calculate_deps_and_status
     for dep in ${INFOREQUIRES[$itemid]}; do
       if [ "$dep" = '%README%' ]; then
         # %README% is now removed unconditionally, but we'll leave this check here for now:
-        log_warning "${itemid}: Unhandled %README% in ${itemprgnam}.info"
+        log_warning -s "${itemid}: Unhandled %README% in ${itemprgnam}.info"
       elif [ "$dep" = "$itemprgnam" ]; then
-        log_warning "${itemid}: Ignoring dependency of ${itemprgnam} on itself"
+        log_warning -s "${itemid}: Ignoring dependency of ${itemprgnam} on itself"
       else
         parse_arg "${dep}" "${itemid}"
         [ "${#PARSEDARGS[@]}" != 0 ] && deplist+=( "${PARSEDARGS[@]}" )

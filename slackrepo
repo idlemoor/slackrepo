@@ -395,6 +395,8 @@ if [ "$OPT_CHROOT" = 'y' ] && [ "$SYS_OVERLAYFS" != 'y' ]; then
 fi
 # accept null niceness, map to zero
 [ -z "$OPT_NICE" ] && OPT_NICE='0'
+# fixup NOWARNING (if you really want the regex to match 'n', see a doctor)
+[ "$OPT_NOWARNING" = 'n' ] && OPT_NOWARNING=''
 
 # Set up the OPT_LINT_* suboptions. This is horrible, sorry.
 LINT_ALL="sb,dl,x,net,pkg,inst"

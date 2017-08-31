@@ -1,495 +1,549 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO.CONF 5 "2015-05-01" slackrepo-0.2.0
+.TH SLACKREPO.CONF 5 "2017-09-01" slackrepo-0.3
 .
 .
 .
 .SH NAME
-slackrepo.conf \- repository configuration files for slackrepo
+.
+.
+.
+\fBslackrepo.conf\fR \- repository configuration files for slackrepo
 .
 .
 .
 .SH SYNOPSIS
-.BI /etc/slackrepo/slackrepo_ ID .conf
-(where
-.I ID
-is a repository ID, for example,
-.BR SBo )
 .
-.br
-.B ~/.genreprc
 .
-.br
-.B ~/.slackreporc
+.
+\fB/etc/slackrepo/slackrepo_\fIID\fB.conf\fR (where \fIID\fR is a
+repository ID, for example, \fBSBo\fR)
+.
+.PP
+\fB~/.genreprc\fR
+.
+.PP
+\fB~/.slackreporc\fR
 .
 .
 .
 .SH DESCRIPTION
 .
-.BR slackrepo (8)
-reads configuration data from
-.I ~/.slackreporc
-and
-.I ~/.genreprc
-and
-.I /etc/slackrepo/slackrepo_ID.conf
-.P
-These files contain assignments of configuration variables, one per line,
-in the form
-.P
-.RS +4n
+.
+.
+\fBslackrepo(8)\fR reads configuration data from \fI~/.slackreporc\fR
+and \fI~/.genreprc\fR and \fI/etc/slackrepo/slackrepo_ID.conf\fR
+.
+.PP
+These files contain assignments of configuration variables, one per
+line, in the form
+.
+.PP
+.RS
 .EX
-.IR NAME = VALUE
+\fINAME=VALUE\fR
 .EE
 .RE
-.P
-The files are 'sourced' by
-.BR bash ,
-so spaces are not permitted either side of '='.
-Lines starting with '#' and empty lines are ignored.
-Assigned values may optionally be enclosed in single or double quotes.
-The strings %REPO%, %SLACKVER% and %ARCH% are automatically replaced by the
-repo ID, Slackware version, and arch, respectively.
-.P
+.
+.PP
+The files are 'sourced' by \fBbash\fR, so spaces are not permitted
+either side of '='. Lines starting with '#' and empty lines are
+ignored. Assigned values may optionally be enclosed in single or double
+quotes. The strings %REPO%, %SLACKVER% and %ARCH% are automatically
+replaced by the repo ID, Slackware version, and arch, respectively.
+.
+.PP
 Any values specified in the configuration files are overridden by
-environment variables or control arguments on the
-.B slackrepo
-command line.  Values specified in
-.IR ~/.slackreporc " and " ~/.genreprc
-override values specified in
-.IR /etc/slackrepo/slackrepo_ID.conf .
-.P
+environment variables or control arguments on the \fBslackrepo\fR
+command line.  Values specified in \fI~/.slackreporc\fR and
+\fI~/.genreprc\fR override values specified in
+\fI/etc/slackrepo/slackrepo_ID.conf\fR.
+.
+.PP
 Note that all the examples below show the values that are set in the
-supplied configuration file for the
-.B SBo
-(SlackBuilds.org) repository ID.
+supplied configuration file for the \fBSBo\fR (SlackBuilds.org)
+repository ID.
+.
 .
 .SS Default repo ID and configuration directory
-.P
+.
+.
+.PP
 The following configuration variables can be set only in
-.IR ~/.slackreporc .
+\fI~/.slackreporc\fR.
 .
 .TP
-.B REPO
+\fBREPO\fR
 The default repo ID. This determines the configuration file
-.I slackrepo_ID.conf
-from which other configuration variables will be read.
-This variable can be set only in
-.IR ~/.slackreporc ,
-but can be overridden by the REPO environment variable or by the
-command line option
-.BR --repo=ID .
-.br
+\fIslackrepo_ID.conf\fR from which other configuration variables will
+be read. This variable can be set only in \fI~/.slackreporc\fR, but can
+be overridden by the REPO environment variable or by the command line
+option \fB--repo=ID\fR.
+.IP
 Example:
-.B REPO=\(dqSBo\(dq
+.EX
+REPO=\(dqSBo\(dq
+.EE
 .
 .TP
-.B CONFIGDIR
-The configuration directory.
-This specifies an alternative directory to be used instead of
-.I /etc/slackrepo
-to find the configuration files.
-This variable can be set only in
-.IR ~/.slackreporc ,
-but can be overridden by the CONFIGDIR environment variable.
-.br
+\fBCONFIGDIR\fR
+The configuration directory. This specifies an alternative directory to
+be used instead of \fI/etc/slackrepo\fR to find the configuration
+files. This variable can be set only in \fI~/.slackreporc\fR, but can
+be overridden by the CONFIGDIR environment variable.
+.IP
 Example:
-.B CONFIGDIR=\(dq/etc/slackrepo\(dq
+.EX
+CONFIGDIR=\(dq/etc/slackrepo\(dq
+.EE
+.
 .
 .SS Repository filestore locations
-.P
-The following configuration variables determine
-repository filestore locations.
-These variables can be set in
-.I ~/.slackreporc
-or
-.IR /etc/slackrepo/slackrepo_ID.conf ,
-or can be overridden by environment variables.
+.
+.
+.PP
+The following configuration variables determine repository filestore
+locations. These variables can be set in \fI~/.slackreporc\fR or
+\fI/etc/slackrepo/slackrepo_ID.conf\fR, or can be overridden by
+environment variables.
 .
 .TP
-.B SBREPO
+\fBSBREPO\fR
 Filestore location of the local SlackBuilds repository.
-.br
-Example:
-.B SBREPO=\(dq/var/lib/slackrepo/%REPO%/slackbuilds\(dq
-.
-.TP
-.B SRCREPO
-Where to store cached sources. (You will need plenty of space.)
-.br
-Example:
-.B SRCREPO=\(dq/var/lib/slackrepo/%REPO%/source\(dq
-.
-.TP
-.B PKGREPO
-Filestore location of the local package repository, i.e., where to store
-built packages. (You will need plenty of space.)
-.br
-Example:
-.B PKGREPO=\(dq/var/lib/slackrepo/%REPO%/packages\(dq
 .IP
-If you intend to use the package repository with slackpkg+,
-you may wish to change this path or symlink it to a location accessible by a
-local web server (e.g., somewhere under
-.IR /var/www/htdocs/ ).
+Example:
+.EX
+SBREPO=\(dq/var/lib/slackrepo/%REPO%/slackbuilds\(dq
+.EE
 .
 .TP
-.B PKGBACKUP
-Where to keep backups. (You will need plenty of space.) For example:
-.br
+\fBSRCREPO\fR
+Where to store cached sources. (You will need plenty of space.)
+.IP
 Example:
-.B PKGBACKUP=\(dq/var/lib/slackrepo/%REPO%/backups/%SLACKVER%/%ARCH%\(dq
+.EX
+SRCREPO=\(dq/var/lib/slackrepo/%REPO%/source\(dq
+.EE
+.
+.TP
+\fBPKGREPO\fR
+Filestore location of the local package repository, i.e., where to
+store built packages. (You will need plenty of space.)
+.IP
+Example:
+.EX
+PKGREPO=\(dq/var/lib/slackrepo/%REPO%/packages\(dq
+.EE
+.
+.IP
+If you intend to use the package repository with slackpkg+, you may
+wish to change this path or symlink it to a location accessible by a
+local web server (e.g., somewhere under \fI/var/www/htdocs/\fR).
+.
+.TP
+\fBPKGBACKUP\fR
+Where to keep backups. (You will need plenty of space.)
+.IP
+Example:
+.EX
+PKGBACKUP=\(dq/var/lib/slackrepo/%REPO%/backups/%SLACKVER%/%ARCH%\(dq
+.EE
 .IP
 You can disable backups by commenting out or deleting this line.
 .
 .TP
-.B HINTDIR
-Where to find hintfiles for this repository.
-.br
-Example:
-.B HINTDIR=\(dq/etc/slackrepo/%REPO%/hintfiles\(dq
-.
-.TP
-.B DEFAULT_HINTDIR
-Where to find default hintfiles for this repository.
-.br
-Example:
-.B DEFAULT_HINTDIR=\(dq/etc/slackrepo/%REPO%/default_hintfiles/%SLACKVER%\(dq
+\fBHINTDIR\fR
+Where to find locally written hintfiles for this repository.
 .IP
-You can disable all the default hintfiles for this repository
-by commenting out or deleting this line.
+Example:
+.EX
+HINTDIR=\(dq/etc/slackrepo/%REPO%/hintfiles\(dq
+.EE
 .
 .TP
-.B LOGDIR
+\fBDEFAULT_HINTDIR\fR
+Where to find system-provided default hintfiles (these come in a
+separate \fbslackrepo-hints\fR package).
+.IP
+Example:
+.EX
+DEFAULT_HINTDIR=\(dq/etc/slackrepo/%REPO%/default_hintfiles/%SLACKVER%\(dq
+.EE
+.IP
+You can disable all the default hintfiles for this repository by
+commenting out or deleting this line.
+.
+.TP
+\fBLOGDIR\fR
 Where to store log files.
-.br
+.IP
 Example:
-.B LOGDIR=\(dq/var/log/slackrepo/%REPO%\(dq
+.EX
+LOGDIR=\(dq/var/log/slackrepo/%REPO%\(dq
+.EE
 .
 .TP
-.B DATABASE
+\fBDATABASE\fR
 Where to keep the database for this repository.
-.br
+.IP
 Example:
-.B DATABASE=\(dq/var/lib/slackrepo/%REPO%/database_%REPO%.sqlite3\(dq
+.EX
+DATABASE=\(dq/var/lib/slackrepo/%REPO%/database_%REPO%_%ARCH%.sqlite3\(dq
+.EE
 .
 .TP
-.B TMP
+\fBTMP\fR
 Where to store temporary files. (You will need plenty of space.)
-.br
+.IP
 Example:
-.B TMP=\(dq/tmp/%REPO%\(dq
+.EX
+TMP=\(dq/tmp/%REPO%\(dq
+.EE
 .
 .
 .SS Building packages
-.P
-The following configuration variables affect
-the building of packages.
-These variables can be set in
-.I ~/.slackreporc
-or
-.IR /etc/slackrepo/slackrepo_ID.conf ,
-or can be overridden by environment variables.
+.
+.
+.PP
+The following configuration variables affect the building of packages.
+These variables can be set in \fI~/.slackreporc or
+\fI/etc/slackrepo/slackrepo_ID.conf\fR, or can be overridden by
+environment variables.
 .
 .TP
-.B NUMJOBS
-Number of make jobs to set in MAKEFLAGS (e.g., '-j2').
-Leave blank to have this automatically determined as one more than
-the number of processors on the build host.
-.br
-Example:
-.B NUMJOBS=''
-.
-.TP
-.B ARCH
-Arch for built packages.
-Leave this blank to have the arch automatically determined by the build host.
-.br
-Example:
-.B ARCH=''
-.
-.TP
-.B TAG
-Tag for built packages.
-.br
-Example:
-.B TAG=\(dq_SBo\(dq
+\fBSUBSTITUTE\fR
+A space-separated list of dependency substitutions applied to all
+SlackBuilds in this repository. Substitution of X by Y is written as
+\fBX=>Y\fR. Deletion of X is written as \fB!X\fR. Spaces and commas
+can be added for readability.
 .IP
-If you are publishing packages from SlackBuilds.org,
-please change
-.B SBo
-to something else (see SlackBuilds.org FAQ, item 20).
+Example:
+.EX
+SUBSTITUTE=\(dqjdk => openjdk, jack_audio_connection_kit => jack2\(dq
+.EE
 .
 .TP
-.B PKGTYPE
-Package compression type. This can be
-.B tgz
-(gzip compressed),
-.B txz
-(xz),
-.B tbz
-(bzip2), or
-.B tlz
-(lzma).
-.br
+\fBNUMJOBS\fR
+Number of make jobs to set in MAKEFLAGS (e.g., '-j2'). Leave blank to
+have this dynamically controlled according to the number of processors
+on the build host and the current load average.
+.IP
 Example:
-.B PKGTYPE=\(dqtgz\(dq
+.EX
+NUMJOBS=''
+.EE
+.
+.TP
+\fBARCH\fR
+Arch for built packages. Leave this blank to have the arch
+automatically determined by the build host.
+.IP
+Example:
+.EX
+ARCH=''
+.EE
+.
+.TP
+\fBTAG\fR
+Tag for built packages. If you are publishing packages from
+SlackBuilds.org, please change \fBSBo\fR to something else (see
+SlackBuilds.org FAQ, item 20).
+.IP
+Example:
+.EX
+TAG=\(dq_SBo\(dq
+.EE
+.
+.TP
+\fBPKGTYPE\fR
+Package compression type. This can be \fBtgz\fR (gzip compressed),
+\fBtxz\fR (xz), \fBtbz\fR (bzip2), or \fBtlz\fR (lzma).
+.IP
+Example:
+.EX
+PKGTYPE=\(dqtgz\(dq
+.EE
 .
 .
 .SS Defaults for control arguments
-.P
-The configuration variables
-.BR VERBOSE ,
-.BR VERY_VERBOSE ,
-.BR DRY_RUN ,
-.BR INSTALL ,
-.BR CHROOT ,
-.BR LINT ,
-.BR KEEP_TMP ,
-.BR COLOR " and "
-.B NICE
-set the defaults for slackrepo's command line control arguments.
-These variables can be set in
-.I ~/.slackreporc
-or
-.IR /etc/slackrepo/slackrepo_ID.conf .
-.br
+.
+.
+.PP
+The configuration variables \fBVERBOSE\fR, \fBVERY_VERBOSE\fR,
+\fBDRY_RUN\fR, \fBINSTALL\fR, \fBCHROOT\fR, \fBLINT\fR, \fBKEEP_TMP\fR,
+\fBCOLOR\fR, \fBNICE\fR and \fBNOWARNING\fR set the defaults for
+slackrepo's command line control arguments. These variables can be set
+in \fI~/.slackreporc or \fI/etc/slackrepo/slackrepo_ID.conf\fR.
+.PP
 Examples:
-.P
-.RS +4n
+.IP
 .EX
-.B VERBOSE='n'
-.B VERY_VERBOSE='n'
-.B DRY_RUN='n'
-.B INSTALL='n'
-.B CHROOT='n'
-.B LINT='n'
-.B KEEP_TMP='n'
-.B COLOR='auto'
-.B NICE='5'
+VERBOSE='n'
+VERY_VERBOSE='n'
+DRY_RUN='n'
+INSTALL='n'
+CHROOT='n'
+LINT='n'
+KEEP_TMP='n'
+COLOR='auto'
+NICE='5'
+NOWARNING=''
 .EE
-.RE
 .
 .
 .SS Calling gen_repos_files.sh
-.P
+.
+.
+.PP
 The following configuration variables relate to the optional use of
-gen_repos_files.sh.  They can be set in
-.I ~/.slackreporc
-or
-.IR /etc/slackrepo/slackrepo_ID.conf ,
-or can be overridden by environment variables.
+gen_repos_files.sh.  They can be set in \fI~/.slackreporc or
+\fI/etc/slackrepo/slackrepo_ID.conf\fR, or can be overridden by
+environment variables.
 .
-.P
 .TP
-.B USE_GENREPOS
-Whether to use
-.IR gen_repos_files.sh .
-For
-.BR SBo ,
-the value supplied is
-.B 0
-(disabled). To enable it, change this to
-.BR 1 .
-.br
+\fBUSE_GENREPOS\fR
+Whether to use \fIgen_repos_files.sh\fR. For \fBSBo\fR, the value
+supplied is \fB0\fR (disabled). To enable it, change this to \fB1\fR.
+.IP
 Example:
-.B USE_GENREPOS=0
+.EX
+USE_GENREPOS=0
+.EE
 .
 .TP
-.B REPOSROOT=\(dq$PKGREPO\(dq
-Don't change this! it is needed so gen_repos_files.sh can find your package
-repository.
+\fBREPOSROOT=\(dq$PKGREPO\(dq\fR
+Don't change this! it is needed so gen_repos_files.sh can find your
+package repository.
 .
-.P
+.PP
 The following gen_repos_files.sh configuration variables can be set in
-.IR ~/.genreprc ,
-.IR ~/.slackreporc ,
-or
-.IR /etc/slackrepo/slackrepo_ID.conf ,
-or can be overridden by environment variables.
-.P
-If USE_GENREPOS is enabled, you must review and set correct values
-for all these variables - the default values will not be sufficient.
+\fI~/.genreprc\fR, \fI~/.slackreporc\fR, or
+\fI/etc/slackrepo/slackrepo_ID.conf\fR, or can be overridden by
+environment variables.
+.PP
+If USE_GENREPOS is enabled, you must review and set correct values for
+all these variables - the default values will not be sufficient.
 .
-.P
 .TP
-.B REPOSOWNER
+\fBREPOSOWNER\fR
 Repository maintainer.
-.br
+.IP
 Example:
-.B REPOSOWNER=\(dqLocal administrator <root@localhost>\(dq
+.EX
+REPOSOWNER=\(dqLocal administrator <root@localhost>\(dq
+.EE
 .
 .TP
-.B REPOSOWNERGPG
-The GPG key for the repository owner can contain a different string than
-the value of $REPOSOWNER . If you leave $REPOSOWNERGPG empty, the script will
-use the value you've set for $REPOSOWNER instead to search the GPG keyfile.
-.br
-Example
-.B REPOSOWNERGPG=\(dq\(dq
+\fBREPOSOWNERGPG\fR
+The GPG key for the repository owner can contain a different string
+than the value of $REPOSOWNER . If you leave $REPOSOWNERGPG empty, the
+script will use the value you've set for $REPOSOWNER instead to search
+the GPG keyfile.
+.IP
+Example:
+.EX
+REPOSOWNERGPG=\(dq\(dq
+.EE
 .
 .TP
-.B DL_URL
+\fBDL_URL\fR
 Under what URL is the repository accessible.
-.br
+.IP
 Example:
-.B DL_URL=\(dqhttp://localhost/pkgrepo/%REPO%/%SLACKVER%/%ARCH%\(dq
+.EX
+DL_URL=\(dqhttp://localhost/pkgrepo/%REPO%/%SLACKVER%/%ARCH%\(dq
+.EE
 .
 .TP
-.B RSS_TITLE
+\fBRSS_TITLE\fR
 The title of the generated RSS feed.
-.br
+.IP
 Example:
-.B RSS_TITLE=\(dqLocal SlackBuild Packages\(dq
+.EX
+RSS_TITLE=\(dqLocal SlackBuild Packages\(dq
+.EE
 .
 .TP
-.B RSS_ICON
+\fBRSS_ICON\fR
 The logo picture used for the RSS feed.
-.br
+.IP
 Example:
-.B RSS_ICON=\(dqhttp://www.slackware.com/~alien/graphics/blueorb.png\(dq
+.EX
+RSS_ICON=\(dqhttp://www.slackware.com/~alien/graphics/blueorb.png\(dq
+.EE
 .
 .TP
-.B RSS_LINK
+\fBRSS_LINK\fR
 The URL linked to when clicking on the logo.
-.br
+.IP
 Example:
-.B RSS_LINK=\(dqfile://$REPOSROOT/ChangeLog.txt\(dq
+.EX
+RSS_LINK=\(dqfile://$REPOSROOT/ChangeLog.txt\(dq
+.EE
 .
 .TP
-.B RSS_CLURL
+\fBRSS_CLURL\fR
 URL to the full ChangeLog.txt.
-.br
+.IP
 Example:
-.B RSS_CLURL=\(dqfile://$REPOSROOT/ChangeLog.txt\(dq
+.EX
+RSS_CLURL=\(dqfile://$REPOSROOT/ChangeLog.txt\(dq
+.EE
 .
 .TP
-.B RSS_DESCRIPTION
+\fBRSS_DESCRIPTION\fR
 The descriptive text for the RSS feed.
-.br
+.IP
 Example:
-.B RSS_DESCRIPTION=\(dqLocal SlackBuild Packages\(dq
+.EX
+RSS_DESCRIPTION=\(dqLocal SlackBuild Packages\(dq
+.EE
 .
 .TP
-.B RSS_FEEDMAX
+\fBRSS_FEEDMAX\fR
 Maximum number of RSS feed entries to display.
-.br
+.IP
 Example:
-.B RSS_FEEDMAX=15
+.EX
+RSS_FEEDMAX=15
+.EE
 .
 .TP
-.B RSS_UUID
-The RSS generator must use a unique feed identifier.
-Generate one for your feed by using the string returned by \(dquuidgen -t\(dq.
-.br
+\fBRSS_UUID\fR
+The RSS generator must use a unique feed identifier. Generate one for
+your feed by using the string returned by \(dquuidgen -t\(dq.
+.IP
 Example:
-.B RSS_UUID=\(dq\(dq
+.EX
+RSS_UUID=\(dqe8dc1000-8e8a-11e7-b78d-001e4fb494b2\(dq
+.EE
 .
 .TP
-.B GPGBIN
+\fBGPGBIN\fR
 Either use gpg or gpg2.
-.br
+.IP
 Example:
-.B GPGBIN=\(dq/usr/bin/gpg\(dq
+.EX
+GPGBIN=\(dq/usr/bin/gpg\(dq
+.EE
 .
 .TP
-.B USE_GPGAGENT
-Optionally use gpg-agent to cache the gpg passphrase instead of letting the
-script keep it in the environment (note that if you define USE_GPGAGENT=1
-but gpg-agent is not running, you will get prompted for a passphrase every
-single time gpg runs).
-.br
+\fBUSE_GPGAGENT\fR
+Optionally use gpg-agent to cache the gpg passphrase instead of letting
+the script keep it in the environment (note that if you define
+USE_GPGAGENT=1 but gpg-agent is not running, you will get prompted for
+a passphrase every single time gpg runs).
+.IP
 Example:
-.B USE_GPGAGENT=0
+.EX
+USE_GPGAGENT=0
+.EE
 .
 .TP
-.B FOR_SLAPTGET
-Generate slack-requires, slack-suggests, and slack-conflicts lines in the
-metadata files by setting FOR_SLAPTGET to \(dq1\(dq -- these are used by slapt-get.
-.br
+\fBFOR_SLAPTGET\fR
+Generate slack-requires, slack-suggests, and slack-conflicts lines in
+the metadata files by setting FOR_SLAPTGET to \(dq1\(dq -- these lines
+are used by the slapt-get package manager.
+.IP
 Example:
-.B FOR_SLAPTGET=0
+.EX
+FOR_SLAPTGET=0
+.EE
 .
 .TP
-.B FOLLOW_SYMLINKS
+\fBFOLLOW_SYMLINKS\fR
 Follow symlinks in case the repository has symlinks like 14.0 -> 13.37
-indicating that one package works for those two Slackware releases.
-If the script does _not_ follow symlinks, then the symlinks will appear in
+indicating that one package works for those two Slackware releases. If
+the script does _not_ follow symlinks, then the symlinks will appear in
 the repository listing instead of the packages they point to.
-.br
+.IP
 Example:
-.B FOLLOW_SYMLINKS=1
+.EX
+FOLLOW_SYMLINKS=1
+.EE
 .
 .TP
-.B REPO_SUBDIRS
+\fBREPO_SUBDIRS\fR
 If the repository has separate package subdirectories (for separate
-Slackware releases or architectures) then define them here.
-Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them.
-.br
+Slackware releases or architectures) then define them here. Separate
+FILELIST.TXT, MANIFEST etc.. files will be created for all of them.
+.IP
 Example:
-.B REPO_SUBDIRS=\(dq\(dq
+.EX
+REPO_SUBDIRS=\(dq\(dq
+.EE
 .
 .TP
-.B REPO_EXCLUDES
+\fBREPO_EXCLUDES\fR
 If you want to exclude certain directories or files from being included
 in the repository metadata, define them here (space-separated).
-.br
+.IP
 Example:
-.B REPO_EXCLUDES=\(dq.revision\(dq
+.EX
+REPO_EXCLUDES=\(dq.htaccess\(dq
+.EE
 .
 .
 .SS Initial setup
-.P
+.
+.
+.PP
 The following configuration variables determine how the SlackBuilds
-repository will be created if it does not already exist.
-These variables are set in
-.IR /etc/slackrepo/slackrepo_ID.conf .
-Normally, they are only used the first time that
-.B slackrepo
-is run.
-.TP
-.B INIT_GITCLONE
-.br
-The remote git repository to be cloned.
-.br
-Example:
-.B INIT_GITCLONE='git://git.slackbuilds.org/slackbuilds'
+repository will be created if it does not already exist. These
+variables are set in \fI/etc/slackrepo/slackrepo_ID.conf\fR. Normally,
+they are only used when \fBslackrepo\fR is run for the first time in an
+empty repository.
 .
 .TP
-.B INIT_GITBRANCH
+\fBINIT_GITCLONE\fR
+The remote git repository to be cloned.
+.IP
+Example:
+.EX
+INIT_GITCLONE='git://git.slackbuilds.org/slackbuilds'
+.EE
+.
+.TP
+\fBINIT_GITBRANCH\fR
 The local git branch to be created, tracking the remote branch of the
 same name.
-.br
+.IP
 Example:
-.B INIT_GITBRANCH='%SLACKVER%'
+.EX
+INIT_GITBRANCH='%SLACKVER%'
+.EE
 .
 .
 .SS Environment variables
-.P
-The slackrepo configuration file can be a useful place to set environment variables for the build process.
-You can simply add export commands at the end of the configuration file.
-.P
-For example, you can add the following commands to compile everything with clang instead of gcc
-(but please note, there are a few packages do not build correctly with clang).
-.P
-.RS +4n
+.
+.
+.PP
+The slackrepo configuration file can be a useful place to set
+environment variables for the build process. You can simply add export
+commands at the end of the configuration file.
+.
+.PP
+For example, you can add the following commands to compile everything
+with clang instead of gcc (but please note, there are a few packages do
+not build correctly with clang).
+.
+.IP
 .EX
-.B export CC=clang
-.B export CXX=clang++
+export CC=clang
+export CXX=clang++
 .EE
-.RE
 .
 .
 .
 .SH SEE ALSO
 .
-.BR slackrepo (8),
-.BR slackrepo.hint (5),
-.BR installpkg (8),
-.BR upgradepkg (8),
-.BR removepkg (8),
-.BR pkgtool (8),
-.BR slackpkg (8).
+.
+.
+.PP
+\fBslackrepo(8)\fR, \fBslackrepo.hint(5)\fR, \fBinstallpkg(8)\fR,
+\fBupgradepkg(8)\fR, \fBremovepkg(8)\fR, \fBpkgtool(8)\fR,
+\fBslackpkg(8)\fR.
+.
 .
 .

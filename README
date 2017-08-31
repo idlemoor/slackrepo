@@ -7,5 +7,5 @@ Features:
   * Package updates detected by tracking upstream git revisions
   * Output repositories suitable for use with slackpkg+
 
+See also: https://github.com/idlemoor/slackrepo-hints
 Homepage: https://idlemoor.github.io/slackrepo/
-Feedback: email David Spencer <baildon.research@googlemail.com>

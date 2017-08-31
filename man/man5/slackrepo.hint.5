@@ -1,161 +1,174 @@
 .\" Copyright 2014 David Spencer, Baildon, West Yorkshire, U.K.
 .\" All rights reserved.  For licence details, see the file 'LICENCE'.
 .
-.TH SLACKREPO.HINT 5 "2015-05-01" slackrepo-0.2.0
+.TH SLACKREPO.HINT 5 "2017-09-01" slackrepo-0.3
 .
 .
 .
 .SH NAME
-slackrepo.hint \- slackrepo hintfile format
+.
+.
+.
+\fBslackrepo.hint\fR \- slackrepo hintfile format
 .
 .
 .
 .SH SYNOPSIS
-.BI /etc/slackrepo/ ID /hintfiles/ prgnam .hint
-.br
-where
-.I ID
-is 'SBo' by default.
+.
+.
+.
+\fB/etc/slackrepo/\fIID\fB/hintfiles/\fIprgnam\fB.hint
+.PP
+where \fIID\fR is 'SBo' by default.
 .
 .
 .
 .SH DESCRIPTION
 .
-A \(dqhintfile\(dq is a file that supplements a SlackBuild's .info file, for
-example to specify options and additional dependencies, to override the version,
-downloads and md5sums, etc.
-.P
-Each repository ID should have a local hintfiles directory, as configured
-by the HINTDIR variable in the configuration file (see
-.BR slackrepo.conf (5)).
-By default this will be
-.IR /etc/slackrepo/ID/hintfiles .
-.P
-The local hintfiles directory can optionally contain a structure of subdirectories
-that is the same as the subdirectories in the SlackBuilds repository.
-For example, if the SBo repository's SlackBuild file for wxPython is
-.IR libraries/wxPython/wxPython.SlackBuild ,
-then its hintfile would be
-.IR /etc/slackrepo/SBo/hintfiles/libraries/wxPython/wxPython.hint .
-Alternatively, hintfiles can be placed in the top level directory, for example
-.IR /etc/slackrepo/SBo/hintfiles/wxPython.hint .
-A hintfile in the top level directory takes precedence over a hintfile
-of the same name in a subdirectory.
-.P
-Each repository ID should also have a default hint directory
-for system supplied hintfiles,
-as configured by the DEFAULT_HINTDIR variable
-in the configuration file (see
-.BR slackrepo.conf (5)).
-For example, the SlackBuilds.org default hintfiles for Slackware 14.1 are
-supplied in the directory
-.IR /usr/share/slackrepo/SBo/default_hintfiles/14.1 .
+.
+.
+A \(dqhintfile\(dq is a file that supplements a SlackBuild's .info
+file, for example to specify options and additional dependencies, to
+override the version, downloads and md5sums, etc.
+.
+.PP
+Each repository ID should have a local hintfiles directory, as
+configured by the HINTDIR variable in the configuration file (see
+\fBslackrepo.conf(5)\fR). By default this will be
+\fI/etc/slackrepo/ID/hintfiles\fR.
+.
+.PP
+The local hintfiles directory can optionally contain a structure of
+subdirectories that is the same as the subdirectories in the
+SlackBuilds repository. For example, if the SBo repository's SlackBuild
+file for wxPython is \fIlibraries/wxPython/wxPython.SlackBuild\fR, then
+its hintfile would be
+\fI/etc/slackrepo/SBo/hintfiles/libraries/wxPython/wxPython.hint\fR.
+Alternatively, hintfiles can be placed in the top level directory, for
+example \fI/etc/slackrepo/SBo/hintfiles/wxPython.hint\fR. A hintfile in
+the top level directory takes precedence over a hintfile of the same
+name in a subdirectory.
+.
+.PP
+Each repository ID should also have a default hint directory for system
+supplied hintfiles, as configured by the DEFAULT_HINTDIR variable in
+the configuration file (see \fBslackrepo.conf(5)\fR). For example, the
+SlackBuilds.org default hintfiles for Slackware 14.1 are supplied in
+the directory \fI/usr/share/slackrepo/SBo/default_hintfiles/14.1\fR .
 The default hintfiles directory contains a structure of subdirectories
 that is the same as the subdirectories in the SlackBuilds repository.
-.P
-Local hintfiles always take precedence over default hintfiles.
-You can disable the default hintfile directory completely by unsetting the
+.
+.PP
+Local hintfiles always take precedence over default hintfiles. You can
+disable the default hintfile directory completely by unsetting the
 DEFAULT_HINTDIR variable.
-.P
-The format of a hintfile is based on the format of SlackBuilds.org .info files,
-but all the entries are optional, and any unrecognised entries are ignored.
-The entries that can be defined are as follows:
-.P
-.RS
-.EX
-VERSION=\(dqnewversion\(dq
-DOWNLOAD=\(dqnew urls\(dq
-MD5SUM=\(dqnew md5sums\(dq
-SHA256SUM=\(dqsha256sum\(dq
-DOWNLOAD_arch=\(dqnew urls\(dq
-MD5SUM_arch=\(dqnew md5sums\(dq
-SHA256SUM_arch=\(dqsha256sum\(dq
-ADDREQUIRES=\(dqadditional dependencies\(dq
-OPTIONS=\(dqOPT1=yes OPT2=no ...\(dq
-GROUPADD=\(dqgid:groupname ...\(dq
-USERADD=\(dquid:username[:controlargs...] ...\(dq
-SKIP=\(dqyesno\(dq
-ARCH=\(dqarch\(dq
-INSTALL=\(dqyesno\(dq
-NUMJOBS=\(dq-j1\(dq
-ANSWERS=\(dqstrings\(dq
-CLEANUP=\(dqcommands\(dq
-PRAGMA=\(dqpragmas\(dq
-.EE
-.RE
+.
+.PP
+The format of a hintfile is based on the format of
+SlackBuilds.org .info files, but all the entries are optional, and any
+unrecognised entries are ignored. Most SlackBuilds do not need
+hintfiles, and most hintfiles will only have one or two variables.
 .
 .
 .
 .SS VERSION=\(dqnewversion\(dq
-.P
-This hint can be specified to attempt an automatic patch of the version number
-in both the SlackBuild and info files. The automatic patch is done by a simple text substitution.
-This often won't work (particularly if the old version number is something like '1', or
-if the download URL has not been patched correctly and you have not supplied a new
-download URL in the hint file). The md5sum and/or sha256sum of the source archive will not be checked, unless you have
-also supplied a new md5sum and/or sha256sum in the hint file. The patched SlackBuild and info
+.
+.
+.PP
+This hint can be specified to attempt an automatic patch of the version
+number in both the SlackBuild and info files. The automatic patch is
+done by a simple text substitution. This often won't work (particularly
+if the old version number is something like '1', or if the download URL
+has not been patched correctly and you have not supplied a new download
+URL in the hint file). The md5sum and/or sha256sum of the source
+archive will not be checked, unless you have also supplied a new md5sum
+and/or sha256sum in the hint file. The patched SlackBuild and info
 files are not kept.
 .
 .
 .SS DOWNLOAD=\(dqnew urls\(dq
-.P
-This hint redefines download URLs that replace the URLs specified in the .info file,
-for example if you have also defined VERSION=, or if the upstream URL has changed.
-.P
-However, if specified as
-.BR DOWNLOAD=\(dqno\(dq ,
-this hint indicates that the source needs
-to be downloaded manually (for example, because of a licence agreement).
-If you have already downloaded the source into the source cache, and if the
-md5sum is correct, then the package will be built. Otherwise, a message will
-be displayed explaining what you should do, and the package will be skipped.
+.
+.
+.PP
+This hint redefines download URLs that replace the URLs specified in
+the .info file, for example if you have also defined VERSION=, or if
+the upstream URL has changed.
+.
+.PP
+However, if specified as \fBDOWNLOAD=\(dqno\(dq\fR, this hint indicates
+that the source needs to be downloaded manually (for example, because
+of a licence agreement). If you have already downloaded the source into
+the source cache, and if the md5sum is correct, then the package will
+be built. Otherwise, a message will be displayed explaining what you
+should do, and the package will be skipped.
 .
 .
 .SS MD5SUM=\(dqnew md5sums\(dq
-.P
-This hint redefines md5sums that replace the md5sums specified in the .info file,
-for example if you have also redefined VERSION=, or if the upstream source
-archive has been changed.
-.P
-However, if specified as
-.BR MD5SUM=\(dqno\(dq ,
-this hint indicates that the source md5sums are not reliable
-(for example, because of an unversioned archive) and should not be checked.
+.
+.
+.PP
+This hint redefines md5sums that replace the md5sums specified in the
+.info file, for example if you have also redefined VERSION=, or if the
+upstream source archive has been changed.
+.
+.PP
+However, if specified as \fBMD5SUM=\(dqno\(dq\fR, this hint indicates
+that the source md5sums are not reliable (for example, because of an
+unversioned archive) and should not be checked.
 .
 .
 .SS SHA256SUM=\(dqsha256sums\(dq
-.P
-This hint specifies an sha256sum that will be checked (in addition to any md5sum).
+.
+.
+.PP
+This hint specifies an sha256sum that will be checked (in addition to
+any md5sum).
 .
 .
 .SS DOWNLOAD_arch=\(dqnew urls\(dq and MD5SUM_arch=\(dqnew md5sums\(dq and SHA256SUM_arch=\(dqsha256sums\(dq
-.P
-These hints redefine DOWNLOAD and MD5SUM, and specify SHA256SUM, as above,
-for the specified arch.
+.
+.
+.PP
+These hints redefine DOWNLOAD and MD5SUM, and specify SHA256SUM, as
+above, for the specified arch.
 .
 .
 .SS ADDREQUIRES=\(dqadditional dependencies\(dq
-.P
+.
+.
+.PP
 This hint should define a list of dependencies, separated by spaces.
-Dependencies in this list will be added to the dependencies defined by the
-REQUIRES= list defined in the .info file. If the .info file specifies %README%,
-you should set this hint (possibly as an empty string)
-to stop slackrepo displaying a warning.
+Dependencies in this list will be added to the dependencies defined by
+the REQUIRES= list defined in the .info file. If the .info file
+specifies %README%, you should set this hint (possibly as an empty
+string) to stop slackrepo displaying a warning.
+.
+.
+.SS DELREQUIRES=\(dqdependencies to ignore\(dq
+.
+.
+.PP
+To ignore dependencies in the REQUIRES= list, use this hint.
 .
 .
 .SS OPTIONS=\(dqOPT1=yes OPT2=no ...\(dq
-.P
-This hint should define options described in the SlackBuild's README file.
-Note that this is the only way in slackrepo that you can define SlackBuild options.
+.
+.
+.PP
+This hint should define options described in the SlackBuild's README
+file. Note that this is the only way in slackrepo that you can define
+SlackBuild options.
 .
 .
 .SS GROUPADD=\(dqgid:groupname ...\(dq
-.P
-This hint defines groups to be added on the host system.
-If a group already exists, nothing will be done.
-If more than one group is to be added, a space-separated list can be specified.
-Example:
-.P
+.
+.
+.PP
+This hint defines groups to be added on the host system. If a group
+already exists, nothing will be done. If more than one group is to be
+added, a space-separated list can be specified. Example:
+.
+.PP
 .RS
 .EX
 GROUPADD=\(dq209:postgres\(dq
@@ -164,32 +177,37 @@ GROUPADD=\(dq209:postgres\(dq
 .
 .
 .SS USERADD=\(dquid:username[:controlargs...] ...\(dq
-.P
-This hint defines usernames to be added on the host system.
-If a username already exists, nothing will be done.
-Optionally, additional control arguments of the useradd command can be
-specified, separated by colons, with the space between the control argument
-and its argument omitted. If more than one username is required, a
-space-separated list of specifications can be defined.
-Examples:
-.P
+.
+.
+.PP
+This hint defines usernames to be added on the host system. If a
+username already exists, nothing will be done. Optionally, additional
+control arguments of the useradd command can be specified, separated by
+colons, with the space between the control argument and its argument
+omitted. If more than one username is required, a space-separated list
+of specifications can be defined. Examples:
+.
+.PP
 .RS
 .EX
 USERADD=\(dq209:postgres:-d/var/lib/pgsql\(dq
 USERADD=\(dq270:smtpd:-g0:-r:-s/bin/false:-d/var/empty 271:smtpq:-r:-s/bin/false:-d/var/empty\(dq
 .EE
 .RE
-.P
 .
 .
 .SS SKIP=\(dqyesno\(dq
-.P
+.
+.
+.PP
 This hint can be specified if you want to skip the package when it
-would otherwise be built, rebuilt, updated or removed.
-If the hint isn't specified as SKIP=\(dqyes\(dq or SKIP=\(dqno\(dq, it will be interpreted
-as \(dqyes\(dq, and the string will be displayed when the build is skipped, so that
-you can put a helpful message into it, for example:
-.P
+would otherwise be built, rebuilt, updated or removed. If the hint
+isn't specified as SKIP=\(dqyes\(dq or SKIP=\(dqno\(dq, it will be
+interpreted as \(dqyes\(dq, and the string will be displayed when the
+build is skipped, so that you can put a helpful message into it, for
+example:
+.
+.PP
 .RS
 .EX
 SKIP=\(dqPlease remove the Slackware nc package before you build netcat-openbsd\(dq
@@ -198,35 +216,62 @@ SKIP=\(dqPlease remove the Slackware nc package before you build netcat-openbsd\
 .
 .
 .SS ARCH=\(dqarch\(dq
-.P
-This hint temporarily overrides the value of ARCH given in the configuration
-file or environment.
-This hint is most useful for SlackBuilds that repackage binaries.
+.
+.
+.PP
+This hint temporarily overrides the value of ARCH given in the
+configuration file or environment. This hint is most useful for
+SlackBuilds that repackage binaries.
 .
 .
 .SS INSTALL=\(dqyesno\(dq
-.P
-This hint temporarily overrides the value of INSTALL given in the configuration
-file or on the command line. Use this hint if you want a specific package to be
-installed after it has been built (e.g. nvidia-driver). Note that if the control
-argument --dry-run is specified, this hint will be ignored.
+.
+.
+.PP
+This hint temporarily overrides the value of INSTALL given in the
+configuration file or on the command line. Use this hint if you want a
+specific package to be installed after it has been built (e.g.
+nvidia-driver). Note that if the control argument --dry-run is
+specified, this hint will be ignored.
 .
 .
 .SS NUMJOBS=\(dq-j1\(dq
-.P
-This hint temporarily overrides the value of NUMJOBS given in the configuration
-file or environment. Use this hint if the build process fails when multiple
-'make' jobs are used, so that the build will be executed with MAKEFLAGS='-j1'.
+.
+.
+.PP
+This hint temporarily overrides the value of NUMJOBS given in the
+configuration file or environment. Use this hint if the build process
+fails when multiple 'make' jobs are used, so that the build will be
+executed with MAKEFLAGS='-j1'.
+.
+.
+.SS NOWARNING=\(dqExtended RE\(dq
+.
+.
+.PP
+This hint suppresses slackrepo warnings that match the specified
+extended regular expression. Multiple warnings can be suppressed by
+using a suitable expression, for example:
+.
+.PP
+.RS
+.EX
+NOWARNING=\(dq(Nonstandard directories|Unexpected owner/group)\(dq
+.EE
+.RE
 .
 .
 .SS ANSWERS=\(dqstring\(dq
-.P
-This hint can be specified if the build process wants to read answers to its
-questions during execution, for example concerning a licence agreement.
-The string is piped into the SlackBuild's standard input, so it should contain
-whatever will make the build process happy. Newlines can be specified as \\n,
-for example
-.P
+.
+.
+.PP
+This hint can be specified if the build process wants to read answers
+to its questions during execution, for example concerning a licence
+agreement. The string is piped into the SlackBuild's standard input, so
+it should contain whatever will make the build process happy. Newlines
+can be specified as \\n, for example
+.
+.PP
 .RS
 .EX
 ANSWERS=\(dqok\\nyes\(dq
@@ -235,22 +280,26 @@ ANSWERS=\(dqok\\nyes\(dq
 .
 .
 .SS CLEANUP=\(dqcommands\(dq
-.P
-This hint can be specified if the package needs extra cleanup when it is uninstalled
-(e.g. packages that replace standard Slackware packages or install kernel modules).
-The hint should define an appropriate shell command line.
-to clean up after a kernel module is uninstalled:
-.P
+.
+.
+.PP
+This hint can be specified if the package needs extra cleanup when it
+is uninstalled (e.g. packages that replace standard Slackware packages
+or install kernel modules). The hint should define an appropriate shell
+command line. to clean up after a kernel module is uninstalled:
+.
+.PP
 .RS
 .EX
 CLEANUP=\(dqdepmod -a\(dq
 .EE
 .RE
-.P
-For your convenience, slackrepo provides a command
-.B s_reinstall
+.
+.PP
+For your convenience, slackrepo provides a command \fBs_reinstall\fR
 that reinstalls the specified Slackware packages, for example:
-.P
+.
+.PP
 .RS
 .EX
 CLEANUP=\(dqs_reinstall tetex tetex-doc\(dq
@@ -259,65 +308,117 @@ CLEANUP=\(dqs_reinstall tetex tetex-doc\(dq
 .
 .
 .SS PRAGMA=\(dqpragmas\(dq
-This hint can be specified to perform one or more pragmas.
-.B Pragmas are not guaranteed to work!
-The hint name 'PRAGMA' used to be 'SPECIAL', which is still accepted as a synonym.
-The following pragmas are available:
-.P
-.B multilib_ldflags
-.P
+.
+.
+.PP
+This hint can be specified to perform one or more pragmas. \fBPragmas
+are not guaranteed to work!\fR Multiple pragmas can be specified,
+separated by spaces. The following pragmas are available:
+.
+.PP
+\fBpython3\fR
+.
+.PP
+Force python3 support: add python3 to the dependencies, set the
+PYTHON3=”yes” option, and if necessary patch the SlackBuild to support
+python3.
+.
+.PP
+\fBkernelmodule\fR and \fBkernel\fR
+.
+.PP
+Rebuild when the build host's kernel is upgraded; 'kernelmodule' also
+causes depmod to be run when the package is uninstalled.
+.
+.PP
+\fBmultilib_ldflags\fR
+.
+.PP
 On a multilib host, attempt to patch the SlackBuild to specify LDFLAGS,
 as described in SlackBuilds.org FAQ 18.
-.P
-.B download_basename
-.P
-Provide a symlink for source downloads using the URL's basename,
-for the benefit of SlackBuilds that don't expect content-disposition to be respected.
-.P
-.BR noexport_ARCH " and " noexport_BUILD " and " noexport_TAG
-.P
-Set ARCH or BUILD or TAG by patching the SlackBuild instead of exporting it
-to the environment.
-.P
-.B unset_ARCH
-.P
-Unset the value of ARCH, overriding the value given in the configuration file
-or environment.
-Other variables can be specified, for example
-.P
+.
+.PP
+\fBwget\fR or \fBcurl\fR
+.
+.PP
+Download with a fake wget or curl user agent string.
+.
+.PP
+\fBdownload_basename\fR
+.
+.PP
+Provide a symlink for source downloads using the URL's basename, for
+the benefit of SlackBuilds that don't expect content-disposition to be
+respected.
+.
+.PP
+\fBneed_net\fR and \fBneed_X\fR
+.
+.PP
+Do not block the network, and/or the X display, when building.
+.
+.PP
+\fBx86arch=\fIarch\fR
+.
+.PP
+When building on 32 bit x86, set the ARCH to \fIarch\fR.
+.PP
+\fBnoexport_ARCH\fR and \fBnoexport_BUILD\fR and \fBnoexport_TAG\fR
+.
+.PP
+Set ARCH and/or BUILD and/or TAG by patching the SlackBuild instead of
+exporting it to the environment.
+.
+.PP
+\fBunset_ARCH\fR
+.
+.PP
+Unset the value of ARCH, overriding the value given in the
+configuration file or environment. Other variables can be specified
+instead of ARCH, for example
+.
+.PP
 .RS
 .EX
 PRAGMA=\(dqunset_DISTCC_HOSTS\(dq
 .EE
 .RE
-.P
-.B noremove
-.P
-Do not remove (uninstall) packages before building the item.
-This is particularly useful for gcc, glibc, etc.
-.P
-.B nofakeroot
-.P
-Override building the package as a non-root user with fakeroot.
-Build the package as root, using
-.BR sudo .
-.P
-.B no_make_test
-.P
+.
+.PP
+\fBnoremove\fR
+.
+.PP
+Do not remove (uninstall) packages before building the item. This is
+particularly useful for gcc, glibc, etc.
+.
+.PP
+\fBnofakeroot\fR
+.
+.PP
+Override building the package as a non-root user with fakeroot. Build
+the package as root, using \fBsudo\fR.
+.
+.PP
+\fBno_make_test\fR
+.
+.PP
 Patch the SlackBuild to comment out any 'make test' command.
-.P
-.B stubs-32
-.P
-Temporarily provide
-.I /usr/include/gnu/stubs-32.h
-as described in the memtest86+ README and xen SlackBuild.
-.P
-.B abstar
-.P
-Patch the SlackBuild to use the tar command's
-.I --absolute-names
+.
+.PP
+\fBstubs-32\fR
+.
+.PP
+Temporarily provide \fI/usr/include/gnu/stubs-32.h\fR as described in
+the memtest86+ README and xen SlackBuild.
+.
+.PP
+\fBabstar\fR
+.
+.PP
+Patch the SlackBuild to use the tar command's \fI--absolute-names\fR
 control argument. Use this if you get the error message
-.P
+.
+.PP
 .RS
 .EX
 tar: Directory renamed before its status could be extracted
@@ -325,14 +426,14 @@ tar: Directory renamed before its status could be extracted
 .RE
 .
 .
+.
 .SH SEE ALSO
 .
-.BR slackrepo (8),
-.BR slackrepo.conf (5),
-.BR installpkg (8),
-.BR upgradepkg (8),
-.BR removepkg (8),
-.BR pkgtool (8),
-.BR slackpkg (8).
+.
+.
+\fBslackrepo(8)\fR, \fBslackrepo.conf(5)\fR, \fBinstallpkg(8)\fR,
+\fBupgradepkg(8)\fR, \fBremovepkg(8)\fR, \fBpkgtool(8)\fR,
+\fBslackpkg(8)\fR.
+.
 .
 .

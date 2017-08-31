@@ -1,14 +1,39 @@
-TODO
-----
+TODO - Stuff that isn't in 0.3
+------------------------------
+
+Moar Lint Checks!
+  desktop files
+  buildtime destdir paths in package
+  md5sum validity
+  perms of files in package
+  clashes with Slackware
+  docs provided in /usr/doc/prgnam-ver
+  lintpkg and sbostuff
 
 Use sbosrcarch structure for source repo (rsyncable) and make by-md5sum
 the primary access route
 
-Share package dirs (Slackware structure)
+BUILD_FAIL database
+
+Log file viewer
+
+Slackware pkg repo structure (each category has one dir with many pkgs)
 
 Full support for reproducible building
 
 Cross-repo dependencies and builds
+
+BUILDTIME, RUNTIME and CIRCULAR dependency hints
+
+Rebuild all deps if a build fails (-current, or -stable upgrades)
+
+Bash completion
+
+Build from Slackware
+
+Build from pkgsrc
+
+Use sbopkg as build backend
 
 ARM support
 

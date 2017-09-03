@@ -23,7 +23,7 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PRGNAM=slackrepo
-VERSION=${VERSION:-0.3.0}
+VERSION=${VERSION:-0.3}
 BUILD=${BUILD:-1}
 TAG=${TAG:-_SBo}
 
@@ -63,14 +63,14 @@ cp -a libexec/ $PKG/usr/libexec/$PRGNAM
 mkdir -p $PKG/usr/share
 cp -a share/ $PKG/usr/share/$PRGNAM
 
+mkdir -p $PKG/var/lib/$PRGNAM
+mkdir -p $PKG/var/log/$PRGNAM
+
 mkdir -p $PKG/etc/$PRGNAM
 for conffile in etc/slackrepo_*.conf; do
   repo=$(basename $conffile .conf | sed 's/slackrepo_//')
   cp -a $conffile $PKG/etc/$PRGNAM/$(basename $conffile).new
   mkdir -p $PKG/etc/$PRGNAM/$repo/hintfiles
-  mkdir -p $PKG/etc/$PRGNAM/$repo/default_hintfiles
-  mkdir -p $PKG/var/log/$PRGNAM/$repo
-  mkdir -p $PKG/var/lib/$PRGNAM/$repo
 done
 
 install -m 750 -d $PKG/etc/sudoers.d
@@ -82,7 +82,7 @@ find $PKG/usr/man -type f -exec gzip -9 {} \;
 
 mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
 cp -a \
-  BUGS LICENCE README TODO \
+  BUGS LICENCE NEWS README TODO \
   $PKG/usr/doc/$PRGNAM-$VERSION
 cat $CWD/$PRGNAM.SlackBuild > $PKG/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
 

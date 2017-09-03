@@ -431,7 +431,6 @@ function test_package
       get_pkgtree "$itemprgnam" "$pkgpath" install/doinst.sh
     for dir in \
       usr/share/applications \
-      usr/share/mime \
       usr/share/icons/hicolor \
       usr/lib/gio/modules \
       usr/lib64/gio/modules \

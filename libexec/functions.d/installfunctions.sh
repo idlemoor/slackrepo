@@ -158,7 +158,6 @@ function install_packages
             log_warning -a -s "${itemid}: Possible error message from doinst.sh or installpkg"
           fi
         fi
-        dotprofilizer "$pkgpath"
         [ "$OPT_INSTALL" = 'y' -o "${HINT_INSTALL[$itemid]}" = 'y' ] && KEEPINSTALLED[$pkgnam]="$pkgid"
       else
         # istat=1 (already installed, different version/arch/build/tag)
@@ -175,9 +174,9 @@ function install_packages
           pstat=$?
         fi
         [ "$pstat" = 0 ] || { log_error -a "${itemid}: upgradepkg $pkgbase failed (status $pstat)"; return 1; }
-        dotprofilizer "$pkgpath"
         KEEPINSTALLED[$pkgnam]="$pkgid"
       fi
+      dotprofilizer "$pkgpath"
     done
 
   done

@@ -544,6 +544,7 @@ if [ -n "$SR_TMP" ] && [ -d "$SR_TMP" ]; then
   log_done
 fi
 mkdir -p "$SR_TMP" || { log_error "Failed to create $SR_TMP"; exit_cleanup 4; }
+[ -n "$SUDO" ] && ${SUDO}chown "$USER" "$SR_TMP"
 
 # We need a slackrepo-specific temporary directory, for small stuff only
 MYTMP=$(mktemp -t -d slackrepo.XXXXXX) || { log_error "Failed to create temporary directory"; exit_cleanup 4; }

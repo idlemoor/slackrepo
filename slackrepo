@@ -243,6 +243,10 @@ if [ "$EUID" != 0 ]; then
     echo "$(basename "$0"): Running as non-root user, but fakeroot is not installed."
     echo "$(basename "$0"): You should either install fakeroot or run slackrepo as root."
     exit_cleanup 4
+  elif ! sudo -v >/dev/null 2>&1; then
+    echo "$(basename "$0"): Running as non-root user, but sudo is not configured."
+    echo "$(basename "$0"): You need to edit /etc/sudoers.d/slackrepo."
+    exit_cleanup 4
   fi
   SUDO="/usr/bin/sudo "
   export PATH="${LIBEXECDIR}:/usr/local/sbin:/usr/sbin:/sbin:$PATH"

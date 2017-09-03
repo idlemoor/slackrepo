@@ -174,9 +174,13 @@ function log_warning
     esac
   done
   show='y'
-  if [ "$S" = 'y' ] && [ -n "${HINT_NOWARNING[$itemid]:-${OPT_NOWARNING}}" ]; then
-    if echo "$1" | grep -q -E "${HINT_NOWARNING[$itemid]:-${OPT_NOWARNING}}"; then
-      show='n'
+  if [ "$S" = 'y' ]; then
+    warnRE="${OPT_NOWARNING}"
+    [ -n "$itemid" ] && [ -n "${HINT_NOWARNING[$itemid]}" ] && warnRE="${HINT_NOWARNING[$itemid]}"
+    if [ -n "$warnRE" ]; then
+      if echo "$1" | grep -q -E "$warnRE"; then
+        show='n'
+      fi
     fi
   fi
   [ "$show" = 'y' ] && echo -e "${NL}${colour_warning}${W}${1}${colour_normal}" && NL=''

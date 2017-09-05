@@ -138,23 +138,38 @@ function download_src
   log_normal -a "Downloading source files ..."
   cd "$DOWNDIR"
   for url in $DOWNLIST; do
-    # wget is good for redirects and ftp, but curl's content-disposition is better,
-    # so let's try it this way:
+    # wget is good for redirects and ftp, so let's try it this way:
     dlcmd='wget'
+    # some stupid sites refuse to serve documents if the user-agent is wget or curl
     useragent="slackrepo/1.0.0"
-    # Some sites refuse to serve documents if the user-agent is wget or curl...
-    # but Dropbox fails to redirect to the actual download if the user-agent *isn't* wget.
-    # (The regex '*dropbox*' gives false positives, but is necessary to cope with
-    # dropboxusercontent.com -- hopefully no false positives refuse wget?)
+    # "special needs"
     case "$url" in
-      *dropbox*)  dlcmd="curl"; useragent="Wget/1.18" ;;  # this may be a lie, but who cares?
+      # dropbox fails to redirect to the actual download if the user-agent *isn't* wget
+      # (The regex '*dropbox*' gives false positives, but is necessary to cope with
+      # dropboxusercontent.com -- hopefully no false positives refuse wget?)
+      *dropbox*)
+        dlcmd="curl";
+        useragent="Wget/1.18" # this may be a lie, but who cares?
+        ;;
+      # bitbucket redirects to a URL with a commit-based query string, but does not send
+      # a content disposition header, which confuses wget, so use curl
+      *bitbucket*)
+        dlcmd="curl"
+        useragent="curl/7.51.0"
+        ;;
+      # Thanks slalik for this awesome self-explanatory fix, simple and elegant and clinical :)
+      *download.oracle.com*)
+        dlcmd="curl";
+        useragent="curl/7.51.0"
+        curlboredom="${curlboredom} --cookie oraclelicense=accept-securebackup-cookie"
+        ;;
     esac
     # In case of utter derpage, you can override that with a pragma if necessary :(
     for pragma in ${HINT_PRAGMA[$itemid]}; do
       case "$pragma" in
-        download_basename) dlcmd="curl" ;;
         curl) dlcmd="curl"; useragent="curl/7.51.0" ;;
         wget) dlcmd="wget"; useragent="Wget/1.18" ;;
+        download_basename) dlcmd="curl" ;;  # curl -J is better than wget --content-disposition
       esac
     done
     wgetstat=0

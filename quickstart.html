@@ -63,15 +63,18 @@ revisions of the SlackBuild repository determine <a href="/slackrepo/doc/usage.h
 <a href="/slackrepo/doc/usage.html#dependencies">dependencies</a> are built as a ‘tree’, not a linear ‘queue’,
 and packages that are out-of-date with respect to their dependencies are automatically rebuilt;
 slackrepo creates a throw-away chroot environment for each build, to help keep your build box safe and clean.</li>
-  <li><b>Quality assurance checks</b> —
-optional <a href="/slackrepo/doc/checks.html">lint checks</a> can be performed on the SlackBuild files and built packages</li>
   <li><b>No interaction required</b> —
 highly automated and suitable for batch building hundreds or even thousands of packages</li>
   <li>Can build from
 <b><a class="ext" href="https://SlackBuilds.org">SlackBuilds.org</a> (SBo)</b>,
-Chess Griffin and Willy Sudiarto Raharjo’s <b>&lt;a class=”ext href=”https://github.com/mateslackbuilds/msb”“&gt;Mate SlackBuilds&lt;/a&gt; (msb)</b>,
-Willy’s <b><a class="ext" href="https://github.com/willysr/csb">Cinnamon SlackBuilds</a> (csb),</b>
-and Matteo Bernardini’s forked <b><a class="ext" href="https://github.com/Ponce/slackbuilds">SBo repository for slackware-current</a> (ponce).</b></li>
+Chess Griffin and Willy Sudiarto Raharjo’s
+<b><a class="ext" href="https://github.com/mateslackbuilds/msb">Mate SlackBuilds</a> (msb)</b>,
+Willy’s
+<b><a class="ext" href="https://github.com/willysr/csb">Cinnamon SlackBuilds</a> (csb),</b>
+and Matteo Bernardini’s forked
+<b><a class="ext" href="https://github.com/Ponce/slackbuilds">SBo repository for slackware-current</a> (ponce).</b></li>
+  <li><b>Quality assurance checks</b> —
+optional <a href="/slackrepo/doc/checks.html">lint checks</a> can be performed on the SlackBuild files and built packages</li>
 </ul>
 
 <h2 id="running">Running</h2>
@@ -193,15 +196,21 @@ The existing packages are backed up, in case you change your mind again and agai
 
 <pre>slackrepo lint [--options] [item...]
 slackrepo install [--options] [item...]
-slackrepo info</pre>
+slackrepo info [--options]</pre>
 
-<p>The lint command performs quality checks on the source download URLs and source files, the SlackBuild,
+<ul>
+  <li>
+    <p>The lint command performs quality checks on the source download URLs and source files, the SlackBuild,
 and existing packages for each specified item.</p>
-
-<p>The install command is a quick way of typing <code>add --install</code>
+  </li>
+  <li>
+    <p>The install command is a quick way of typing <code>build --install</code>
 (the <code>--install</code> control argument is described below).</p>
-
-<p>The info command prints information about your system and repository setup.</p>
+  </li>
+  <li>
+    <p>The info command prints information about your system and repository setup.</p>
+  </li>
+</ul>
 
 <h2 id="options">Options</h2>
 
@@ -257,15 +266,26 @@ for each run of slackrepo, with a name of the form
 has subdirectories.  For example, the log file for building the SBo item ‘graphics/shotwell’ is
 <br /><code>/var/log/slackrepo/SBo/graphics/shotwell/build.log</code></p>
 
+<p>The log files include</p>
+<ul>
+  <li>ChangeLog (a cumulative log of successful builds and rebuilds)</li>
+  <li>build.log (output from the build command)</li>
+  <li>build.1.log.gz (a compressed log of the previous build)</li>
+  <li>rebuild.log and rebuild.1.log.gz (output from the rebuild command)</li>
+  <li>config.log (a copy is kept here if an autotools build creates config.log)</li>
+  <li>install.log (if you use the install command or –install)</li>
+  <li>lint.log (if you use the lint command or –lint)</li>
+  <li>resource.log (resource usage during the most recent build)</li>
+</ul>
 
   </div>
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-08-31 13:52:25
+    </p>
   </div>
 </footer>
 

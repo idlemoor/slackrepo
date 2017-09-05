@@ -41,13 +41,13 @@
         
         <br class="not-when-small" />
 <a class="site-nav-link" href="/slackrepo/doc/usage.html">Usage&nbsp;notes</a>
-<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/faq.html">FAQ</a>
+<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
-<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 <a class="site-nav-link" href="/slackrepo/doc/structure.html">Repo&nbsp;structure</a>
 <a class="site-nav-link" href="/slackrepo/doc/checks.html">Checks</a>
 <a class="site-nav-link" href="/slackrepo/doc/links.html">Links</a>
+<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 
         
       </div>
@@ -89,10 +89,11 @@ and the Slackware ARCH (e.g. i586).</p>
   <li><code>SRCREPO="/var/lib/slackrepo/%REPO%/source"</code> — location of downloaded source repository</li>
   <li><code>PKGREPO="/var/lib/slackrepo/%REPO%/packages/%SLACKVER%/%ARCH%"</code> — location of package repository</li>
   <li><code>PKGBACKUP="/var/lib/slackrepo/%REPO%/backups/%SLACKVER%/%ARCH%"</code> — location of backups</li>
-  <li><code>HINTDIR="/etc/slackrepo/%REPO%/hintfiles"</code> — location of <a href="/slackrepo/doc/hintfiles.html">Hintfiles</a></li>
-  <li><code>DEFAULT_HINTDIR="/etc/slackrepo/%REPO%/default_hintfiles/%SLACKVER%"</code> — location of default hintfiles</li>
+  <li><code>HINTDIR="/etc/slackrepo/%REPO%/hintfiles"</code> — location of locally written <a href="/slackrepo/doc/hintfiles.html">Hintfiles</a></li>
+  <li><code>DEFAULT_HINTDIR="/etc/slackrepo/%REPO%/default_hintfiles/%SLACKVER%"</code> — location of system-provided default hintfiles
+(these come in a separate <a href="/slackrepo/download.html">slackrepo-hints package</a>)</li>
   <li><code>LOGDIR="/var/log/slackrepo/%REPO%"</code> — location of log files</li>
-  <li><code>DATABASE="/var/lib/slackrepo/%REPO%/database_%REPO%.sqlite3"</code> — location of the database</li>
+  <li><code>DATABASE="/var/lib/slackrepo/%REPO%/database_%REPO%_%ARCH%.sqlite3"</code> — location of the database</li>
   <li><code>TMP="/tmp/%REPO%"</code> — directory for temporary files</li>
 </ul>
 
@@ -105,10 +106,10 @@ PKGBACKUP=~/slackrepo/%REPO%/backups/%SLACKVER%/%ARCH%
 HINTDIR=~/slackrepo/%REPO%/hintfiles
 DEFAULT_HINTDIR="/etc/slackrepo/%REPO%/default_hintfiles/%SLACKVER%"
 LOGDIR=~/slackrepo/%REPO%/logs
-DATABASE=~/slackrepo/%REPO%/database_%REPO%.sqlite3
+DATABASE=~/slackrepo/%REPO%/database_%REPO%_%ARCH%.sqlite3
 </code></pre>
 </div>
-<p>If you use ~ you should NOT use quotes “…”. You also need to edit the file
+<p>If you use <code>~</code> you should NOT use quotes <code>"..."</code>. You also need to edit the file
 <code>/etc/sudoers.d/slackrepo</code>, replacing <code><i>username</i></code> with your
 username:</p>
 <pre>
@@ -120,18 +121,22 @@ SLACKREPOERS ALL=(ALL) NOPASSWD: /usr/libexec/slackrepo/*
 <h3 id="building-packages">Building packages</h3>
 
 <ul>
-  <li><code>NUMJOBS=''</code> — number of make jobs to set in MAKEFLAGS (e.g., <code>NUMJOBS='-j2'</code>).
-Leave blank to have this automatically determined as one more than the number of processors on the build host.</li>
-  <li><code>ARCH=''</code> — arch for built packages (normally determined from the build host)</li>
-  <li><code>TAG='_SBo'</code> — tag for built packages (<strong>please change this</strong>
+  <li><code>SUBSTITUTE=""</code> — a list of dependency substitutions applied to
+all SlackBuilds.  To substitute jdk with openjdk, and jack-audio-connection-kit with jack2:
+<br /><code>SUBSTITUTE="jdk =&gt; openjdk, jack-audio-connection-kit =&gt; jack2"</code></li>
+  <li><code>NUMJOBS=""</code> — number of make jobs to set in MAKEFLAGS (e.g., <code>NUMJOBS="-j2"</code>).
+Leave blank to have this dynamically controlled according to the number of processors on the build host
+and the current load average.</li>
+  <li><code>ARCH=""</code> — arch for built packages (normally determined from the build host)</li>
+  <li><code>TAG="_SBo"</code> — tag for built packages (<strong>please change this</strong>
 if your packages will be publicly available, see <a class="ext" href="https://slackbuilds.org/faq/#package_repos">SlackBuilds.org FAQ 20</a>)</li>
-  <li><code>PKGTYPE='tgz'</code> — package compression type. Valid values are: tgz, txz, tbz, tlz</li>
+  <li><code>PKGTYPE="txz"</code> — package compression type. Valid values are: tgz, txz, tbz, tlz</li>
 </ul>
 
 <h3 id="calling-gen_repos_filessh">Calling gen_repos_files.sh</h3>
 
 <ul>
-  <li><code>USE_GENREPOS='0'</code> — whether to use gen_repos_files.sh (to enable it, change 0 to 1)</li>
+  <li><code>USE_GENREPOS="0"</code> — whether to use gen_repos_files.sh (to enable it, change 0 to 1)</li>
 </ul>
 
 <p>If you enable gen_repos_files.sh, you <strong>must</strong> set correct values for its
@@ -143,10 +148,10 @@ you already use gen_repos_files.sh, it will still read your existing
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-09-01 00:00:12
+    </p>
   </div>
 </footer>
 

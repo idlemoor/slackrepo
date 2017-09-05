@@ -41,13 +41,13 @@
         
         <br class="not-when-small" />
 <a class="site-nav-link" href="/slackrepo/doc/usage.html">Usage&nbsp;notes</a>
-<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/faq.html">FAQ</a>
+<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
-<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 <a class="site-nav-link" href="/slackrepo/doc/structure.html">Repo&nbsp;structure</a>
 <a class="site-nav-link" href="/slackrepo/doc/checks.html">Checks</a>
 <a class="site-nav-link" href="/slackrepo/doc/links.html">Links</a>
+<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 
         
       </div>
@@ -70,8 +70,8 @@ don't need slackrepo.  The existing
 <a href="/slackrepo/doc/links.html#other-package-management-tools">popular tools</a> like
 <a class="ext" href="http://www.sbopkg.org/">sbopkg</a> and
 <a class="ext" href="http://slackblogs.blogspot.co.uk/2014/01/managing-sbo-dependencies-easily.html">sqg</a>,
+<a class="ext" href="https://pink-mist.github.io/sbotools/">sbotools</a>,
 <a class="ext" href="http://alien.slackbook.org/AST/">AST</a>,
-<a class="ext" href="http://www.src2pkg.net/start">src2pkg</a>,
 <a class="ext" href="http://www.dawoodfall.net/files/slackbuilds/noversion/mkslack/">mkslack</a>,
 etc. remain good choices for personal package building and installing,
 but for repeatable, clean batch building and regular maintenance of
@@ -102,9 +102,8 @@ I want complete control by doing everything manually.</h4>
 Automation will give you huge gains in accuracy, reproducibility and
 productivity. You still have complete control of the details with
 slackrepo's <a href="/slackrepo/doc/hintfiles.html">hintfiles</a>. By building in a
-dynamically created and destroyed chroot environment (available in
-Slackware-current), slackrepo will keep your build system clean, and by
-calculating trees of dependencies rather than linear queues, slackrepo
+dynamically created and destroyed chroot environment, slackrepo will keep your build
+system clean, and by calculating trees of dependencies rather than linear queues, slackrepo
 will keep your packages clean too. Good luck doing that manually!
 </p>
 
@@ -213,7 +212,7 @@ be quite large; if this is a problem you can delete them manually.
 Maybe :-) There are SBo default hintfiles for the SlackBuilds.org '14.2'
 and '14.1' branches. Some of them will need to be edited if you want to use them
 with an earlier branch or with Slackware -current. The code has been
-tested only with bash-4.2, so there may be problems with 13.37 or
+tested only with bash-4.2 and later, so there may be problems with 13.37 or
 earlier.
 </p>
 
@@ -269,10 +268,10 @@ confused if the archive contains symlinks with .. in the path.
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-08-31 13:52:25
+    </p>
   </div>
 </footer>
 

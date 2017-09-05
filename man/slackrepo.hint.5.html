@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>slackrepo(8)</title>
+  <title>slackrepo.hint (5)</title>
   <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
 
   <link rel="stylesheet" href="/slackrepo/css/main.css">
@@ -40,9 +40,9 @@
 
         
         <br class="not-when-small" />
-<a class="site-nav-link" href="/slackrepo/man/slackrepo.8.html">slackrepo.8</a>
-<a class="site-nav-link" href="/slackrepo/man/slackrepo.conf.5.html">slackrepo.conf.5</a>
-<a class="site-nav-link" href="/slackrepo/man/slackrepo.hint.5.html">slackrepo.hint.5</a>
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.8.html">slackrepo&nbsp(8)</a>
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.conf.5.html">slackrepo.conf&nbsp(5)</a>
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.hint.5.html">slackrepo.hint&nbsp(5)</a>
 
         
       </div>
@@ -52,404 +52,306 @@
 
 <div class="page-content">
   <div class="wrapper">
-    <div id="man">
-
-
-<a name="top"></a>
-<h2>slackrepo.hint (5)</h2>
-
-
-<a name="0">
-<h3>NAME</h3>
-</a>
-<blockquote>
-slackrepo.hint - slackrepo hintfile format
-</blockquote>
-
-
-<a name="contents"></a>
-<h3>CONTENTS</h3>
-<blockquote>
-<a href="#1">Synopsis</a><br />
-<a href="#2">Description</a><br />
-<a href="#3">See Also</a><br />
-</blockquote>
-
-
-<a name="4">
-<h3>SYNOPSIS</h3>
-</a>
-<blockquote>
+    <h1>slackrepo.hint (5)</h1>
+<div class="manpage">
+<table class="head">
+  <tr>
+    <td class="head-ltitle">SLACKREPO.HINT(5)</td>
+    <td class="head-vol">File Formats Manual</td>
+    <td class="head-rtitle">SLACKREPO.HINT(5)</td>
+  </tr>
+</table>
+<div class="manual-text">
+<h1 class="Sh" title="Sh" id="NAME"><a class="selflink" href="#NAME">NAME</a></h1>
+<b>slackrepo.hint</b> - slackrepo hintfile format
+<h1 class="Sh" title="Sh" id="SYNOPSIS"><a class="selflink" href="#SYNOPSIS">SYNOPSIS</a></h1>
 <b>/etc/slackrepo/</b><i>ID</i><b>/hintfiles/</b><i>prgnam</i><b>.hint</b>
-<br /><b>/etc/slackrepo/</b><i>ID</i><b>/default_hintfiles/</b><i>slackversion</i><b>/.../</b><i>prgnam</i><b>.hint</b>
-<br />where <i>ID</i> is 'SBo' by default.
-</blockquote>
-
-
-<a name="2">
-<h3>DESCRIPTION</h3>
-</a>
-<blockquote>
-A "hintfile" is a file that supplements a SlackBuild's .info file, for
-example to specify options and additional dependencies, to override the version,
-downloads and md5sums, etc.
-
-<p>Each repository ID should have a local hintfiles directory, as configured by the
-HINTDIR variable in the configuration file (see
-<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>).
-By default this will be
-<i>/etc/slackrepo/ID/hintfiles</i>.</p>
-
-<p>The local hintfiles directory can optionally contain a structure of subdirectories
-that is the same as the subdirectories in the SlackBuilds repository.
-For example, if the SBo repository's SlackBuild file for wxPython is
-<i>libraries/wxPython/wxPython.SlackBuild</i>, then its hintfile would be
-<i>/etc/slackrepo/SBo/hintfiles/libraries/wxPython/wxPython.hint</i>. Alternatively,
-hintfiles can be placed in the top level directory,
-for example <i>/etc/slackrepo/SBo/hintfiles/wxPython.hint</i>.
-A hintfile in the top level directory takes precedence over a hintfile of the
-same name in a subdirectory.</p>
-
-<p>Each repository ID should also have a default hint directory for system
-supplied hintfiles, as configured by the
-DEFAULT_HINTDIR variable in the configuration file (see
-<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>).
-For example, the SlackBuilds.org default hintfiles for Slackware 14.1 are
-supplied in the directory
-<i>/usr/share/slackrepo/SBo/default_hintfiles/14.1</i>.
-The default hintfiles directory contains a structure of subdirectories
-that is the same as the subdirectories in the SlackBuilds repository.</p>
-
-<p>Local hintfiles always take precedence over default hintfiles.
-You can disable the default hintfile directory completely by unsetting the
-DEFAULT_HINTDIR variable.</p>
-
-<p>The format of a hintfile is based on the format of SlackBuilds.org .info files,
-but all the entries are optional, and any unrecognised entries are ignored.
-The entries that can be defined are as follows:</p>
-
-<blockquote>
+<div class="Pp"></div>
+where <i>ID</i> is 'SBo' by default.
+<h1 class="Sh" title="Sh" id="DESCRIPTION"><a class="selflink" href="#DESCRIPTION">DESCRIPTION</a></h1>
+A &quot;hintfile&quot; is a file that supplements a SlackBuild's .info file, for
+  example to specify options and additional dependencies, to override the
+  version, downloads and md5sums, etc.
+<div class="Pp"></div>
+Each repository ID should have a local hintfiles directory, as configured by the
+  HINTDIR variable in the configuration file (see <b>slackrepo.conf(5)</b>). By
+  default this will be <i>/etc/slackrepo/ID/hintfiles</i>.
+<div class="Pp"></div>
+The local hintfiles directory can optionally contain a structure of
+  subdirectories that is the same as the subdirectories in the SlackBuilds
+  repository. For example, if the SBo repository's SlackBuild file for wxPython
+  is <i>libraries/wxPython/wxPython.SlackBuild</i>, then its hintfile would be
+  <i>/etc/slackrepo/SBo/hintfiles/libraries/wxPython/wxPython.hint</i>.
+  Alternatively, hintfiles can be placed in the top level directory, for example
+  <i>/etc/slackrepo/SBo/hintfiles/wxPython.hint</i>. A hintfile in the top level
+  directory takes precedence over a hintfile of the same name in a subdirectory.
+<div class="Pp"></div>
+Each repository ID should also have a default hint directory for system supplied
+  hintfiles, as configured by the DEFAULT_HINTDIR variable in the configuration
+  file (see <b>slackrepo.conf(5)</b>). For example, the SlackBuilds.org default
+  hintfiles for Slackware 14.1 are supplied in the directory
+  <i>/usr/share/slackrepo/SBo/default_hintfiles/14.1</i> . The default hintfiles
+  directory contains a structure of subdirectories that is the same as the
+  subdirectories in the SlackBuilds repository.
+<div class="Pp"></div>
+Local hintfiles always take precedence over default hintfiles. You can disable
+  the default hintfile directory completely by unsetting the DEFAULT_HINTDIR
+  variable.
+<div class="Pp"></div>
+The format of a hintfile is based on the format of SlackBuilds.org .info files,
+  but all the entries are optional, and any unrecognised entries are ignored.
+  Most SlackBuilds do not need hintfiles, and most hintfiles will only have one
+  or two variables.
+<h2 class="Ss" title="Ss" id="VERSION=&quot;newversion&quot;"><a class="selflink" href="#VERSION=&quot;newversion&quot;">VERSION=&quot;newversion&quot;</a></h2>
+This hint can be specified to attempt an automatic patch of the version number
+  in both the SlackBuild and info files. The automatic patch is done by a simple
+  text substitution. This often won't work (particularly if the old version
+  number is something like '1', or if the download URL has not been patched
+  correctly and you have not supplied a new download URL in the hint file). The
+  md5sum and/or sha256sum of the source archive will not be checked, unless you
+  have also supplied a new md5sum and/or sha256sum in the hint file. The patched
+  SlackBuild and info files are not kept.
+<h2 class="Ss" title="Ss" id="DOWNLOAD=&quot;new_urls&quot;"><a class="selflink" href="#DOWNLOAD=&quot;new_urls&quot;">DOWNLOAD=&quot;new
+  urls&quot;</a></h2>
+This hint redefines download URLs that replace the URLs specified in the .info
+  file, for example if you have also defined VERSION=, or if the upstream URL
+  has changed.
+<div class="Pp"></div>
+However, if specified as <b>DOWNLOAD=&quot;no&quot;</b>, this hint indicates
+  that the source needs to be downloaded manually (for example, because of a
+  licence agreement). If you have already downloaded the source into the source
+  cache, and if the md5sum is correct, then the package will be built.
+  Otherwise, a message will be displayed explaining what you should do, and the
+  package will be skipped.
+<h2 class="Ss" title="Ss" id="MD5SUM=&quot;new_md5sums&quot;"><a class="selflink" href="#MD5SUM=&quot;new_md5sums&quot;">MD5SUM=&quot;new
+  md5sums&quot;</a></h2>
+This hint redefines md5sums that replace the md5sums specified in the upstream
+  source archive has been changed.
+<div class="Pp"></div>
+However, if specified as <b>MD5SUM=&quot;no&quot;</b>, this hint indicates that
+  the source md5sums are not reliable (for example, because of an unversioned
+  archive) and should not be checked.
+<h2 class="Ss" title="Ss" id="SHA256SUM=&quot;sha256sums&quot;"><a class="selflink" href="#SHA256SUM=&quot;sha256sums&quot;">SHA256SUM=&quot;sha256sums&quot;</a></h2>
+This hint specifies an sha256sum that will be checked (in addition to any
+  md5sum).
+<h2 class="Ss" title="Ss" id="DOWNLOAD_arch=&quot;new_urls&quot;_and_MD5SUM_arch=&quot;new_md5sums&quot;_and_SHA256SUM_arch=&quot;sha256sums&quot;"><a class="selflink" href="#DOWNLOAD_arch=&quot;new_urls&quot;_and_MD5SUM_arch=&quot;new_md5sums&quot;_and_SHA256SUM_arch=&quot;sha256sums&quot;">DOWNLOAD_arch=&quot;new
+  urls&quot; and MD5SUM_arch=&quot;new md5sums&quot; and
+  SHA256SUM_arch=&quot;sha256sums&quot;</a></h2>
+These hints redefine DOWNLOAD and MD5SUM, and specify SHA256SUM, as above, for
+  the specified arch.
+<h2 class="Ss" title="Ss" id="ADDREQUIRES=&quot;additional_dependencies&quot;"><a class="selflink" href="#ADDREQUIRES=&quot;additional_dependencies&quot;">ADDREQUIRES=&quot;additional
+  dependencies&quot;</a></h2>
+This hint should define a list of dependencies, separated by spaces.
+  Dependencies in this list will be added to the dependencies defined by the
+  REQUIRES= list defined in the .info file. If the .info file specifies
+  %README%, you should set this hint (possibly as an empty string) to stop
+  slackrepo displaying a warning.
+<h2 class="Ss" title="Ss" id="DELREQUIRES=&quot;dependencies_to_ignore&quot;"><a class="selflink" href="#DELREQUIRES=&quot;dependencies_to_ignore&quot;">DELREQUIRES=&quot;dependencies
+  to ignore&quot;</a></h2>
+To ignore dependencies in the REQUIRES= list, use this hint.
+<h2 class="Ss" title="Ss" id="OPTIONS=&quot;OPT1=yes_OPT2=no_...&quot;"><a class="selflink" href="#OPTIONS=&quot;OPT1=yes_OPT2=no_...&quot;">OPTIONS=&quot;OPT1=yes
+  OPT2=no ...&quot;</a></h2>
+This hint should define options described in the SlackBuild's README file. Note
+  that this is the only way in slackrepo that you can define SlackBuild options.
+<h2 class="Ss" title="Ss" id="GROUPADD=&quot;gid:groupname_...&quot;"><a class="selflink" href="#GROUPADD=&quot;gid:groupname_...&quot;">GROUPADD=&quot;gid:groupname
+  ...&quot;</a></h2>
+This hint defines groups to be added on the host system. If a group already
+  exists, nothing will be done. If more than one group is to be added, a
+  space-separated list can be specified. Example:
+<div class="Pp"></div>
+<div style="margin-left: 5.00ex;">
 <pre>
-OPTIONS="OPT1=yes OPT2=no ..."
-ADDREQUIRES="additional dependencies"
-GROUPADD="gid:groupname ..."
-USERADD="uid:username[:controlargs...] ..."
-VERSION="newversion"
-DOWNLOAD="new urls"
-MD5SUM="new md5sums"
-SHA256SUM="sha256sum"
-ARCH="arch"
-DOWNLOAD_arch="new urls"
-MD5SUM_arch="new md5sums"
-SHA256SUM_arch="sha256sum"
-SKIP="yesno"
-INSTALL="yesno"
-NUMJOBS="-j1"
-CLEANUP="commands"
-ANSWERS="strings"
-PRAGMA="pragmas"
+GROUPADD=&quot;209:postgres&quot;
 </pre>
-</blockquote>&lt;/p&gt;
-</blockquote>
-
-
-<a name="options">
-<h4>&nbsp; &nbsp; OPTIONS="OPT1=yes OPT2=no ..."</h4>
-</a>
-<blockquote>
-<p>This hint should define options described in the SlackBuild's README file.
-Note that this is the only way in slackrepo that you can define SlackBuild options.</p>
-<p></p>
-</blockquote>
-
-
-<a name="addrequires">
-<h4>&nbsp; &nbsp; ADDREQUIRES="additional dependencies"</h4>
-</a>
-<blockquote>
-<p>This hint should define a list of dependencies, separated by spaces.
-Dependencies in this list will be added to the dependencies defined by the
-REQUIRES= list defined in the .info file.</p>
-<p>If the .info file specifies %README%, you should set this hint (possibly as
-an empty string) to stop slackrepo displaying a warning.</p>
-<p></p>
-</blockquote>
-
-
-<a name="groupadd">
-<h4>&nbsp; &nbsp; GROUPADD="gid:groupname ..."</h4>
-</a>
-<blockquote>
-<p>This hint defines groups to be added on the host system.
-If a group already exists, nothing will be done.
-If more than one group is to be added, a space-separated list can be specified.
-Example:</p>
-<p></p>
-<blockquote>
-<pre>GROUPADD="209:postgres"</pre>
-</blockquote>
-</blockquote>
-
-
-<a name="useradd">
-<h4>&nbsp; &nbsp; USERADD="uid:username[:controlargs...] ..."</h4>
-</a>
-<blockquote>
-<p>This hint defines usernames to be added on the host system.
-If a username already exists, nothing will be done.
-Optionally, additional control arguments of the useradd command can be
-specified, separated by colons, with the space between the control argument
-and its argument omitted. If more than one username is required, a
-space-separated list of specifications can be defined.
-Examples:</p>
-<p></p>
-<blockquote>
-<pre>USERADD="209:postgres:-d/var/lib/pgsql"
-USERADD="270:smtpd:-g0:-r:-s/bin/false:-d/var/empty 271:smtpq:-r:-s/bin/false:-d/var/empty"
+</div>
+<h2 class="Ss" title="Ss" id="USERADD=&quot;uid:username[:controlargs...]_...&quot;"><a class="selflink" href="#USERADD=&quot;uid:username[:controlargs...]_...&quot;">USERADD=&quot;uid:username[:controlargs...]
+  ...&quot;</a></h2>
+This hint defines usernames to be added on the host system. If a username
+  already exists, nothing will be done. Optionally, additional control arguments
+  of the useradd command can be specified, separated by colons, with the space
+  between the control argument and its argument omitted. If more than one
+  username is required, a space-separated list of specifications can be defined.
+  Examples:
+<div class="Pp"></div>
+<div style="margin-left: 5.00ex;">
+<pre>
+USERADD=&quot;209:postgres:-d/var/lib/pgsql&quot;
+USERADD=&quot;270:smtpd:-g0:-r:-s/bin/false:-d/var/empty 271:smtpq:-r:-s/bin/false:-d/var/empty&quot;
 </pre>
-</blockquote>
-</blockquote>
-
-
-<a name="version">
-<h4>&nbsp; &nbsp; VERSION="newversion"</h4>
-</a>
-<blockquote>
-<p>This hint can be specified to attempt an automatic patch of the version
-number in both the SlackBuild and info files. The automatic patch is done by
-a simple text substitution. This often won't work (particularly if the old
-version number is something like '1', or if the download URL has not been
-patched correctly and you have not supplied a new download URL in the hint
-file). The md5sum and/or sha256sum of the source archive will not be checked, unless you have
-also supplied a new md5sum and/or sha256sum in the hint file. The patched SlackBuild and info
-files are not kept.</p>
-</blockquote>
-
-
-<a name="download">
-<h4>&nbsp; &nbsp; DOWNLOAD="new urls"</h4>
-</a>
-<blockquote>
-<p>This hint redefines download URLs that replace the
-URLs specified in the .info file, for example if you have also defined
-VERSION=, or if the upstream URL has changed.</p>
-<p>However, if specified as
-<code>DOWNLOAD="no"</code>,
-this hint indicates that the source
-needs to be downloaded manually (for example, because of a licence
-agreement). If you have already downloaded the source into the source cache,
-and if the md5sum and/or sha256sum is correct, then the package will be built.
-Otherwise, a message will be displayed explaining what you should do, and the package
-will be skipped.</p>
-<p></p>
-</blockquote>
-
-
-<a name="md5sum">
-<h4>&nbsp; &nbsp; MD5SUM="new md5sums"</h4>
-</a>
-<blockquote>
-<p>This hint redefines md5sums that replace the md5sums specified in the .info file,
-for example if you have also redefined VERSION=, or if the upstream source
-archive has been changed.</p>
-<p>However, if specified as
-<code>MD5SUM="no"</code>,
-this hint indicates that the source md5sums are not reliable
-(for example, because of an unversioned archive) and should not be checked.</p>
-<p></p>
-</blockquote>
-
-
-<a name="sha256sum">
-<h4>&nbsp; &nbsp; SHA256SUM="sha256sums"</h4>
-</a>
-<blockquote>
-<p>This hint specifies an sha256sum that will be checked (in addition to any md5sum).</p>
-<p></p>
-</blockquote>
-
-
-<a name="arch">
-<h4>&nbsp; &nbsp; ARCH="arch"</h4>
-</a>
-<blockquote>
-<p>This hint temporarily overrides the value of ARCH given in the configuration file
-or environment. This hint is most useful for SlackBuilds that repackage binaries.</p>
-<p></p>
-</blockquote>
-
-
-<a name="download-arch">
-<h4>&nbsp; &nbsp; DOWNLOAD_arch="new urls"
-<br />&nbsp; &nbsp; MD5SUM_arch="new md5sums"
-<br />&nbsp; &nbsp; SHA256SUM_arch="sha256sums"
-</h4>
-</a>
-<blockquote>
-<p>These hints redefine DOWNLOAD and MD5SUM, and specify SHA256SUM, as above, for the specified arch.</p>
-<p></p>
-</blockquote>
-
-
-<a name="skip">
-<h4>&nbsp; &nbsp; SKIP="yesno"</h4>
-</a>
-<blockquote>
-<p>This hint can be specified if you want to skip the package when it
-would otherwise be built, rebuilt, updated or removed.
-If the hint isn't specified as <code>SKIP="yes"</code> or <code>SKIP="no"</code>, it will be interpreted
-as "yes", and the string will be displayed when the build is skipped, so that
-you can put a helpful message into it, for example:</p>
-<p></p>
-<blockquote>
-<pre>SKIP="Please remove the Slackware nc package before you build netcat-openbsd"
+</div>
+<h2 class="Ss" title="Ss" id="SKIP=&quot;yesno&quot;"><a class="selflink" href="#SKIP=&quot;yesno&quot;">SKIP=&quot;yesno&quot;</a></h2>
+This hint can be specified if you want to skip the package when it would
+  otherwise be built, rebuilt, updated or removed. If the hint isn't specified
+  as SKIP=&quot;yes&quot; or SKIP=&quot;no&quot;, it will be interpreted as
+  &quot;yes&quot;, and the string will be displayed when the build is skipped,
+  so that you can put a helpful message into it, for example:
+<div class="Pp"></div>
+<div style="margin-left: 5.00ex;">
+<pre>
+SKIP=&quot;Please remove the Slackware nc package before you build netcat-openbsd&quot;
 </pre>
-</blockquote>
-</blockquote>
+</div>
+<h2 class="Ss" title="Ss" id="ARCH=&quot;arch&quot;"><a class="selflink" href="#ARCH=&quot;arch&quot;">ARCH=&quot;arch&quot;</a></h2>
+This hint temporarily overrides the value of ARCH given in the configuration
+  file or environment. This hint is most useful for SlackBuilds that repackage
+  binaries.
+<h2 class="Ss" title="Ss" id="INSTALL=&quot;yesno&quot;"><a class="selflink" href="#INSTALL=&quot;yesno&quot;">INSTALL=&quot;yesno&quot;</a></h2>
+This hint temporarily overrides the value of INSTALL given in the configuration
+  file or on the command line. Use this hint if you want a specific package to
+  be installed after it has been built (e.g. nvidia-driver). Note that if the
+  control argument --dry-run is specified, this hint will be ignored.
+<h2 class="Ss" title="Ss" id="NUMJOBS=&quot;-j1&quot;"><a class="selflink" href="#NUMJOBS=&quot;-j1&quot;">NUMJOBS=&quot;-j1&quot;</a></h2>
+This hint temporarily overrides the value of NUMJOBS given in the configuration
+  file or environment. Use this hint if the build process fails when multiple
+  'make' jobs are used, so that the build will be executed with MAKEFLAGS='-j1'.
+<h2 class="Ss" title="Ss" id="NOWARNING=&quot;Extended_RE&quot;"><a class="selflink" href="#NOWARNING=&quot;Extended_RE&quot;">NOWARNING=&quot;Extended
+  RE&quot;</a></h2>
+This hint suppresses slackrepo warnings that match the specified extended
+  regular expression. Multiple warnings can be suppressed by using a suitable
+  expression, for example:
+<div class="Pp"></div>
+<div style="margin-left: 5.00ex;">
+<pre>
+NOWARNING=&quot;(Nonstandard directories|Unexpected owner/group)&quot;
+</pre>
+</div>
+<h2 class="Ss" title="Ss" id="ANSWERS=&quot;string&quot;"><a class="selflink" href="#ANSWERS=&quot;string&quot;">ANSWERS=&quot;string&quot;</a></h2>
+This hint can be specified if the build process wants to read answers to its
+  questions during execution, for example concerning a licence agreement. The
+  string is piped into the SlackBuild's standard input, so it should contain
+  whatever will make the build process happy. Newlines can be specified as \n,
+  for example
+<div class="Pp"></div>
+<div style="margin-left: 5.00ex;">
+<pre>
+ANSWERS=&quot;ok\nyes&quot;
+</pre>
+</div>
+<h2 class="Ss" title="Ss" id="CLEANUP=&quot;commands&quot;"><a class="selflink" href="#CLEANUP=&quot;commands&quot;">CLEANUP=&quot;commands&quot;</a></h2>
+This hint can be specified if the package needs extra cleanup when it is
+  uninstalled (e.g. packages that replace standard Slackware packages or install
+  kernel modules). The hint should define an appropriate shell command line. to
+  clean up after a kernel module is uninstalled:
+<div class="Pp"></div>
+<div style="margin-left: 5.00ex;">
+<pre>
+CLEANUP=&quot;depmod -a&quot;
+</pre>
+</div>
+<div class="Pp"></div>
+For your convenience, slackrepo provides a command <b>s_reinstall</b> that
+  reinstalls the specified Slackware packages, for example:
+<div class="Pp"></div>
+<div style="margin-left: 5.00ex;">
+<pre>
+CLEANUP=&quot;s_reinstall tetex tetex-doc&quot;
+</pre>
+</div>
+<h2 class="Ss" title="Ss" id="PRAGMA=&quot;pragmas&quot;"><a class="selflink" href="#PRAGMA=&quot;pragmas&quot;">PRAGMA=&quot;pragmas&quot;</a></h2>
+This hint can be specified to perform one or more pragmas. <b>Pragmas</b> <b>are
+  not guaranteed to work!</b> Multiple pragmas can be specified, separated by
+  spaces. The following pragmas are available:
+<div class="Pp"></div>
+<b>python3</b>
+<div class="Pp"></div>
+Force python3 support: add python3 to the dependencies, set the
+  PYTHON3=&#x201D;yes&#x201D; option, and if necessary patch the SlackBuild to
+  support python3.
+<div class="Pp"></div>
+<b>kernelmodule</b> and <b>kernel</b>
+<div class="Pp"></div>
+Rebuild when the build host's kernel is upgraded; 'kernelmodule' also causes
+  depmod to be run when the package is uninstalled.
+<div class="Pp"></div>
+<b>multilib_ldflags</b>
+<div class="Pp"></div>
+On a multilib host, attempt to patch the SlackBuild to specify LDFLAGS, as
+  described in SlackBuilds.org FAQ 18.
+<div class="Pp"></div>
+<b>wget</b> or <b>curl</b>
+<div class="Pp"></div>
+Download with a fake wget or curl user agent string.
+<div class="Pp"></div>
+<b>download_basename</b>
+<div class="Pp"></div>
+Provide a symlink for source downloads using the URL's basename, for the benefit
+  of SlackBuilds that don't expect content-disposition to be respected.
+<div class="Pp"></div>
+<b>need_net</b> and <b>need_X</b>
+<div class="Pp"></div>
+Do not block the network, and/or the X display, when building.
+<div class="Pp"></div>
+<b>x86arch=</b><i>arch</i>
+<div class="Pp"></div>
+When building on 32 bit x86, set the ARCH to <i>arch</i>.
+<div class="Pp"></div>
+<b>noexport_ARCH</b> and <b>noexport_BUILD</b> and <b>noexport_TAG</b>
+<div class="Pp"></div>
+Set ARCH and/or BUILD and/or TAG by patching the SlackBuild instead of exporting
+  it to the environment.
+<div class="Pp"></div>
+<b>unset_ARCH</b>
+<div class="Pp"></div>
+Unset the value of ARCH, overriding the value given in the configuration file or
+  environment. Other variables can be specified instead of ARCH, for example
+<div class="Pp"></div>
+<div style="margin-left: 5.00ex;">
+<pre>
+PRAGMA=&quot;unset_DISTCC_HOSTS&quot;
+</pre>
+</div>
+<div class="Pp"></div>
+<b>noremove</b>
+<div class="Pp"></div>
+Do not remove (uninstall) packages before building the item. This is
+  particularly useful for gcc, glibc, etc.
+<div class="Pp"></div>
+<b>nofakeroot</b>
+<div class="Pp"></div>
+Override building the package as a non-root user with fakeroot. Build the
+  package as root, using <b>sudo</b>.
+<div class="Pp"></div>
+<b>no_make_test</b>
+<div class="Pp"></div>
+Patch the SlackBuild to comment out any 'make test' command.
+<div class="Pp"></div>
+<b>stubs-32</b>
+<div class="Pp"></div>
+Temporarily provide <i>/usr/include/gnu/stubs-32.h</i> as described in the
+  memtest86+ README and xen SlackBuild.
+<div class="Pp"></div>
+<b>abstar</b>
+<div class="Pp"></div>
+Patch the SlackBuild to use the tar command's <i>--absolute-names</i> control
+  argument. Use this if you get the error message
+<div class="Pp"></div>
+<div style="margin-left: 5.00ex;">
+<pre>
+tar: Directory renamed before its status could be extracted
+</pre>
+</div>
+<h1 class="Sh" title="Sh" id="SEE_ALSO"><a class="selflink" href="#SEE_ALSO">SEE
+  ALSO</a></h1>
+<b>slackrepo(8)</b>, <b>slackrepo.conf(5)</b>, <b>installpkg(8)</b>,
+  <b>upgradepkg(8)</b>, <b>removepkg(8)</b>, <b>pkgtool(8)</b>,
+  <b>slackpkg(8)</b>.</div>
+<table class="foot">
+  <tr>
+    <td class="foot-date">2017-09-01</td>
+    <td class="foot-os">slackrepo-0.3</td>
+  </tr>
+</table>
 
-
-<a name="install">
-<h4>&nbsp; &nbsp; INSTALL="yesno"</h4>
-</a>
-<blockquote>
-<p>This hint temporarily overrides the value of INSTALL given in the configuration
-file or on the command line. Use this hint if you want a specific package to be
-installed after it has been built (e.g. nvidia-driver). Note that if the control
-argument --dry-run is specified, this hint will be ignored.</p>
-<p></p>
-</blockquote>
-
-
-<a name="numjobs">
-<h4>&nbsp; &nbsp; NUMJOBS="-j1"</h4>
-</a>
-<blockquote>
-<p>This hint temporarily overrides the value of NUMJOBS given in the configuration
-file or environment. Use this hint if the build process fails when multiple
-'make' jobs are used, so that the build will be executed with MAKEFLAGS='-j1'.</p>
-<p></p>
-</blockquote>
-
-
-<a name="cleanup">
-<h4>&nbsp; &nbsp; CLEANUP="commands"</h4>
-</a>
-<blockquote>
-<p>This hint can be specified if the package needs extra cleanup when it is uninstalled
-(e.g. packages that replace standard Slackware packages or install kernel modules).
-The hint should define an appropriate shell command line.
-For example, to clean up after a kernel module is uninstalled:</p>
-<blockquote>
-<pre>CLEANUP="depmod -a"</pre>
-</blockquote>
-For your convenience, slackrepo provides a command <code>s_reinstall</code> that
-reinstalls the specified Slackware packages, for example:&lt;/p&gt;
-<blockquote>
-<pre>CLEANUP="s_reinstall tetex tetex-doc"</pre>
-</blockquote>
-</blockquote>
-
-
-<a name="answers">
-<h4>&nbsp; &nbsp; ANSWERS="string"</h4>
-</a>
-<blockquote>
-<p>This hint can be specified if the build process wants to read answers to its
-questions during execution, for example concerning a licence agreement.
-The string is piped into the SlackBuild's standard input, so it should contain
-whatever will make the build process happy. Newlines can be specified as \n,
-for example</p>
-<p></p>
-<blockquote>
-<pre>ANSWERS="ok\nyes"</pre>
-</blockquote>
-</blockquote>
-
-
-<a name="special">
-<h4>&nbsp; &nbsp; PRAGMA="pragmas"</h4>
-</a>
-
-<blockquote>
-<p>This hint can be specified to perform one or more pragmas.
-<strong>Pragmas are not guaranteed to work!</strong>
-The hint name 'PRAGMA' used to be 'SPECIAL', which is still accepted as a synonym.
-The following pragmas are available:</p>
-
-<p><b>multilib_ldflags</b></p>
-<p>On a multilib host, attempt to patch the SlackBuild to specify LDFLAGS,
-as described in SlackBuilds.org FAQ 18.</p>
-
-<p><b>download_basename</b></p>
-<p>Provide a symlink for source downloads using the URL's basename, for the
-benefit of SlackBuilds that don't expect content-disposition to be respected.</p>
-
-<p><b>noexport_ARCH</b>
-<br /><b>noexport_BUILD</b>
-<br /><b>noexport_TAG</b></p>
-<p>Set the value of ARCH or BUILD or TAG by
-patching the SlackBuild instead of exporting it to the environment.</p>
-
-<p><b>unset_ARCH</b></p>
-<p>Unset the value of ARCH, overriding the value given in the configuration file
-or environment. Other variables can be specified, for example</p>
-<p></p>
-<blockquote>
-<pre>PRAGMA="unset_DISTCC_HOSTS"&lt;/code&gt;</pre>
-</blockquote>
-
-<p><b>noremove</b></p>
-<p>Do not remove (uninstall) packages before building the item.
-This is particularly useful for gcc, glibc, etc.</p>
-
-<p><b>nofakeroot</b></p>
-<p>Override building the package as a non-root user with fakeroot.
-Build the package as root, using <code>sudo</code>.</p>
-
-<p><b>no_make_test</b></p>
-<p>Patch the SlackBuild to comment out any 'make test' command.</p>
-
-<p><b>stubs-32</b></p>
-<p>Temporarily provide <code>/usr/include/gnu/stubs-32.h</code> as described in the
-memtest86+ README and xen SlackBuild.</p>
-
-<p><b>abstar</b></p>
-<p>Patch the SlackBuild to use the tar command's <code>--absolute-names</code>
-control argument. Use this if you get the error message
-<br /><code>tar: Directory renamed before its status could be extracted</code>.</p>
-
-<p></p>
-</blockquote>&lt;/p&gt;
-&lt;/blockquote&gt;
-
-
-<a name="3">
-<h3>SEE ALSO</h3>
-</a>
-<blockquote>
-<a href="slackrepo.8.html">slackrepo(8)</a>,
-<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>,
-installpkg(8),
-upgradepkg(8),
-removepkg(8),
-pkgtool(8),
-slackpkg(8).
-</blockquote>
-<p></p>
-
-
-<hr />
-<table width="100%"><tbody><tr> <td width="33%"><i>slackrepo-0.2.0</i></td> <td align="center" width="33%">SLACKREPO.HINT (5)</td> <td align="right" width="33%"><i>2015-04-12</i></td> </tr></tbody></table>
 </div>
 
   </div>
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-08-27 20:50:46
+    </p>
   </div>
 </footer>
 

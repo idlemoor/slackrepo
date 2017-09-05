@@ -41,13 +41,13 @@
         
         <br class="not-when-small" />
 <a class="site-nav-link" href="/slackrepo/doc/usage.html">Usage&nbsp;notes</a>
-<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/faq.html">FAQ</a>
+<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
-<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 <a class="site-nav-link" href="/slackrepo/doc/structure.html">Repo&nbsp;structure</a>
 <a class="site-nav-link" href="/slackrepo/doc/checks.html">Checks</a>
 <a class="site-nav-link" href="/slackrepo/doc/links.html">Links</a>
+<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 
         
       </div>
@@ -62,8 +62,10 @@
 <h2 id="dependencies">Dependencies</h2>
 
 <p>Dependencies are built, installed and removed automatically, according to the
-contents of .info files (<code>REQUIRES="..."</code>) and
-<a href="/slackrepo/doc/hintfiles.html">Hintfiles</a> (<code>ADDREQUIRES="..."</code>).
+contents of .info files like those provided by SlackBuilds.org
+(<code>REQUIRES="..."</code>) and according to slackrepo-specific
+<a href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
+(<code>ADDREQUIRES="..."</code>).
 If a SlackBuild does not have a corresponding .info file or hintfile, dependencies cannot
 be processed.</p>
 
@@ -183,7 +185,7 @@ of doing this: (1) set <code>CHECKGPG=off</code> in <code>/etc/slackpkg/slackpkg
 (2) use the slackpkg control argument <code>-checkgpg=off</code>.</p>
 
 <p>Note that slackpkg+ will not install newly added packages from your own
-package repository when you run <code>slackpkg install-new</code>.  This command
+package repository when you run <code>slackpkg&nbsp;install-new</code>.  This command
 searches for new packages ONLY in the official Slackware repository.  To
 install specific packages in your own repository you can use</p>
 
@@ -201,10 +203,10 @@ install specific packages in your own repository you can use</p>
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-09-01 00:00:12
+    </p>
   </div>
 </footer>
 

@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>slackrepo(8)</title>
+  <title>slackrepo (8)</title>
   <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
 
   <link rel="stylesheet" href="/slackrepo/css/main.css">
@@ -40,9 +40,9 @@
 
         
         <br class="not-when-small" />
-<a class="site-nav-link" href="/slackrepo/man/slackrepo.8.html">slackrepo.8</a>
-<a class="site-nav-link" href="/slackrepo/man/slackrepo.conf.5.html">slackrepo.conf.5</a>
-<a class="site-nav-link" href="/slackrepo/man/slackrepo.hint.5.html">slackrepo.hint.5</a>
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.8.html">slackrepo&nbsp(8)</a>
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.conf.5.html">slackrepo.conf&nbsp(5)</a>
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.hint.5.html">slackrepo.hint&nbsp(5)</a>
 
         
       </div>
@@ -52,394 +52,374 @@
 
 <div class="page-content">
   <div class="wrapper">
-    <div id="man">
-
-
-
-# <a name="top"></a>slackrepo (8)
-
-
-## <a name="0"></a>NAME
-
-<blockquote>
-slackrepo - automated SlackBuild package building and repository maintenance
-</blockquote>
-
-
-<a name="contents"></a>
-<h3>CONTENTS</h3>
-<blockquote>
-<a href="#1">Synopsis</a>
-<br /><a href="#2">Description</a>
-<br /><a href="#3">Options</a>
-<br /><a href="#4">Exit Status</a>
-<br /><a href="#5">Environment</a>
-<br /><a href="#6">Files</a>
-<br /><a href="#7">Notes</a>
-<br /><a href="#8">Examples</a>
-<br /><a href="#9">See Also</a>
-<br />
-</blockquote>
-
-
-<a name="10">
-<h3>SYNOPSIS</h3>
-</a>
-<blockquote>
-<b>slackrepo build</b>
-[<i>OPTIONS</i>]
-[<i>ITEM</i>...]
-<br /><b>slackrepo rebuild</b>
-[<i>OPTIONS</i>]
-[<i>ITEM</i>...]
-<br /><b>slackrepo update</b>
-[<i>OPTIONS</i>]
-[<i>ITEM</i>...]
-<br /><b>slackrepo remove</b>
-[<i>OPTIONS</i>]
-<i>ITEM</i>...
-<br /><b>slackrepo revert</b>
-[<i>OPTIONS</i>]
-<i>ITEM</i>...
-<br /><b>slackrepo lint</b>
-[<i>OPTIONS</i>]
-[<i>ITEM</i>...]
-</blockquote>
-
-
-<a name="2">
-<h3>DESCRIPTION</h3>
-</a>
-<blockquote>
-<table cellpadding="3">
-<tbody><tr valign="top">
-<td colspan="2">
-<b>slackrepo build</b>
-</td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td><td>
-Builds packages from an input repository of SlackBuilds (for example,
-a git clone of SlackBuilds.org), and then stores them in a package repository.
-'add' is accepted as a synonym of 'build'.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>slackrepo rebuild</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Rebuilds packages that are already in the package repository.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>slackrepo update</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Builds, rebuilds and removes packages in the package repository,
-according to changes in the SlackBuild repository.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>slackrepo remove</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Removes packages from the package repository.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>slackrepo revert</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Moves packages from the backup repository into the package repository, and packages
-from the package repository into the backup repository.
-'restore' is accepted as a synonym of 'revert'.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>slackrepo lint</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Performs quality tests on source download URLs and source files, SlackBuilds, and packages.
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<i>ITEM</i> </td><td valign="bottom">
-An item specifies
-a directory or a SlackBuild file in the SlackBuild repository,
-and/or (in the update, remove and revert commands only) formerly in the SlackBuild repository.
-Shell-style globs (wildcards) are allowed.
-If no items are specified, all directories in the SlackBuild repository are processed
-(except in the remove and revert commands,
-where it is mandatory to specify the items to be removed).
-</td></tr>
-<tr></tr>
-</tbody></table>
-</blockquote>
-
-
-<a name="3">
-<h3>OPTIONS</h3>
-</a>
-<blockquote>
-<table cellpadding="3">
-<tbody>
-<tr valign="top"><td colspan="2">
-<b>--repo=ID</b> </td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td><td>
-Use the SlackBuild and package repository identified by ID.
-The filestore locations of the SlackBuild and package repositories are defined in
-the configuration file
-<i>/etc/slackrepo/slackrepo_ID.conf</i>, where ID is an identifier for the repositories.
-The default repository ID is SBo.
-For details, see
-<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a> .
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>--dry-run</b> </td><td valign="bottom">
-Builds and rebuilds will be performed, and removes and reverts will be checked, but no
-changes will be made to the package repository. This option conflicts with --install.
-This option has no effect with the lint command.
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>--install</b> </td><td valign="bottom">
-Built, rebuilt and updated packages will be installed on the host system.
-This results in a "queue" style build, and packages may not be 100% clean of
-unexpected dependencies. The default is for packages <strong>not</strong>
-to be installed. This option conflicts with --dry-run, and has no effect with the
-remove, revert and lint commands.
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>--chroot</b> </td><td valign="bottom">
-Construct and use a temporary chroot environment for each build process.
-(Requires a Linux 3.18+ kernel with overlayfs.)
-This option has no effect with the remove, revert and lint commands.
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>--lint</b> </td><td valign="bottom">
-With the build, rebuild and update commands, the source files and URLs, SlackBuild files,
-and any built packages will be subjected to quality tests;
-these tests are the same as the tests performed by the lint command.
-With the remove, revert and lint commands, this option has no effect.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>-v</b>, <b>--verbose</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Display the output of each build process on the console during execution.
-If --verbose or -v is specified multiple times, it is equivalent to --very-verbose.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>-vv</b>, <b>--very-verbose</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Forces <b>make</b> and <b>cmake</b> to produce more verbose compilation output
-when it is called by a SlackBuild. This option implies --verbose.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>--keep-tmp</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-On exit, keep all temporary files in $TMP and $TMPDIR, for debugging purposes.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>--color=always|auto|no</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Pass coloured output from cmake, clang, git, gcc-4.9, mono, waf etc. to standard output
-if standard output is a terminal console (--color=auto),
-or pass colour unconditionally (--color=always),
-or do not pass colour (--color=no).
-The default is --color=auto. The --color option is effective only if --verbose is specified.
-'--colour' is accepted as a synonym of '--color'.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>--nice=N</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Adjust the niceness of the build process by integer N. The default is 5 (like distcc).
-</td></tr>
-<tr></tr></tbody></table>
-</blockquote>
-
-
-<a name="4">
-<h3>EXIT STATUS</h3>
-</a>
-<blockquote>
-<b>0</b> all operations succeeded or only warnings were issued
-<br /><b>1</b> one or more operations failed
-<br /><b>2</b> command usage error
-<br /><b>3</b> config or setup error
-<br /><b>4</b> internal error, please report a bug
-</blockquote>
-
-
-<a name="5">
-<h3>ENVIRONMENT</h3>
-</a>
-<blockquote>
-The behaviour of <b>slackrepo</b> is affected by the following environment variables:
-<p>
-<b>REPO</b>, <b>CONFIGDIR</b>, <b>SBREPO</b>, <b>PKGREPO</b>, <b>PKGBACKUP</b>, <b>SRCREPO</b>,
-<b>HINTDIR</b>, <b>DEFAULT_HINTDIR</b>, <b>LOGDIR</b>, <b>DATABASE</b>, <b>TMP</b>,
-<b>NUMJOBS</b>, <b>ARCH</b>, <b>TAG</b>, <b>PKGTYPE</b>, <b>USE_GENREPOS</b></p>
-
-<p>Each of these environment variables overrides the corresponding configuration
-variable in the file <i>/etc/slackrepo/slackrepo_ID.conf</i> or
-<i>~/.slackreporc</i>. For details, see
-<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>.</p>
-<p><b>MAKEFLAGS</b></p>
-<p>The MAKEFLAGS variable is passed to each SlackBuild.  Its value will
-be augmented by the value of NUMJOBS, so '-j' should not be specified in MAKEFLAGS.</p>
-<p><b>TMPDIR</b></p>
-<p><b>slackrepo</b> uses the directory specified by TMPDIR (default
-<i>/tmp</i>) for its own temporary files.
-(However, SlackBuilds use the directory specified by TMP, not TMPDIR.)</p>
-<p><b>VERBOSE</b>, <b>VERY_VERBOSE</b>, <b>CHROOT</b>, <b>DRY_RUN</b>, <b>INSTALL</b>, <b>LINT</b>, <b>KEEP_TMP</b>, <b>COLOR</b>, <b>NICE</b></p>
-<p>Each of these environment variables can be used to set the default for the corresponding control argument.
-They override the corresponding configuration variables in the file
-<i>/etc/slackrepo/slackrepo_ID.conf</i> or
-<i>~/.slackreporc</i>. For details, see
-<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>.</p>
-</blockquote>
-
-
-<a name="6">
-<h3>FILES</h3>
-</a>
-<blockquote>
-<table cellpadding="3">
-<tbody><tr valign="top"><td colspan="2">
-<i>/etc/slackrepo/slackrepo_SBo.conf</i> </td></tr><tr valign="top"><td width="5%">&nbsp;</td><td>
-This file defines the configuration variables for the SBo repository; see
-<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<i>~/.slackreporc</i> </td></tr><tr valign="top"><td width="5%">&nbsp;</td><td>
-This file can optionally be created to define the default repository ID
-and override configuration variables set in <i>/etc/slackrepo/slackrepo_ID.conf</i>; see
-<a href="slackrepo.conf.5.html">slackrepo.conf(5)</a>.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<i>/etc/slackrepo/SBo/hintfiles</i> </td></tr><tr valign="top"><td width="5%">&nbsp;</td><td>
-This directory contains the hintfiles for the SBo repository; see
-<a href="slackrepo.hint.5.html">slackrepo.hint(5)</a>.
-</td></tr>
-<tr></tr>
-</tbody></table>
-</blockquote>
-
-
-<a name="7">
-<h3>NOTES</h3>
-</a>
-<blockquote>
-<p>For best results, <b>slackrepo</b> is intended to be run on a "clean" standard Slackware
-environment (like a "build box" or a virtual machine), with a full installation
-of Slackware and no additional packages (or very few). You can then use the
-package repository to install the packages on other hosts (e.g. with <b>slackpkg+</b>).</p>
-<p>Packages are updated or rebuilt if required; for example, if a package is being
-built, its dependencies will be updated and/or rebuilt if they are out-of-date.
-A package is out-of-date if:</p>
-<blockquote>
-<table cellpadding="3">
-<tbody><tr></tr><tr></tr>
-<tr valign="top"><td width="4%">
-&bull;
-</td><td>
-the git revision in the directory containing the SlackBuild has changed since the package was built
-</td></tr>
-<tr valign="top"><td width="4%">
-&bull;
-</td><td>
-the directory containing the SlackBuilds has untracked/uncommited files
-(i.e., "git is dirty") and they are newer than the package
-</td></tr>
-<tr valign="top"><td width="4%">
-&bull;
-</td><td>
-the hintfile has changed since the package was built
-</td></tr>
-<tr valign="top"><td width="4%">
-&bull;
-</td><td>
-any of its direct dependencies has been updated since the package was built
-</td></tr>
-<tr valign="top"><td width="4%">
-&bull;
-</td><td>
-the version of Slackware has changed since the package was built
-</td></tr>
-<tr></tr>
-</tbody></table>
-</blockquote>
-<p>Changes in the SlackBuilds directory are
-classified as "updates", which will cause directly depending items to be rebuilt.
-Other changes are classified as "rebuilds" and do not cause depending items to be rebuilt.
-For example, ffmpeg depends on x264, and transcode depends on ffmpeg.
-If x264 is updated, ffmpeg will be rebuilt, but transcode will not be rebuilt.
-If x264 is rebuilt, ffmpeg will not be rebuilt.
-If ffmpeg is updated, transcode will be rebuilt.</p>
-<p>When a package is rebuilt, and when a package is updated but its version
-is unchanged, the BUILD number in the package repository is always incremented
-(and the BUILD number in the SlackBuild file is ignored).</p>
-<p><b>slackrepo</b> is not affiliated with, or endorsed by, the SlackBuilds.org Project or
-Slackware. The author thanks those projects for their continuing generosity
-to the community.  Slackware&reg; is a registered trademark of Patrick Volkerding.</p>
-</blockquote>
-
-
-<a name="8">
-<h3>EXAMPLES</h3>
-</a>
-<blockquote>
-Build the whole SBo repository (you will need about four days and 80Gb of disk space):
-<p></p>
-<blockquote>
-<pre># slackrepo build</pre>
-</blockquote>
-<p>Build shotwell, with all its dependencies:</p>
-<p></p>
-<blockquote>
-<pre># slackrepo build shotwell</pre>
-</blockquote>
-<p>Build and install shotwell and all its dependencies (this will NOT be a clean build):</p>
-<p></p>
-<blockquote>
-<pre># slackrepo build --install shotwell</pre>
-</blockquote>
-<p>Remove grass (note, its dependencies and dependers will not be removed):</p>
-<p></p>
-<blockquote>
-<pre># slackpkg remove grass</pre>
-</blockquote>
-<p>Restore the backed-up grass packages (note, you can use this to 'undelete' packages that were removed in error):</p>
-<p></p>
-<blockquote>
-<pre># slackpkg revert grass</pre>
-</blockquote>
-<p>Update all the academic/ packages in your package repository for SBo's latest changes:</p>
-<p></p>
-<blockquote>
-<pre># slackrepo update academic</pre>
-</blockquote>
-<p>Do a "dry run" update of all your SBo packages, with verbose messages:</p>
-<p></p>
-<blockquote>
-<pre># slackrepo update --dry-run -v</pre>
-</blockquote>
-<p>Test-build colord (in the csb repo),
-with output from the build displayed on the console;
-do not store the built package:</p>
-<p></p>
-<blockquote>
-<pre># slackrepo build -v --repo=csb --lint --dry-run colord</pre>
-</blockquote>
-</blockquote>
-
-
-<a name="9">
-<h3>SEE ALSO</h3>
-</a>
-<blockquote>
-<a href="/man/slackrepo.conf.5.html">slackrepo.conf(5)</a>,
-<a href="/man/slackrepo.hint.5.html">slackrepo.hint(5)</a>,
-installpkg(8),
-upgradepkg(8),
-removepkg(8),
-pkgtool(8),
-slackpkg(8).
-</blockquote>
-<p></p>
-
-<hr />
-<table width="100%"><tbody>
-<tr> <td width="33%"><i>slackrepo-0.3</i></td> <td align="center" width="33%">SLACKREPO (8)</td> <td align="right" width="33%"><i>2015-04-12</i></td> </tr>
-</tbody></table>
+    <h1>slackrepo (8)</h1>
+<div class="manpage">
+<table class="head">
+  <tr>
+    <td class="head-ltitle">SLACKREPO(8)</td>
+    <td class="head-vol">System Manager's Manual</td>
+    <td class="head-rtitle">SLACKREPO(8)</td>
+  </tr>
+</table>
+<div class="manual-text">
+<h1 class="Sh" title="Sh" id="NAME"><a class="selflink" href="#NAME">NAME</a></h1>
+<b>slackrepo</b> - automated SlackBuild package building and repository
+  maintenance
+<h1 class="Sh" title="Sh" id="SYNOPSIS"><a class="selflink" href="#SYNOPSIS">SYNOPSIS</a></h1>
+<b>slackrepo build</b> [<i>OPTIONS</i>] [<i>ITEM ...</i>]
+<div class="Pp"></div>
+<b>slackrepo rebuild</b> [<i>OPTIONS</i>] [<i>ITEM</i> ...]
+<div class="Pp"></div>
+<b>slackrepo update</b> [<i>OPTIONS</i>] [<i>ITEM</i>] ...
+<div class="Pp"></div>
+<b>slackrepo remove</b> [<i>OPTIONS</i>] <i>ITEM ...</i>
+<div class="Pp"></div>
+<b>slackrepo revert</b> [<i>OPTIONS</i>] <i>ITEM ...</i>
+<div class="Pp"></div>
+<b>slackrepo lint</b> [<i>OPTIONS</i>] [<i>ITEM</i> ...]
+<div class="Pp"></div>
+<b>slackrepo install</b> [<i>OPTIONS</i>] [<i>ITEM</i> ...]
+<div class="Pp"></div>
+<b>slackrepo info</b> [<i>OPTIONS</i>]
+<h1 class="Sh" title="Sh" id="DESCRIPTION"><a class="selflink" href="#DESCRIPTION">DESCRIPTION</a></h1>
+Slackrepo is a highly automated tool for Slackware users to manage their own
+  package repositories. It builds packages from a repository of SlackBuilds (for
+  example, a clone of SlackBuilds.org), and then outputs the packages to a
+  package repository.
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>slackrepo&#x00A0;build</b></dt>
+  <dd class="It-tag">Builds packages from an input repository of SlackBuilds
+      (for example, a git clone of SlackBuilds.org), and then stores them in a
+      package repository. <b>add</b> is accepted as a synonym of
+    <b>build</b>.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>slackrepo&#x00A0;rebuild</b></dt>
+  <dd class="It-tag">Rebuilds packages that are already in the package
+      repository.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>slackrepo&#x00A0;update</b></dt>
+  <dd class="It-tag">Builds, rebuilds and removes packages in the package
+      repository, according to changes in the SlackBuild repository.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>slackrepo&#x00A0;remove</b></dt>
+  <dd class="It-tag">Removes packages from the package repository.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>slackrepo&#x00A0;revert</b></dt>
+  <dd class="It-tag">Moves packages from the backup repository into the package
+      repository, and packages from the package repository into the backup
+      repository. <b>restore</b> is accepted as a synonym of <b>revert</b>.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>slackrepo&#x00A0;lint</b></dt>
+  <dd class="It-tag">Performs quality checks without performing a build. See the
+      <b>--lint</b> control argument for a brief description of the checks that
+      can be performed.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>slackrepo&#x00A0;install</b></dt>
+  <dd class="It-tag">Installs a package on the host system, building first if
+      necessary. This command is equivalent to <b>build --install</b>.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>slackrepo&#x00A0;info</b></dt>
+  <dd class="It-tag">Prints information about the system and specified
+      repository, configuration and options.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><i>ITEM</i></dt>
+  <dd class="It-tag">An item specifies a directory or a SlackBuild file in the
+      SlackBuild repository, and/or (in the <b>update</b>, <b>remove</b> and
+      <b>revert</b> commands only) formerly in the SlackBuild repository.
+      Shell-style globs (wildcards) are allowed. If no items are specified, all
+      directories in the SlackBuild repository are processed (except in the
+      remove and revert commands, where it is mandatory to specify the items to
+      be removed).</dd>
+</dl>
+<h1 class="Sh" title="Sh" id="OPTIONS"><a class="selflink" href="#OPTIONS">OPTIONS</a></h1>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--chroot</b></dt>
+  <dd class="It-tag">Construct and use a temporary chroot environment for each
+      build process. (Requires a Linux 3.18+ kernel with overlayfs.) This option
+      has no effect with the remove, revert and lint commands.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--color=always|auto|no</b></dt>
+  <dd class="It-tag">Pass coloured output from cmake, clang, git, gcc, mono, waf
+      etc. to standard output if standard output is a terminal console (
+      <b>--color=auto</b>), or pass colour unconditionally (
+      <b>--color=always</b>), or do not pass colour ( <b>--color=no</b>). The
+      default is <b>--color=auto</b>. The <b>--color</b> option is effective
+      only if <b>--verbose</b> is specified. <b>--colour</b> is accepted as a
+      synonym of <b>--color</b>.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--debug</b></dt>
+  <dd class="It-tag">Equivalent to <b>--very-verbose --lint --dry-run</b>
+      <b>--keep-tmp</b>.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--dry-run</b></dt>
+  <dd class="It-tag">Builds and rebuilds will be performed, and removes and
+      reverts will be checked, but no changes will be made to the package
+      repository. This option conflicts with <b>--install</b>. This option has
+      no effect with the <b>lint</b> command.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--install</b></dt>
+  <dd class="It-tag">Built, rebuilt and updated packages will be installed on
+      the host system. This results in a &quot;queue&quot; style build, and
+      packages may not be 100% clean of unexpected dependencies. The default is
+      for packages not to be installed. This option conflicts with
+      <b>--dry-run</b>, and has no effect with the <b>remove</b>, <b>revert</b>
+      and <b>lint</b> commands.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--keep-tmp</b></dt>
+  <dd class="It-tag">Keep all temporary files in $TMP and $TMPDIR, for debugging
+      purposes.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--lint</b>[<b>=sb,dl,x,net,pkg,inst</b>]</dt>
+  <dd class="It-tag">Specifies quality checks to be performed: <b>sb</b> checks
+      the SlackBuild files, <b>dl</b> checks the download URLs, <b>x</b>
+      prevents access to the X GUI during the build, <b>net</b> prevents access
+      to the network during the build, <b>pkg</b> checks the package and its
+      contents, and <b>inst</b> temporarily installs the package. With the
+      <b>remove</b>, <b>revert</b> and <b>info</b> commands, this option has no
+      effect.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--nice=</b><i>N</i></dt>
+  <dd class="It-tag">Adjust the niceness of the build process by integer
+      <i>N</i>. The default is 5 (like distcc).</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--nowarning=</b><i>EREGEX</i></dt>
+  <dd class="It-tag">Suppress warnings that match the GNU grep extended regular
+      expression <i>EREGEX</i>. Multiple warnings can be suppressed with an
+      extended regular expression of the form '(textone|texttwo|...)'.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>--repo=</b><i>ID</i></dt>
+  <dd class="It-tag">Use the SlackBuild and package repository identified by
+      <i>ID</i>. The filestore locations of the SlackBuild and package
+      repositories are defined in the configuration file
+      <i>/etc/slackrepo/slackrepo_ID.conf</i>, where <i>ID</i> is an identifier
+      for the repositories. The default repository <i>ID</i> is <b>SBo</b>. For
+      details, see <b>slackrepo.conf(5)</b>.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>-v</b>, <b>--verbose</b></dt>
+  <dd class="It-tag">Display the output of each build process on the console
+      during execution. If <b>--verbose</b> or <b>-v</b> is specified multiple
+      times, it is equivalent to <b>--very-verbose</b>.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>-vv</b>, <b>--very-verbose</b></dt>
+  <dd class="It-tag">Forces <b>make</b> and <b>cmake</b> to produce more verbose
+      compilation output when it is called by a SlackBuild. This option implies
+      <b>--verbose</b>.</dd>
+</dl>
+<h1 class="Sh" title="Sh" id="EXIT_STATUS"><a class="selflink" href="#EXIT_STATUS">EXIT
+  STATUS</a></h1>
+<b>0</b> - all operations completed
+<div class="Pp"></div>
+<b>1</b> - execution was interrupted
+<div class="Pp"></div>
+<b>2</b> - invocation usage error
+<div class="Pp"></div>
+<b>3</b> - the configuration file was not found
+<div class="Pp"></div>
+<b>4</b> - initialisation error
+<div class="Pp"></div>
+<b>5</b> - another instance is running
+<div class="Pp"></div>
+<b>6</b> - internal error, please report a bug
+<h1 class="Sh" title="Sh" id="ENVIRONMENT"><a class="selflink" href="#ENVIRONMENT">ENVIRONMENT</a></h1>
+The behaviour of <b>slackrepo</b> is affected by the following environment
+  variables:
+<div class="Pp"></div>
+<b>REPO</b>, <b>CONFIGDIR</b>, <b>SBREPO</b>, <b>SRCREPO</b>, <b>PKGREPO</b>,
+  <b>PKGBACKUP</b>, <b>HINTDIR</b>, <b>DEFAULT_HINTDIR</b>, <b>LOGDIR</b>,
+  <b>DATABASE</b>, <b>TMP</b>, <b>SUBSTITUTE</b>, <b>NUMJOBS</b>, <b>ARCH</b>,
+  <b>TAG</b>, <b>PKGTYPE</b>, <b>USE_GENREPOS</b>
+<div class="Pp"></div>
+Each of these environment variables overrides the corresponding configuration
+  variable in the file <i>/etc/slackrepo/slackrepo_ID.conf</i> or
+  <i>~/.slackreporc</i>. For details, see <b>slackrepo.conf(5)</b>.
+<div class="Pp"></div>
+<b>MAKEFLAGS</b>
+<div class="Pp"></div>
+The MAKEFLAGS variable is passed to each SlackBuild. Its value will be augmented
+  by the value of NUMJOBS, so '-j' should not be specified in MAKEFLAGS.
+<div class="Pp"></div>
+<b>TMPDIR</b>
+<div class="Pp"></div>
+<b>slackrepo</b> uses the directory specified by TMPDIR (default <i>/tmp</i>)
+  for its own temporary files. (However, SlackBuilds conventionally use the
+  directory specified by TMP, not TMPDIR.)
+<div class="Pp"></div>
+<b>VERBOSE</b>, <b>VERY_VERBOSE</b>, <b>CHROOT</b>, <b>DRY_RUN</b>,
+  <b>INSTALL</b>, <b>LINT</b>, <b>KEEP_TMP</b>, <b>COLOR</b>, <b>NICE</b>,
+  <b>NOWARNING</b>
+<div class="Pp"></div>
+Each of these environment variables can be used to set the default for the
+  corresponding control argument. They override the corresponding configuration
+  variables in the file <i>/etc/slackrepo/slackrepo_ID.conf</i> or
+  <i>~/.slackreporc</i>. For details, see <b>slackrepo.conf(5)</b>.
+<div class="Pp"></div>
+<b>SLACKREPO_COLORS</b>
+<div class="Pp"></div>
+This environment variable can be used to customise slackrepo's colour palette.
+  The value is a string similar to LS_COLORS or GCC_COLORS. The default palette
+  is
+<pre>
+SLACKREPO_COLORS=&quot;error=01;31:warning=01;35:success=01;32:important=01:normal=00:\
+info=22;36:ok=00:build=22;32:skip=22;35:fail=22;31:updated=22;36&quot;
+</pre>
+<h1 class="Sh" title="Sh" id="FILES"><a class="selflink" href="#FILES">FILES</a></h1>
+<dl class="Bl-tag">
+  <dt class="It-tag"><i>/etc/slackrepo/slackrepo_SBo.conf</i></dt>
+  <dd class="It-tag">This file defines the configuration variables for the SBo
+      repository; see <b>slackrepo.conf(5)</b>.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><i>~/.slackreporc</i></dt>
+  <dd class="It-tag">This file can optionally be created to define the default
+      repository ID and override configuration variables set in
+      <i>/etc/slackrepo/slackrepo_ID.conf</i>; see
+    <b>slackrepo.conf(5)</b>.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><i>/etc/slackrepo/SBo/hintfiles</i></dt>
+  <dd class="It-tag">This directory contains the local hintfiles for the SBo
+      repository; see <b>slackrepo.hint(5)</b>.</dd>
+</dl>
+<h1 class="Sh" title="Sh" id="NOTES"><a class="selflink" href="#NOTES">NOTES</a></h1>
+For best results, <b>slackrepo</b> is intended to be run on a &quot;clean&quot;
+  standard Slackware environment (like a &quot;build box&quot; or a virtual
+  machine), with a full installation of Slackware and no additional packages (or
+  very few). You can then use the package repository to install the packages on
+  other hosts (e.g. with <b>slackpkg+</b>).
+<div class="Pp"></div>
+Packages are updated or rebuilt if required; for example, if a package is being
+  built, its dependencies will be updated and/or rebuilt if they are
+  out-of-date. A package is out-of-date if:
+<div style="margin-left: 5.00ex;">
+<dl class="Bl-tag">
+  <dt class="It-tag">&#x2022;</dt>
+  <dd class="It-tag">the git revision in the directory containing the SlackBuild
+      has changed since the package was built</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag">&#x2022;</dt>
+  <dd class="It-tag">the directory containing the SlackBuilds has
+      untracked/uncommited files (i.e., &quot;git is dirty&quot;) and they are
+      newer than the package</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag">&#x2022;</dt>
+  <dd class="It-tag">the hintfile has changed since the package was built</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag">&#x2022;</dt>
+  <dd class="It-tag">any of its direct dependencies has been updated since the
+      package was built</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag">&#x2022;</dt>
+  <dd class="It-tag">for kernel-dependent packages, the kernel version has
+      changed since the package was built</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag">&#x2022;</dt>
+  <dd class="It-tag">the version of Slackware has changed since the package was
+      built</dd>
+</dl>
+</div>
+<div class="Pp"></div>
+Changes in the SlackBuilds directory are classified as &quot;updates&quot;,
+  which will cause directly depending items to be rebuilt. Other changes are
+  classified as &quot;rebuilds&quot; and do not cause depending items to be
+  rebuilt if/when they are processed. For example, ffmpeg depends on x264, and
+  transcode depends on ffmpeg. If x264 is updated, ffmpeg will be rebuilt, but
+  transcode will not be rebuilt. If x264 is rebuilt, ffmpeg will not be rebuilt.
+  If ffmpeg is updated, transcode will be rebuilt.
+<div class="Pp"></div>
+When a package is rebuilt, and when a package is updated but its version is
+  unchanged, the BUILD number in the package repository is always incremented
+  (and the BUILD number in the SlackBuild file is ignored).
+<h1 class="Sh" title="Sh" id="EXAMPLES"><a class="selflink" href="#EXAMPLES">EXAMPLES</a></h1>
+Build the whole SBo repository (you will need at least four days and 80Gb of
+  disk space):
+<pre>
+# slackrepo build
+</pre>
+<div class="Pp"></div>
+Build shotwell, with all its dependencies:
+<pre>
+# slackrepo build shotwell
+</pre>
+<div class="Pp"></div>
+Build and install shotwell and all its dependencies (this will NOT be a clean
+  build):
+<pre>
+# slackrepo build --install shotwell
+</pre>
+<div class="Pp"></div>
+Remove grass (note, its dependencies and dependers will not be removed):
+<pre>
+# slackpkg remove grass
+</pre>
+<div class="Pp"></div>
+Restore the backed-up grass packages (note, you can use this to 'undelete'
+  packages that were removed in error):
+<pre>
+# slackpkg revert grass
+</pre>
+<div class="Pp"></div>
+Update all the academic/ packages in your package repository for SBo's latest
+  changes:
+<pre>
+# slackrepo update academic
+</pre>
+<div class="Pp"></div>
+Do a &quot;dry run&quot; update of all your SBo packages, with verbose messages:
+<pre>
+# slackrepo update --dry-run -v
+</pre>
+<div class="Pp"></div>
+Build colord (in the csb repo) with lint checks, do not store the built package,
+  and keep all the temporary files so you can investigate them:
+<pre>
+# slackrepo build --repo=csb --debug colord
+</pre>
+<h1 class="Sh" title="Sh" id="SEE_ALSO"><a class="selflink" href="#SEE_ALSO">SEE
+  ALSO</a></h1>
+<b>slackrepo.conf(5)</b>, <b>slackrepo.hint(5)</b>, <b>installpkg(8)</b>,
+  <b>upgradepkg(8)</b>, <b>removepkg(8)</b>, <b>pkgtool(8)</b>,
+  <b>slackpkg(8)</b>.</div>
+<table class="foot">
+  <tr>
+    <td class="foot-date">2017-09-01</td>
+    <td class="foot-os">slackrepo-0.3</td>
+  </tr>
+</table>
 
 </div>
-
 
   </div>
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-09-01 00:00:57
+    </p>
   </div>
 </footer>
 

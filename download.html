@@ -85,15 +85,18 @@ SlackBuild to create a package that you can install:</p>
 <div class="highlighter-rouge"><pre class="highlight"><code>git clone https://github.com/idlemoor/slackrepo.git
 cd slackrepo
 gitrev=git$(git log -n 1 --format=format:%h .)
-git archive --format=tar --prefix=slackrepo-$gitrev/ HEAD | gzip &gt; SlackBuild/slackrepo-$gitrev.tar.gz
+git archive --format=tar --prefix=slackrepo-$gitrev/ HEAD \
+  | gzip &gt; SlackBuild/slackrepo-$gitrev.tar.gz
 cd SlackBuild
 VERSION=$gitrev TAG=_github sh ./slackrepo.SlackBuild
 upgradepkg --install-new /tmp/slackrepo-$gitrev-noarch-1_github.t?z
-cd ../..
+cd -
+
 git clone https://github.com/idlemoor/slackrepo-hints.git
 cd slackrepo-hints
 gitrev=git$(git log -n 1 --format=format:%h .)
-git archive --format=tar --prefix=slackrepo-hints-$gitrev/ HEAD | gzip &gt; SlackBuild/slackrepo-hints-$gitrev.tar.gz
+git archive --format=tar --prefix=slackrepo-hints-$gitrev/ HEAD \
+  | gzip &gt; SlackBuild/slackrepo-hints-$gitrev.tar.gz
 cd SlackBuild
 VERSION=$gitrev TAG=_github sh ./slackrepo.SlackBuild
 upgradepkg --install-new /tmp/slackrepo-hints-$gitrev-noarch-1_github.t?z
@@ -188,10 +191,10 @@ purposes.  No warantee, guarantee, or liability is implied.
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-08-28 00:05:13
+    </p>
   </div>
 </footer>
 

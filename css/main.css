@@ -1,7 +1,20 @@
+.wrapper:after, .site-footer:after, footer:after {
+  content: "";
+  display: table;
+  clear: both; }
+
+.icon > svg {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  vertical-align: middle; }
+  .icon > svg path {
+    fill: black; }
+
 body {
-  font-size: 0.875rem;
-  line-height: 1.5;
+  font-size: 1rem;
   -webkit-text-size-adjust: 100%;
+  line-height: 1.5;
   -webkit-font-feature-settings: "kern" 1;
   -moz-font-feature-settings: "kern" 1;
   -o-font-feature-settings: "kern" 1;
@@ -9,16 +22,107 @@ body {
   font-kerning: normal; }
   @media screen and (max-width: 560px) {
     body {
-      font-size: 0.75rem;
-      line-height: 1.2; } }
+      font-size: 0.875rem; } }
+  @media screen and (max-width: 560px) {
+    body {
+      line-height: 1.375; } }
+
+.site-title {
+  font-size: 2rem;
+  line-height: 1.5; }
+  @media screen and (max-width: 560px) {
+    .site-title {
+      font-size: 2rem;
+      line-height: 1.375; } }
+
+h1 {
+  font-size: 1.67rem;
+  line-height: 1.5; }
+  @media screen and (max-width: 560px) {
+    h1 {
+      font-size: 1.4rem;
+      line-height: 1.375; } }
+
+h2 {
+  font-size: 1.4rem;
+  line-height: 1.5; }
+  @media screen and (max-width: 560px) {
+    h2 {
+      font-size: 1.175rem;
+      line-height: 1.375; } }
+
+h3, .page-heading {
+  font-size: 1.175rem;
+  line-height: 1.5; }
+  @media screen and (max-width: 560px) {
+    h3, .page-heading {
+      font-size: 1.12rem;
+      line-height: 1.375; } }
+
+h4 {
+  font-size: 1.12rem;
+  line-height: 1.5; }
+  @media screen and (max-width: 560px) {
+    h4 {
+      font-size: 1rem;
+      line-height: 1.375; } }
+
+h5 {
+  font-size: 1rem;
+  line-height: 1.5; }
+  @media screen and (max-width: 560px) {
+    h5 {
+      font-size: 0.875rem;
+      line-height: 1.375; } }
+
+blockquote {
+  font-size: 1rem; }
+  @media screen and (max-width: 560px) {
+    blockquote {
+      font-size: 0.875rem; } }
+
+.site-nav {
+  font-size: 0.875rem;
+  line-height: 1.375; }
+  @media screen and (max-width: 560px) {
+    .site-nav {
+      font-size: 0.8rem; } }
+
+table, footer, .site-footer {
+  font-size: 0.875rem;
+  line-height: 1.375; }
+
+code {
+  font-size: 0.875rem; }
+
+pre {
+  font-size: 0.8rem;
+  line-height: 1.375;
+  overflow-x: auto; }
+  pre > code {
+    font-size: 0.8rem; }
+
+pre.lic {
+  font-size: 0.875rem;
+  line-height: 1.25; }
 
 body,
 h1, h2, h3, h4, h5, h6,
 p, blockquote, pre, hr,
 dl, dd, ol, ul {
-  margin: 0;
-  margin-bottom: 1rem;
+  padding: 0;
+  margin: 0 0 1rem 0; }
+
+blockquote > :last-child {
+  margin-bottom: 0; }
+
+code {
   padding: 0; }
+
+pre > code {
+  border: 0;
+  padding-right: 0;
+  padding-left: 0; }
 
 img {
   max-width: 100%;
@@ -32,34 +136,9 @@ li > ul, li > ol {
 
 table {
   width: 100%;
+  padding: 0;
   margin: 0 0 1rem 0;
   border-collapse: collapse; }
-
-blockquote {
-  font-size: 0.875rem; }
-  blockquote > :last-child {
-    margin-bottom: 0; }
-
-code {
-  font-size: 0.75rem;
-  padding: 0; }
-
-pre {
-  font-size: 0.75rem;
-  padding: 0.67em 1em;
-  overflow-x: auto; }
-  pre > code {
-    border: 0;
-    padding-right: 0;
-    padding-left: 0; }
-
-.icon > svg {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  vertical-align: middle; }
-  .icon > svg path {
-    fill: black; }
 
 .wrapper {
   max-width: -webkit-calc(800px);
@@ -67,20 +146,12 @@ pre {
   padding: 0 0.5rem 0 0.5rem;
   margin: 0 auto 0 auto; }
 
-.wrapper:after, .site-footer:after {
-  content: "";
-  display: table;
-  clear: both; }
-
 .site-header {
   min-height: 5rem;
   position: relative; }
 
 .site-title {
-  font-size: 2rem;
-  line-height: 2.25rem;
   vertical-align: top;
-  letter-spacing: -0.05em;
   margin: 0; }
   @media screen and (max-width: 560px) {
     .site-title {
@@ -125,8 +196,13 @@ pre {
         margin: 2em; } }
 
 .site-footer {
-  padding: 1rem 0;
-  font-size: 0.75rem; }
+  padding: 1rem 0; }
+
+.page-content {
+  padding: 1rem 0; }
+
+.page-vertical {
+  margin-bottom: 1rem; }
 
 .not-when-small {
   display: inline; }
@@ -154,78 +230,18 @@ pre {
       max-width: 100%;
       margin: 0 0 1rem 0; } }
 
-.page-content {
-  padding: 1rem 0; }
-
-.page-heading {
-  font-size: 20px; }
-
-.page-vertical {
-  margin-bottom: 1rem; }
-
-.post-list {
-  margin-left: 0;
-  list-style: none; }
-  .post-list > li {
-    margin-bottom: 1rem; }
-
-.post-link {
-  display: block;
-  font-size: 24px; }
-  @media screen and (max-width: 800px) {
-    .post-link {
-      font-size: 24px;
-      line-height: 120%; } }
-  @media screen and (max-width: 560px) {
-    .post-link {
-      font-size: 20px;
-      line-height: 120%; } }
-
-.post-header {
-  margin-bottom: 1rem; }
-
-.post-title {
-  font-size: 28px;
-  letter-spacing: -1px;
-  line-height: 120%; }
-  @media screen and (max-width: 560px) {
-    .post-title {
-      font-size: 24px; } }
-
-.post-content {
-  margin-bottom: 1rem; }
-  .post-content h1 {
-    font-size: 28px; }
-    @media screen and (max-width: 560px) {
-      .post-content h1 {
-        font-size: 24px;
-        line-height: 120%; } }
-  .post-content h2 {
-    font-size: 24px;
-    font-weight: bold; }
-    @media screen and (max-width: 560px) {
-      .post-content h2 {
-        font-size: 20px;
-        line-height: 120%; } }
-  .post-content h3 {
-    font-size: 18px;
-    font-weight: bold; }
-    @media screen and (max-width: 560px) {
-      .post-content h3 {
-        font-size: 16px;
-        line-height: 120%; } }
-  .post-content h4 {
-    font-size: 16px;
-    font-weight: bold; }
-    @media screen and (max-width: 560px) {
-      .post-content h4 {
-        font-size: 14px;
-        line-height: 120%; } }
+.centred {
+  margin: 0 auto 1rem auto; }
 
 body {
   font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: black;
-  background-color: white; }
+  background-color: white;
+  -webkit-font-feature-settings: "kern" 1;
+  -moz-font-feature-settings: "kern" 1;
+  -o-font-feature-settings: "kern" 1;
+  font-feature-settings: "kern" 1;
+  font-kerning: normal; }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -233,30 +249,22 @@ h1, h2, h3, h4, h5, h6 {
 
 h2, h3, h4 {
   background-color: #ccd7e9;
-  padding-left: 0.2em; }
+  padding-left: 0.3em; }
 
 ul {
   list-style-type: disc;
   list-style-position: outside; }
-
-li {
-  margin-left: 3em; }
-
-table {
-  font-size: small; }
+  ul li {
+    margin-left: 3em; }
 
 code, pre {
   font-family: "Droid Sans Mono", monospace; }
 
 pre {
-  background-color: #e0ffe0;
   border: 1px solid #66bb66;
   border-radius: 5px;
-  overflow-x: auto; }
-  pre > code {
-    border: 0;
-    padding-right: 0;
-    padding-left: 0; }
+  background-color: #e0ffe0;
+  padding: 0.67em 1em; }
 
 a {
   color: #2a7ae2;
@@ -264,20 +272,16 @@ a {
   a a:hover {
     text-decoration: underline; }
 
-blockquote {
-  color: #828282;
-  border-left: 0.3em solid #e8e8e8;
-  padding-left: 0.5rem;
-  letter-spacing: -1px;
-  font-style: italic; }
-
 .site-header {
   background-image: linear-gradient(#6080bb, #ffffff 5rem); }
 
 .site-title {
   font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 600;
-  letter-spacing: -1px; }
+  letter-spacing: -0.05em;
+  border: 1px solid white;
+  padding: 0 0.2em 0 0.2em;
+  border-radius: 5px; }
   .site-title, .site-title:visited {
     color: white;
     text-decoration: none; }
@@ -298,20 +302,8 @@ blockquote {
   border: 1px solid #4f4f4f;
   border-radius: 5px; }
 
-.site-footer {
-  color: #828282;
-  line-height: 100%; }
-
-.post-meta {
+footer {
   color: #828282; }
-
-.post-link {
-  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif; }
-
-.post-title {
-  font-family: "Source Sans Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  letter-spacing: -1px;
-  line-height: 120%; }
 
 p.scary {
   background-image: url("/slackrepo/img/warning.png");
@@ -332,34 +324,68 @@ h4.faq:before {
   counter-increment: faqnumber;
   content: counter(faqnumber) ". "; }
 
-#man {
-  float: right;
-  width: 75%;
-  margin: 10px;
-  text-align: left;
-  font-family: 'Source Sans Pro',sans-serif; }
-
-#man h2 {
-  font-family: 'Source Sans Pro',sans-serif;
-  background-color: #c0c0ff;
-  padding: 8px; }
-
-#man h4 {
-  font-family: 'Source Sans Pro',sans-serif; }
-
-#man p {
-  font-family: 'Source Sans Pro',sans-serif;
-  margin-bottom: 10px; }
-
-#man ul {
-  margin: 0; }
-
-#man li {
-  margin-bottom: 10px; }
-
-#man pre {
-  font-family: 'Droid Sans Mono',monospace;
-  font-size: 12px;
+.manpage table.head, .manpage table.foot {
+  display: none; }
+.manpage .manual-text {
+  font-size: 1rem;
+  margin: 1.2rem 0 1.2rem 0;
+  margin-collapse: collapse; }
+  @media screen and (max-width: 560px) {
+    .manpage .manual-text {
+      font-size: 0.875rem; } }
+.manpage h1 {
+  font-size: 1.4rem;
+  line-height: 1.5;
+  background-color: #ccd7e9;
+  padding-left: 0.3em;
+  margin: 2rem 0 1.2rem 0;
+  margin-collapse: collapse; }
+  @media screen and (max-width: 560px) {
+    .manpage h1 {
+      font-size: 1.175rem;
+      line-height: 1.375; } }
+.manpage h2 {
+  font-size: 1.175rem;
+  line-height: 1.5;
+  margin: 1.2rem 0 1.2rem 0;
+  margin-collapse: collapse; }
+  @media screen and (max-width: 560px) {
+    .manpage h2 {
+      font-size: 1.12rem;
+      line-height: 1.375; } }
+.manpage h3 {
+  font-size: 1.12rem;
+  line-height: 1.5;
+  margin: 1.2rem 0 1.2rem 0;
+  margin-collapse: collapse; }
+  @media screen and (max-width: 560px) {
+    .manpage h3 {
+      font-size: 1rem;
+      line-height: 1.375; } }
+.manpage a.selflink {
+  color: black; }
+.manpage pre {
+  font-size: 0.875rem;
+  line-height: 1.5;
   padding: 0;
   border: 0;
+  margin: 0 0 1.2rem 0;
   background-color: transparent; }
+  @media screen and (max-width: 560px) {
+    .manpage pre {
+      font-size: 0.8rem;
+      line-height: 1.375; } }
+.manpage dl {
+  padding: 0;
+  margin: 1.2rem 0 1.2rem 0;
+  margin-collapse: collapse; }
+.manpage dt {
+  padding: 0;
+  margin: 0; }
+.manpage dd {
+  padding: 0 0 0 5ex;
+  margin: 0 0 1.2rem 0;
+  margin-collapse: collapse; }
+.manpage .Pp {
+  margin: 0 0 0.6rem 0;
+  margin-collapse: collapse; }

@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>slackrepo(8)</title>
+  <title>slackrepo.conf (5)</title>
   <meta name="description" content="Documentation for slackrepo, a SlackBuild package builder">
 
   <link rel="stylesheet" href="/slackrepo/css/main.css">
@@ -40,9 +40,9 @@
 
         
         <br class="not-when-small" />
-<a class="site-nav-link" href="/slackrepo/man/slackrepo.8.html">slackrepo.8</a>
-<a class="site-nav-link" href="/slackrepo/man/slackrepo.conf.5.html">slackrepo.conf.5</a>
-<a class="site-nav-link" href="/slackrepo/man/slackrepo.hint.5.html">slackrepo.hint.5</a>
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.8.html">slackrepo&nbsp(8)</a>
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.conf.5.html">slackrepo.conf&nbsp(5)</a>
+<a class="site-nav-link" href="/slackrepo/man/slackrepo.hint.5.html">slackrepo.hint&nbsp(5)</a>
 
         
       </div>
@@ -52,258 +52,312 @@
 
 <div class="page-content">
   <div class="wrapper">
-    <div id="man">
-
-<a name="top"></a>
-<h2>slackrepo.conf (5)</h2>
-
-
-<a name="0">
-<h3>NAME</h3>
-</a>
-<blockquote>
-slackrepo.conf - repository configuration files for slackrepo
-</blockquote>
-
-
-<a name="contents"></a><h3>CONTENTS</h3>
-<blockquote>
-<a href="#1">Synopsis</a><br />
-<a href="#2">Description</a><br />
-&nbsp; &nbsp; &nbsp;<a href="#3">Default repo ID and configuration directory</a><br />
-&nbsp; &nbsp; &nbsp;<a href="#4">Repository filestore locations</a><br />
-&nbsp; &nbsp; &nbsp;<a href="#5">Building packages</a><br />
-&nbsp; &nbsp; &nbsp;<a href="#6">Defaults for control arguments</a><br />
-&nbsp; &nbsp; &nbsp;<a href="#7">Calling gen_repos_files.sh</a><br />
-&nbsp; &nbsp; &nbsp;<a href="#8">Initial setup</a><br />
-&nbsp; &nbsp; &nbsp;<a href="#9">Environment variables</a><br />
-<a href="#10">See Also</a><br />
-</blockquote>
-
-
-<a name="1">
-<h3>SYNOPSIS</h3>
-</a>
-<blockquote>
-<b>/etc/slackrepo/slackrepo_</b><i>ID</i><b>.conf</b> (where
-<i>ID</i> is a repository ID, for example,
-<b>SBo</b>)
-<br /><b>~/.genreprc</b>
-<br /><b>~/.slackreporc</b>
-</blockquote>
-
-
-<a name="2">
-<h3>DESCRIPTION</h3>
-</a>
-<blockquote>
-<a href="slackrepo.8.html">slackrepo(8)</a>
-reads configuration data from
-<i>~/.slackreporc</i> and
-<i>~/.genreprc</i> and
-<i>/etc/slackrepo/slackrepo_ID.conf</i>
-<p>These files contain assignments of configuration variables, one per line,
-in the form</p>
-<p></p>
-<blockquote>
-<pre><i>NAME</i>=<i>VALUE</i></pre>
-</blockquote>
-<p>The files are 'sourced' by <b>bash</b>, so spaces are not permitted either side of '='.
-Lines starting with '#' and empty lines are ignored.
-Assigned values may optionally be enclosed in single or double quotes.
-The strings %REPO%, %SLACKVER% and %ARCH% are automatically replaced by the
-repo ID, Slackware version, and arch, respectively.</p>
-<p>Any values specified in the configuration files are overridden by
-environment variables or control arguments on the
-<b>slackrepo</b> command line.  Values specified in
-<i>~/.slackreporc</i> and <i>~/.genreprc</i> override values specified in
-<i>/etc/slackrepo/slackrepo_ID.conf</i>.</p>
-<p>Note that all the examples below show the values that are set in the
-supplied configuration file for the <b>SBo</b> (SlackBuilds.org) repository ID.<p>
-&lt;/blockquote&gt;
-
-
-<a name="3">
-<h4>&nbsp; &nbsp; Default repo ID and configuration directory</h4>
-</a>
-<blockquote>
-<p>The following configuration variables can be set only in
-<i>~/.slackreporc</i>.
-<table cellpadding="3"><tbody>
-<tr valign="top"><td nowrap="nowrap" width="6%"><b>REPO</b> </td>
-<td valign="bottom">
-The default repo ID. This determines the configuration file
-<i>slackrepo_ID.conf</i> from which other configuration variables will be read.
-For example:
-<pre>REPO="SBo"</pre>
-This variable can be set only in
-<i>~/.slackreporc</i>,
-but can be overridden by the REPO environment variable or by the
-command line option '--repo=ID'. 
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%"><b>CONFIGDIR</b> </td>
-<td valign="bottom">
-The configuration directory. This specifies an alternative directory to be used instead of
-<i>/etc/slackrepo</i> to find the configuration files.
-For example:
-<pre>CONFIGDIR="/etc/slackrepo"</pre>
-This variable can be set only in
-<i>~/.slackreporc</i>,
-but can be overridden by the CONFIGDIR environment variable. 
-</td></tr>
-</tbody></table>
-</p>
-</blockquote>
-
-
-<a name="4">
-<h4>&nbsp; &nbsp; Repository filestore locations</h4>
-</a>
-<blockquote>
-<p>The following configuration variables determine
-repository filestore locations.
-These variables can be set in
-<i>~/.slackreporc</i> or
-<i>/etc/slackrepo/slackrepo_ID.conf</i>, or can be overridden by environment variables.
-<table cellpadding="3"><tbody>
-<tr></tr>
-<tr></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>SBREPO</b></td><td valign="bottom">
-Filestore location of the local SlackBuilds repository. For example:
-<pre>SBREPO="/var/lib/slackrepo/%REPO%/slackbuilds"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>SRCREPO</b>
-</td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td>
-<td>Where to store cached sources. (You will need plenty of space.)
-For example:
-<pre>SRCREPO="/var/lib/slackrepo/%REPO%/source"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>PKGREPO</b>
-</td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td>
-<td>Filestore location of the local package repository, i.e., where to store
-built packages. (You will need plenty of space.)
-For example:
-<pre>PKGREPO="/var/lib/slackrepo/%REPO%/packages/%SLACKVER%/%ARCH%"</pre>
-</td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td>
-<td>If you intend to use the package repository with slackpkg+,
-you may wish to change this path or symlink it to a location accessible by a
-local web server (e.g., somewhere under <i>/var/www/htdocs/</i>).
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>PKGBACKUP</b>
-</td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td>
-<td>Where to keep backups. (You will need plenty of space.) For example:
-<pre>PKGBACKUP="/var/lib/slackrepo/%REPO%/backups/%SLACKVER%/%ARCH%"</pre>
-</td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td>
-<td>You can disable backups by commenting out or deleting this line.
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>HINTDIR</b></td>
-<td valign="bottom">Where to find hintfiles for this repository. For example:
-<pre>HINTDIR="/etc/slackrepo/%REPO%/hintfiles"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>DEFAULT_HINTDIR</b>
-</td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td>
-<td>Where to find default hintfiles for this repository. For example:
-<pre>DEFAULT_HINTDIR="/etc/slackrepo/%REPO%/default_hintfiles/%SLACKVER%"</pre>
-</td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td>
-<td>You can disable all the default hintfiles for this repository
-by commenting out or deleting this line.
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>LOGDIR</b></td>
-<td valign="bottom">Where to store log files, for example:
-<pre>LOGDIR="/var/log/slackrepo/%REPO%"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>DATABASE</b>
-</td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td><td>
-Where to keep the database for this repository, for example:
-<pre>DATABASE="/var/lib/slackrepo/%REPO%/database_%REPO%.sqlite3"</pre>
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>TMP</b> </td><td valign="bottom">
-Where to store temporary files. (You will need plenty of space.)
-For example:
-<pre>TMP="/tmp/%REPO%"</pre>
-</td></tr>
-<tr></tr></tbody></table></p>
-</blockquote>
-
-
-<a name="5">
-<h4>&nbsp; &nbsp; Building packages</h4>
-</a>
-<blockquote>
-<p>The following configuration variables affect
-the building of packages.
-These variables can be set in
-<i>~/.slackreporc</i> or
-<i>/etc/slackrepo/slackrepo_ID.conf</i>, or can be overridden by environment variables.
-<table cellpadding="3">
-<tbody><tr></tr><tr></tr>
-<tr valign="top"><td colspan="2">
-<b>NUMJOBS</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Number of make jobs to set in MAKEFLAGS (e.g., '-j2').
-Leave blank to have this automatically determined as one more than
-the number of processors on the build host,
-for example:
-<pre>NUMJOBS=''</pre>
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>ARCH</b> </td><td valign="bottom">
-Arch for built packages.
-Leave this blank to have the arch automatically determined by the build host,
-for example:
-<pre>ARCH=''</pre>
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>TAG</b> </td><td valign="bottom">
-Tag for built packages, for example:
-<pre>TAG='_SBo'</pre>
-</td></tr>
-<tr valign="top"><td width="6%">
-</td><td>
-If you are publishing packages from SlackBuilds.org,
-please change
-<b>SBo</b> to something else (see <a href="http://slackbuilds.org/faq/#package_repos" class="ext">SlackBuilds.org FAQ, item 20</a>).
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>PKGTYPE</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Package compression type. This can be
-<b>tgz</b> (gzip compressed),
-<b>txz</b> (xz),
-<b>tbz</b> (bzip2), or
-<b>tlz</b> (lzma).
-For example:
-<pre>PKGTYPE='tgz'</pre>
-</td></tr>
-<tr></tr></tbody></table></p>
-</blockquote>
-
-
-<a name="6">
-<h4>&nbsp; &nbsp; Defaults for control arguments</h4>
-</a>
-<blockquote>
-<p>The configuration variables
-<b>QUIET</b>, <b>VERBOSE</b>, <b>VERY_VERBOSE</b>, <b>DRY_RUN</b>, <b>INSTALL</b>, <b>CHROOT</b>, <b>LINT</b>, <b>KEEP_TMP</b>, <b>COLOR</b> and <b>NICE</b>
-set the defaults for slackrepo's command line control arguments.
-These variables can be set in <i>~/.slackreporc</i> or <i>/etc/slackrepo/slackrepo_ID.conf</i>.<p>
-<p>Examples:</p>
+    <h1>slackrepo.conf (5)</h1>
+<div class="manpage">
+<table class="head">
+  <tr>
+    <td class="head-ltitle">SLACKREPO.CONF(5)</td>
+    <td class="head-vol">File Formats Manual</td>
+    <td class="head-rtitle">SLACKREPO.CONF(5)</td>
+  </tr>
+</table>
+<div class="manual-text">
+<h1 class="Sh" title="Sh" id="NAME"><a class="selflink" href="#NAME">NAME</a></h1>
+<b>slackrepo.conf</b> - repository configuration files for slackrepo
+<h1 class="Sh" title="Sh" id="SYNOPSIS"><a class="selflink" href="#SYNOPSIS">SYNOPSIS</a></h1>
+<b>/etc/slackrepo/slackrepo_</b><i>ID</i><b>.conf</b> (where <i>ID</i> is a
+  repository ID, for example, <b>SBo</b>)
+<div class="Pp"></div>
+<b>~/.genreprc</b>
+<div class="Pp"></div>
+<b>~/.slackreporc</b>
+<h1 class="Sh" title="Sh" id="DESCRIPTION"><a class="selflink" href="#DESCRIPTION">DESCRIPTION</a></h1>
+<b>slackrepo(8)</b> reads configuration data from <i>~/.slackreporc</i> and
+  <i>~/.genreprc</i> and <i>/etc/slackrepo/slackrepo_ID.conf</i>
+<div class="Pp"></div>
+These files contain assignments of configuration variables, one per line, in the
+  form
+<div class="Pp"></div>
+<div style="margin-left: 5.00ex;">
 <pre>
+<i>NAME=VALUE</i>
+</pre>
+</div>
+<div class="Pp"></div>
+The files are 'sourced' by <b>bash</b>, so spaces are not permitted either side
+  of '='. Lines starting with '#' and empty lines are ignored. Assigned values
+  may optionally be enclosed in single or double quotes. The strings %REPO%,
+  %SLACKVER% and %ARCH% are automatically replaced by the repo ID, Slackware
+  version, and arch, respectively.
+<div class="Pp"></div>
+Any values specified in the configuration files are overridden by environment
+  variables or control arguments on the <b>slackrepo</b> command line. Values
+  specified in <i>~/.slackreporc</i> and <i>~/.genreprc</i> override values
+  specified in <i>/etc/slackrepo/slackrepo_ID.conf</i>.
+<div class="Pp"></div>
+Note that all the examples below show the values that are set in the supplied
+  configuration file for the <b>SBo</b> (SlackBuilds.org) repository ID.
+<h2 class="Ss" title="Ss" id="Default_repo_ID_and_configuration_directory"><a class="selflink" href="#Default_repo_ID_and_configuration_directory">Default
+  repo ID and configuration directory</a></h2>
+The following configuration variables can be set only in <i>~/.slackreporc</i>.
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>REPO</b></dt>
+  <dd class="It-tag">The default repo ID. This determines the configuration file
+      <i>slackrepo_ID.conf</i> from which other configuration variables will be
+      read. This variable can be set only in <i>~/.slackreporc</i>, but can be
+      overridden by the REPO environment variable or by the command line option
+      <b>--repo=ID</b>.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+REPO=&quot;SBo&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>CONFIGDIR</b></dt>
+  <dd class="It-tag">The configuration directory. This specifies an alternative
+      directory to be used instead of <i>/etc/slackrepo</i> to find the
+      configuration files. This variable can be set only in
+      <i>~/.slackreporc</i>, but can be overridden by the CONFIGDIR environment
+      variable.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+CONFIGDIR=&quot;/etc/slackrepo&quot;
+    </pre>
+  </dd>
+</dl>
+<h2 class="Ss" title="Ss" id="Repository_filestore_locations"><a class="selflink" href="#Repository_filestore_locations">Repository
+  filestore locations</a></h2>
+The following configuration variables determine repository filestore locations.
+  These variables can be set in <i>~/.slackreporc</i> or
+  <i>/etc/slackrepo/slackrepo_ID.conf</i>, or can be overridden by environment
+  variables.
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>SBREPO</b></dt>
+  <dd class="It-tag">Filestore location of the local SlackBuilds
+    repository.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+SBREPO=&quot;/var/lib/slackrepo/%REPO%/slackbuilds&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>SRCREPO</b></dt>
+  <dd class="It-tag">Where to store cached sources. (You will need plenty of
+      space.)</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+SRCREPO=&quot;/var/lib/slackrepo/%REPO%/source&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>PKGREPO</b></dt>
+  <dd class="It-tag">Filestore location of the local package repository, i.e.,
+      where to store built packages. (You will need plenty of space.)</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+PKGREPO=&quot;/var/lib/slackrepo/%REPO%/packages&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">If you intend to use the package repository with slackpkg+,
+      you may wish to change this path or symlink it to a location accessible by
+      a local web server (e.g., somewhere under <i>/var/www/htdocs/</i>).</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>PKGBACKUP</b></dt>
+  <dd class="It-tag">Where to keep backups. (You will need plenty of
+    space.)</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+PKGBACKUP=&quot;/var/lib/slackrepo/%REPO%/backups/%SLACKVER%/%ARCH%&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">You can disable backups by commenting out or deleting this
+      line.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>HINTDIR</b></dt>
+  <dd class="It-tag">Where to find locally written hintfiles for this
+      repository.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+HINTDIR=&quot;/etc/slackrepo/%REPO%/hintfiles&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>DEFAULT_HINTDIR</b></dt>
+  <dd class="It-tag">Where to find system-provided default hintfiles (these come
+      in a separate slackrepo-hints package).</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+DEFAULT_HINTDIR=&quot;/etc/slackrepo/%REPO%/default_hintfiles/%SLACKVER%&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">You can disable all the default hintfiles for this
+      repository by commenting out or deleting this line.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>LOGDIR</b></dt>
+  <dd class="It-tag">Where to store log files.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+LOGDIR=&quot;/var/log/slackrepo/%REPO%&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>DATABASE</b></dt>
+  <dd class="It-tag">Where to keep the database for this repository.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+DATABASE=&quot;/var/lib/slackrepo/%REPO%/database_%REPO%_%ARCH%.sqlite3&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>TMP</b></dt>
+  <dd class="It-tag">Where to store temporary files. (You will need plenty of
+      space.)</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+TMP=&quot;/tmp/%REPO%&quot;
+    </pre>
+  </dd>
+</dl>
+<h2 class="Ss" title="Ss" id="Building_packages"><a class="selflink" href="#Building_packages">Building
+  packages</a></h2>
+The following configuration variables affect the building of packages. These
+  variables can be set in <i>~/.slackreporc or</i>
+  <i></i><i>/etc/slackrepo/slackrepo_ID.conf</i>, or can be overridden by
+  environment variables.
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>SUBSTITUTE</b></dt>
+  <dd class="It-tag">A space-separated list of dependency substitutions applied
+      to all SlackBuilds in this repository. Substitution of X by Y is written
+      as <b>X=&gt;Y</b>. Deletion of X is written as <b>!X</b>. Spaces and
+      commas can be added for readability.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+SUBSTITUTE=&quot;jdk =&gt; openjdk, jack_audio_connection_kit =&gt; jack2&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>NUMJOBS</b></dt>
+  <dd class="It-tag">Number of make jobs to set in MAKEFLAGS (e.g., '-j2').
+      Leave blank to have this dynamically controlled according to the number of
+      processors on the build host and the current load average.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+NUMJOBS=''
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>ARCH</b></dt>
+  <dd class="It-tag">Arch for built packages. Leave this blank to have the arch
+      automatically determined by the build host.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+ARCH=''
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>TAG</b></dt>
+  <dd class="It-tag">Tag for built packages. If you are publishing packages from
+      SlackBuilds.org, please change <b>SBo</b> to something else (see
+      SlackBuilds.org FAQ, item 20).</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+TAG=&quot;_SBo&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>PKGTYPE</b></dt>
+  <dd class="It-tag">Package compression type. This can be <b>tgz</b> (gzip
+      compressed), <b>txz</b> (xz), <b>tbz</b> (bzip2), or <b>tlz</b>
+    (lzma).</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+PKGTYPE=&quot;tgz&quot;
+    </pre>
+  </dd>
+</dl>
+<h2 class="Ss" title="Ss" id="Defaults_for_control_arguments"><a class="selflink" href="#Defaults_for_control_arguments">Defaults
+  for control arguments</a></h2>
+The configuration variables <b>VERBOSE</b>, <b>VERY_VERBOSE</b>, <b>DRY_RUN</b>,
+  <b>INSTALL</b>, <b>CHROOT</b>, <b>LINT</b>, <b>KEEP_TMP</b>, <b>COLOR</b>,
+  <b>NICE</b> and <b>NOWARNING</b> set the defaults for slackrepo's command line
+  control arguments. These variables can be set in <i>~/.slackreporc or
+  </i><i>/etc/slackrepo/slackrepo_ID.conf</i>.
+<div class="Pp"></div>
+Examples:
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">
+    <pre>
 VERBOSE='n'
 VERY_VERBOSE='n'
 DRY_RUN='n'
@@ -313,223 +367,326 @@ LINT='n'
 KEEP_TMP='n'
 COLOR='auto'
 NICE='5'
-</pre>
-&lt;/blockquote&gt;
-
-
-<a name="7">
-<h4>&nbsp; &nbsp; Calling gen_repos_files.sh</h4>
-</a>
-<blockquote>
-<p>The following configuration variables relate to the optional use of
-gen_repos_files.sh.  They can be set in <i>~/.slackreporc</i> or
-<i>/etc/slackrepo/slackrepo_ID.conf</i>, or can be overridden by environment variables.
-</p>
-<p>
-<table cellpadding="3">
-<tbody><tr valign="top"><td colspan="2">
-<b>USE_GENREPOS</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Whether to use
-<i>gen_repos_files.sh</i>. For
-<b>SBo</b>, the value supplied is
-<b>0</b> (disabled). To enable it, change this to
-<b>1</b>, for example:
-<pre>USE_GENREPOS=0</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>REPOSROOT="$PKGREPO"</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Don't change this! it is needed so gen_repos_files.sh can find your package
-repository.
-</td></tr>
-<tr><td colspan="2">
+NOWARNING=''
+    </pre>
+  </dd>
+</dl>
+<h2 class="Ss" title="Ss" id="Calling_gen_repos_files.sh"><a class="selflink" href="#Calling_gen_repos_files.sh">Calling
+  gen_repos_files.sh</a></h2>
+The following configuration variables relate to the optional use of
+  gen_repos_files.sh. They can be set in <i>~/.slackreporc or</i>
+  <i></i><i>/etc/slackrepo/slackrepo_ID.conf</i>, or can be overridden by
+  environment variables.
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>USE_GENREPOS</b></dt>
+  <dd class="It-tag">Whether to use <i>gen_repos_files.sh</i>. For <b>SBo</b>,
+      the value supplied is <b>0</b> (disabled). To enable it, change this to
+      <b>1</b>.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+USE_GENREPOS=0
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>REPOSROOT=&quot;$PKGREPO&quot;</b></dt>
+  <dd class="It-tag">Don't change this! it is needed so gen_repos_files.sh can
+      find your package repository.</dd>
+</dl>
+<div class="Pp"></div>
 The following gen_repos_files.sh configuration variables can be set in
-<i>~/.genreprc</i>,
-<i>~/.slackreporc</i>, or
-<i>/etc/slackrepo/slackrepo_ID.conf</i>, or can be overridden by environment variables.
-</td></tr>
-<tr><td colspan="2">
-If USE_GENREPOS is enabled, you must review and set correct values
-for all these variables - the default values will not be sufficient.
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>REPOSOWNER</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Repository maintainer, for example:
-<pre>REPOSOWNER="Local administrator &lt;root@localhost&gt;"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>REPOSOWNERGPG</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-The GPG key for the repository owner can contain a different string than
-the value of $REPOSOWNER . If you leave $REPOSOWNERGPG empty, the script will
-use the value you've set for $REPOSOWNER instead to search the GPG keyfile, for example:
-<pre>REPOSOWNERGPG=""</pre>
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>DL_URL</b> </td><td valign="bottom">
-Under what URL is the repository accessible, for example:
-<pre>DL_URL="http://localhost/pkgrepo/%REPO%/%SLACKVER%/%ARCH%"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>RSS_TITLE</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-The title of the generated RSS feed, for example:
-<pre>RSS_TITLE="Local SlackBuild Packages"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>RSS_ICON</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-The logo picture used for the RSS feed, for example:
-<pre>RSS_ICON="http://www.slackware.com/~alien/graphics/blueorb.png"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>RSS_LINK</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-The URL linked to when clicking on the logo, for example:
-<pre>RSS_LINK="file://$REPOSROOT/ChangeLog.txt"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>RSS_CLURL</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-URL to the full ChangeLog.txt, for example:
-<pre>RSS_CLURL="file://$REPOSROOT/ChangeLog.txt"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>RSS_DESCRIPTION</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-The descriptive text for the RSS feed, for example:
-<pre>RSS_DESCRIPTION="Local SlackBuild Packages"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>RSS_FEEDMAX</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Maximum number of RSS feed entries to display, for example:
-<pre>RSS_FEEDMAX=15</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>RSS_UUID</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-The RSS generator must use a unique feed identifier.
-Generate one for your feed by using the string returned by "uuidgen -t".
-Example:
-<pre>RSS_UUID=""</pre>
-</td></tr>
-<tr valign="top"><td nowrap="nowrap" width="6%">
-<b>GPGBIN</b> </td><td valign="bottom">
-Either use gpg or gpg2, for example:
-<pre>GPGBIN="/usr/bin/gpg"</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>USE_GPGAGENT</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Optionally use gpg-agent to cache the gpg passphrase instead of letting the
-script keep it in the environment (note that if you define USE_GPGAGENT=1
-but gpg-agent is not running, you will get prompted for a passphrase every
-single time gpg runs).
-For example:
-<pre>USE_GPGAGENT=0</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>FOR_SLAPTGET</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Generate slack-requires, slack-suggests, and slack-conflicts lines in the
-metadata files by setting FOR_SLAPTGET to "1" &mdash; these are used by slapt-get.
-Example:
-<pre>FOR_SLAPTGET=0</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>FOLLOW_SYMLINKS</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-Follow symlinks in case the repository has symlinks like 14.0 -&gt; 13.37
-indicating that one package works for those two Slackware releases.
-If the script does <em>not</em> follow symlinks, then the symlinks will appear in
-the repository listing instead of the packages they point to.
-Example:
-<pre>FOLLOW_SYMLINKS=1</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>REPO_SUBDIRS</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-If the repository has separate package subdirectories (for separate
-Slackware releases or architectures) then define them here.
-Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of them.
-Example:
-<pre>REPO_SUBDIRS=""</pre>
-</td></tr>
-<tr valign="top"><td colspan="2">
-<b>REPO_EXCLUDES</b> </td></tr><tr valign="top"><td width="6%">&nbsp;</td><td>
-If you want to exclude certain directories or files from being included
-in the repository metadata, define them here (space-separated).
-Example:
-<pre>REPO_EXCLUDES=".revision"</pre>
-</td></tr>
-<tr></tr></tbody></table>
-</p>
-</blockquote>
-
-
-<a name="8">
-<h4>&nbsp; &nbsp; Initial setup</h4>
-</a>
-<blockquote>
-<p>The following configuration variables determine how the SlackBuilds
-repository will be created if it does not already exist.
-These variables are set in
-<i>/etc/slackrepo/slackrepo_ID.conf</i>. Normally, they are only used the first time that
-<b>slackrepo</b> is run.
-<table cellpadding="3"><tbody>
-<tr></tr>
-<tr></tr>
-<tr valign="top"><td colspan="2"><b>INIT_GITCLONE</b> </td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td><td>
-The remote git repository to be cloned. For example:
-<pre>INIT_GITCLONE='git://slackbuilds.org/slackbuilds'</pre>
-</td></tr>
-<tr valign="top"><td colspan="2"><b>INIT_GITBRANCH</b> </td></tr>
-<tr valign="top"><td width="6%">&nbsp;</td><td>
-The local git branch to be created, tracking the remote branch of the
-same name. For example:
-<pre>INIT_GITBRANCH='%SLACKVER%'</pre>
-</td></tr>
-<tr></tr>
-</tbody></table>
-</p>
-</blockquote>
-
-
-<a name="9">
-<h4>&nbsp; &nbsp; Environment variables</h4>
-</a>
-<blockquote>
-<p>The slackrepo configuration file can be a useful place to set environment variables for the build process.
-You can simply add export commands at the end of the configuration file.<p>
-<p>For example, you can add the following commands to compile everything with clang instead of gcc 
-(but please note, there are a few packages do not build correctly with clang).</p>
-<pre>
+  <i>~/.genreprc</i>, <i>~/.slackreporc</i>, or
+  <i>/etc/slackrepo/slackrepo_ID.conf</i>, or can be overridden by environment
+  variables.
+<div class="Pp"></div>
+If USE_GENREPOS is enabled, you must review and set correct values for all these
+  variables - the default values will not be sufficient.
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>REPOSOWNER</b></dt>
+  <dd class="It-tag">Repository maintainer.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+REPOSOWNER=&quot;Local administrator &lt;root@localhost&gt;&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>REPOSOWNERGPG</b></dt>
+  <dd class="It-tag">The GPG key for the repository owner can contain a
+      different string than the value of $REPOSOWNER . If you leave
+      $REPOSOWNERGPG empty, the script will use the value you've set for
+      $REPOSOWNER instead to search the GPG keyfile.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+REPOSOWNERGPG=&quot;&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>DL_URL</b></dt>
+  <dd class="It-tag">Under what URL is the repository accessible.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+DL_URL=&quot;http://localhost/pkgrepo/%REPO%/%SLACKVER%/%ARCH%&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>RSS_TITLE</b></dt>
+  <dd class="It-tag">The title of the generated RSS feed.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+RSS_TITLE=&quot;Local SlackBuild Packages&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>RSS_ICON</b></dt>
+  <dd class="It-tag">The logo picture used for the RSS feed.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+RSS_ICON=&quot;http://www.slackware.com/~alien/graphics/blueorb.png&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>RSS_LINK</b></dt>
+  <dd class="It-tag">The URL linked to when clicking on the logo.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+RSS_LINK=&quot;file://$REPOSROOT/ChangeLog.txt&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>RSS_CLURL</b></dt>
+  <dd class="It-tag">URL to the full ChangeLog.txt.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+RSS_CLURL=&quot;file://$REPOSROOT/ChangeLog.txt&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>RSS_DESCRIPTION</b></dt>
+  <dd class="It-tag">The descriptive text for the RSS feed.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+RSS_DESCRIPTION=&quot;Local SlackBuild Packages&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>RSS_FEEDMAX</b></dt>
+  <dd class="It-tag">Maximum number of RSS feed entries to display.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+RSS_FEEDMAX=15
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>RSS_UUID</b></dt>
+  <dd class="It-tag">The RSS generator must use a unique feed identifier.
+      Generate one for your feed by using the string returned by &quot;uuidgen
+      -t&quot;.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+RSS_UUID=&quot;e8dc1000-8e8a-11e7-b78d-001e4fb494b2&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>GPGBIN</b></dt>
+  <dd class="It-tag">Either use gpg or gpg2.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+GPGBIN=&quot;/usr/bin/gpg&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>USE_GPGAGENT</b></dt>
+  <dd class="It-tag">Optionally use gpg-agent to cache the gpg passphrase
+      instead of letting the script keep it in the environment (note that if you
+      define USE_GPGAGENT=1 but gpg-agent is not running, you will get prompted
+      for a passphrase every single time gpg runs).</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+USE_GPGAGENT=0
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>FOR_SLAPTGET</b></dt>
+  <dd class="It-tag">Generate slack-requires, slack-suggests, and
+      slack-conflicts lines in the metadata files by setting FOR_SLAPTGET to
+      &quot;1&quot; -- these lines are used by the slapt-get package
+    manager.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+FOR_SLAPTGET=0
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>FOLLOW_SYMLINKS</b></dt>
+  <dd class="It-tag">Follow symlinks in case the repository has symlinks like
+      14.0 -&gt; 13.37 indicating that one package works for those two Slackware
+      releases. If the script does _not_ follow symlinks, then the symlinks will
+      appear in the repository listing instead of the packages they point
+    to.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+FOLLOW_SYMLINKS=1
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>REPO_SUBDIRS</b></dt>
+  <dd class="It-tag">If the repository has separate package subdirectories (for
+      separate Slackware releases or architectures) then define them here.
+      Separate FILELIST.TXT, MANIFEST etc.. files will be created for all of
+      them.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+REPO_SUBDIRS=&quot;&quot;
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>REPO_EXCLUDES</b></dt>
+  <dd class="It-tag">If you want to exclude certain directories or files from
+      being included in the repository metadata, define them here
+      (space-separated).</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+REPO_EXCLUDES=&quot;.htaccess&quot;
+    </pre>
+  </dd>
+</dl>
+<h2 class="Ss" title="Ss" id="Initial_setup"><a class="selflink" href="#Initial_setup">Initial
+  setup</a></h2>
+The following configuration variables determine how the SlackBuilds repository
+  will be created if it does not already exist. These variables are set in
+  <i>/etc/slackrepo/slackrepo_ID.conf</i>. Normally, they are only used when
+  <b>slackrepo</b> is run for the first time in an empty repository.
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>INIT_GITCLONE</b></dt>
+  <dd class="It-tag">The remote git repository to be cloned.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+INIT_GITCLONE='git://git.slackbuilds.org/slackbuilds'
+    </pre>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"><b>INIT_GITBRANCH</b></dt>
+  <dd class="It-tag">The local git branch to be created, tracking the remote
+      branch of the same name.</dd>
+</dl>
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">Example:
+    <pre>
+INIT_GITBRANCH='%SLACKVER%'
+    </pre>
+  </dd>
+</dl>
+<h2 class="Ss" title="Ss" id="Environment_variables"><a class="selflink" href="#Environment_variables">Environment
+  variables</a></h2>
+The slackrepo configuration file can be a useful place to set environment
+  variables for the build process. You can simply add export commands at the end
+  of the configuration file.
+<div class="Pp"></div>
+For example, you can add the following commands to compile everything with clang
+  instead of gcc (but please note, there are a few packages do not build
+  correctly with clang).
+<dl class="Bl-tag">
+  <dt class="It-tag"></dt>
+  <dd class="It-tag">
+    <pre>
 export CC=clang
 export CXX=clang++
-</pre>
-&lt;/blockquote&gt;
+    </pre>
+  </dd>
+</dl>
+<h1 class="Sh" title="Sh" id="SEE_ALSO"><a class="selflink" href="#SEE_ALSO">SEE
+  ALSO</a></h1>
+<b>slackrepo(8)</b>, <b>slackrepo.hint(5)</b>, <b>installpkg(8)</b>,
+  <b>upgradepkg(8)</b>, <b>removepkg(8)</b>, <b>pkgtool(8)</b>,
+  <b>slackpkg(8)</b>.</div>
+<table class="foot">
+  <tr>
+    <td class="foot-date">2017-09-01</td>
+    <td class="foot-os">slackrepo-0.3</td>
+  </tr>
+</table>
 
-
-<a name="10">
-<h3>SEE ALSO</h3>
-</a>
-<blockquote>
-<a href="slackrepo.8.html">slackrepo(8)</a>,
-<a href="slackrepo.hint.5.html">slackrepo.hint(5)</a>,
-installpkg(8),
-upgradepkg(8),
-removepkg(8),
-pkgtool(8),
-slackpkg(8).
-</blockquote>
-<p></p>
-
-
-<hr />
-<table width="100%"><tbody>
-<tr> <td width="33%"><i>slackrepo-0.2.0</i></td> <td align="center" width="33%">SLACKREPO.CONF (5)</td> <td align="right" width="33%"><i>2015-05-01</i></td> </tr>
-</tbody></table>
-
-&lt;/div&gt;
-</p></p></blockquote></p></p></blockquote></p></p></blockquote></div>
+</div>
 
   </div>
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-08-27 20:50:46
+    </p>
   </div>
 </footer>
 

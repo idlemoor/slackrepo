@@ -41,13 +41,13 @@
         
         <br class="not-when-small" />
 <a class="site-nav-link" href="/slackrepo/doc/usage.html">Usage&nbsp;notes</a>
-<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/faq.html">FAQ</a>
+<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
-<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 <a class="site-nav-link" href="/slackrepo/doc/structure.html">Repo&nbsp;structure</a>
 <a class="site-nav-link" href="/slackrepo/doc/checks.html">Checks</a>
 <a class="site-nav-link" href="/slackrepo/doc/links.html">Links</a>
+<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 
         
       </div>
@@ -59,18 +59,32 @@
   <div class="wrapper">
     <h1 id="lint-checks">Lint checks</h1>
 
-<p>The following checks are performed by the <code>lint</code> command, and by the
+<p>These checks are performed by the <code>lint</code> command, and by the
 <code>build</code>, <code>rebuild</code> and <code>update</code>
 commands if the <code>--lint</code> control argument is specified.
 When any checks fail, warnings are displayed and logged, but building continues.</p>
 
-<h3 id="prgnamslackbuild">prgnam.SlackBuild</h3>
+<p>There are six groups of checks that can be specified by the LINT configuration
+variable or the –lint control argument:</p>
+
+<ul>
+  <li><b>sb</b> for the SlackBuild files,</li>
+  <li><b>dl</b> for the download URLs,</li>
+  <li><b>x</b> to prevent access to the X GUI during the build,</li>
+  <li><b>net</b> to prevent access to the network during the build,</li>
+  <li><b>pkg</b> to check the package name, format and contents, and</li>
+  <li><b>inst</b> to temporarily install the package</li>
+</ul>
+
+<h3 id="sb-check">‘sb’ check</h3>
+
+<h5 id="prgnamslackbuild">prgnam.SlackBuild</h5>
 
 <ul>
   <li>Should exist</li>
 </ul>
 
-<h3 id="slack-desc">slack-desc</h3>
+<h5 id="slack-desc">slack-desc</h5>
 
 <ul>
   <li>Should exist</li>
@@ -78,27 +92,48 @@ When any checks fail, warnings are displayed and logged, but building continues.
   <li>If the handy-ruler exists, it must be aligned correctly and have the correct format</li>
   <li>No trailing spaces on <code>prgnam:</code> lines, i.e. no lines should match <code>^prgnam:&lt;sp&gt;&lt;sp&gt;*$</code></li>
   <li>No <code>prgnam:</code> lines should have more than 73 chars of description</li>
-  <li>All other lines must be prefixed by <code>#</code>, or completely empty</li>
+  <li>All other lines must be prefixed by <code>#</code>, or be completely empty</li>
 </ul>
 
-<h3 id="prgnaminfo">prgnam.info</h3>
+<h5 id="prgnaminfo">prgnam.info</h5>
 
 <ul>
   <li>Optional; its existence indicates an SBo-style SlackBuild</li>
   <li>Should define PRGNAM, VERSION, HOMEPAGE, DOWNLOAD(_arch), MD5SUM(_arch), REQUIRES, MAINTAINER, EMAIL</li>
-  <li>Download URLs should work; to check this, the header is retrieved</li>
   <li>PRGNAM should be the same as the .info file’s name and the .SlackBuild file’s name</li>
   <li>Each item defined in REQUIRES should exist in the repo</li>
 </ul>
 
-<h3 id="readme">README</h3>
+<h5 id="readme">README</h5>
 
 <ul>
   <li>Optional; if prgnam.info exists, README should exist</li>
   <li>Should not contain long lines &gt;= 80 chars</li>
 </ul>
 
-<h3 id="package-name">Package name</h3>
+<h3 id="dl-check">‘dl’ check</h3>
+
+<ul>
+  <li>Download URLs should work; to check this, the header is retrieved</li>
+  <li>If the file is already in the source repository, the file size reported in the
+header should be the same as the size of the file in the source repository</li>
+</ul>
+
+<h3 id="x-check">‘x’ check</h3>
+
+<ul>
+  <li>The package should build with no X display</li>
+</ul>
+
+<h3 id="net-check">‘net’ check</h3>
+
+<ul>
+  <li>The package should not download anything or perform tests that need the network</li>
+</ul>
+
+<h3 id="pkg-check">‘pkg’ check</h3>
+
+<h5 id="package-name">Package name</h5>
 
 <ul>
   <li>Package name should be in form $PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE</li>
@@ -110,7 +145,7 @@ When any checks fail, warnings are displayed and logged, but building continues.
   <li>PKGTYPE should be tgz, txz, tbz or tlz (and should be as set by the caller)</li>
 </ul>
 
-<h3 id="package-contents">Package contents</h3>
+<h5 id="package-contents">Package contents</h5>
 
 <ul>
   <li>Should be tar-1.13 compatible (path prefix should not start with <code>./</code>)</li>
@@ -123,14 +158,20 @@ When any checks fail, warnings are displayed and logged, but building continues.
   <li>should install without error</li>
 </ul>
 
+<h3 id="inst-check">‘inst’ check</h3>
+
+<ul>
+  <li>installpkg should run without returning an error status or printing an error message</li>
+</ul>
+
   </div>
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-09-01 00:00:12
+    </p>
   </div>
 </footer>
 

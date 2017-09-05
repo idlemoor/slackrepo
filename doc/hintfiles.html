@@ -41,13 +41,13 @@
         
         <br class="not-when-small" />
 <a class="site-nav-link" href="/slackrepo/doc/usage.html">Usage&nbsp;notes</a>
-<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/faq.html">FAQ</a>
+<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
-<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 <a class="site-nav-link" href="/slackrepo/doc/structure.html">Repo&nbsp;structure</a>
 <a class="site-nav-link" href="/slackrepo/doc/checks.html">Checks</a>
 <a class="site-nav-link" href="/slackrepo/doc/links.html">Links</a>
+<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 
         
       </div>
@@ -70,26 +70,28 @@ but all the variables are <strong>optional</strong>, and any unrecognised variab
 <strong>ignored</strong>. Most SlackBuilds do not need hintfiles, and most
 hintfiles will only have one or two variables. The variables you can set are as follows:</p>
 
-<div class="highlighter-rouge"><pre class="highlight"><code>OPTIONS="OPT1=yes OPT2=no ..."
+<pre>
+OPTIONS="OPT1=yes OPT2=no ..."
 ADDREQUIRES="additional dependencies"
+DELREQUIRES="dependencies to ignore"
 GROUPADD="gid:groupname ..."
 USERADD="uid:username[:controlargs...] ..."
 VERSION="newversion"
 DOWNLOAD="new urls"
 MD5SUM="new md5sums"
 SHA256SUM="sha256sum"
-DOWNLOAD_&lt;i&gt;arch&lt;/i&gt;="new urls"
-MD5SUM_&lt;i&gt;arch&lt;/i&gt;="new md5sums"
-SHA256SUM_&lt;i&gt;arch&lt;/i&gt;="sha256sum"
+DOWNLOAD_<i>arch</i>="new urls"
+MD5SUM_<i>arch</i>="new md5sums"
+SHA256SUM_<i>arch</i>="sha256sum"
 SKIP="yesno"
 ARCH="arch"
 INSTALL="yesno"
 NUMJOBS="-j1"
+NOWARNING="Extended RE"
 ANSWERS="strings"
 CLEANUP="commands"
 PRAGMA="pragmas"
-</code></pre>
-</div>
+</pre>
 
 <p>Each repository has two directories for hintfiles: one for your own local hintfiles,
 and one for system-supplied default hintfiles. For the SBo repository, your own directory is
@@ -112,11 +114,12 @@ put your own hintfiles in <code>/etc/slackrepo/SBo/hintfiles/</code>.</p>
 
 <p>Your own local hintfiles override the default hintfiles.</p>
 
-<p>The default hintfiles will be updated every time you upgrade slackrepo.</p>
+<p>The default hintfiles will be updated every time you upgrade the
+<b>slackrepo-hints</b> package.</p>
 
 <p>If you don’t want to use the default hintfiles, you can disable them completely
 by setting the variable DEFAULT_HINTDIR to null or commenting it out
-in the configuration file.</p>
+in the configuration file, or by not installing the <b>slackrepo-hints</b> package.</p>
 
 <h3 id="optionsopt1yes-opt2no-">OPTIONS=”OPT1=yes OPT2=no …”</h3>
 
@@ -127,9 +130,11 @@ in the configuration file.</p>
 <p>To specify the optional requirements that are described in the SlackBuild’s README file,
 you should set this variable to a list of dependencies, separated by spaces.
 Dependencies in this list will be added to the dependencies in
-the REQUIRES= list defined in the SlackBuild’s .info file.
-If the .info file specifies %README%, you should set this hint
-(possibly with an empty value) to stop slackrepo displaying a warning.</p>
+the REQUIRES= list defined in the SlackBuild’s .info file.</p>
+
+<h3 id="delrequiresdependencies-to-ignore">DELREQUIRES=”dependencies to ignore”</h3>
+
+<p>To ignore dependencies in the REQUIRES= list, use this variable.</p>
 
 <h3 id="groupaddgidgroupname-">GROUPADD=”gid:groupname …”</h3>
 
@@ -182,9 +187,7 @@ reliable (for example, because of an unversioned archive) and should not be chec
 
 <p>This hint specifies an sha256sum that will be checked (in addition to any md5sum).</p>
 
-<h3 id="download_archnew-urls">DOWNLOAD_arch=”new urls”</h3>
-<p><br />MD5SUM_arch=”new md5sums”
-<br />SHA256SUM_arch=”sha256sums”</p>
+<h3 id="download_archnew-urlsmd5sum_archnew-md5sumssha256sum_archsha256sums">DOWNLOAD_<i>arch</i>=”new urls”<br />MD5SUM_<i>arch</i>=”new md5sums”<br />SHA256SUM_<i>arch</i>=”sha256sums”</h3>
 
 <p>These hints redefine DOWNLOAD and MD5SUM, and specify SHA256SUM, as above, for the specified arch.</p>
 
@@ -210,14 +213,23 @@ SlackBuilds that repackage binaries.</p>
 <p>This hint temporarily overrides the value of INSTALL given in the
 configuration file or on the command line. Use this hint if you want a specific
 package to be installed after it has been built (e.g. nvidia-driver). Note that
-if the control argument –dry-run is specified, this hint will be ignored.</p>
+if the control argument <code>--dry-run</code> is specified, this hint will be ignored.</p>
 
 <h3 id="numjobs-j1">NUMJOBS=”-j1”</h3>
 
 <p>This hint temporarily overrides the value of NUMJOBS given in the
 configuration file or environment.  Use this hint if the build process fails
 when multiple ‘make’ jobs are used, so that the build will be executed with
-MAKEFLAGS=’-j1’.</p>
+MAKEFLAGS=”-j1”.</p>
+
+<h3 id="nowarningextended-re">NOWARNING=”Extended RE”</h3>
+
+<p>This hint suppresses slackrepo warnings that match the specified extended regular
+expression. Multiple warnings can be suppressed by using a suitable expression,
+for example:</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>NOWARNING="(Nonstandard directories|Unexpected owner/group)"
+</code></pre>
+</div>
 
 <h3 id="cleanupcommands">CLEANUP=”commands”</h3>
 
@@ -247,17 +259,34 @@ will make the build process happy. Newlines can be specified as \n, for example
 <strong>Pragmas are not guaranteed to work!</strong>
 The following pragmas are available:</p>
 
+<p><b>python3</b>
+— force python3 support: add python3 to the dependencies,
+set the PYTHON3=”yes” option, and if necessary patch the SlackBuild to support python3.</p>
+
+<p><b>kernelmodule</b> and <b>kernel</b>
+— rebuild when the build host’s kernel is upgraded; kernelmodule also causes
+depmod be run when the package is uninstalled.</p>
+
 <p><b>multilib_ldflags</b>
 — on a <a class="ext" href="http://docs.slackware.com/slackware:multilib">multilib</a> host,
 attempt to patch the SlackBuild to specify LDFLAGS, as described in
 <a class="ext" href="https://slackbuilds.org/faq/#multilib">SlackBuilds.org FAQ 18</a>.</p>
 
+<p><b>wget</b> or <b>curl</b>
+— download with a fake wget or curl user agent string</p>
+
 <p><b>download_basename</b>
 — provide a symlink for source downloads using the URL’s basename,
 for the benefit of SlackBuilds that don’t expect content-disposition to be respected.</p>
 
+<p><b>need_net</b> and <b>need_X</b>
+— do not block the network and the X display when building</p>
+
+<p><b>x86arch=<i>arch</i></b>
+— when building on 32 bit x86, set the ARCH to <i>arch</i></p>
+
 <p><b>noexport_ARCH</b> and <b>noexport_BUILD</b> and <b>noexport_TAG</b>
-— Set ARCH or BUILD or TAG by patching the SlackBuild instead of exporting
+— set ARCH or BUILD or TAG by patching the SlackBuild instead of exporting
 it to the environment.</p>
 
 <p><b>unset_ARCH</b>
@@ -265,7 +294,8 @@ it to the environment.</p>
 Other variables can be specified, for example <code>PRAGMA="unset_DISTCC_HOSTS"</code></p>
 
 <p><b>noremove</b>
-— do not remove (uninstall) packages before building the item. This is particularly useful for gcc, glibc, etc.</p>
+— do not remove (uninstall) packages before building the item.
+This is particularly useful for gcc, glibc, etc.</p>
 
 <p><b>nofakeroot</b>
 — override building the package as a non-root user with fakeroot.
@@ -287,10 +317,10 @@ control argument. Use this if you get the error message
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-09-01 00:00:12
+    </p>
   </div>
 </footer>
 

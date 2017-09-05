@@ -50,42 +50,52 @@
 
 <h2 id="slackrepo-03-september-2017">slackrepo-0.3, September 2017</h2>
 
-<p>The following new features and improvements have been added since slackrepo-0.2.0:</p>
+<p>The following new features and improvements have been added since the
+release of slackrepo-0.2.0. Thanks to Jeremy H., Andrzej T., Skaendo,
+Alexander V. and Andrew C. for their contributions.</p>
 
 <ul>
   <li><b>Default hintfiles have been moved to the <i>slackrepo-hints</i> package</b>,
 so you now need both <i>slackrepo</i> and <i>slackrepo-hints</i> if you use the
 default hintfiles (recommended).</li>
-  <li>Automatic download fallback to
+  <li>CPU, memory and disk space usage is recorded during builds. A summary is shown
+on the console if the build takes more than five minutes, and a log is created
+in the log directory.</li>
+  <li>The new <code>SUBSTITUTE</code> config file option allows you to set a global policy for replacing
+  dependencies in all builds, for example:
+  <br /><code>SUBSTITUTE="jdk =&gt; openjdk, jack_audio_connection_kit =&gt; jack2"</code></li>
+  <li>The new <code>DELREQUIRES</code> hint deletes a dependency (it’s the opposite of <code>ADDREQUIRES</code>).</li>
+  <li>The new ‘python3’ pragma gives you a single easy way to force python3 support,
+including SlackBuilds that automatically detect Python 3, SlackBuilds that need
+a <code>PYTHON3</code> option, and even to add Python 3 support into SlackBuilds that do not
+support it.</li>
+  <li>The new ‘kernelmod’ and ‘kernel’ pragmas enable automatic rebuilding of a package
+when the build system’s kernel is upgraded.</li>
+  <li>The new ‘x86arch’ pragma sets the correct arch for 32 bit binary repack SlackBuilds.</li>
+  <li>The new ‘curl’ and ‘wget’ pragmas select which command should be used for downloading.</li>
+  <li>If downloading from the normal URL fails, downloads now automatically fall back to both
 <a class="ext" href="http://slackware.uk/sbosrcarch/">sbosrcarch</a> and
-<a class="ext" href="https://sourceforge.net/projects/slackbuildsdirectlinks/">Slackbuilds Direct Links</a>
-if downloading from the upstream URL fails</li>
-  <li>Resource monitoring of CPU, memory and disk space during builds</li>
-  <li>Dependency hint improvements
-DELREQUIRES SUBSTITUTE BUILDTIME RUNTIME</li>
-  <li>‘python3’ pragma</li>
-  <li>New warnings</li>
-  <li>Warnings can be suppressed</li>
-  <li>--debug control argument is a quick way of setting --very-verbose --dry-run --lint --keep-tmp</li>
-  <li>Suboptions for the lint command and --lint control argument</li>
-  <li>‘kernelmod’ and ‘kernel’ pragmas for automatic rebuilding when the
-build system’s kernel version changes</li>
-  <li>Other new pragmas ‘x86arch’ to select the correct arch for 32 bit
-binary repack SlackBuilds; ‘curl’ and ‘wget’ for downloading from sites that
-inspect the user agent.</li>
-  <li>Experimental support for reproducible builds (set the config variable REPRODUCIBLE=’y’).</li>
+<a class="ext" href="https://sourceforge.net/projects/slackbuildsdirectlinks/">Slackbuilds Direct Links</a>.</li>
+  <li>The new <code>--debug</code> control argument is a quick way of setting
+<code>--very-verbose --dry-run --lint --keep-tmp</code></li>
+  <li>Some warnings have been revised and new warnings have been added, see <a href="/slackrepo/doc/checks.html">Lint checks</a> for details.</li>
+  <li>Warnings can be suppressed selectively for specific builds with the new ‘NOWARNING’ hint.</li>
+  <li>The <code>lint</code> command and <code>--lint</code> control argument now accept suboptions for doing checks selectively.</li>
+  <li>Experimental support for reproducible builds has been added (set the config variable <code>REPRODUCIBLE="y"<code>).</code></code></li>
 </ul>
+
+<p><img src="/slackrepo/img/xkcd.png" alt="xkcd1319 in practice" title="xkcd1319 in practice" style="display:block;" class="centred" /></p>
 
 <h2 id="slackrepo-020-may-2015">slackrepo-0.2.0, May 2015</h2>
 
 <ul>
   <li>Building in a dynamically created and destroyed chroot environment
 to keep your system absolutely clean, to detect bad builds and to speed up package uninstalls
-(this feature requires Linux kernel version 3.18 or newer with overlayfs, for example Slackware -current)</li>
+(this feature requires Linux kernel version 3.18 or newer with overlayfs)</li>
   <li>Building as a non-root user to detect bad builds and keep your system clean
-(the ‘fakeroot’ package, available from SlackBuilds.org) — see the <a href="/slackrepo/doc/faq.html">FAQ</a></li>
+(requires the ‘fakeroot’ package, available from SlackBuilds.org) — see the <a href="/slackrepo/doc/faq.html">FAQ</a></li>
   <li>Automatic download fallback to <a class="ext" href="https://sourceforge.net/projects/slackbuildsdirectlinks/">Slackbuilds Direct Links</a>
-if the original download has gone down</li>
+if downloading from the normal URL fails</li>
   <li>On Slackware -current, the default is to build from Matteo Bernardini’s forked
 <a class="ext" href="https://github.com/Ponce/slackbuilds">SBo repository for slackware-current</a> (--repo=ponce)</li>
   <li>Build time estimates are shown, using a database of known build times,
@@ -117,10 +127,10 @@ You can disable the default hintfiles by disabling the DEFAULT_HINTDIR configura
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-09-05 23:44:55
+    </p>
   </div>
 </footer>
 

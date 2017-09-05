@@ -41,13 +41,13 @@
         
         <br class="not-when-small" />
 <a class="site-nav-link" href="/slackrepo/doc/usage.html">Usage&nbsp;notes</a>
-<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/faq.html">FAQ</a>
+<a class="site-nav-link" href="/slackrepo/doc/config.html">Configuration</a>
 <a class="site-nav-link" href="/slackrepo/doc/hintfiles.html">Hintfiles</a>
-<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 <a class="site-nav-link" href="/slackrepo/doc/structure.html">Repo&nbsp;structure</a>
 <a class="site-nav-link" href="/slackrepo/doc/checks.html">Checks</a>
 <a class="site-nav-link" href="/slackrepo/doc/links.html">Links</a>
+<a class="site-nav-link" href="/slackrepo/man/">manpages</a>
 
         
       </div>
@@ -74,11 +74,11 @@ in the file <code>~/.slackreporc</code>.  By default, the default default is <b>
 <div class="highlighter-rouge"><pre class="highlight"><code>[REPO=SBo] /etc/slackrepo/slackrepo_SBo.conf
             |
 [SBREPO]    |--/var/lib/slackrepo/SBo/slackbuilds/category/prgnam/prgnam.SlackBuild
-[SRCREPO]   |--/var/lib/slackrepo/SBo/source/category/prgnam/prgnam-1.0.4.tar.gz
-[PKGREPO]   |--/var/lib/slackrepo/SBo/packages/14.2/i586/category/prgnam/prgnam-1.0.4-i586-1_SBo.tgz
-[PKGBACKUP] |--/var/lib/slackrepo/SBo/backups/14.2/i586/category/prgnam/prgnam-1.0.3-i586-1_SBo.tgz
+[SRCREPO]   |--/var/lib/slackrepo/SBo/source/category/prgnam/prgnam-1.4.tar.gz
+[PKGREPO]   |--/var/lib/slackrepo/SBo/packages/14.2/i586/category/prgnam/prgnam-1.4-i586-1_SBo.tgz
+[PKGBACKUP] |--/var/lib/slackrepo/SBo/backups/14.2/i586/category/prgnam/prgnam-1.3-i586-1_SBo.tgz
             |
-[DATABASE]  |--/var/lib/slackrepo/SBo/database_SBo.sqlite3
+[DATABASE]  |--/var/lib/slackrepo/SBo/database_SBo_i586.sqlite3
             |
 [HINTDIR]   |--/etc/slackrepo/SBo/hintfiles/[category/prgnam/]prgnam.hint
             |
@@ -89,8 +89,7 @@ in the file <code>~/.slackreporc</code>.  By default, the default default is <b>
 </div>
 
 <p>Under each of SBREPO, SRCREPO, PKGREPO, PKGBACKUP and LOGDIR is a subdirectory structure for each
-SBo category and item. In HINTDIR, the subdirectory structure is optional: this allows you
-to use your existing queuefile directory, if you have one.</p>
+SBo category and item. In HINTDIR, the subdirectory structure is optional.</p>
 
 <h2 id="package-repository-files">Package repository files</h2>
 
@@ -123,16 +122,17 @@ to use your existing queuefile directory, if you have one.</p>
   <li><code>package.lst</code> - a listing of the contents of the package</li>
   <li><code>package.meta</code> - package management information, for generating PACKAGES.TXT</li>
   <li><code>package.txt</code> - text description of the package (based on the slack-desc)</li>
+  <li><code>package.buildinfo</code> - (if enabled) experimental reproducible build information</li>
 </ul>
 
   </div>
 </div>
 <footer class="site-footer">
   <div class="wrapper">
-    <p>
-      Page last modified 2017-08-23 11:39:59
-    </p>
     
+    <p>
+      Page last modified 2017-08-31 13:52:25
+    </p>
   </div>
 </footer>
 

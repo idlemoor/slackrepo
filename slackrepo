@@ -42,7 +42,7 @@ function print_usage
   echo "  $(basename "$0") info    [--control_args]"
   echo 'Control args:'
   echo '  --repo=ID'
-  echo '  --dry-run | --install'
+  echo '  --preview | --dry-run | --install'
   echo '  --debug (-d)'
   echo 'For the complete usage and list of control args, please see'
   echo '  man slackrepo'
@@ -114,7 +114,7 @@ starttime=$(date +%s)
 
 # Initialise OPTIONLIST first so that any extended options are at the end
 OPTIONLIST=( 'REPO' 'VERBOSE' 'VERY_VERBOSE' 'NOWARNING' \
-  'DRY_RUN' 'INSTALL' 'LINT' 'KEEP_TMP' 'CHROOT' 'COLOR' 'NICE' 'REPRODUCIBLE' )
+  'PREVIEW' 'DRY_RUN' 'INSTALL' 'LINT' 'KEEP_TMP' 'CHROOT' 'COLOR' 'NICE' 'REPRODUCIBLE' )
 
 # Get the support functions
 LIBEXECDIR="/usr/libexec/$(basename "$0")"
@@ -389,7 +389,8 @@ done
 # Resolve conflicting options:
 # --very-verbose implies --verbose
 [ "$OPT_VERY_VERBOSE" = 'y' ] && OPT_VERBOSE='y'
-# --dry-run overrides --install
+# --preview or --dry-run overrides --install
+[ "$OPT_PREVIEW" = 'y' ] && OPT_INSTALL='n'
 [ "$OPT_DRY_RUN" = 'y' ] && OPT_INSTALL='n'
 # lazy implementation of --very-verbose ;-)
 [ "$OPT_VERY_VERBOSE" = 'y' ] && export VERBOSE=1 V=1
@@ -689,7 +690,43 @@ secs=$(( $(date +%s) - starttime ))
 h=$(( secs / 3600 )); m=$(( ( secs / 60) % 60 )); s=$(( secs % 60 ))
 log_normal "Runtime:     ${h}h ${m}m ${s}s"
 
-if [ "$OPT_DRY_RUN" = 'y' ]; then
+if [ "$OPT_PREVIEW" = 'y' ]; then
+  knownitems=( ${!STATUSINFO[@]} )
+  PENDINGLIST=()
+  totalbuildsecs=60  # always estimate at least 1 min ;-)
+  unknownbuildsecs=0
+  for i in ${knownitems[@]}; do
+    case "${STATUS[$i]}" in
+      ok|updated|skipped|unsupported|aborted)
+        : ;;
+      *)
+        PENDINGLIST+=( "$(printf '%s (%s)\n' "$i" "${STATUSINFO[$i]}")" )
+        estbuildsecs=''
+        read -r prevsecs prevmhz guessflag < <(db_get_buildsecs "$i")
+        if [ -n "$prevsecs" ] && [ -n "$prevmhz" ] && [ -n "$SYS_MHz" ]; then
+          estbuildsecs=$(echo "scale=3; ${prevsecs}*${prevmhz}/${SYS_MHz}+1" | bc | sed 's/\..*//')
+        fi
+        if [ -z "$estbuildsecs" ]; then
+          unknownbuildsecs=$(( unknownbuildsecs + 1 ))
+        else
+          totalbuildsecs=$(( totalbuildsecs + estbuildsecs ))
+        fi
+        ;;
+    esac
+  done
+  pendingcount="${#PENDINGLIST[@]}"
+  if [ "$pendingcount" != 0 ]; then
+    log_normal "Pending:     $pendingcount"
+    log_info "$(printf '  %s\n' "${PENDINGLIST[@]}" | sort)"
+    ((hr=${totalbuildsecs}/3600))
+    ((mn=(${totalbuildsecs}%3600)/60))
+    if [ "$unknownbuildsecs" = 0 ]; then
+      log_normal "Estimated build time ${hr}h ${mn}m"
+    else
+      log_normal "Estimated build time ${hr}h ${mn}m (+ $unknownbuildsecs unknown)"
+    fi
+  fi
+elif [ "$OPT_DRY_RUN" = 'y' ]; then
   OKLIST=( $(printf '%s\n' "${OKLIST[@]}" | sort -u) )
   okcount="${#OKLIST[@]}"
   if [ "$okcount" != 0 ]; then

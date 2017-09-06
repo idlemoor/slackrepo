@@ -16,7 +16,7 @@ function build_command
 # Build an item and all its dependencies
 # $1 = itemid
 # Return status:
-# 0 = build ok, or already up-to-date so not built, or dry run
+# 0 = build ok, or already up-to-date so not built, or preview, or dry run
 # 1 = build failed, or sub-build failed => abort parent, or any other error
 {
   [ -z "$1" ] && return 1
@@ -52,6 +52,29 @@ function build_command
         TODOLIST=( "$itemid" )
       fi
     fi
+  fi
+
+  if [ "${OPT_PREVIEW}" = 'y' ]; then
+    case "${STATUS[$itemid]}" in
+      ok)
+        log_important "$itemid is up-to-date (version ${INFOVERSION[$itemid]})." ;;
+      add)
+        log_important "$itemid would be added (version ${INFOVERSION[$itemid]})." ;;
+      update)
+        log_important "$itemid would be updated (version ${INFOVERSION[$itemid]})." ;;
+      rebuild)
+        log_important "$itemid would be rebuilt (version ${INFOVERSION[$itemid]})." ;;
+      remove)
+        log_important "$itemid would be removed (version ${INFOVERSION[$itemid]})." ;;
+      skipped)
+        log_important "$itemid would not be built." ;;
+      aborted|unsupported)
+        log_important "$itemid can not be built." ;;
+      *)
+        : ;;
+    esac
+    log_normal ""
+    return 0
   fi
 
   if [ "${#TODOLIST[@]}" = 0 ]; then
@@ -102,7 +125,7 @@ function build_command
         missingdeps=()
         for dep in ${DIRECTDEPS[$todo]}; do
           if [ "${STATUS[$dep]}" != 'ok' ] && [ "${STATUS[$dep]}" != 'updated' ]; then
-           missingdeps+=( "$dep" )
+            missingdeps+=( "$dep" )
           fi
         done
         if [ "${#missingdeps[@]}" = '0' ]; then
@@ -190,6 +213,8 @@ function revert_command
   # Check that there is something to revert.
   extramsg=''
   [ "$OPT_DRY_RUN" = 'y' ] && extramsg="[dry run]"
+  # preview is the same as dry run
+  [ "$OPT_PREVIEW" = 'y' ] && extramsg="[preview]" && OPT_DRY_RUN='y'
   if [ -z "$SR_PKGBACKUP" ]; then
     log_error "No backup repository configured -- please set PKGBACKUP in your config file"
     log_itemfinish "$itemid" 'failed' "$extramsg"
@@ -355,6 +380,8 @@ function remove_command
   else
     removeopt=''
     [ "$OPT_DRY_RUN" = 'y' ] && removeopt=' [dry run]'
+    # preview is the same as dry run
+    [ "$OPT_PREVIEW" = 'y' ] && removeopt=" [preview]" && OPT_DRY_RUN='y'
     log_itemstart "$itemid" "Removing $itemid$removeopt"
   fi
   # Log a comment if the packages don't exist
@@ -600,6 +627,7 @@ function info_command
   elif [ "$OPT_VERBOSE" = 'y' ]; then
     echo "  --verbose"
   fi
+  [      "$OPT_PREVIEW" = 'y' ] && echo "  --preview"
   [      "$OPT_DRY_RUN" = 'y' ] && echo "  --dry-run"
   [      "$OPT_INSTALL" = 'y' ] && echo "  --install"
   [        "$OPT_LINT" != 'n' ] && echo "  --lint=$OPT_LINT"

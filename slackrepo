@@ -296,7 +296,13 @@ SYS_NPROC=$(nproc)
 SYS_OVERLAYFS='n'
 # don't look at the kernel version -- somebody might have the old patchset,
 # or we might be in something like an OpenVZ instance
-[ -d /sys/module/overlay ] && SYS_OVERLAYFS='y'
+if \
+  [ -d /sys/module/overlay ] || \
+  [ -f /lib/modules/"$(uname -r)"/kernel/fs/overlayfs/overlay.ko ] || \
+  grep -q overlay /proc/filesystems
+then
+  SYS_OVERLAYFS='y'
+fi
 # Detect current
 SYS_CURRENT='n'
 if [ -f /var/lib/slackpkg/ChangeLog.txt ] && ! grep -q "${SYS_OSVER}.*is released" /var/lib/slackpkg/ChangeLog.txt; then

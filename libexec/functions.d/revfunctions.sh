@@ -469,6 +469,23 @@ function write_pkg_metadata
   local itemfile="${ITEMFILE[$itemid]}"
   local -a pkglist
 
+  # To support BUILDTIME deps (and potentially RUNTIME) we need another list of deps :(
+  if [ -n "${HINT_BUILDTIME[$itemid]}" ] && [ -n "${FULLDEPS[$itemid]}" ]; then
+    METADEPS=""
+    for trydep in ${FULLDEPS[$itemid]}; do
+      match='n'
+      for exclude in ${HINT_BUILDTIME[$itemid]}; do
+        case ${exclude##*/} in
+          ${trydep##*/}) match='y' ;;
+          *) : ;;
+        esac
+      done
+      [ "$match" = 'n' ] && METADEPS="$METADEPS $trydep"
+    done
+  else
+    METADEPS="${FULLDEPS[$itemid]}"
+  fi
+
   #-----------------------------#
   # Update database             #
   #-----------------------------#
@@ -562,8 +579,8 @@ EOF
     #-----------------------------#
 
     if [ ! -f "$dotdep" ]; then
-      if [ -n "${FULLDEPS[$itemid]}" ]; then
-        for dep in ${FULLDEPS[$itemid]}; do
+      if [ -n "$METADEPS" ]; then
+        for dep in $METADEPS; do
           printf "%s\n" "${dep##*/}" >> "$dotdep"
         done
       fi
@@ -604,13 +621,13 @@ EOF
       if [ "$SR_FOR_SLAPTGET" -eq 1 ]; then
 
         # slack-required
-        # from packaging dir, or extract from package, or synthesise it from DIRECTDEPS
+        # from packaging dir, or extract from package, or synthesise it from METADEPS
         if [ -f "$SR_TMP"/package-"$pkgnam"/install/slack-required ]; then
           SLACKREQUIRED=$(tr -d ' ' < "$SR_TMP"/package-"$pkgnam"/install/slack-required | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
         elif grep -q install/slack-required "$dotlst"; then
           SLACKREQUIRED=$(tar xf "$pkgpath" -O install/slack-required 2>/dev/null | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
-        elif [ -n "${DIRECTDEPS[$itemid]}" ]; then
-          SLACKREQUIRED=$(for dep in ${DIRECTDEPS[$itemid]}; do printf "%s\n" "${dep##*/}"; done | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
+        elif [ -n "${METADEPS}" ]; then
+          SLACKREQUIRED=$(for dep in ${METADEPS}; do printf "%s\n" "${dep##*/}"; done | tr -d ' ' | xargs -r -iZ echo -n "Z," | sed -e "s/,$//")
         else
           SLACKREQUIRED=""
         fi

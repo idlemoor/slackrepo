@@ -255,7 +255,7 @@ declare -A SRCDIR GITREV GITDIRTY
 declare -A \
   HINT_MD5IGNORE HINT_SHA256IGNORE HINT_NUMJOBS HINT_INSTALL HINT_PRAGMA \
   HINT_ARCH HINT_CLEANUP HINT_USERADD HINT_GROUPADD HINT_ANSWER HINT_NODOWNLOAD \
-  HINT_CONFLICTS HINT_NOWARNING \
+  HINT_CONFLICTS HINT_BUILDTIME HINT_NOWARNING \
   HINT_OPTIONS HINT_VERSION HINT_KERNEL HINTFILE
 # and for validation in test_*
 declare -A VALID_USERS VALID_GROUPS
@@ -409,13 +409,15 @@ function parse_info_and_hints
 
   if [ -n "${HINTFILE[$itemid]}" ] && [ -s "${HINTFILE[$itemid]}" ]; then
     local SKIP \
-          VERSION ADDREQUIRES DELREQUIRES OPTIONS GROUPADD USERADD CONFLICTS NOWARNING NOWARNINGS \
+          VERSION OPTIONS GROUPADD USERADD NOWARNING NOWARNINGS \
+          ADDREQUIRES DELREQUIRES BUILDTIME CONFLICTS \
           INSTALL NUMJOBS ANSWER CLEANUP PRAGMA SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
     . "${HINTFILE[$itemid]}"
 
     # Process the hint file's variables individually (looping for each variable would need
     # 'eval', which would mess up the payload, so we don't do that).
     [ -n "$OPTIONS"   ] &&   HINT_OPTIONS[$itemid]="$OPTIONS"
+    [ -n "$BUILDTIME" ] && HINT_BUILDTIME[$itemid]="$BUILDTIME"
     [ -n "$CONFLICTS" ] && HINT_CONFLICTS[$itemid]="$CONFLICTS"
     [ -n "$NUMJOBS"   ] &&   HINT_NUMJOBS[$itemid]="$NUMJOBS"
     [ -n "$ANSWER"    ] &&    HINT_ANSWER[$itemid]="$ANSWER"
@@ -536,7 +538,6 @@ function parse_info_and_hints
       ${OPTIONS+"OPTIONS=\"$OPTIONS\""} \
       ${GROUPADD+"GROUPADD=\"$GROUPADD\""} \
       ${USERADD+"USERADD=\"$USERADD\""} \
-      ${CONFLICTS+"CONFLICTS=\"$CONFLICTS\""} \
       ${INSTALL+"INSTALL=\"$INSTALL\""} \
       ${NUMJOBS+"NUMJOBS=\"$NUMJOBS\""} \
       ${ANSWER+"ANSWER=\"$ANSWER\""} \
@@ -549,10 +550,12 @@ function parse_info_and_hints
       ${SHA256SUM+"SHA256SUM=\"$SHA256SUM\""} \
       ${ADDREQUIRES+"ADDREQUIRES=\"$ADDREQUIRES\""} \
       ${DELREQUIRES+"DELREQUIRES=\"$DELREQUIRES\""} \
+      ${BUILDTIME+"BUILDTIME=\"$BUILDTIME\""} \
+      ${CONFLICTS+"CONFLICTS=\"$CONFLICTS\""} \
       )"
 
     unset VERSION OPTIONS GROUPADD USERADD \
-          CONFLICTS NOWARNING \
+          BUILDTIME CONFLICTS NOWARNING \
           INSTALL NUMJOBS ANSWER CLEANUP \
           PRAGMA SPECIAL ARCH DOWNLOAD MD5SUM SHA256SUM
 
@@ -577,17 +580,18 @@ function parse_info_and_hints
     for delreq in ${DELREQUIRES} '%README%'; do
       INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]//${delreq}/})"
     done
-    # python3 pragma implies a dep on python3
+
+    # (2) python3 pragma implies a dep on python3
     for pragma in ${HINT_PRAGMA[$itemid]}; do
       case "$pragma" in
         'python3' ) ADDREQUIRES="python3 ${ADDREQUIRES}" ;;
       esac
     done
 
-    # (2) Append ADDREQUIRES
-    INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]} ${ADDREQUIRES})"
+    # (3) Append ADDREQUIRES and BUILDTIME
+    INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]} ${ADDREQUIRES} ${HINT_BUILDTIME[$itemid]})"
 
-    # (3) Substitute SUBST
+    # (4) Substitute SUBST
     local newrequires irqdep newdep
     if [ "${#SUBST[@]}" != 0 ] && [ -n "${INFOREQUIRES[$itemid]}" ]; then
       newrequires=''

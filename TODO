@@ -1,39 +1,52 @@
 TODO - Stuff that isn't in 0.3
 ------------------------------
 
+Updates and rebuilds
+  Version pinning ("FROZEN"?)
+  Rebuild all deps if a build fails (-current, or -stable upgrades)
+  Dependers (build, rebuild, remove)
+  Smart rebuilding for -stable upgrades
+
+CIRCULAR hint
+
+Better documentation about gpg setup
+
+Use sbosrcarch structure for source repo
+  rsyncable with sbosrcarch
+  by-md5sum should be the primary access
+  Flat source directory / manual download directory
+  Retain obsolete sources
+
+Bash completion
+
+Multilib (build unsupported/untested)
+
 Moar Lint Checks!
   desktop files
   buildtime destdir paths in package
   md5sum validity
   perms of files in package
   clashes with Slackware
-  docs provided in /usr/doc/prgnam-ver
+  good docs in usr/doc/prgnam-ver
+  no usr/share/doc
   lintpkg and sbostuff
 
-Use sbosrcarch structure for source repo (rsyncable) and make by-md5sum
-the primary access route
+Option to use sbopkg as a build engine
 
-BUILD_FAIL database
+BUILD_FAIL database hook & viewer
 
 Log file viewer
-
-Slackware pkg repo structure (each category has one dir with many pkgs)
+README viewer
 
 Full support for reproducible building
 
 Cross-repo dependencies and builds
+  Local repo
+  Slackware repo
+  pkgsrc repo
 
-BUILDTIME, RUNTIME and CIRCULAR dependency hints
-
-Rebuild all deps if a build fails (-current, or -stable upgrades)
-
-Bash completion
-
-Build from Slackware
-
-Build from pkgsrc
-
-Use sbopkg as build backend
+Slackware pkg repo structure (each category in one dir with many pkgs)
+Single integrated multirepo package repo
 
 ARM support
 

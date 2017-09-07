@@ -127,8 +127,8 @@ Equivalent to \fB\-\-very\-verbose \-\-lint \-\-dry\-run
 \fB\-\-dry\-run\fR
 Builds and rebuilds will be performed, and removes and reverts will be
 checked, but no changes will be made to the package repository. This
-option conflicts with \fB\-\-install\fR. This option has no effect with
-the \fBlint\fR command.
+option conflicts with \fB\-\-preview\fR and \fB\-\-install\fR. This
+option has no effect with the \fBlint\fR command.
 .
 .TP
 \fB\-\-install\fR
@@ -136,8 +136,8 @@ Built, rebuilt and updated packages will be installed on the host
 system. This results in a \(dqqueue\(dq style build, and packages may
 not be 100% clean of unexpected dependencies. The default is for
 packages not to be installed. This option conflicts with
-\fB\-\-dry\-run\fR, and has no effect with the \fBremove\fR,
-\fBrevert\fR and \fBlint\fR commands.
+\fB\-\-dry\-run\fR and \fB\-\-preview\fR. This option has no effect
+with the \fBremove\fR, \fBrevert\fR and \fBlint\fR commands.
 .
 .TP
 \fB\-\-keep\-tmp\fR
@@ -164,6 +164,13 @@ default is 5 (like distcc).
 Suppress warnings that match the GNU grep extended regular expression
 \fIEREGEX\fR. Multiple warnings can be suppressed with an extended
 regular expression of the form \(aq(textone|texttwo|...)\(aq.
+.
+.TP
+\fB\-\-preview\fR
+Print what would be added, updated, rebuilt or removed, and an estimate
+of the total build time, but do not build or remove anything. This
+option conflicts with \fB\-\-dry\-run\fR and \fB\-\-install\fR. This
+option has no effect with the \fBlint\fR command.
 .
 .TP
 \fB\-\-repo=\fIID\fR

@@ -266,6 +266,34 @@ PKGTYPE=\(dqtgz\(dq
 .EE
 .
 .
+.SS Hooks
+.
+.
+.PP
+The following configuration variables are defined as bash arrays.
+Multiple values can be specified between the parentheses, separated by
+spaces.
+.TP
+\fBHOOK_START\fR
+Specifies pathnames, commands or slackrepo hook functions to be run
+before slackrepo starts processing. 
+.IP
+Example:
+.EX
+HOOK_START=( gitfetch_hook )
+.EE
+.
+.TP
+\fBHOOK_FINISH\fR
+Specifies pathnames, commands or slackrepo hook functions to be run
+after slackrepo finishes processing.
+.IP
+Example:
+.EX
+HOOK_FINISH=( genrepos_hook /usr/local/bin/rsync_my_repo )
+.EE
+.
+.
 .SS Defaults for control arguments
 .
 .

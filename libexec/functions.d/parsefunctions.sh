@@ -576,12 +576,17 @@ function parse_info_and_hints
   else
 
     # (1) Remove DELREQUIRES and %README%
-    local delreq pragma
+    local delreq req newreqlist
+    newreqlist=""
     for delreq in ${DELREQUIRES} '%README%'; do
-      INFOREQUIRES[$itemid]="$(echo ${INFOREQUIRES[$itemid]//${delreq}/})"
+      for req in ${INFOREQUIRES[$itemid]}; do
+        [ "$req" != "$delreq" ] && newreqlist="$newreqlist $req"
+      done
     done
+    INFOREQUIRES[$itemid]="$(echo ${newreqlist})"
 
     # (2) python3 pragma implies a dep on python3
+    local pragma
     for pragma in ${HINT_PRAGMA[$itemid]}; do
       case "$pragma" in
         'python3' ) ADDREQUIRES="python3 ${ADDREQUIRES}" ;;

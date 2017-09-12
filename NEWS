@@ -37,6 +37,10 @@ of slackrepo-0.2.0:
   * If downloading from the normal URL fails, downloads now fall back to both
     sbosrcarch and Slackbuilds Direct Links.
 
+  * The --chroot control argument now allows any specified chroot directory to
+    be used (--chroot=/path/to/chroot). This can also be set as a default in
+    the configuration file (CHROOT="/path/to/chroot").
+
   * The new --debug control argument is a quick way of setting
     --very-verbose --dry-run --lint --keep-tmp
 

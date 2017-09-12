@@ -103,10 +103,11 @@ removed).
 .
 .
 .TP
-\fB\-\-chroot\fR
+\fB\-\-chroot\fI[=path]\fR
 Construct and use a temporary chroot environment for each build process.
-(Requires a Linux 3.18+ kernel with overlayfs.)
-This option has no effect with the remove, revert and lint commands.
+(Requires a Linux 3.18+ kernel with overlayfs.) The specified path will
+be used to create the chroot (default '/'). This option has no effect
+with the remove, revert and lint commands.
 .
 .TP
 \fB\-\-color=always|auto|no\fR

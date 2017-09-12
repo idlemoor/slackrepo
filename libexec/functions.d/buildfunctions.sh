@@ -107,7 +107,7 @@ function build_item_packages
   # Copy or link the source (if any) into the temporary SlackBuild directory
   # (need to copy if this is a chroot, it might be on an inaccessible mounted FS)
   if [ -n "${INFODOWNLIST[$itemid]}" ]; then
-    if [ "$OPT_CHROOT" = 'y' ]; then
+    if [ "$OPT_CHROOT" != 'n' ]; then
       cp -a "${SRCDIR[$itemid]}"/* "$TMP_SLACKBUILD/"
     else
       # "Copy / is dandy / but linky / is quicky" [after Ogden Nash]
@@ -370,7 +370,7 @@ function build_item_packages
 
   # Setup the chroot
   # (to be destroyed below, or by build_failed if necessary)
-  if [ "$OPT_CHROOT" = 'y' ]; then
+  if [ "$OPT_CHROOT" != 'n' ]; then
     chroot_setup || return 1
   fi
 
@@ -518,7 +518,7 @@ function build_item_packages
     #### fi ####
   done
 
-  [ "$OPT_CHROOT" = 'y' ] && chroot_report
+  [ "$OPT_CHROOT" != 'n' ] && chroot_report
 
   local inst testinst
   # Do we want to install it?  if not, we'll ask for a test install.
@@ -532,7 +532,7 @@ function build_item_packages
   test_package $testinst "$itemid" "${pkglist[@]}"
   [ $? -gt 1 ] && { build_failed "$itemid"; return 7; }
 
-  [ "$OPT_CHROOT" = 'y' ] && chroot_destroy
+  [ "$OPT_CHROOT" != 'n' ] && chroot_destroy
   rm -f "$MY_STARTSTAMP" 2>/dev/null
 
   if [ "$inst" = 'y' ]; then
@@ -700,7 +700,7 @@ function chroot_setup
 # Exits completely (status=6) if the overlay failed to mount
 {
   CHROOTCMD=''
-  [ "$OPT_CHROOT" != 'y' ] && return 1
+  [ "$OPT_CHROOT" = 'n' ] && return 1
 
   MY_CHRDIR="$MYTMP"/chrootdir/  # note the trailing slash
   ${SUDO}mkdir -p "$MY_CHRDIR"
@@ -717,7 +717,7 @@ function chroot_setup
   OVL_DIRTY="$TMP_OVLDIR"/dirty
   OVL_WORK="$TMP_OVLDIR"/work
   ${SUDO}mkdir -p "$OVL_DIRTY" "$OVL_WORK"
-  ${SUDO}mount -t overlay overlay -olowerdir=/,upperdir="$OVL_DIRTY",workdir="$OVL_WORK" "$MY_CHRDIR" || \
+  ${SUDO}mount -t overlay overlay -olowerdir="$OPT_CHROOT",upperdir="$OVL_DIRTY",workdir="$OVL_WORK" "$MY_CHRDIR" || \
     { log_error "Failed to mount $MY_CHRDIR"; exit_cleanup 6; }
   CHRMOUNTS+=( "$MY_CHRDIR" )
 

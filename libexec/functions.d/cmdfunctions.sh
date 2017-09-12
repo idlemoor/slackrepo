@@ -632,7 +632,7 @@ function info_command
   [      "$OPT_INSTALL" = 'y' ] && echo "  --install"
   [        "$OPT_LINT" != 'n' ] && echo "  --lint=$OPT_LINT"
   [     "$OPT_KEEP_TMP" = 'y' ] && echo "  --keep-tmp"
-  [       "$OPT_CHROOT" = 'y' ] && echo "  --chroot"
+  [      "$OPT_CHROOT" != 'n' ] && echo "  --chroot=$OPT_CHROOT"
   [    "$OPT_COLOR" != 'auto' ] && echo "  --color=$OPT_COLOR"
   [        "$OPT_NICE" != '5' ] && echo "  --nice=$OPT_NICE"
   [ "$OPT_REPRODUCIBLE" = 'y' ] && echo "  --reproducible"

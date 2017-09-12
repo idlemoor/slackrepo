@@ -50,7 +50,7 @@ function uninstall_deps
   local mydep
 
   if [ -n "${FULLDEPS[$itemid]}" ]; then
-    [ "$OPT_CHROOT" != 'y' ] && log_normal -a "Uninstalling dependencies ..."
+    [ "$OPT_CHROOT" = 'n' ] && log_normal -a "Uninstalling dependencies ..."
     for mydep in ${FULLDEPS[$itemid]}; do
       uninstall_packages "$mydep"
     done
@@ -210,7 +210,7 @@ function uninstall_packages
   local pkgpath
   local etcnewfiles etcdirs e
 
-  if [ "$OPT_CHROOT" = 'y' ]; then
+  if [ "$OPT_CHROOT" != 'n' ]; then
     # Don't bother uninstalling, the chroot has already been destroyed,
     # but we need to run 'depmod' if we have removed a kernel module.
     if [ "${HINT_KERNEL[$itemid]}" = 'kernelmodule' ]; then

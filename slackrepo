@@ -324,7 +324,6 @@ fi
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO SRCREPO PKGREPO PKGBACKUP \
           HINTDIR DEFAULT_HINTDIR LOGDIR DATABASE TMP \
-          SUBSTITUTE \
           ARCH TAG PKGTYPE NUMJOBS"
 # These config vars don't need to be obfuscated:
 genrepnames="USE_GENREPOS REPOSROOT REPOSOWNER REPOSOWNERGPG DL_URL \
@@ -400,10 +399,10 @@ done
 [ "$OPT_DRY_RUN" = 'y' ] && OPT_INSTALL='n'
 # lazy implementation of --very-verbose ;-)
 [ "$OPT_VERY_VERBOSE" = 'y' ] && export VERBOSE=1 V=1
+# compatibility fix, OPT_CHROOT is now a pathname or 'n'
+[ "$OPT_CHROOT" = 'y' ] && OPT_CHROOT='/'
 # chroot will only work if overlayfs is available
-if [ "$OPT_CHROOT" = 'y' ] && [ "$SYS_OVERLAYFS" != 'y' ]; then
-  OPT_CHROOT='n'
-fi
+[ "$SYS_OVERLAYFS" != 'y' ] && OPT_CHROOT='n'
 # accept null niceness, map to zero
 [ -z "$OPT_NICE" ] && OPT_NICE='0'
 # fixup NOWARNING (if you really want the regex to match 'n', see a doctor)
@@ -476,6 +475,9 @@ for name in $varnames $genrepnames $initnames; do
   srvar="SR_$name"
   eval "$srvar=\"$(echo "${!srvar}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_OSVER/g" -e "s/%ARCH%/$SR_ARCH/g")\""
 done
+for name in OPT_CHROOT; do
+  eval "$name=\"$(echo "${!name}" | sed -e "s/%REPO%/$OPT_REPO/g" -e "s/%SLACKVER%/$SYS_OSVER/g" -e "s/%ARCH%/$SR_ARCH/g")\""
+done
 
 #-------------------------------------------------------------------------------
 
@@ -519,6 +521,17 @@ fi
 
 # Arrays for tracking outcomes:
 declare -a OKLIST WARNINGLIST SKIPPEDLIST FAILEDLIST ABORTEDLIST
+
+# Validate $OPT_CHROOT:
+if [ "$OPT_CHROOT" != 'n' ]; then
+  if [ ! -d "$OPT_CHROOT" ]; then
+    log_error "chroot is not a directory: $OPT_CHROOT"; exit_cleanup 4
+  elif [ ! -x "$OPT_CHROOT"/bin/bash ]; then
+    log_error "Not a usable chroot: $OPT_CHROOT"; exit_cleanup 4
+  else
+    OPT_CHROOT=$(realpath "$OPT_CHROOT")
+  fi
+fi
 
 # Create directories:
 [ -d "$SR_SBREPO" ]   || \

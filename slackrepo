@@ -299,6 +299,7 @@ SYS_OVERLAYFS='n'
 if \
   [ -d /sys/module/overlay ] || \
   [ -f /lib/modules/"$(uname -r)"/kernel/fs/overlayfs/overlay.ko ] || \
+  [ -f /lib/modules/"$(uname -r)"/kernel/fs/overlayfs/overlay.ko.gz ] || \
   grep -q overlay /proc/filesystems
 then
   SYS_OVERLAYFS='y'

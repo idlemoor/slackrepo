@@ -239,8 +239,8 @@ function parse_package_name
   PN_PRGNAM=$(echo "$pkgnam" | rev | cut -f4- -d- | rev)
   PN_VERSION=$(echo "$pkgnam" | rev | cut -f3 -d- | rev)
   PN_ARCH=$(echo "$pkgnam" | rev | cut -f2 -d- | rev)
-  PN_BUILD=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/[^0-9]*$//')
-  PN_TAG=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/\..*$//')
+  PN_BUILD=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^\([[:digit:]][[:digit:]]*\).*$/\1/')
+  PN_TAG=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[[:digit:]][[:digit:]]*\(.*\)$/\1/' | rev | sed 's/^[^\.]*\.//' | rev)
   PN_PKGTYPE=$(echo "$pkgnam" | rev | cut -f1 -d- | rev | sed 's/^[0-9]*//' | sed 's/^.*\.//')
   return 0
 }

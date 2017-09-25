@@ -123,22 +123,36 @@ function build_command
         STATUS[$todo]='removed'
       else
         missingdeps=()
+        unsupporteddeps=()
         for dep in ${DIRECTDEPS[$todo]}; do
           if [ "${STATUS[$dep]}" != 'ok' ] && [ "${STATUS[$dep]}" != 'updated' ]; then
-            missingdeps+=( "$dep" )
+            if [ "${STATUS[$dep]}" = 'unsupported' ] ; then
+              unsupporteddeps+=( "$dep" )
+            else
+              missingdeps+=( "$dep" )
+            fi
           fi
         done
-        if [ "${#missingdeps[@]}" = '0' ]; then
+        if [ "${#missingdeps[@]}" = '0' ] && [ "${#unsupporteddeps[@]}" = '0' ] ; then
           build_item_packages "$todo"
         else
           log_error "Cannot build ${todo}."
-          if [ "${#missingdeps[@]}" = '1' ]; then
+
+          if [ "${#missingdeps[@]}" = '1' ] && [ "${#unsupportedeps[@]}" = '0' ] ; then
             STATUSINFO[$todo]="Missing dependency: ${missingdeps[0]}"
+          elif [ "${#missingdeps[@]}" = '0' ] && [ "${#unsupportedeps[@]}" = '1' ] ; then
+            STATUSINFO[$todo]="Unsupported dependency: ${unsupporteddeps[0]}"
           else
-            STATUSINFO[$todo]="Missing dependencies:\n$(printf '  %s\n' "${missingdeps[@]}")"
+            STATUSINFO[$todo]="Missing dependencies:\n$(printf '  %s\n' "${missingdeps[@]}")\nUnsupported dependencies:\n$(printf '  %s\n' "${unsupporteddeps[@]}")"
           fi
-          STATUS[$todo]='aborted'
-          log_itemfinish "$todo" "aborted" '' "${STATUSINFO[$todo]}"
+
+          if [ "${#unsupporteddeps[@]}" = '0' ] ; then
+            STATUS[$todo]='aborted'
+            log_itemfinish "$todo" "aborted" '' "${STATUSINFO[$todo]}"
+          else
+            STATUS[$todo]='unsupported'
+            log_itemfinish "$todo" "unsupported" '' "${STATUSINFO[$todo]}"
+          fi
         fi
       fi
     done

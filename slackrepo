@@ -324,7 +324,7 @@ fi
 # However, they do NOT have the SR_ prefix in the config files or environment.
 varnames="SBREPO SRCREPO PKGREPO PKGBACKUP \
           HINTDIR DEFAULT_HINTDIR LOGDIR DATABASE TMP \
-          ARCH TAG PKGTYPE NUMJOBS"
+          ARCH TAG PKGTYPE NUMJOBS SUBSTITUTE"
 # These config vars don't need to be obfuscated:
 genrepnames="USE_GENREPOS REPOSROOT REPOSOWNER REPOSOWNERGPG DL_URL \
              RSS_TITLE RSS_ICON RSS_LINK RSS_CLURL RSS_DESCRIPTION RSS_FEEDMAX RSS_UUID \

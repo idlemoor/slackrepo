@@ -578,10 +578,16 @@ function parse_info_and_hints
     # (1) Remove DELREQUIRES and %README%
     local delreq req newreqlist
     newreqlist=""
-    for delreq in ${DELREQUIRES} '%README%'; do
-      for req in ${INFOREQUIRES[$itemid]}; do
-        [ "$req" != "$delreq" ] && newreqlist="$newreqlist $req"
+    for req in ${INFOREQUIRES[$itemid]}; do
+      for delreq in ${DELREQUIRES} '%README%'; do
+        if [ "$req" == "$delreq" ] ; then
+         req=""
+         break
+        fi
       done
+      if [ -n "$req" ] ; then
+        newreqlist="$newreqlist $req"
+      fi
     done
     INFOREQUIRES[$itemid]="$(echo ${newreqlist})"
 
